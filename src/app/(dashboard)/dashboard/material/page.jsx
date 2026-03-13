@@ -1,411 +1,812 @@
 'use client'
 
-import { authFetch } from '@/app/utils/authFetch'
-import { usePageHeading } from '@/contexts/PageHeadingContext'
-import useAdminPermission from '@/hooks/useAdminPermission'
-import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Loader2,
-  BookOpen,
-  Search,
-  Plus
+    GripVertical,
+    ChevronRight,
+    MoreVertical,
+    Plus,
+    FileText,
+    Trash2,
+    Edit2,
+    Check,
+    X,
+    FileIcon,
+    Loader2,
+    FileDown,
+    ExternalLink,
+    ChevronDown,
+    AlertCircle
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+    defaultDropAnimationSideEffects
+} from '@dnd-kit/core'
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { toast, ToastContainer } from 'react-toastify'
-import { arrayMove } from '@dnd-kit/sortable'
-import { Button } from '@/ui/shadcn/button'
+import 'react-toastify/dist/ReactToastify.css'
+import { authFetch } from '@/app/utils/authFetch'
+import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+import { usePageHeading } from '@/contexts/PageHeadingContext'
 
-// New separated components
-import MaterialListView from './components/MaterialListView'
-import MaterialFormDialog from './components/MaterialFormDialog'
+// --- HELPERS ---
 
-export default function MaterialForm() {
-  const { setHeading } = usePageHeading()
-  const author_id = useSelector((state) => state.user.data?.id)
-
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [materials, setMaterials] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editId, setEditId] = useState(null)
-  const [deleteId, setDeleteId] = useState(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [initialContext, setInitialContext] = useState(null)
-
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchTimeout, setSearchTimeout] = useState(null)
-
-  // Category & subcategory filter state
-  const [filterCategory, setFilterCategory] = useState('')
-  const [filterSubCategory, setFilterSubCategory] = useState('')
-  const [appliedSearch, setAppliedSearch] = useState('')
-  const [parentCategories, setParentCategories] = useState([])
-  const [subCategories, setSubCategories] = useState([])
-  const [subLoading, setSubLoading] = useState(false)
-
-  const abortControllerRef = useRef(null)
-  const { requireAdmin } = useAdminPermission()
-
-  useEffect(() => {
-    setHeading('Material Management')
-    loadParentCategories()
-    return () => setHeading(null)
-  }, [setHeading])
-
-  useEffect(() => {
-    fetchMaterials(filterCategory, filterSubCategory, appliedSearch)
-  }, [filterCategory, filterSubCategory, appliedSearch])
-
-  useEffect(() => {
-    return () => { if (searchTimeout) clearTimeout(searchTimeout) }
-  }, [searchTimeout])
-
-  const loadParentCategories = async () => {
+const truncateUrl = (url) => {
+    if (!url) return ''
     try {
-      const res = await authFetch(`${process.env.baseUrl}/category?type=MATERIAL&limit=100`)
-      const data = await res.json()
-      setParentCategories(data.items || [])
-    } catch {
-      // ignore
+        const u = new URL(url)
+        return u.hostname + u.pathname.substring(0, 15) + (u.pathname.length > 15 ? '...' : '')
+    } catch (e) {
+        return url.substring(0, 30) + (url.length > 30 ? '...' : '')
     }
-  }
+}
 
-  const loadSubCategories = async (parentId) => {
-    if (!parentId) { setSubCategories([]); return }
-    try {
-      setSubLoading(true)
-      const res = await authFetch(`${process.env.baseUrl}/sub/${parentId}`)
-      const data = await res.json()
-      setSubCategories(data.items || data || [])
-    } catch {
-      setSubCategories([])
-    } finally {
-      setSubLoading(false)
+const getFirstLetter = (title) => {
+    return title ? title.charAt(0).toUpperCase() : '?'
+}
+
+// --- COMPONENTS ---
+
+const SortableItem = ({
+    id,
+    item,
+    type,
+    isSelected,
+    onClick,
+    onEdit,
+    onDelete,
+    accentColor,
+    isMaterial = false
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id })
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 'auto',
+        opacity: isDragging ? 0.3 : 1,
+        borderColor: isSelected ? accentColor : undefined,
+        boxShadow: isSelected ? `0 0 0 1px ${accentColor}33` : undefined
     }
-  }
 
-  const handleFilterCategoryChange = (categoryId) => {
-    setFilterCategory(categoryId)
-    setFilterSubCategory('')
-    setSubCategories([])
-    if (categoryId) loadSubCategories(categoryId)
-  }
+    const badgeCount = type === 'L1'
+        ? item.subcategories?.length || 0
+        : item.children_count || item.materials_count || 0
 
-  const handleSearchInput = (value) => {
-    setSearchQuery(value)
-    if (searchTimeout) clearTimeout(searchTimeout)
-    const id = setTimeout(() => setAppliedSearch(value), 350)
-    setSearchTimeout(id)
-  }
+    if (isMaterial) {
+        const materialStyle = {
+            ...style,
+            borderColor: isDragging ? accentColor : undefined
+        }
+        return (
+            <div
+                ref={setNodeRef}
+                style={materialStyle}
+                className={`group relative flex items-center gap-3 p-3 mb-2 rounded-xl border transition-all bg-white hover:shadow-sm`}
+            >
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600">
+                    <GripVertical size={16} />
+                </div>
 
-  const fetchMaterials = async (category = filterCategory, subCategory = filterSubCategory, search = appliedSearch) => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort('superseded')
-    }
-    const controller = new AbortController()
-    abortControllerRef.current = controller
+                <div className={`flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-blue-600`}>
+                    <FileText size={20} />
+                </div>
 
-    setLoading(true)
-    try {
-      // Note: The backend will now return nested hierarchy
-      let url = `${process.env.baseUrl}/material`
-      if (search) url += `&q=${encodeURIComponent(search)}`
-      if (subCategory) url += `&parent_id=${subCategory}`
-      else if (category) url += `&parent_id=${category}`
+                <div className="flex-1 min-w-0">
+                    <div className="font-bold text-gray-900 truncate">{item.title}</div>
+                    <div className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{item.file_url}</div>
+                </div>
 
-      const response = await authFetch(url, { signal: controller.signal })
-      const data = await response.json()
-
-      // The 'data' is the array of nested categories/subcategories/materials
-      setMaterials(data.data || data || [])
-    } catch (error) {
-      if (error.name === 'AbortError' || controller.signal.aborted) return
-      toast.error('Failed to fetch materials')
-    } finally {
-      if (!controller.signal.aborted) setLoading(false)
-    }
-  }
-
-  const handleEdit = (material) => {
-    setEditing(true)
-    setEditId(material.id)
-    setIsFormOpen(true)
-  }
-
-  // Pre-fetch check for editing (ensures modal state is correct)
-  useEffect(() => {
-    if (isFormOpen && editing && editId) {
-      // Optional: extra check if needed
-    }
-  }, [isFormOpen, editing, editId])
-
-  const handleDeleteClick = (id) => {
-    requireAdmin(() => { setDeleteId(id); setIsDeleteDialogOpen(true) })
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteId) return
-    try {
-      const response = await authFetch(`${process.env.baseUrl}/material?id=${deleteId}`, { method: 'DELETE' })
-      const res = await response.json()
-      toast.success(res.message || 'Deleted successfully')
-      fetchMaterials()
-    } catch (err) {
-      toast.error(err.message)
-    } finally {
-      setIsDeleteDialogOpen(false)
-      setDeleteId(null)
-    }
-  }
-
-  const handleAddClick = (context = null) => {
-    setEditing(false)
-    setEditId(null)
-    setInitialContext(context)
-    setIsFormOpen(true)
-  }
-
-  const handleReorder = async (activeId, overId) => {
-    const oldIdx = materials.findIndex(m => m.id === activeId)
-    const newIdx = materials.findIndex(m => m.id === overId)
-    const reordered = arrayMove(materials, oldIdx, newIdx)
-    setMaterials(reordered)
-
-    const payload = reordered.map((m, i) => ({ id: m.id, order_no: i + 1 }))
-    await saveOrder(payload)
-  }
-
-  const handleCategoryReorder = async (activeId, overId) => {
-    // Get unique categories in current display order
-    const cats = []
-    materials.forEach(m => {
-      const cId = m.category?.id
-      if (cId && !cats.includes(cId)) cats.push(cId)
-    })
-
-    const oldIdx = cats.indexOf(activeId)
-    const newIdx = cats.indexOf(overId)
-    if (oldIdx === -1 || newIdx === -1) return
-
-    const reorderedCats = arrayMove(cats, oldIdx, newIdx)
-
-    // Update local materials state to reflect new category sequence
-    const newMaterials = [...materials].sort((a, b) => {
-      const idxA = reorderedCats.indexOf(a.category?.id)
-      const idxB = reorderedCats.indexOf(b.category?.id)
-      return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB)
-    })
-    setMaterials(newMaterials)
-
-    // Save to server
-    const payload = reorderedCats.map((id, i) => ({ id, order_no: i + 1 }))
-    await saveCategoryOrder(payload)
-  }
-
-  const handleSubCategoryReorder = async (activeId, overId, parentId) => {
-    // Get subcategories within this parent
-    const subs = []
-    materials.forEach(m => {
-      if (m.category?.id === parentId) {
-        const sId = m.sub_category?.id
-        if (sId && !subs.includes(sId)) subs.push(sId)
-      }
-    })
-
-    const oldIdx = subs.indexOf(activeId)
-    const newIdx = subs.indexOf(overId)
-    if (oldIdx === -1 || newIdx === -1) return
-
-    const reorderedSubs = arrayMove(subs, oldIdx, newIdx)
-
-    // Update local materials state
-    const newMaterials = [...materials].sort((a, b) => {
-      // First maintain category order
-      const catA = a.category?.id
-      const catB = b.category?.id
-      if (catA !== catB) return 0 // Keep relative to other categories
-
-      // If in same category, sort by new subcategory order
-      if (catA === parentId) {
-        const idxA = reorderedSubs.indexOf(a.sub_category?.id)
-        const idxB = reorderedSubs.indexOf(b.sub_category?.id)
-        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB)
-      }
-      return 0
-    })
-    setMaterials(newMaterials)
-
-    const payload = reorderedSubs.map((id, i) => ({ id, order_no: i + 1 }))
-    await saveSubCategoryOrder(payload)
-  }
-
-  const saveOrder = async (payload) => {
-    try {
-      setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/material/update-order`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materials: payload })
-      })
-      if (!res.ok) throw new Error('Failed to save material order')
-      toast.success('Material order saved', { autoClose: 1000 })
-    } catch (err) {
-      toast.error(err.message)
-      fetchMaterials()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const saveCategoryOrder = async (payload) => {
-    try {
-      setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/category-order`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categories: payload })
-      })
-      if (!res.ok) throw new Error('Failed to save category order')
-      toast.success('Category order saved', { autoClose: 1000 })
-    } catch (err) {
-      toast.error(err.message)
-      fetchMaterials()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const saveSubCategoryOrder = async (payload) => {
-    try {
-      setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/category-order`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categories: payload })
-      })
-      if (!res.ok) throw new Error('Failed to save subcategory order')
-      toast.success('Subcategory order saved', { autoClose: 1000 })
-    } catch (err) {
-      toast.error(err.message)
-      fetchMaterials()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className='w-full'>
-      <ToastContainer position='bottom-right' />
-
-      {/* ── Sticky Header ───────────────────────────────────────────────────── */}
-      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
-        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
-          <div className='flex items-center gap-3'>
-            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-              <BookOpen size={17} className='text-[#387cae]' />
-            </div>
-            <div>
-              <p className='text-sm font-bold text-gray-800'>Materials</p>
-              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
-                {loading
-                  ? <span className='inline-flex items-center gap-1'><Loader2 size={10} className='animate-spin' /> Loading…</span>
-                  : `${materials.length} total`
-                }
-                {saving && (
-                  <span className='inline-flex items-center gap-1 text-[#387cae]'>
-                    · <Loader2 size={10} className='animate-spin' /> Saving order…
-                  </span>
+                {item.image && (
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shrink-0">
+                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    </div>
                 )}
-              </p>
+
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onEdit(item)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => onDelete(item.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md">
+                        <Trash2 size={14} />
+                    </button>
+                </div>
             </div>
-          </div>
+        )
+    }
 
-          <div className='flex items-center gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 flex-wrap'>
-            <div className='relative shrink-0 sm:w-52'>
-              <Search size={13} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none' />
-              <input
-                type='text'
-                value={searchQuery}
-                onChange={(e) => handleSearchInput(e.target.value)}
-                placeholder='Search materials…'
-                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
-              />
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            onClick={() => onClick(item)}
+            className={`group relative flex items-center gap-3 p-3 mb-2 rounded-xl border cursor-pointer transition-all hover:bg-gray-50
+        ${isSelected ? `bg-gray-50` : 'border-gray-100 bg-white'}
+      `}
+        >
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
+                <GripVertical size={16} />
             </div>
 
-            <select
-              value={filterCategory}
-              onChange={(e) => handleFilterCategoryChange(e.target.value)}
-              className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[140px]'
+            <div
+                className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs shrink-0`}
+                style={{ backgroundColor: `${accentColor}15`, color: accentColor }}
             >
-              <option value=''>All Categories</option>
-              {parentCategories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.title}</option>
-              ))}
-            </select>
+                {getFirstLetter(item.title)}
+            </div>
 
-            {filterCategory && (
-              <select
-                value={filterSubCategory}
-                onChange={(e) => setFilterSubCategory(e.target.value)}
-                disabled={subLoading}
-                className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[150px]'
-              >
-                <option value=''>
-                  {subLoading ? 'Loading…' : 'All Subcategories'}
-                </option>
-                {subCategories.map(sub => (
-                  <option key={sub.id} value={sub.id}>{sub.title}</option>
-                ))}
-              </select>
-            )}
+            <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-700 truncate">{item.title}</div>
+            </div>
 
-            <Button
-              onClick={handleAddClick}
-              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
-            >
-              <Plus size={15} />
-              Add Material
-            </Button>
-          </div>
+            <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-500">
+                    {badgeCount} {type === 'L1' ? '' : 'files'}
+                </span>
+
+                {isSelected ? (
+                    <ChevronRight size={14} style={{ color: accentColor }} />
+                ) : (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1 text-gray-400 hover:text-blue-600">
+                            <Edit2 size={14} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="p-1 text-gray-400 hover:text-red-600">
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
-      </div>
+    )
+}
 
-      {/* ── View / Card List ────────────────────────────────────────────────── */}
-      <MaterialListView
-        materials={materials}
-        loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
-        onReorder={handleReorder}
-        onCategoryReorder={handleCategoryReorder}
-        onSubCategoryReorder={handleSubCategoryReorder}
-        onAddClick={handleAddClick}
-        searchQuery={searchQuery}
-        filterCategory={filterCategory}
-      />
+// --- MAIN PAGE ---
 
-      {/* ── Create / Edit Modal ─────────────────────────────────────────────── */}
-      <MaterialFormDialog
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        editing={editing}
-        editId={editId}
-        authorId={author_id}
-        initialContext={initialContext}
-        onSuccess={fetchMaterials}
-      />
+export default function MaterialDashboard() {
+    const { setHeading } = usePageHeading()
 
-      <ConfirmationDialog
-        open={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        title='Delete Material'
-        message='Are you sure you want to delete this material? This action cannot be undone.'
-        confirmText='Delete'
-        cancelText='Cancel'
-      />
-    </div>
-  )
+    // State
+    const [l1List, setL1List] = useState([])
+    const [selectedL1, setSelectedL1] = useState(null)
+    const [selectedL2, setSelectedL2] = useState(null)
+    const [materialsBySubject, setMaterialsBySubject] = useState({})
+
+    const [loadingL1, setLoadingL1] = useState(true)
+    const [loadingMaterials, setLoadingMaterials] = useState(false)
+    const [activeId, setActiveId] = useState(null)
+    const [activeType, setActiveType] = useState(null)
+    const [activeItem, setActiveItem] = useState(null)
+
+    // Drag related
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    )
+
+    // Forms
+    const [editingItem, setEditingItem] = useState(null)
+    const [isAddingL1, setIsAddingL1] = useState(false)
+    const [isAddingL2, setIsAddingL2] = useState(false)
+    const [isAddingL3, setIsAddingL3] = useState(false)
+    const [deleteId, setDeleteId] = useState(null)
+    const [deleteType, setDeleteType] = useState(null) // 'L1', 'L2', 'L3'
+
+    const [formData, setFormData] = useState({ title: '', file_url: '', image: '', order_no: '' })
+    const [inlineInput, setInlineInput] = useState('')
+
+    useEffect(() => {
+        setHeading('Material Management')
+        fetchInitialData()
+        return () => setHeading(null)
+    }, [setHeading])
+
+    const fetchInitialData = async () => {
+        try {
+            setLoadingL1(true)
+            const res = await authFetch(`${process.env.baseUrl}/categories?type=MATERIAL&depth=2`)
+            const data = await res.json()
+            setL1List(data.items || [])
+        } catch (error) {
+            toast.error('Failed to load classes')
+        } finally {
+            setLoadingL1(false)
+        }
+    }
+
+    const fetchMaterials = async (subjectId) => {
+        try {
+            setLoadingMaterials(true)
+            const res = await authFetch(`${process.env.baseUrl}/categories/${subjectId}/children`)
+            const data = await res.json()
+            setMaterialsBySubject(prev => ({
+                ...prev,
+                [subjectId]: data.items || []
+            }))
+        } catch (error) {
+            toast.error('Failed to load materials')
+        } finally {
+            setLoadingMaterials(false)
+        }
+    }
+
+    // --- ACTIONS ---
+
+    const handleL1Click = (item) => {
+        if (selectedL1?.id === item.id) return
+        setSelectedL1(item)
+        setSelectedL2(null)
+    }
+
+    const handleL2Click = (item) => {
+        if (selectedL2?.id === item.id) return
+        setSelectedL2(item)
+        if (!materialsBySubject[item.id]) {
+            fetchMaterials(item.id)
+        }
+    }
+
+    const onDragStart = (event) => {
+        const { active } = event
+        setActiveId(active.id)
+
+        let list = []
+        let currentType = null
+        if (l1List.some(i => i.id === active.id)) {
+            list = l1List
+            currentType = 'L1'
+        } else if (selectedL1?.subcategories?.some(i => i.id === active.id)) {
+            list = selectedL1.subcategories
+            currentType = 'L2'
+        } else if (selectedL2 && materialsBySubject[selectedL2.id]?.some(i => i.id === active.id)) {
+            list = materialsBySubject[selectedL2.id]
+            currentType = 'L3'
+        }
+
+        const item = list.find(i => i.id === active.id)
+        setActiveItem(item)
+        setActiveType(currentType)
+    }
+
+    const handleDragEnd = async (event) => {
+        const { active, over } = event
+        const type = activeType
+
+        setActiveId(null)
+        setActiveType(null)
+        setActiveItem(null)
+
+        if (!over || active.id === over.id) return
+
+        let list = []
+        let parent_id = null
+
+        if (type === 'L1') {
+            list = [...l1List]
+        } else if (type === 'L2') {
+            list = [...(selectedL1?.subcategories || [])]
+            parent_id = selectedL1.id
+        } else if (type === 'L3') {
+            list = [...(materialsBySubject[selectedL2.id] || [])]
+            parent_id = selectedL2.id
+        }
+
+        const oldIndex = list.findIndex(item => item.id === active.id)
+        const newIndex = list.findIndex(item => item.id === over.id)
+        const newList = arrayMove(list, oldIndex, newIndex)
+
+        // Optimistic update
+        if (type === 'L1') setL1List(newList)
+        else if (type === 'L2') {
+            const updatedL1 = { ...selectedL1, subcategories: newList }
+            setSelectedL1(updatedL1)
+            setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
+        } else if (type === 'L3') {
+            setMaterialsBySubject(prev => ({ ...prev, [selectedL2.id]: newList }))
+        }
+
+        try {
+            await authFetch(`${process.env.baseUrl}/category-positions`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    context: 'MATERIAL',
+                    parent_id,
+                    positions: newList.map(item => item.id)
+                })
+            })
+            toast.success('Order saved ✓', {
+                position: "bottom-right",
+                autoClose: 1500,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+                style: { borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }
+            })
+        } catch (error) {
+            toast.error('Failed to sync order')
+            // Revert if needed? Usually better to just show error.
+        }
+    }
+
+    const handleAddSubmit = async (type) => {
+        if (type === 'L1' || type === 'L2') {
+            if (!inlineInput.trim()) return
+            try {
+                const res = await authFetch(`${process.env.baseUrl}/category`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: inlineInput,
+                        type: 'MATERIAL',
+                        parent_id: type === 'L2' ? selectedL1.id : null
+                    })
+                })
+                const newItem = await res.json()
+                if (type === 'L1') {
+                    setL1List(prev => [...prev, { ...newItem, subcategories: [] }])
+                    setIsAddingL1(false)
+                } else {
+                    const updatedL1 = { ...selectedL1, subcategories: [...(selectedL1.subcategories || []), newItem] }
+                    setSelectedL1(updatedL1)
+                    setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
+                    setIsAddingL2(false)
+                }
+                setInlineInput('')
+                toast.success(`${type === 'L1' ? 'Class' : 'Subject'} added ✓`)
+            } catch (error) {
+                toast.error('Failed to add')
+            }
+        } else if (type === 'L3') {
+            if (!formData.title.trim()) return
+            try {
+                const url = editingItem ? `${process.env.baseUrl}/category?category_id=${editingItem.id}` : `${process.env.baseUrl}/category`
+                const res = await authFetch(url, {
+                    method: editingItem ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...formData,
+                        type: 'MATERIAL',
+                        parent_id: selectedL2.id
+                    })
+                })
+                const savedItem = await res.json()
+
+                setMaterialsBySubject(prev => {
+                    const current = prev[selectedL2.id] || []
+                    if (editingItem) {
+                        return { ...prev, [selectedL2.id]: current.map(i => i.id === editingItem.id ? savedItem : i) }
+                    }
+                    return { ...prev, [selectedL2.id]: [...current, savedItem] }
+                })
+
+                setIsAddingL3(false)
+                setEditingItem(null)
+                setFormData({ title: '', file_url: '', image: '', order_no: '' })
+                toast.success(`Material ${editingItem ? 'updated' : 'added'} ✓`)
+            } catch (error) {
+                toast.error('Failed to save material')
+            }
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!deleteId) return
+        try {
+            await authFetch(`${process.env.baseUrl}/category?category_id=${deleteId}`, {
+                method: 'DELETE'
+            })
+
+            if (deleteType === 'L1') {
+                setL1List(prev => prev.filter(i => i.id !== deleteId))
+                if (selectedL1?.id === deleteId) {
+                    setSelectedL1(null)
+                    setSelectedL2(null)
+                }
+            } else if (deleteType === 'L2') {
+                const updatedL1 = { ...selectedL1, subcategories: selectedL1.subcategories.filter(i => i.id !== deleteId) }
+                setSelectedL1(updatedL1)
+                setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
+                if (selectedL2?.id === deleteId) setSelectedL2(null)
+            } else if (deleteType === 'L3') {
+                setMaterialsBySubject(prev => ({
+                    ...prev,
+                    [selectedL2.id]: prev[selectedL2.id].filter(i => i.id !== deleteId)
+                }))
+            }
+
+            toast.info('Item deleted')
+        } catch (error) {
+            toast.error('Failed to delete')
+        } finally {
+            setDeleteId(null)
+            setDeleteType(null)
+        }
+    }
+
+    const handleEdit = (item, type) => {
+        if (type === 'L3') {
+            setEditingItem(item)
+            setFormData({
+                title: item.title,
+                file_url: item.file_url || '',
+                image: item.image || '',
+                order_no: item.order_no || ''
+            })
+            setIsAddingL3(true)
+        } else {
+            const newTitle = window.prompt("Edit title", item.title)
+            if (newTitle && newTitle !== item.title) {
+                updateTitle(item.id, newTitle, type)
+            }
+        }
+    }
+
+    const updateTitle = async (id, title, type) => {
+        try {
+            const res = await authFetch(`${process.env.baseUrl}/category?category_id=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            })
+            const updated = await res.json()
+
+            if (type === 'L1') {
+                setL1List(prev => prev.map(i => i.id === id ? { ...i, title: updated.title } : i))
+                if (selectedL1?.id === id) setSelectedL1(prev => ({ ...prev, title: updated.title }))
+            } else if (type === 'L2') {
+                const updatedSub = selectedL1.subcategories.map(i => i.id === id ? updated : i)
+                const updatedL1 = { ...selectedL1, subcategories: updatedSub }
+                setSelectedL1(updatedL1)
+                setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
+                if (selectedL2?.id === id) setSelectedL2(prev => ({ ...prev, title: updated.title }))
+            }
+            toast.success('Title updated ✓')
+        } catch (error) {
+            toast.error('Update failed')
+        }
+    }
+
+    // --- RENDERING ---
+
+    return (
+        <div className="flex flex-col h-[calc(100vh-100px)] font-[Figtree] text-gray-800 overflow-hidden bg-gradient-to-br from-[#f0f4f8] to-[#e8eef5]">
+            <ToastContainer position="bottom-right" hideProgressBar />
+
+            {/* Breadcrumb / Top Bar */}
+            <div className="flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                    <span className="text-gray-900">Materials</span>
+                    {selectedL1 && (
+                        <>
+                            <ChevronRight size={12} />
+                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors" onClick={() => { setSelectedL2(null) }}>
+                                {selectedL1.title}
+                            </span>
+                        </>
+                    )}
+                    {selectedL2 && (
+                        <>
+                            <ChevronRight size={12} />
+                            <span className="px-2 py-0.5 rounded bg-violet-50 text-violet-600 font-bold">
+                                {selectedL2.title}
+                            </span>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={onDragStart}
+                onDragEnd={handleDragEnd}
+            >
+                {/* Main 3-Column Content */}
+                <div className="flex-1 flex gap-4 px-6 pb-6 overflow-hidden">
+
+                    {/* Column 1 — Classes */}
+                    <div className="flex-1 flex flex-col min-w-[300px] bg-[#f8fafc] rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-[#387cae] font-extrabold text-sm uppercase tracking-wider">Classes</h3>
+                                <span className="px-2 py-0.5 rounded-full bg-[#387cae]/10 text-[#387cae] text-[10px] font-bold">
+                                    {l1List.length}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-medium">Level 1 Hierarchy</p>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" onMouseEnter={() => setActiveType('L1')}>
+                            {loadingL1 ? (
+                                Array(5).fill(0).map((_, i) => (
+                                    <div key={i} className="mb-3"><Skeleton height={48} borderRadius={12} /></div>
+                                ))
+                            ) : (
+                                <SortableContext items={l1List.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                    {l1List.map(item => (
+                                        <SortableItem
+                                            key={item.id}
+                                            id={item.id}
+                                            item={item}
+                                            type="L1"
+                                            isSelected={selectedL1?.id === item.id}
+                                            onClick={handleL1Click}
+                                            onEdit={(i) => handleEdit(i, 'L1')}
+                                            onDelete={(id) => { setDeleteId(id); setDeleteType('L1'); }}
+                                            accentColor="#387cae"
+                                        />
+                                    ))}
+                                </SortableContext>
+                            )}
+
+                            {isAddingL1 ? (
+                                <div className="mt-2 p-1 bg-white rounded-xl border border-blue-200 shadow-sm animate-in slide-in-from-top-2">
+                                    <input
+                                        autoFocus
+                                        className="w-full px-3 py-2 text-sm outline-none bg-transparent"
+                                        placeholder="Class name..."
+                                        value={inlineInput}
+                                        onChange={(e) => setInlineInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleAddSubmit('L1')
+                                            if (e.key === 'Escape') setIsAddingL1(false)
+                                        }}
+                                    />
+                                    <div className="flex justify-end gap-1 p-1">
+                                        <button onClick={() => setIsAddingL1(false)} className="p-1 hover:bg-gray-100 rounded text-gray-400"><X size={14} /></button>
+                                        <button onClick={() => handleAddSubmit('L1')} className="p-1 bg-blue-500 hover:bg-blue-600 rounded text-white shadow-sm"><Check size={14} /></button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => { setIsAddingL1(true); setIsAddingL2(false); setInlineInput(''); }}
+                                    className="w-full mt-2 py-3 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center gap-2 text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all text-sm font-medium"
+                                >
+                                    <Plus size={16} /> Add Class
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 2 — Subjects */}
+                    <div className={`flex-1 flex flex-col min-w-[300px] bg-[#f8fafc] rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 ${!selectedL1 ? 'opacity-50 grayscale pointer-events-none' : 'opacity-100'}`}>
+                        <div className="p-4 border-b border-gray-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-[#7c6ab5] font-extrabold text-sm uppercase tracking-wider">Subjects</h3>
+                                <span className="px-2 py-0.5 rounded-full bg-[#7c6ab5]/10 text-[#7c6ab5] text-[10px] font-bold">
+                                    {selectedL1?.subcategories?.length || 0}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-medium">in {selectedL1?.title || '...'}</p>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" onMouseEnter={() => setActiveType('L2')}>
+                            {selectedL1 && (
+                                <SortableContext items={(selectedL1.subcategories || []).map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                    {selectedL1.subcategories?.map(item => (
+                                        <SortableItem
+                                            key={item.id}
+                                            id={item.id}
+                                            item={item}
+                                            type="L2"
+                                            isSelected={selectedL2?.id === item.id}
+                                            onClick={handleL2Click}
+                                            onEdit={(i) => handleEdit(i, 'L2')}
+                                            onDelete={(id) => { setDeleteId(id); setDeleteType('L2'); }}
+                                            accentColor="#7c6ab5"
+                                        />
+                                    ))}
+                                </SortableContext>
+                            )}
+
+                            {isAddingL2 ? (
+                                <div className="mt-2 p-1 bg-white rounded-xl border border-violet-200 shadow-sm animate-in slide-in-from-top-2">
+                                    <input
+                                        autoFocus
+                                        className="w-full px-3 py-2 text-sm outline-none bg-transparent"
+                                        placeholder="Subject name..."
+                                        value={inlineInput}
+                                        onChange={(e) => setInlineInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleAddSubmit('L2')
+                                            if (e.key === 'Escape') setIsAddingL2(false)
+                                        }}
+                                    />
+                                    <div className="flex justify-end gap-1 p-1">
+                                        <button onClick={() => setIsAddingL2(false)} className="p-1 hover:bg-gray-100 rounded text-gray-400"><X size={14} /></button>
+                                        <button onClick={() => handleAddSubmit('L2')} className="p-1 bg-violet-500 hover:bg-violet-600 rounded text-white shadow-sm"><Check size={14} /></button>
+                                    </div>
+                                </div>
+                            ) : selectedL1 && (
+                                <button
+                                    onClick={() => { setIsAddingL2(true); setIsAddingL1(false); setInlineInput(''); }}
+                                    className="w-full mt-2 py-3 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center gap-2 text-gray-400 hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/50 transition-all text-sm font-medium"
+                                >
+                                    <Plus size={16} /> Add Subject
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 3 — Materials */}
+                    <div className={`flex-[1.5] flex flex-col min-w-[350px] bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden transition-all duration-300 ${!selectedL2 ? 'opacity-50 grayscale pointer-events-none filter blur-[1px]' : 'opacity-100'}`}>
+                        <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+                            <div>
+                                <h3 className="text-[#387cae] font-extrabold text-lg tracking-tight leading-none mb-1">{selectedL2?.title || 'Materials'}</h3>
+                                <p className="text-xs text-gray-400 font-medium">{materialsBySubject[selectedL2?.id]?.length || 0} files available</p>
+                            </div>
+                            <button
+                                onClick={() => { setIsAddingL3(true); setEditingItem(null); setFormData({ title: '', file_url: '', image: '', order_no: '' }); }}
+                                className="flex items-center gap-2 bg-[#387cae] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#2d648c] transition-all shadow-lg shadow-blue-500/10 active:scale-95"
+                            >
+                                <Plus size={16} /> Add Material
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar" onMouseEnter={() => setActiveType('L3')}>
+                            {isAddingL3 && (
+                                <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-blue-100 animate-in zoom-in-95">
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Title</label>
+                                            <input
+                                                autoFocus
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                                                placeholder="e.g. Rotational Dynamics Notes"
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">File URL / Path</label>
+                                            <input
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-mono bg-white"
+                                                placeholder="e.g. rd.pdf"
+                                                value={formData.file_url}
+                                                onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Thumbnail URL</label>
+                                                <input
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                                                    placeholder="thumb.jpg"
+                                                    value={formData.image}
+                                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Order (Optional)</label>
+                                                <input
+                                                    type="number"
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
+                                                    placeholder="1"
+                                                    value={formData.order_no}
+                                                    onChange={(e) => setFormData({ ...formData, order_no: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2 pt-2">
+                                            <button onClick={() => { setIsAddingL3(false); setEditingItem(null); }} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700">Cancel</button>
+                                            <button
+                                                onClick={() => handleAddSubmit('L3')}
+                                                className="px-6 py-2 bg-[#387cae] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-[#2d648c]"
+                                            >
+                                                {editingItem ? 'Save Changes' : 'Publish Material'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {loadingMaterials ? (
+                                Array(3).fill(0).map((_, i) => (
+                                    <div key={i} className="mb-4"><Skeleton height={80} borderRadius={16} /></div>
+                                ))
+                            ) : selectedL2 && (
+                                <SortableContext items={(materialsBySubject[selectedL2.id] || []).map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                    {materialsBySubject[selectedL2.id]?.map(item => (
+                                        <SortableItem
+                                            key={item.id}
+                                            id={item.id}
+                                            item={item}
+                                            type="L3"
+                                            isMaterial={true}
+                                            onEdit={(i) => handleEdit(i, 'L3')}
+                                            onDelete={(id) => { setDeleteId(id); setDeleteType('L3'); }}
+                                            accentColor="#387cae"
+                                        />
+                                    ))}
+                                </SortableContext>
+                            )}
+
+                            {selectedL2 && (!materialsBySubject[selectedL2.id] || materialsBySubject[selectedL2.id].length === 0) && !isAddingL3 && !loadingMaterials && (
+                                <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-gray-50/50 rounded-3xl border border-dashed border-gray-100">
+                                    <FileDown size={48} strokeWidth={1} className="mb-4 text-gray-200" />
+                                    <p className="text-sm font-medium">No materials yet in this subject</p>
+                                    <p className="text-[10px] mt-1 uppercase tracking-widest font-bold">Start adding files above</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <DragOverlay adjustScale={false} dropAnimation={{
+                    sideEffects: defaultDropAnimationSideEffects({
+                        styles: {
+                            active: {
+                                opacity: '0.5',
+                            },
+                        },
+                    }),
+                }}>
+                    {activeId ? (
+                        <div className="shadow-2xl opacity-90 scale-105 transition-transform pointer-events-none">
+                            <SortableItem
+                                id={activeId}
+                                item={activeItem}
+                                type={activeType}
+                                isSelected={false}
+                                isMaterial={activeType === 'L3'}
+                                accentColor={activeType === 'L2' ? "#7c6ab5" : "#387cae"}
+                            />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
+
+            <ConfirmationDialog
+                open={!!deleteId}
+                onClose={() => { setDeleteId(null); setDeleteType(null); }}
+                onConfirm={handleDelete}
+                title="Confirm Deletion"
+                message="Are you sure you want to delete this? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
+
+            <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap');
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #cbd5e1;
+        }
+      `}</style>
+        </div>
+    )
 }
