@@ -20,7 +20,7 @@ const UniversityCard = ({ university }) => {
 
 
   const location = [city, state].filter(Boolean).join(', ')
-  const image = featured_image || logo;
+  const image = featured_image || "/images/logo.png";
 
   return (
     <motion.div
