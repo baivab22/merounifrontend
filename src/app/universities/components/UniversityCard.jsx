@@ -20,7 +20,7 @@ const UniversityCard = ({ university }) => {
 
 
   const location = [city, state].filter(Boolean).join(', ')
-  const image = featured_image || logo || 'https://placehold.co/600x400?text=University'
+  const image = featured_image || logo;
 
   return (
     <motion.div

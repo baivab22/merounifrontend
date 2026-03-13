@@ -70,7 +70,6 @@ export default function CategoryManager() {
       setTableLoading(true)
       const response = await fetchCategories(page, 10, selectedType, parentFilter?.id || "", query)
       setCategories(response.items)
-      console.log(response, "responseresponse")
       setPagination({
         currentPage: response.pagination.currentPage,
         totalPages: response.pagination.totalPages,

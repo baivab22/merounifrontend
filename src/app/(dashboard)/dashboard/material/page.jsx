@@ -43,6 +43,8 @@ import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
+import * as yup from 'yup'
+import FileUpload from '../colleges/FileUpload'
 
 // --- HELPERS ---
 
@@ -214,7 +216,7 @@ export default function MaterialDashboard() {
     const [deleteId, setDeleteId] = useState(null)
     const [deleteType, setDeleteType] = useState(null) // 'L1', 'L2', 'L3'
 
-    const [formData, setFormData] = useState({ title: '', file_url: '', image: '', order_no: '' })
+    const [formData, setFormData] = useState({ title: '', file_url: '', description: '' })
     const [inlineInput, setInlineInput] = useState('')
 
     useEffect(() => {
@@ -239,11 +241,11 @@ export default function MaterialDashboard() {
     const fetchMaterials = async (subjectId) => {
         try {
             setLoadingMaterials(true)
-            const res = await authFetch(`${process.env.baseUrl}/categories/${subjectId}/children`)
+            const res = await authFetch(`${process.env.baseUrl}/materials/topic/${subjectId}`)
             const data = await res.json()
             setMaterialsBySubject(prev => ({
                 ...prev,
-                [subjectId]: data.items || []
+                [subjectId]: data.materials || data.items || data.data || []
             }))
         } catch (error) {
             toast.error('Failed to load materials')
@@ -328,8 +330,8 @@ export default function MaterialDashboard() {
         }
 
         try {
-            await authFetch(`${process.env.baseUrl}/category-positions`, {
-                method: 'PATCH',
+            await authFetch(`${process.env.baseUrl}/category-order`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     context: 'MATERIAL',
@@ -365,7 +367,10 @@ export default function MaterialDashboard() {
                         parent_id: type === 'L2' ? selectedL1.id : null
                     })
                 })
-                const newItem = await res.json()
+                const newItemJson = await res.json()
+                console.log(newItemJson, "WOW");
+                const newItem = newItemJson?.data;
+
                 if (type === 'L1') {
                     setL1List(prev => [...prev, { ...newItem, subcategories: [] }])
                     setIsAddingL1(false)
@@ -378,22 +383,34 @@ export default function MaterialDashboard() {
                 setInlineInput('')
                 toast.success(`${type === 'L1' ? 'Class' : 'Subject'} added ✓`)
             } catch (error) {
+                console.log(error, "DONDONE")
                 toast.error('Failed to add')
             }
         } else if (type === 'L3') {
-            if (!formData.title.trim()) return
             try {
-                const url = editingItem ? `${process.env.baseUrl}/category?category_id=${editingItem.id}` : `${process.env.baseUrl}/category`
+                // Validation
+                const materialSchema = yup.object({
+                    title: yup.string().trim().min(3).required("Title is required"),
+                    category_id: yup.number().integer().positive().nullable().optional(),
+                    file_url: yup.string().trim().required("File is required"),
+                    description: yup.string().trim().nullable().optional(),
+                })
+
+                const payload = {
+                    ...formData,
+                    category_id: selectedL2.id
+                }
+
+                await materialSchema.validate(payload, { abortEarly: false })
+
+                const url = editingItem ? `${process.env.baseUrl}/materials/${editingItem.id}` : `${process.env.baseUrl}/materials`
                 const res = await authFetch(url, {
                     method: editingItem ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ...formData,
-                        type: 'MATERIAL',
-                        parent_id: selectedL2.id
-                    })
+                    body: JSON.stringify(payload)
                 })
-                const savedItem = await res.json()
+                const savedItemJson = await res.json()
+                const savedItem = savedItemJson?.data || savedItemJson
 
                 setMaterialsBySubject(prev => {
                     const current = prev[selectedL2.id] || []
@@ -405,10 +422,14 @@ export default function MaterialDashboard() {
 
                 setIsAddingL3(false)
                 setEditingItem(null)
-                setFormData({ title: '', file_url: '', image: '', order_no: '' })
+                setFormData({ title: '', file_url: '', description: '' })
                 toast.success(`Material ${editingItem ? 'updated' : 'added'} ✓`)
             } catch (error) {
-                toast.error('Failed to save material')
+                if (error.name === 'ValidationError') {
+                    error.inner.forEach(err => toast.error(err.message))
+                } else {
+                    toast.error('Failed to save material')
+                }
             }
         }
     }
@@ -416,7 +437,11 @@ export default function MaterialDashboard() {
     const handleDelete = async () => {
         if (!deleteId) return
         try {
-            await authFetch(`${process.env.baseUrl}/category?category_id=${deleteId}`, {
+            const url = deleteType === 'L3'
+                ? `${process.env.baseUrl}/materials/${deleteId}`
+                : `${process.env.baseUrl}/category?category_id=${deleteId}`
+
+            await authFetch(url, {
                 method: 'DELETE'
             })
 
@@ -453,8 +478,7 @@ export default function MaterialDashboard() {
             setFormData({
                 title: item.title,
                 file_url: item.file_url || '',
-                image: item.image || '',
-                order_no: item.order_no || ''
+                description: item.description || ''
             })
             setIsAddingL3(true)
         } else {
@@ -660,7 +684,7 @@ export default function MaterialDashboard() {
                                 <p className="text-xs text-gray-400 font-medium">{materialsBySubject[selectedL2?.id]?.length || 0} files available</p>
                             </div>
                             <button
-                                onClick={() => { setIsAddingL3(true); setEditingItem(null); setFormData({ title: '', file_url: '', image: '', order_no: '' }); }}
+                                onClick={() => { setIsAddingL3(true); setEditingItem(null); setFormData({ title: '', file_url: '', description: '' }); }}
                                 className="flex items-center gap-2 bg-[#387cae] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#2d648c] transition-all shadow-lg shadow-blue-500/10 active:scale-95"
                             >
                                 <Plus size={16} /> Add Material
@@ -682,34 +706,22 @@ export default function MaterialDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">File URL / Path</label>
-                                            <input
-                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-mono bg-white"
-                                                placeholder="e.g. rd.pdf"
-                                                value={formData.file_url}
-                                                onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                                            <FileUpload
+                                                label="Upload Material File"
+                                                defaultPreview={formData.file_url}
+                                                accept="application/pdf,image/*,.docx,.doc"
+                                                onUploadComplete={(url) => setFormData({ ...formData, file_url: url })}
+                                                autoUpload={true}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Thumbnail URL</label>
-                                                <input
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
-                                                    placeholder="thumb.jpg"
-                                                    value={formData.image}
-                                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Order (Optional)</label>
-                                                <input
-                                                    type="number"
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
-                                                    placeholder="1"
-                                                    value={formData.order_no}
-                                                    onChange={(e) => setFormData({ ...formData, order_no: e.target.value })}
-                                                />
-                                            </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Description</label>
+                                            <textarea
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white min-h-[80px]"
+                                                placeholder="Description..."
+                                                value={formData.description || ''}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            />
                                         </div>
                                         <div className="flex justify-end gap-2 pt-2">
                                             <button onClick={() => { setIsAddingL3(false); setEditingItem(null); }} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700">Cancel</button>
