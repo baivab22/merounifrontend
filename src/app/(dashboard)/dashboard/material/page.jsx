@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import {
     GripVertical,
     ChevronRight,
@@ -45,6 +46,9 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import * as yup from 'yup'
 import FileUpload from '../colleges/FileUpload'
+import { Label } from '@/ui/shadcn/label'
+import { Input } from '@/ui/shadcn/input'
+import { Textarea } from '@/ui/shadcn/textarea'
 
 // --- HELPERS ---
 
@@ -73,8 +77,17 @@ const SortableItem = ({
     onEdit,
     onDelete,
     accentColor,
-    isMaterial = false
+    isMaterial = false,
+    isEditingInline = false,
+    onSaveInline,
+    onCancelInline
 }) => {
+    const [tempValue, setTempValue] = useState(item.title)
+
+    useEffect(() => {
+        if (isEditingInline) setTempValue(item.title)
+    }, [isEditingInline, item.title])
+
     const {
         attributes,
         listeners,
@@ -82,7 +95,7 @@ const SortableItem = ({
         transform,
         transition,
         isDragging
-    } = useSortable({ id })
+    } = useSortable({ id, disabled: isEditingInline })
 
     const style = {
         transform: CSS.Translate.toString(transform),
@@ -98,6 +111,7 @@ const SortableItem = ({
         : item.children_count || item.materials_count || 0
 
     if (isMaterial) {
+        // ... (Keep existing Material L3 logic, but ensure attributes/listeners are handled)
         const materialStyle = {
             ...style,
             borderColor: isDragging ? accentColor : undefined
@@ -143,14 +157,17 @@ const SortableItem = ({
         <div
             ref={setNodeRef}
             style={style}
-            onClick={() => onClick(item)}
-            className={`group relative flex items-center gap-3 p-3 mb-2 rounded-xl border cursor-pointer transition-all hover:bg-gray-50
+            onClick={() => !isEditingInline && onClick(item)}
+            className={`group relative flex items-center gap-3 p-3 mb-2 rounded-xl border transition-all
         ${isSelected ? `bg-gray-50` : 'border-gray-100 bg-white'}
+        ${isEditingInline ? 'ring-2 ring-blue-500/20 border-blue-500' : 'cursor-pointer hover:bg-gray-50'}
       `}
         >
-            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
-                <GripVertical size={16} />
-            </div>
+            {!isEditingInline && (
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
+                    <GripVertical size={16} />
+                </div>
+            )}
 
             <div
                 className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs shrink-0`}
@@ -160,15 +177,41 @@ const SortableItem = ({
             </div>
 
             <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-gray-700 truncate">{item.title}</div>
+                {isEditingInline ? (
+                    <input
+                        autoFocus
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') onSaveInline(item.id, tempValue)
+                            if (e.key === 'Escape') onCancelInline()
+                        }}
+                        onBlur={() => onCancelInline()}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full text-sm font-semibold text-gray-700 bg-transparent outline-none"
+                    />
+                ) : (
+                    <div className="text-sm font-semibold text-gray-700 truncate">{item.title}</div>
+                )}
             </div>
 
             <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-500">
-                    {badgeCount} {type === 'L1' ? '' : 'files'}
-                </span>
+                {!isEditingInline && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-500">
+                        {badgeCount} {type === 'L1' ? '' : 'files'}
+                    </span>
+                )}
 
-                {isSelected ? (
+                {isEditingInline ? (
+                    <div className="flex gap-1">
+                        <button
+                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onSaveInline(item.id, tempValue); }}
+                            className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        >
+                            <Check size={14} />
+                        </button>
+                    </div>
+                ) : isSelected ? (
                     <ChevronRight size={14} style={{ color: accentColor }} />
                 ) : (
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -215,9 +258,23 @@ export default function MaterialDashboard() {
     const [isAddingL3, setIsAddingL3] = useState(false)
     const [deleteId, setDeleteId] = useState(null)
     const [deleteType, setDeleteType] = useState(null) // 'L1', 'L2', 'L3'
-
-    const [formData, setFormData] = useState({ title: '', file_url: '', description: '' })
+    const [editingInlineId, setEditingInlineId] = useState(null)
     const [inlineInput, setInlineInput] = useState('')
+
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        setValue,
+        formState: { errors, isSubmitting }
+    } = useForm({
+        defaultValues: {
+            title: '',
+            file_url: '',
+            description: ''
+        }
+    })
 
     useEffect(() => {
         setHeading('Material Management')
@@ -228,9 +285,9 @@ export default function MaterialDashboard() {
     const fetchInitialData = async () => {
         try {
             setLoadingL1(true)
-            const res = await authFetch(`${process.env.baseUrl}/categories?type=MATERIAL&depth=2`)
+            const res = await authFetch(`${process.env.baseUrl}/materials?type=MATERIAL&depth=2`)
             const data = await res.json()
-            setL1List(data.items || [])
+            setL1List(data.data || [])
         } catch (error) {
             toast.error('Failed to load classes')
         } finally {
@@ -330,7 +387,8 @@ export default function MaterialDashboard() {
         }
 
         try {
-            await authFetch(`${process.env.baseUrl}/category-order`, {
+            const endpoint = type === 'L3' ? 'material-order' : 'category-order'
+            await authFetch(`${process.env.baseUrl}/materials/${endpoint}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -339,15 +397,7 @@ export default function MaterialDashboard() {
                     positions: newList.map(item => item.id)
                 })
             })
-            toast.success('Order saved ✓', {
-                position: "bottom-right",
-                autoClose: 1500,
-                hideProgressBar: true,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: false,
-                style: { borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }
-            })
+            toast.success('Order saved ✓')
         } catch (error) {
             toast.error('Failed to sync order')
             // Revert if needed? Usually better to just show error.
@@ -386,51 +436,113 @@ export default function MaterialDashboard() {
                 console.log(error, "DONDONE")
                 toast.error('Failed to add')
             }
-        } else if (type === 'L3') {
-            try {
-                // Validation
-                const materialSchema = yup.object({
-                    title: yup.string().trim().min(3).required("Title is required"),
-                    category_id: yup.number().integer().positive().nullable().optional(),
-                    file_url: yup.string().trim().required("File is required"),
-                    description: yup.string().trim().nullable().optional(),
-                })
+        }
+    }
 
-                const payload = {
-                    ...formData,
-                    category_id: selectedL2.id
-                }
+    const onMaterialSubmit = async (data) => {
+        console.log("onMaterialSubmit: Initializing...", { data, selectedL2 });
 
-                await materialSchema.validate(payload, { abortEarly: false })
+        if (!selectedL2?.id) {
+            console.warn("onMaterialSubmit: Missing selectedL2.id");
+            toast.error("Subject ID is missing. Please re-select a subject.");
+            return;
+        }
 
-                const url = editingItem ? `${process.env.baseUrl}/materials/${editingItem.id}` : `${process.env.baseUrl}/materials`
-                const res = await authFetch(url, {
-                    method: editingItem ? 'PUT' : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                const savedItemJson = await res.json()
-                const savedItem = savedItemJson?.data || savedItemJson
-
-                setMaterialsBySubject(prev => {
-                    const current = prev[selectedL2.id] || []
-                    if (editingItem) {
-                        return { ...prev, [selectedL2.id]: current.map(i => i.id === editingItem.id ? savedItem : i) }
-                    }
-                    return { ...prev, [selectedL2.id]: [...current, savedItem] }
-                })
-
-                setIsAddingL3(false)
-                setEditingItem(null)
-                setFormData({ title: '', file_url: '', description: '' })
-                toast.success(`Material ${editingItem ? 'updated' : 'added'} ✓`)
-            } catch (error) {
-                if (error.name === 'ValidationError') {
-                    error.inner.forEach(err => toast.error(err.message))
-                } else {
-                    toast.error('Failed to save material')
-                }
+        try {
+            const payload = {
+                title: (data.title || '').trim(),
+                file_url: data.file_url,
+                description: (data.description || '').trim(),
+                category_id: selectedL2.id
             }
+            console.log("onMaterialSubmit: Prepared Payload:", payload);
+
+            const base = (process.env.baseUrl || '').replace(/\/+$/, '');
+            const url = editingItem ? `${base}/materials/${editingItem.id}` : `${base}/materials`
+            console.log("onMaterialSubmit: Fetching URL:", url, "Method:", editingItem ? 'PUT' : 'POST');
+
+            const res = await authFetch(url, {
+                method: editingItem ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+
+            console.log("onMaterialSubmit: Server Raw Response:", res);
+
+            let result = {};
+            try {
+                result = await res.json();
+                console.log("onMaterialSubmit: Parsed JSON Result:", result);
+            } catch (jsonErr) {
+                console.error("onMaterialSubmit: Failed to parse JSON", jsonErr);
+            }
+
+            if (!res.ok) {
+                const errorDetail = result?.message || result?.error || `HTTP ${res.status}`;
+                throw new Error(errorDetail);
+            }
+
+            const savedItem = result?.data || result;
+
+            setMaterialsBySubject(prev => {
+                const current = prev[selectedL2.id] || []
+                if (editingItem) {
+                    return { ...prev, [selectedL2.id]: current.map(i => i.id === editingItem.id ? savedItem : i) }
+                }
+                return { ...prev, [selectedL2.id]: [...current, savedItem] }
+            })
+
+            // Update file counts in the subject list if it's a new addition
+            if (!editingItem) {
+                console.log("Updating counts for addition. Current subcategories:", selectedL1?.subcategories);
+                const updateCategoryCounts = (cat) => {
+                    if (!cat || String(cat.id) !== String(selectedL1?.id)) return cat;
+                    return {
+                        ...cat,
+                        subcategories: (cat.subcategories || []).map(sub => {
+                            if (String(sub.id) === String(selectedL2?.id)) {
+                                const currentCount = Math.max(
+                                    Number(sub.children_count || 0),
+                                    Number(sub.materials_count || 0)
+                                );
+                                const newCount = currentCount + 1;
+                                console.log(`Subject ${sub.title} count incrementing to ${newCount}`);
+                                return {
+                                    ...sub,
+                                    children_count: newCount,
+                                    materials_count: newCount
+                                }
+                            }
+                            return sub;
+                        })
+                    };
+                };
+
+                setSelectedL1(prev => updateCategoryCounts(prev));
+                setL1List(prevList => prevList.map(cat => updateCategoryCounts(cat)));
+                setSelectedL2(prev => {
+                    const currentCount = Math.max(
+                        Number(prev?.children_count || 0),
+                        Number(prev?.materials_count || 0)
+                    );
+                    const newCount = currentCount + 1;
+                    console.log(`selectedL2 count incrementing to ${newCount}`);
+                    return {
+                        ...prev,
+                        children_count: newCount,
+                        materials_count: newCount
+                    };
+                });
+            }
+
+            const successStatus = editingItem ? 'updated' : 'added';
+            setIsAddingL3(false)
+            setEditingItem(null)
+            reset({ title: '', file_url: '', description: '' })
+            toast.success(`Material ${successStatus} ✓`)
+        } catch (error) {
+            console.error("onMaterialSubmit Error:", error);
+            toast.error(error.message || 'Error occurred while saving material')
         }
     }
 
@@ -452,15 +564,62 @@ export default function MaterialDashboard() {
                     setSelectedL2(null)
                 }
             } else if (deleteType === 'L2') {
-                const updatedL1 = { ...selectedL1, subcategories: selectedL1.subcategories.filter(i => i.id !== deleteId) }
-                setSelectedL1(updatedL1)
-                setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
+                setSelectedL1(prev => {
+                    if (!prev) return prev;
+                    return { ...prev, subcategories: (prev.subcategories || []).filter(i => i.id !== deleteId) };
+                });
+                setL1List(prev => prev.map(item => {
+                    if (item.id === selectedL1?.id) {
+                        return { ...item, subcategories: (item.subcategories || []).filter(i => i.id !== deleteId) };
+                    }
+                    return item;
+                }));
                 if (selectedL2?.id === deleteId) setSelectedL2(null)
             } else if (deleteType === 'L3') {
+                console.log("Deleting L3 Material. ID:", deleteId);
                 setMaterialsBySubject(prev => ({
                     ...prev,
-                    [selectedL2.id]: prev[selectedL2.id].filter(i => i.id !== deleteId)
+                    [selectedL2?.id]: (prev[selectedL2?.id] || []).filter(i => i.id !== deleteId)
                 }))
+
+                const updateCategoryCounts = (cat) => {
+                    if (!cat || String(cat.id) !== String(selectedL1?.id)) return cat;
+                    return {
+                        ...cat,
+                        subcategories: (cat.subcategories || []).map(sub => {
+                            if (String(sub.id) === String(selectedL2?.id)) {
+                                const currentCount = Math.max(
+                                    Number(sub.children_count || 0),
+                                    Number(sub.materials_count || 0)
+                                );
+                                const newCount = Math.max(0, currentCount - 1);
+                                console.log(`Subject ${sub.title} count decrementing to ${newCount}`);
+                                return {
+                                    ...sub,
+                                    children_count: newCount,
+                                    materials_count: newCount
+                                }
+                            }
+                            return sub;
+                        })
+                    };
+                };
+
+                setSelectedL1(prev => updateCategoryCounts(prev));
+                setL1List(prevList => prevList.map(cat => updateCategoryCounts(cat)));
+                setSelectedL2(prev => {
+                    const currentCount = Math.max(
+                        Number(prev?.children_count || 0),
+                        Number(prev?.materials_count || 0)
+                    );
+                    const newCount = Math.max(0, currentCount - 1);
+                    console.log(`selectedL2 count decrementing to ${newCount}`);
+                    return {
+                        ...prev,
+                        children_count: newCount,
+                        materials_count: newCount
+                    };
+                });
             }
 
             toast.info('Item deleted')
@@ -471,21 +630,17 @@ export default function MaterialDashboard() {
             setDeleteType(null)
         }
     }
-
     const handleEdit = (item, type) => {
         if (type === 'L3') {
             setEditingItem(item)
-            setFormData({
+            reset({
                 title: item.title,
                 file_url: item.file_url || '',
                 description: item.description || ''
             })
             setIsAddingL3(true)
         } else {
-            const newTitle = window.prompt("Edit title", item.title)
-            if (newTitle && newTitle !== item.title) {
-                updateTitle(item.id, newTitle, type)
-            }
+            setEditingInlineId(item.id)
         }
     }
 
@@ -496,18 +651,19 @@ export default function MaterialDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title })
             })
-            const updated = await res.json()
-
+            const updatedResponse = await res.json()
+            const updatedData = updatedResponse?.data || updatedResponse
             if (type === 'L1') {
-                setL1List(prev => prev.map(i => i.id === id ? { ...i, title: updated.title } : i))
-                if (selectedL1?.id === id) setSelectedL1(prev => ({ ...prev, title: updated.title }))
+                setL1List(prev => prev.map(i => i.id === id ? { ...i, title: updatedData.title } : i))
+                if (selectedL1?.id === id) setSelectedL1(prev => ({ ...prev, title: updatedData.title }))
             } else if (type === 'L2') {
-                const updatedSub = selectedL1.subcategories.map(i => i.id === id ? updated : i)
+                const updatedSub = selectedL1.subcategories.map(i => i.id === id ? { ...i, title: updatedData.title } : i)
                 const updatedL1 = { ...selectedL1, subcategories: updatedSub }
                 setSelectedL1(updatedL1)
                 setL1List(prev => prev.map(item => item.id === selectedL1.id ? updatedL1 : item))
-                if (selectedL2?.id === id) setSelectedL2(prev => ({ ...prev, title: updated.title }))
+                if (selectedL2?.id === id) setSelectedL2(prev => ({ ...prev, title: updatedData.title }))
             }
+            setEditingInlineId(null)
             toast.success('Title updated ✓')
         } catch (error) {
             toast.error('Update failed')
@@ -578,6 +734,9 @@ export default function MaterialDashboard() {
                                             item={item}
                                             type="L1"
                                             isSelected={selectedL1?.id === item.id}
+                                            isEditingInline={editingInlineId === item.id}
+                                            onSaveInline={(id, val) => updateTitle(id, val, 'L1')}
+                                            onCancelInline={() => setEditingInlineId(null)}
                                             onClick={handleL1Click}
                                             onEdit={(i) => handleEdit(i, 'L1')}
                                             onDelete={(id) => { setDeleteId(id); setDeleteType('L1'); }}
@@ -631,19 +790,29 @@ export default function MaterialDashboard() {
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar" onMouseEnter={() => setActiveType('L2')}>
                             {selectedL1 && (
                                 <SortableContext items={(selectedL1.subcategories || []).map(i => i.id)} strategy={verticalListSortingStrategy}>
-                                    {selectedL1.subcategories?.map(item => (
-                                        <SortableItem
-                                            key={item.id}
-                                            id={item.id}
-                                            item={item}
-                                            type="L2"
-                                            isSelected={selectedL2?.id === item.id}
-                                            onClick={handleL2Click}
-                                            onEdit={(i) => handleEdit(i, 'L2')}
-                                            onDelete={(id) => { setDeleteId(id); setDeleteType('L2'); }}
-                                            accentColor="#7c6ab5"
-                                        />
-                                    ))}
+                                    {selectedL1.subcategories?.map(item => {
+                                        // Use materialsBySubject length as the source of truth if it has been loaded
+                                        const actualCount = materialsBySubject[item.id]
+                                            ? materialsBySubject[item.id].length
+                                            : (item.children_count || item.materials_count || 0);
+
+                                        return (
+                                            <SortableItem
+                                                key={item.id}
+                                                id={item.id}
+                                                item={{ ...item, children_count: actualCount, materials_count: actualCount }}
+                                                type="L2"
+                                                isSelected={selectedL2?.id === item.id}
+                                                isEditingInline={editingInlineId === item.id}
+                                                onSaveInline={(id, val) => updateTitle(id, val, 'L2')}
+                                                onCancelInline={() => setEditingInlineId(null)}
+                                                onClick={handleL2Click}
+                                                onEdit={(i) => handleEdit(i, 'L2')}
+                                                onDelete={(id) => { setDeleteId(id); setDeleteType('L2'); }}
+                                                accentColor="#7c6ab5"
+                                            />
+                                        );
+                                    })}
                                 </SortableContext>
                             )}
 
@@ -684,7 +853,11 @@ export default function MaterialDashboard() {
                                 <p className="text-xs text-gray-400 font-medium">{materialsBySubject[selectedL2?.id]?.length || 0} files available</p>
                             </div>
                             <button
-                                onClick={() => { setIsAddingL3(true); setEditingItem(null); setFormData({ title: '', file_url: '', description: '' }); }}
+                                onClick={() => {
+                                    setIsAddingL3(true)
+                                    setEditingItem(null)
+                                    reset({ title: '', file_url: '', description: '' })
+                                }}
                                 className="flex items-center gap-2 bg-[#387cae] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#2d648c] transition-all shadow-lg shadow-blue-500/10 active:scale-95"
                             >
                                 <Plus size={16} /> Add Material
@@ -693,47 +866,64 @@ export default function MaterialDashboard() {
 
                         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar" onMouseEnter={() => setActiveType('L3')}>
                             {isAddingL3 && (
-                                <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-blue-100 animate-in zoom-in-95">
-                                    <div className="space-y-3">
+                                <form onSubmit={handleSubmit(onMaterialSubmit, (err) => console.log("Material Form Validation Errors:", err))} className="mb-6 p-4 bg-gray-50 rounded-2xl border border-blue-100 animate-in zoom-in-95">
+                                    <div className="space-y-4">
                                         <div>
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Title</label>
-                                            <input
+                                            <Label required className="">Title</Label>
+                                            <Input
+                                                {...register('title', { required: 'Title is required', minLength: { value: 3, message: 'Minimum 3 characters' } })}
                                                 autoFocus
-                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white"
                                                 placeholder="e.g. Rotational Dynamics Notes"
-                                                value={formData.title}
-                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            />
+                                            {errors.title && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{errors.title.message}</p>}
+                                        </div>
+                                        <div>
+                                            <Label className="">File</Label>
+                                            <Controller
+                                                name="file_url"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <FileUpload
+                                                        label="Upload Material File"
+                                                        defaultPreview={field.value}
+                                                        accept="application/pdf,image/*,.docx,.doc"
+                                                        onUploadComplete={(url) => field.onChange(url)}
+                                                        autoUpload={true}
+                                                    />
+                                                )}
                                             />
                                         </div>
                                         <div>
-                                            <FileUpload
-                                                label="Upload Material File"
-                                                defaultPreview={formData.file_url}
-                                                accept="application/pdf,image/*,.docx,.doc"
-                                                onUploadComplete={(url) => setFormData({ ...formData, file_url: url })}
-                                                autoUpload={true}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Description</label>
-                                            <textarea
+                                            <Label>Description</Label>
+                                            <Textarea
+                                                {...register('description')}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white min-h-[80px]"
-                                                placeholder="Description..."
-                                                value={formData.description || ''}
-                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                placeholder="Brief description (optional)..."
                                             />
                                         </div>
                                         <div className="flex justify-end gap-2 pt-2">
-                                            <button onClick={() => { setIsAddingL3(false); setEditingItem(null); }} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700">Cancel</button>
                                             <button
-                                                onClick={() => handleAddSubmit('L3')}
-                                                className="px-6 py-2 bg-[#387cae] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-[#2d648c]"
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsAddingL3(false)
+                                                    setEditingItem(null)
+                                                    reset()
+                                                }}
+                                                className="px-5 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900"
                                             >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="flex items-center gap-2 px-6 py-2 bg-[#387cae] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-[#2d648c] disabled:opacity-50"
+                                            >
+                                                {isSubmitting && <Loader2 size={16} className="animate-spin" />}
                                                 {editingItem ? 'Save Changes' : 'Publish Material'}
                                             </button>
                                         </div>
                                     </div>
-                                </div>
+                                </form>
                             )}
 
                             {loadingMaterials ? (
