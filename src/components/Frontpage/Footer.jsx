@@ -9,6 +9,7 @@ import { PiXLogoLight } from 'react-icons/pi'
 import { ChevronDown, MapPin, Mail, Phone } from 'lucide-react'
 
 import { getSiteConfig } from '@/app/actions/siteConfigActions'
+import { THEME_BLUE } from '@/constants/constants'
 
 const Footer = () => {
   const [openSections, setOpenSections] = useState({})
@@ -89,7 +90,7 @@ const Footer = () => {
   }
 
   const linkClass =
-    'text-sm text-gray-600 hover:text-[#0A6FA7] transition-colors'
+    'text-sm text-gray-600 hover:text-[#387cae] transition-colors'
   const headingClass =
     'text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4'
 
@@ -118,19 +119,19 @@ const Footer = () => {
             <h3 className={headingClass}>Contact Us</h3>
             <ul className='space-y-4'>
               <li className='flex items-start gap-3'>
-                <MapPin className='w-5 h-5 text-[#387cae] shrink-0 mt-0.5' />
+                <MapPin className='w-5 h-5 shrink-0 mt-0.5' style={{ color: THEME_BLUE }} />
                 <span className='text-sm text-gray-600'>
                   {contactInfo.address || 'Putalisadak, Kathmandu'}
                 </span>
               </li>
               <li className='flex items-center gap-3'>
-                <Phone className='w-5 h-5 text-[#387cae] shrink-0' />
+                <Phone className='w-5 h-5 shrink-0' style={{ color: THEME_BLUE }} />
                 <a href={`tel:${contactInfo.phone || '+9779840747576'}`} className={linkClass}>
                   {contactInfo.phone || '+977 9840747576'}
                 </a>
               </li>
               <li className='flex items-center gap-3'>
-                <Mail className='w-5 h-5 text-[#387cae] shrink-0' />
+                <Mail className='w-5 h-5 shrink-0' style={{ color: THEME_BLUE }} />
                 <a href={`mailto:${contactInfo.email || 'info@merouni.com'}`} className={linkClass}>
                   {contactInfo.email || 'info@merouni.com'}
                 </a>
@@ -191,19 +192,19 @@ const Footer = () => {
             {openSections['contact'] && (
               <ul className='space-y-4 pb-4'>
                 <li className='flex items-start gap-3'>
-                  <MapPin className='w-4 h-4 text-[#387cae] shrink-0 mt-0.5' />
+                  <MapPin className='w-4 h-4 shrink-0 mt-0.5' style={{ color: THEME_BLUE }} />
                   <span className='text-sm text-gray-600'>
                     {contactInfo.address || 'Putalisadak, Kathmandu'}
                   </span>
                 </li>
                 <li className='flex items-center gap-3'>
-                  <Phone className='w-4 h-4 text-[#387cae] shrink-0' />
+                  <Phone className='w-4 h-4 shrink-0' style={{ color: THEME_BLUE }} />
                   <a href={`tel:${contactInfo.phone || '+9779840747576'}`} className={linkClass}>
                     {contactInfo.phone || '+977 9840747576'}
                   </a>
                 </li>
                 <li className='flex items-center gap-3'>
-                  <Mail className='w-4 h-4 text-[#387cae] shrink-0' />
+                  <Mail className='w-4 h-4 shrink-0' style={{ color: THEME_BLUE }} />
                   <a href={`mailto:${contactInfo.email || 'info@merouni.com'}`} className={linkClass}>
                     {contactInfo.email || 'info@merouni.com'}
                   </a>

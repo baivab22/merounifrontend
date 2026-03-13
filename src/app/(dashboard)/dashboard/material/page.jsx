@@ -1,231 +1,145 @@
 'use client'
 
 import { authFetch } from '@/app/utils/authFetch'
-import { cn } from '@/app/lib/utils'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import useAdminPermission from '@/hooks/useAdminPermission'
-import Table from '@/ui/shadcn/DataTable'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
-import { Button } from '@/ui/shadcn/button'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
-import { Input } from '@/ui/shadcn/input'
-import { Label } from '@/ui/shadcn/label'
-import SearchSelectCreate from '@/ui/shadcn/search-select-create'
-import { Edit2, Plus, Trash2, FileText, Info, Loader2 } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import {
+  Loader2,
+  BookOpen,
+  Search,
+  Plus
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { toast, ToastContainer } from 'react-toastify'
-import FileUpload from '../colleges/FileUpload'
-import Loading from '@/ui/molecules/Loading'
+import { arrayMove } from '@dnd-kit/sortable'
+import { Button } from '@/ui/shadcn/button'
+
+// New separated components
+import MaterialListView from './components/MaterialListView'
+import MaterialFormDialog from './components/MaterialFormDialog'
 
 export default function MaterialForm() {
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
-  const [materials, setMaterials] = useState([])
 
-  const [categories, setCategories] = useState([])
-  const [tableLoading, setTableLoading] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [materials, setMaterials] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [uploadedFiles, setUploadedFiles] = useState({
-    image: '',
-    file: ''
-  })
+  const [editId, setEditId] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
-  const [editId, setEditingId] = useState(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [selectedTags, setSelectedTags] = useState([])
-  const [fileError, setFileError] = useState(false)
+
+  // Category & subcategory filter state
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterSubCategory, setFilterSubCategory] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [parentCategories, setParentCategories] = useState([])
+  const [subCategories, setSubCategories] = useState([])
+  const [subLoading, setSubLoading] = useState(false)
+
   const abortControllerRef = useRef(null)
-  const [pagination, setPagination] = useState({
-    currentPage: parseInt(searchParams.get('page')) || 1,
-    totalPages: 1,
-    total: 0
-  })
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      title: '',
-      author: author_id,
-      tags: [],
-      file: '',
-      image: '',
-      category_id: ''
-    }
-  })
-
   const { requireAdmin } = useAdminPermission()
 
   useEffect(() => {
     setHeading('Material Management')
-    const page = searchParams.get('page') || 1
-    fetchMaterials(page)
+    loadParentCategories()
     return () => setHeading(null)
   }, [setHeading])
 
   useEffect(() => {
-    const addParam = searchParams.get('add')
-    if (addParam === 'true') {
-      handleAddClick()
-      router.replace('/dashboard/material', { scroll: false })
-    }
-  }, [searchParams, router])
+    fetchMaterials(filterCategory, filterSubCategory, appliedSearch)
+  }, [filterCategory, filterSubCategory, appliedSearch])
 
-  const fetchTags = async (query) => {
-    try {
-      const response = await authFetch(`${process.env.baseUrl}/tag?q=${query}`)
-      const data = await response.json()
-      return data.items || []
-    } catch (error) {
-      console.error('Tag Search Error:', error)
-      return []
-    }
-  }
+  useEffect(() => {
+    return () => { if (searchTimeout) clearTimeout(searchTimeout) }
+  }, [searchTimeout])
 
-  const fetchCategoriesSearch = async (query) => {
+  const loadParentCategories = async () => {
     try {
-      const response = await authFetch(
-        `${process.env.baseUrl}/category?type=MATERIAL&limit=100${query ? `&q=${query}` : ''}`
-      )
-      const data = await response.json()
-      return data.items || []
-    } catch (error) {
-      console.error('Category Search Error:', error)
-      return []
+      const res = await authFetch(`${process.env.baseUrl}/category?type=MATERIAL&limit=100`)
+      const data = await res.json()
+      setParentCategories(data.items || [])
+    } catch {
+      // ignore
     }
   }
 
-  const fetchMaterials = async (page = 1) => {
+  const loadSubCategories = async (parentId) => {
+    if (!parentId) { setSubCategories([]); return }
     try {
-      const params = new URLSearchParams(searchParams.toString())
-      if (params.get('page') !== String(page)) {
-        params.set('page', page)
-        router.push(`${pathname}?${params.toString()}`, { scroll: false })
-      }
+      setSubLoading(true)
+      const res = await authFetch(`${process.env.baseUrl}/sub/${parentId}`)
+      const data = await res.json()
+      setSubCategories(data.items || data || [])
+    } catch {
+      setSubCategories([])
+    } finally {
+      setSubLoading(false)
+    }
+  }
 
-      if (abortControllerRef.current) abortControllerRef.current.abort()
-      abortControllerRef.current = new AbortController()
+  const handleFilterCategoryChange = (categoryId) => {
+    setFilterCategory(categoryId)
+    setFilterSubCategory('')
+    setSubCategories([])
+    if (categoryId) loadSubCategories(categoryId)
+  }
 
-      setTableLoading(true)
-      const response = await authFetch(
-        `${process.env.baseUrl}/material?page=${page}${searchQuery ? `&q=${searchQuery}` : ''}`,
-        { signal: abortControllerRef.current.signal }
-      )
+  const handleSearchInput = (value) => {
+    setSearchQuery(value)
+    if (searchTimeout) clearTimeout(searchTimeout)
+    const id = setTimeout(() => setAppliedSearch(value), 350)
+    setSearchTimeout(id)
+  }
+
+  const fetchMaterials = async (category = filterCategory, subCategory = filterSubCategory, search = appliedSearch) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort('superseded')
+    }
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    setLoading(true)
+    try {
+      let url = `${process.env.baseUrl}/material?limit=1000`
+      if (search) url += `&q=${encodeURIComponent(search)}`
+      if (subCategory) url += `&category_id=${subCategory}`
+      else if (category) url += `&category_id=${category}`
+
+      const response = await authFetch(url, { signal: controller.signal })
       const data = await response.json()
-      setPagination({
-        currentPage: data.pagination.currentPage,
-        totalPages: data.pagination.totalPages,
-        total: data.pagination.totalCount
+
+      let items = data.materials || data.items || []
+      items.sort((a, b) => {
+        const oA = a.order_no ?? Infinity
+        const oB = b.order_no ?? Infinity
+        return oA !== oB ? oA - oB : b.id - a.id
       })
-      setMaterials(data.materials || [])
+
+      setMaterials(items)
     } catch (error) {
-      if (error.name === 'AbortError') return
+      if (error.name === 'AbortError' || controller.signal.aborted) return
       toast.error('Failed to fetch materials')
     } finally {
-      if (!abortControllerRef.current?.signal?.aborted) {
-        setTableLoading(false)
-      }
+      if (!controller.signal.aborted) setLoading(false)
     }
   }
 
-  const onSubmit = async (data) => {
-    if (!uploadedFiles.file?.trim()) {
-      setFileError(true)
-      return
-    }
-    setFileError(false)
-    setLoading(true)
-
-    try {
-      const payload = {
-        title: data.title?.trim(),
-        tags: selectedTags.map(t => t.id),
-        image: uploadedFiles.image || null,
-        file: uploadedFiles.file,
-        category_id: selectedCategory?.id ? parseInt(selectedCategory.id, 10) : null
-      }
-
-      const url = editing
-        ? `${process.env.baseUrl}/material?id=${editId}`
-        : `${process.env.baseUrl}/material`
-
-      const method = editing ? 'PUT' : 'POST'
-
-      const response = await authFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) throw new Error('Failed to save material')
-
-      toast.success(editing ? 'Material updated successfully!' : 'Material created successfully!')
-      handleCloseModal()
-      fetchMaterials(editing ? pagination.currentPage : 1)
-    } catch (error) {
-      toast.error(error.message || 'Failed to save material')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEdit = async (editdata) => {
-    try {
-      setEditing(true)
-      setLoading(true)
-      setIsOpen(true)
-
-      const response = await authFetch(`${process.env.baseUrl}/material/${editdata.id}`)
-      const data = await response.json()
-      const material = data.material
-      setEditingId(material.id)
-
-      setValue('title', material.title)
-
-      if (material.tags) {
-        setSelectedTags(material.tags.map(t => ({ id: t.id, title: t.title })))
-      } else {
-        setSelectedTags([])
-      }
-
-      if (material.category) {
-        setSelectedCategory({ id: material.category.id, title: material.category.title })
-      } else {
-        setSelectedCategory(null)
-      }
-
-      setUploadedFiles({
-        image: material.image || '',
-        file: material.file || ''
-      })
-    } catch (error) {
-      toast.error('Failed to fetch material details')
-    } finally {
-      setLoading(false)
-    }
+  const handleEdit = (material) => {
+    setEditing(true)
+    setEditId(material.id)
+    setIsFormOpen(true)
   }
 
   const handleDeleteClick = (id) => {
-    requireAdmin(() => {
-      setDeleteId(id)
-      setIsDialogOpen(true)
-    })
+    requireAdmin(() => { setDeleteId(id); setIsDeleteDialogOpen(true) })
   }
 
   const handleDeleteConfirm = async () => {
@@ -234,236 +148,253 @@ export default function MaterialForm() {
       const response = await authFetch(`${process.env.baseUrl}/material?id=${deleteId}`, { method: 'DELETE' })
       const res = await response.json()
       toast.success(res.message || 'Deleted successfully')
-      fetchMaterials(pagination.currentPage)
+      fetchMaterials()
     } catch (err) {
       toast.error(err.message)
     } finally {
-      setIsDialogOpen(false)
+      setIsDeleteDialogOpen(false)
       setDeleteId(null)
     }
   }
 
-  const columns = useMemo(() => [
-    {
-      header: 'Title',
-      accessorKey: 'title',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-            <FileText size={16} />
-          </div>
-          <span className="font-medium text-slate-900">{row.original.title}</span>
-        </div>
-      )
-    },
-    {
-      header: 'Category',
-      accessorKey: 'category',
-      cell: ({ row }) => {
-        const category = row.original.category
-        return category ? (
-          <span className='px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold'>
-            {category.title}
-          </span>
-        ) : (
-          <span className='text-slate-400 text-xs italic'>No Category</span>
-        )
-      }
-    },
-    {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className='flex gap-1'>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(row.original)}
-            className='hover:bg-blue-50 text-blue-600'
-            title="Edit"
-          >
-            <Edit2 className='w-4 h-4' />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDeleteClick(row.original.id)}
-            className='hover:bg-red-50 text-red-600'
-            title="Delete"
-          >
-            <Trash2 className='w-4 h-4' />
-          </Button>
-        </div>
-      )
-    }
-  ], [requireAdmin])
-
-  const handleSearchInput = (value) => {
-    setSearchQuery(value)
-    if (searchTimeout) clearTimeout(searchTimeout)
-
-    const timeoutId = setTimeout(() => {
-      fetchMaterials(1)
-    }, 500)
-    setSearchTimeout(timeoutId)
-  }
-
-  const handleCloseModal = () => {
-    setIsOpen(false)
-    setEditing(false)
-    setEditingId(null)
-    reset()
-    setUploadedFiles({ image: '', file: '' })
-    setSelectedTags([])
-    setSelectedCategory(null)
-    setFileError(false)
-  }
-
   const handleAddClick = () => {
-    handleCloseModal()
-    setIsOpen(true)
+    setEditing(false)
+    setEditId(null)
+    setIsFormOpen(true)
+  }
+
+  const handleReorder = async (activeId, overId) => {
+    const oldIdx = materials.findIndex(m => m.id === activeId)
+    const newIdx = materials.findIndex(m => m.id === overId)
+    const reordered = arrayMove(materials, oldIdx, newIdx)
+    setMaterials(reordered)
+
+    const payload = reordered.map((m, i) => ({ id: m.id, order_no: i + 1 }))
+    await saveOrder(payload)
+  }
+
+  const handleCategoryReorder = async (activeId, overId) => {
+    // Get unique categories in current display order
+    const cats = []
+    materials.forEach(m => {
+      const cId = m.category?.id
+      if (cId && !cats.includes(cId)) cats.push(cId)
+    })
+
+    const oldIdx = cats.indexOf(activeId)
+    const newIdx = cats.indexOf(overId)
+    if (oldIdx === -1 || newIdx === -1) return
+
+    const reorderedCats = arrayMove(cats, oldIdx, newIdx)
+
+    // Update local materials state to reflect new category sequence
+    const newMaterials = [...materials].sort((a, b) => {
+      const idxA = reorderedCats.indexOf(a.category?.id)
+      const idxB = reorderedCats.indexOf(b.category?.id)
+      return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB)
+    })
+    setMaterials(newMaterials)
+
+    // Save to server
+    const payload = reorderedCats.map((id, i) => ({ id, order_no: i + 1 }))
+    await saveCategoryOrder(payload)
+  }
+
+  const handleSubCategoryReorder = async (activeId, overId, parentId) => {
+    // Get subcategories within this parent
+    const subs = []
+    materials.forEach(m => {
+      if (m.category?.id === parentId) {
+        const sId = m.sub_category?.id
+        if (sId && !subs.includes(sId)) subs.push(sId)
+      }
+    })
+
+    const oldIdx = subs.indexOf(activeId)
+    const newIdx = subs.indexOf(overId)
+    if (oldIdx === -1 || newIdx === -1) return
+
+    const reorderedSubs = arrayMove(subs, oldIdx, newIdx)
+
+    // Update local materials state
+    const newMaterials = [...materials].sort((a, b) => {
+      // First maintain category order
+      const catA = a.category?.id
+      const catB = b.category?.id
+      if (catA !== catB) return 0 // Keep relative to other categories
+
+      // If in same category, sort by new subcategory order
+      if (catA === parentId) {
+        const idxA = reorderedSubs.indexOf(a.sub_category?.id)
+        const idxB = reorderedSubs.indexOf(b.sub_category?.id)
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB)
+      }
+      return 0
+    })
+    setMaterials(newMaterials)
+
+    const payload = reorderedSubs.map((id, i) => ({ id, order_no: i + 1 }))
+    await saveSubCategoryOrder(payload)
+  }
+
+  const saveOrder = async (payload) => {
+    try {
+      setSaving(true)
+      const res = await authFetch(`${process.env.baseUrl}/material/update-order`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materials: payload })
+      })
+      if (!res.ok) throw new Error('Failed to save material order')
+      toast.success('Material order saved', { autoClose: 1000 })
+    } catch (err) {
+      toast.error(err.message)
+      fetchMaterials()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const saveCategoryOrder = async (payload) => {
+    try {
+      setSaving(true)
+      const res = await authFetch(`${process.env.baseUrl}/category/update-order`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories: payload })
+      })
+      if (!res.ok) throw new Error('Failed to save category order')
+      toast.success('Category order saved', { autoClose: 1000 })
+    } catch (err) {
+      toast.error(err.message)
+      fetchMaterials()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const saveSubCategoryOrder = async (payload) => {
+    try {
+      setSaving(true)
+      const res = await authFetch(`${process.env.baseUrl}/sub/update-order`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sub_categories: payload })
+      })
+      if (!res.ok) throw new Error('Failed to save subcategory order')
+      toast.success('Subcategory order saved', { autoClose: 1000 })
+    } catch (err) {
+      toast.error(err.message)
+      fetchMaterials()
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className='w-full'>
-      <ToastContainer />
+      <ToastContainer position='bottom-right' />
 
-      {/* Sticky Header */}
-      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder='Search materials by title...'
-            className='max-w-md w-full'
-          />
+      {/* ── Sticky Header ───────────────────────────────────────────────────── */}
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <BookOpen size={17} className='text-[#387cae]' />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Materials</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {loading
+                  ? <span className='inline-flex items-center gap-1'><Loader2 size={10} className='animate-spin' /> Loading…</span>
+                  : `${materials.length} total`
+                }
+                {saving && (
+                  <span className='inline-flex items-center gap-1 text-[#387cae]'>
+                    · <Loader2 size={10} className='animate-spin' /> Saving order…
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
 
-          <Button onClick={handleAddClick} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-md shadow-[#387cae]/20 transition-all active:scale-95">
-            <Plus className="w-4 h-4" />
-            Add Material
-          </Button>
+          <div className='flex items-center gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 flex-wrap'>
+            <div className='relative shrink-0 sm:w-52'>
+              <Search size={13} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none' />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search materials…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+
+            <select
+              value={filterCategory}
+              onChange={(e) => handleFilterCategoryChange(e.target.value)}
+              className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[140px]'
+            >
+              <option value=''>All Categories</option>
+              {parentCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.title}</option>
+              ))}
+            </select>
+
+            {filterCategory && (
+              <select
+                value={filterSubCategory}
+                onChange={(e) => setFilterSubCategory(e.target.value)}
+                disabled={subLoading}
+                className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[150px]'
+              >
+                <option value=''>
+                  {subLoading ? 'Loading…' : 'All Subcategories'}
+                </option>
+                {subCategories.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.title}</option>
+                ))}
+              </select>
+            )}
+
+            <Button
+              onClick={handleAddClick}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus size={15} />
+              Add Material
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Modal Dialog */}
-      <Dialog isOpen={isOpen} onClose={handleCloseModal} className='max-w-2xl'>
-        <DialogContent className='max-w-2xl p-0'>
-          <DialogHeader className='px-6 py-4 border-b bg-slate-50/50 rounded-t-lg'>
-            <DialogTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-[#387cae] flex items-center justify-center text-white">
-                <FileText size={18} />
-              </div>
-              {editing ? 'Edit Material' : 'Add New Material'}
-            </DialogTitle>
-            <DialogClose onClick={handleCloseModal} />
-          </DialogHeader>
+      {/* ── View / Card List ────────────────────────────────────────────────── */}
+      <MaterialListView
+        materials={materials}
+        loading={loading}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+        onReorder={handleReorder}
+        onCategoryReorder={handleCategoryReorder}
+        onSubCategoryReorder={handleSubCategoryReorder}
+        onAddClick={handleAddClick}
+        searchQuery={searchQuery}
+        filterCategory={filterCategory}
+      />
 
-          <div className='p-6'>
-            <form id="material-form" onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
-              <div className='grid grid-cols-1 gap-6'>
-                <div className="space-y-2">
-                  <Label required className="text-xs font-bold text-slate-500 uppercase tracking-wider">Title</Label>
-                  <Input
-                    {...register('title', {
-                      required: 'Title is required',
-                      minLength: { value: 3, message: 'Title must be at least 3 characters long' }
-                    })}
-                    placeholder='Enter a descriptive title for this material'
-                    className={cn("h-11", errors.title && "border-red-500 focus:ring-red-500/10")}
-                  />
-                  {errors.title && <p className='text-[10px] font-bold text-red-500 uppercase mt-1'>{errors.title.message}</p>}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</Label>
-                    <SearchSelectCreate
-                      onSearch={fetchCategoriesSearch}
-                      onSelect={(item) => setSelectedCategory(item)}
-                      onRemove={() => setSelectedCategory(null)}
-                      selectedItems={selectedCategory}
-                      placeholder="Select Category"
-                      isMulti={false}
-                      displayKey="title"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tags</Label>
-                    <SearchSelectCreate
-                      onSearch={fetchTags}
-                      onSelect={(item) => {
-                        if (!selectedTags.find(t => t.id === item.id)) {
-                          setSelectedTags([...selectedTags, item])
-                        }
-                      }}
-                      onRemove={(item) => setSelectedTags(selectedTags.filter(t => t.id !== item.id))}
-                      selectedItems={selectedTags}
-                      placeholder="Add tags..."
-                      isMulti={true}
-                      displayKey="title"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-dashed'>
-                <div className="space-y-3">
-                  <Label required className="text-xs font-bold text-slate-500 uppercase tracking-wider">Material File</Label>
-                  <FileUpload
-                    accept='application/pdf,image/*'
-                    onUploadComplete={(url) => {
-                      setUploadedFiles((prev) => ({ ...prev, file: url }))
-                      if (url) setFileError(false)
-                    }}
-                    defaultPreview={uploadedFiles.file}
-                  />
-                  {fileError && <p className='text-[10px] font-bold text-red-500 uppercase'>File is required</p>}
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thumbnail <span className="text-slate-400 normal-case font-medium">(Optional)</span></Label>
-                  <FileUpload
-                    onUploadComplete={(url) => setUploadedFiles((prev) => ({ ...prev, image: url }))}
-                    defaultPreview={uploadedFiles.image}
-                  />
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <div className='sticky bottom-0 bg-white border-t p-4 px-6 flex justify-end gap-3 rounded-b-lg'>
-            <Button type='button' variant='outline' onClick={handleCloseModal} className="h-11 px-6">
-              Cancel
-            </Button>
-            <Button
-              type='submit'
-              form="material-form"
-              disabled={loading}
-              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[140px] h-11 px-6 font-bold shadow-lg shadow-[#387cae]/20'
-            >
-              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-              {loading ? 'Processing...' : (editing ? 'Update Content' : 'Publish Material')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="bg-white rounded-md shadow-sm border overflow-hidden">
-        <Table
-          loading={tableLoading}
-          data={materials}
-          columns={columns}
-          pagination={pagination}
-          onPageChange={(newPage) => fetchMaterials(newPage)}
-          showSearch={false}
-          emptyContent={searchQuery ? "No materials found matching your search." : "No materials available."}
-        />
-      </div>
+      {/* ── Create / Edit Modal ─────────────────────────────────────────────── */}
+      <MaterialFormDialog
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        editing={editing}
+        editId={editId}
+        authorId={author_id}
+        onSuccess={fetchMaterials}
+      />
 
       <ConfirmationDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
         title='Delete Material'
         message='Are you sure you want to delete this material? This action cannot be undone.'
