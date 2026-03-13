@@ -63,7 +63,7 @@ export const SortableMaterialCard = ({ material, onEdit, onDelete }) => {
                         </p>
                     ) : (
                         <p className='text-[10px] text-slate-400 mt-0.5 uppercase tracking-wide font-medium'>
-                            {material.tagDetails?.length > 0 ? material.tagDetails.map(t => t.title).join(', ') : 'No description'}
+                            No description available
                         </p>
                     )}
                 </div>

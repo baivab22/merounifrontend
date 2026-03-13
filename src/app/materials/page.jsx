@@ -62,17 +62,16 @@ const Materials = () => {
     try {
       const response = await getMaterials(page, search, category)
 
-      if (response && response.materials) {
-        setMaterials(response.materials)
-        if (response.pagination) {
-          setPagination({
-            currentPage: response.pagination.currentPage,
-            totalPages: response.pagination.totalPages,
-            totalCount: response.pagination.totalCount
-          })
-        }
+      const items = response?.data || response?.materials || []
+      setMaterials(items)
+
+      if (response?.pagination) {
+        setPagination({
+          currentPage: response.pagination.currentPage,
+          totalPages: response.pagination.totalPages,
+          totalCount: response.pagination.totalCount
+        })
       } else {
-        setMaterials([])
         setPagination(prev => ({ ...prev, totalCount: 0, currentPage: page }))
       }
     } catch (error) {
@@ -107,7 +106,7 @@ const Materials = () => {
     setSearchQuery(q)
     setSelectedCategory(cat)
     setPagination(prev => ({ ...prev, currentPage: pg }))
-    
+
     fetchMaterialsData(pg, q, cat)
   }, [searchParams])
 
@@ -119,9 +118,9 @@ const Materials = () => {
     if (searchQuery === initialSearch && selectedCategory === initialCategory) return
 
     debounceRef.current = setTimeout(() => {
-      updateURL({ 
-        q: searchQuery, 
-        category: selectedCategory, 
+      updateURL({
+        q: searchQuery,
+        category: selectedCategory,
         page: 1 // Reset to page 1 on search/filter
       })
     }, 500)
@@ -159,9 +158,9 @@ const Materials = () => {
           loading={loading}
         />
 
-        {!loading && materials.length > 0 && (
+        {!loading && materials?.length > 0 && (
           <div className='mt-10'>
-             <Pagination pagination={pagination} onPageChange={handlePageChange} />
+            <Pagination pagination={pagination} onPageChange={handlePageChange} />
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Plus, FileText, GripVertical, Folder, ChevronRight, ChevronDown, BookCopy, Trash2, Edit2 } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, FileText, GripVertical, Folder, ChevronDown, BookCopy, Trash2, Edit2, ChevronRight } from 'lucide-react'
 import {
     DndContext,
     closestCenter,
@@ -9,8 +9,7 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragOverlay,
-    defaultDropAnimationSideEffects
+    DragOverlay
 } from '@dnd-kit/core'
 import {
     SortableContext,
@@ -20,7 +19,6 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/ui/shadcn/button'
-import { SortableMaterialCard, OverlayCard } from './MaterialCard'
 import { cn } from '@/app/lib/utils'
 
 const CardSkeleton = ({ i = 0 }) => (
@@ -38,90 +36,105 @@ const CardSkeleton = ({ i = 0 }) => (
         </div>
     </div>
 )
-
-const SortableCategoryHeader = ({ cat, isExpanded, onToggle, totalMaterials, subCount }) => {
+const SortableTreeItem = ({ id, type, data, children, depth = 0, onAdd, onEdit, onDelete, isExpanded, onToggle }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `cat-${cat.id}`,
-        data: { type: 'category', id: cat.id }
+        id: `${type}-${id}`,
+        data: { type, id, parentId: data.parent_id }
     })
 
     const style = {
         transform: CSS.Translate.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1
+        opacity: isDragging ? 0.3 : 1,
+        zIndex: isDragging ? 100 : 'auto'
+    }
+
+    const getIcon = () => {
+        if (type === 'material') return <FileText size={16} />
+        if (depth === 0) return isExpanded ? <ChevronDown size={18} /> : <Folder size={18} />
+        if (depth === 1) return <BookCopy size={16} />
+        return <div className='w-2 h-2 rounded-full bg-blue-400' />
+    }
+
+    const getLevelStyles = () => {
+        if (depth === 0) return 'bg-white border-slate-200 shadow-sm text-slate-800'
+        if (depth === 1) return 'bg-slate-50/50 border-slate-100 text-slate-700'
+        if (depth === 2) return 'bg-transparent border-transparent text-slate-600'
+        return 'bg-white'
     }
 
     return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={cn(
-                'flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors select-none group/cat',
-                isExpanded && 'border-b border-gray-50 bg-slate-50/30'
-            )}
-            onClick={onToggle}
-        >
-            <div className='flex items-center gap-3'>
+        <div ref={setNodeRef} style={style} className='group/item'>
+            <div
+                className={cn(
+                    'flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 mb-2',
+                    getLevelStyles(),
+                    isDragging && 'border-blue-400 ring-4 ring-blue-50',
+                    !isDragging && 'hover:border-blue-200 hover:shadow-md'
+                )}
+            >
                 <div
                     {...attributes}
                     {...listeners}
-                    onClick={(e) => e.stopPropagation()}
-                    className='shrink-0 text-slate-200 hover:text-blue-400 cursor-grab active:cursor-grabbing p-1'
+                    className='shrink-0 text-slate-300 hover:text-blue-500 cursor-grab active:cursor-grabbing p-1'
                 >
-                    <GripVertical size={18} />
+                    <GripVertical size={16} />
                 </div>
-                <div className='w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#387cae] group-hover/cat:scale-110 transition-transform'>
-                    {isExpanded ? <ChevronDown size={20} /> : <Folder size={20} />}
+
+                <div
+                    onClick={onToggle}
+                    className={cn(
+                        'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-colors',
+                        depth === 0 ? 'bg-blue-50 text-blue-600' : 'text-slate-400',
+                        onToggle && 'hover:bg-blue-100/50'
+                    )}
+                >
+                    {getIcon()}
                 </div>
-                <div>
-                    <h3 className='font-bold text-slate-800 text-[15px]'>{cat.title}</h3>
-                    <p className='text-[11px] text-slate-400 font-semibold uppercase tracking-wider'>
-                        {subCount} Subjects • {totalMaterials} Materials
+
+                <div className='flex-1 min-w-0' onClick={onToggle}>
+                    <p className={cn(
+                        'truncate font-bold tracking-tight',
+                        depth === 0 ? 'text-[15px]' : 'text-sm'
+                    )}>
+                        {data.title}
                     </p>
+                    {type !== 'material' && (
+                        <p className='text-[10px] text-slate-400 font-bold uppercase mt-0.5'>
+                            {data.materials?.length || 0} Files • {data.subcategories?.length || 0} Sub-levels
+                        </p>
+                    )}
+                </div>
+
+                <div className='flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity'>
+                    {onAdd && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onAdd(data); }}
+                            className='w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors'
+                        >
+                            <Plus size={16} />
+                        </button>
+                    )}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(data); }}
+                        className='w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors'
+                    >
+                        <Edit2 size={14} />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(data.id); }}
+                        className='w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors'
+                    >
+                        <Trash2 size={14} />
+                    </button>
                 </div>
             </div>
-            <div className='w-8 h-8 rounded-full bg-blue-100/50 flex items-center justify-center text-[#387cae] font-bold text-[10px]'>
-                {totalMaterials}
-            </div>
-        </div>
-    )
-}
 
-const SortableSubCategoryHeader = ({ sub, isExpanded, onToggle, matCount, parentId }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `sub-${sub.id}`,
-        data: { type: 'subcategory', id: sub.id, parentId }
-    })
-
-    const style = {
-        transform: CSS.Translate.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1
-    }
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            onClick={onToggle}
-            className='flex items-center gap-2 mb-3 cursor-pointer group/sub'
-        >
-            <div
-                {...attributes}
-                {...listeners}
-                onClick={(e) => e.stopPropagation()}
-                className='shrink-0 text-slate-200 hover:text-emerald-400 cursor-grab active:cursor-grabbing p-1'
-            >
-                <GripVertical size={14} />
-            </div>
-            {isExpanded ? <ChevronDown size={14} className='text-[#387cae]' /> : <ChevronRight size={14} className='text-slate-400' />}
-            <div className='w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center'>
-                <BookCopy size={16} />
-            </div>
-            <div>
-                <h4 className='text-sm font-bold text-slate-700 group-hover/sub:text-[#387cae] transition-colors'>{sub.title}</h4>
-                <p className='text-[10px] text-slate-400'>{matCount} materials available</p>
-            </div>
+            {isExpanded && children && (
+                <div className='ml-11 border-l-2 border-slate-100 pl-4 py-1'>
+                    {children}
+                </div>
+            )}
         </div>
     )
 }
@@ -135,67 +148,53 @@ export default function MaterialListView({
     onCategoryReorder,
     onSubCategoryReorder,
     onAddClick,
-    searchQuery,
-    filterCategory
+    searchQuery
 }) {
+    const [expandedIds, setExpandedIds] = useState({})
     const [activeId, setActiveId] = useState(null)
-    const [activeType, setActiveType] = useState(null)
-    const [expandedCats, setExpandedCats] = useState({})
-    const [expandedSubs, setExpandedSubs] = useState({})
+    const [activeData, setActiveData] = useState(null)
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     )
 
-    const groupedData = useMemo(() => {
-        const categories = {}
-        materials.forEach(m => {
-            const catId = m.category?.id || 'uncategorized'
-            const catTitle = m.category?.title || 'Uncategorized'
-            const subId = m.sub_category?.id || 'none'
-            const subTitle = m.sub_category?.title || 'General / No Subcategory'
-
-            if (!categories[catId]) {
-                categories[catId] = { id: catId, title: catTitle, subcategories: {} }
-            }
-            if (!categories[catId].subcategories[subId]) {
-                categories[catId].subcategories[subId] = { id: subId, title: subTitle, items: [] }
-            }
-            categories[catId].subcategories[subId].items.push(m)
-        })
-        return Object.values(categories)
-    }, [materials])
-
-    const toggleCat = (id) => setExpandedCats(prev => ({ ...prev, [id]: !prev[id] }))
-    const toggleSub = (id) => setExpandedSubs(prev => ({ ...prev, [id]: !prev[id] }))
+    const toggleExpand = (id) => setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }))
 
     const handleDragStart = (event) => {
         const { active } = event
         setActiveId(active.id)
-        setActiveType(active.data.current?.type)
+        setActiveData(active.data.current)
     }
 
     const handleDragEnd = (event) => {
         const { active, over } = event
         setActiveId(null)
-        setActiveType(null)
+        setActiveData(null)
 
         if (!over || active.id === over.id) return
 
-        const type = active.data.current?.type
-        if (type === 'material') {
-            onReorder(active.data.current.id, over.data.current.id)
-        } else if (type === 'subcategory') {
-            onSubCategoryReorder(active.data.current.id, over.data.current.id, active.data.current.parentId)
-        } else if (type === 'category') {
-            onCategoryReorder(active.data.current.id, over.data.current.id)
+        const activeType = active.data.current.type
+        const overType = over.data.current.type
+
+        if (activeType !== overType) return // Only sort within same level/type
+
+        const activeItemParts = active.id.split('-')
+        const overItemParts = over.id.split('-')
+        const activeRealId = activeItemParts[1]
+        const overRealId = overItemParts[1]
+
+        if (activeType === 'material') {
+            onReorder(activeRealId, overRealId)
+        } else if (activeType === 'category') {
+            // General category reorder
+            onCategoryReorder(activeRealId, overRealId, active.data.current.parentId)
         }
     }
 
     if (loading) {
         return (
-            <div className='flex flex-col gap-1'>
+            <div className='space-y-4'>
                 {[...Array(5)].map((_, i) => <CardSkeleton key={i} i={i} />)}
             </div>
         )
@@ -203,115 +202,104 @@ export default function MaterialListView({
 
     if (materials.length === 0) {
         return (
-            <div className='bg-white border border-dashed border-gray-200 rounded-2xl py-20 text-center shadow-sm'>
-                <div className='w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100'>
-                    <FileText className='w-8 h-8 text-gray-300' />
+            <div className='bg-white border-2 border-dashed border-slate-100 rounded-[2rem] py-32 text-center'>
+                <div className='w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-100'>
+                    <Folder className='w-10 h-10 text-slate-200' />
                 </div>
-                <p className='text-gray-500 font-bold text-sm'>
-                    {searchQuery || filterCategory ? 'No items found matching your filters.' : 'Your material library is empty.'}
-                </p>
-                {!searchQuery && !filterCategory && (
-                    <Button
-                        onClick={onAddClick}
-                        className='mt-5 bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 font-bold px-6 shadow-lg shadow-[#387cae]/10'
-                    >
-                        <Plus size={16} /> Add Material
-                    </Button>
-                )}
+                <h3 className='text-lg font-bold text-slate-800 mb-2'>No materials found</h3>
+                <p className='text-slate-400 text-sm mb-8'>Start organizing your library by adding your first class.</p>
+                <Button
+                    onClick={() => onAddClick()}
+                    className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 font-bold px-8 h-12 rounded-xl shadow-xl shadow-blue-500/20'
+                >
+                    <Plus size={18} /> Create New Class
+                </Button>
             </div>
         )
     }
 
+    const renderTree = (items, depth = 0, parentId = null) => {
+        return (
+            <SortableContext
+                items={items.map(item => `${item.type || 'category'}-${item.id}`)}
+                strategy={verticalListSortingStrategy}
+            >
+                {items.map(item => {
+                    const id = item.id
+                    const type = item.type || 'category'
+                    const uniqueId = `${type}-${id}`
+                    const isExpanded = expandedIds[uniqueId] || (depth < 1) // Auto-expand Class level
+
+                    return (
+                        <SortableTreeItem
+                            key={uniqueId}
+                            id={id}
+                            type={type}
+                            depth={depth}
+                            data={item}
+                            isExpanded={isExpanded}
+                            onToggle={() => toggleExpand(uniqueId)}
+                            onAdd={depth < 3 ? (item) => onAddClick(
+                                depth === 0 ? { l1: item } :
+                                    depth === 1 ? { l2: item } :
+                                        { l3: item }
+                            ) : null}
+                            onEdit={type === 'material' ? onEdit : (item) => onEdit({ ...item, isCategory: true })}
+                            onDelete={type === 'material' ? onDelete : (id) => onDelete(id, true)}
+                        >
+                            {/* Nested Contents */}
+                            {(item.subcategories?.length > 0 || item.materials?.length > 0) && (
+                                <>
+                                    {renderTree(
+                                        [
+                                            ...(item.subcategories || []).map(s => ({ ...s, type: 'category' })),
+                                            ...(item.materials || []).map(m => ({ ...m, type: 'material' }))
+                                        ],
+                                        depth + 1,
+                                        id
+                                    )}
+                                </>
+                            )}
+                        </SortableTreeItem>
+                    )
+                })}
+            </SortableContext>
+        )
+    }
+
     return (
-        <div className='space-y-4 pb-20'>
+        <div className='max-w-5xl mx-auto pb-32'>
+            <div className='flex items-center justify-between mb-8'>
+                <div>
+                    <h2 className='text-2xl font-black text-slate-900'>Library Explorer</h2>
+                    <p className='text-sm text-slate-400 font-medium'>Drag items to reorder them within their groups.</p>
+                </div>
+                <Button
+                    onClick={() => onAddClick()}
+                    className='bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 gap-2 font-black px-6 rounded-xl shadow-sm'
+                >
+                    <Plus size={18} className='text-blue-500' /> New Class
+                </Button>
+            </div>
+
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
-                onDragCancel={() => { setActiveId(null); setActiveType(null); }}
             >
-                <SortableContext
-                    items={groupedData.map(c => `cat-${c.id}`)}
-                    strategy={verticalListSortingStrategy}
-                >
-                    {groupedData.map(cat => {
-                        const totalMaterials = Object.values(cat.subcategories).reduce((sum, s) => sum + s.items.length, 0)
-                        const subCount = Object.keys(cat.subcategories).length
+                <div className='space-y-2'>
+                    {renderTree(materials?.map(m => ({ ...m, type: 'category' })))}
+                </div>
 
-                        return (
-                            <div key={cat.id} className='bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group/cat'>
-                                <SortableCategoryHeader
-                                    cat={cat}
-                                    isExpanded={expandedCats[cat.id]}
-                                    onToggle={() => toggleCat(cat.id)}
-                                    totalMaterials={totalMaterials}
-                                    subCount={subCount}
-                                />
-
-                                {expandedCats[cat.id] && (
-                                    <div className='p-2 md:p-4 space-y-4 bg-white'>
-                                        <SortableContext
-                                            items={Object.values(cat.subcategories).map(s => `sub-${s.id}`)}
-                                            strategy={verticalListSortingStrategy}
-                                        >
-                                            {Object.values(cat.subcategories).map(sub => (
-                                                <div key={sub.id} className='ml-4 border-l-2 border-slate-100 pl-4'>
-                                                    <SortableSubCategoryHeader
-                                                        sub={sub}
-                                                        isExpanded={expandedSubs[`${cat.id}-${sub.id}`]}
-                                                        onToggle={() => toggleSub(`${cat.id}-${sub.id}`)}
-                                                        matCount={sub.items.length}
-                                                        parentId={cat.id}
-                                                    />
-
-                                                    {expandedSubs[`${cat.id}-${sub.id}`] && (
-                                                        <SortableContext
-                                                            items={sub.items.map(m => m.id)}
-                                                            strategy={verticalListSortingStrategy}
-                                                        >
-                                                            <div className='space-y-2 ml-4'>
-                                                                {sub.items.map(material => (
-                                                                    <SortableMaterialCard
-                                                                        key={material.id}
-                                                                        material={material}
-                                                                        onEdit={onEdit}
-                                                                        onDelete={onDelete}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                        </SortableContext>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </SortableContext>
-                                    </div>
-                                )}
+                <DragOverlay>
+                    {activeId ? (
+                        <div className='flex items-center gap-3 p-3 rounded-xl border border-blue-400 bg-white shadow-2xl ring-4 ring-blue-50 scale-105 opacity-90'>
+                            <GripVertical size={16} className='text-blue-400' />
+                            <div className='w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600'>
+                                {activeData.type === 'material' ? <FileText size={16} /> : <Folder size={18} />}
                             </div>
-                        )
-                    })}
-                </SortableContext>
-
-                <DragOverlay dropAnimation={{
-                    sideEffects: defaultDropAnimationSideEffects({
-                        styles: { active: { opacity: '0.5' } }
-                    })
-                }}>
-                    {activeId && activeType === 'material' ? (
-                        <OverlayCard material={materials.find(m => m.id === activeId)} />
-                    ) : activeId && activeType === 'category' ? (
-                        <div className='bg-white border-2 border-blue-400 p-4 rounded-2xl shadow-2xl opacity-90 scale-105'>
-                            <div className='flex items-center gap-3'>
-                                <Folder size={20} className='text-blue-500' />
-                                <span className='font-bold text-slate-800'>Moving Category...</span>
-                            </div>
-                        </div>
-                    ) : activeId && activeType === 'subcategory' ? (
-                        <div className='bg-white border-2 border-emerald-400 p-3 rounded-xl shadow-2xl opacity-90 scale-105'>
-                            <div className='flex items-center gap-3'>
-                                <BookCopy size={16} className='text-emerald-500' />
-                                <span className='font-bold text-slate-800 text-sm'>Moving Subject...</span>
-                            </div>
+                            <span className='font-bold text-slate-800'>{activeData.title || 'Moving...'}</span>
                         </div>
                     ) : null}
                 </DragOverlay>
@@ -319,3 +307,4 @@ export default function MaterialListView({
         </div>
     )
 }
+

@@ -18,6 +18,7 @@ const UniversityCard = ({ university }) => {
     type_of_institute
   } = university
 
+
   const location = [city, state].filter(Boolean).join(', ')
   const image = featured_image || logo || 'https://placehold.co/600x400?text=University'
 

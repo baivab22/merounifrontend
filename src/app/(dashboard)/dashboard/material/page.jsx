@@ -32,6 +32,7 @@ export default function MaterialForm() {
   const [editId, setEditId] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [initialContext, setInitialContext] = useState(null)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
@@ -108,22 +109,17 @@ export default function MaterialForm() {
 
     setLoading(true)
     try {
-      let url = `${process.env.baseUrl}/material?limit=1000`
+      // Note: The backend will now return nested hierarchy
+      let url = `${process.env.baseUrl}/material`
       if (search) url += `&q=${encodeURIComponent(search)}`
-      if (subCategory) url += `&category_id=${subCategory}`
-      else if (category) url += `&category_id=${category}`
+      if (subCategory) url += `&parent_id=${subCategory}`
+      else if (category) url += `&parent_id=${category}`
 
       const response = await authFetch(url, { signal: controller.signal })
       const data = await response.json()
 
-      let items = data.materials || data.items || []
-      items.sort((a, b) => {
-        const oA = a.order_no ?? Infinity
-        const oB = b.order_no ?? Infinity
-        return oA !== oB ? oA - oB : b.id - a.id
-      })
-
-      setMaterials(items)
+      // The 'data' is the array of nested categories/subcategories/materials
+      setMaterials(data.data || data || [])
     } catch (error) {
       if (error.name === 'AbortError' || controller.signal.aborted) return
       toast.error('Failed to fetch materials')
@@ -137,6 +133,13 @@ export default function MaterialForm() {
     setEditId(material.id)
     setIsFormOpen(true)
   }
+
+  // Pre-fetch check for editing (ensures modal state is correct)
+  useEffect(() => {
+    if (isFormOpen && editing && editId) {
+      // Optional: extra check if needed
+    }
+  }, [isFormOpen, editing, editId])
 
   const handleDeleteClick = (id) => {
     requireAdmin(() => { setDeleteId(id); setIsDeleteDialogOpen(true) })
@@ -157,9 +160,10 @@ export default function MaterialForm() {
     }
   }
 
-  const handleAddClick = () => {
+  const handleAddClick = (context = null) => {
     setEditing(false)
     setEditId(null)
+    setInitialContext(context)
     setIsFormOpen(true)
   }
 
@@ -258,7 +262,7 @@ export default function MaterialForm() {
   const saveCategoryOrder = async (payload) => {
     try {
       setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/category/update-order`, {
+      const res = await authFetch(`${process.env.baseUrl}/category-order`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categories: payload })
@@ -276,10 +280,10 @@ export default function MaterialForm() {
   const saveSubCategoryOrder = async (payload) => {
     try {
       setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/sub/update-order`, {
+      const res = await authFetch(`${process.env.baseUrl}/category-order`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sub_categories: payload })
+        body: JSON.stringify({ categories: payload })
       })
       if (!res.ok) throw new Error('Failed to save subcategory order')
       toast.success('Subcategory order saved', { autoClose: 1000 })
@@ -389,6 +393,7 @@ export default function MaterialForm() {
         editing={editing}
         editId={editId}
         authorId={author_id}
+        initialContext={initialContext}
         onSuccess={fetchMaterials}
       />
 

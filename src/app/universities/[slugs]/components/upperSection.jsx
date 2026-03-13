@@ -13,8 +13,6 @@ import LevelSections from './LevelSections'
 import ImageGallery from './Gallery'
 import MapSection from './MapSection'
 const UpperSection = ({ university }) => {
-
-  console.log(university, "universityuniversityuniversity")
   return (
     <div className='flex flex-col items-center'>
       {/* Top Section (Already Styled) */}
@@ -138,89 +136,47 @@ const UpperSection = ({ university }) => {
         </div>
       </div>
 
-      {/* About Section */}
-      <div className='rounded-md p-8 w-full lg:w-[80%] mb-12 max-md:mb-7 px-[75px] max-md:px-[30px]'>
-        <h2 className='font-bold text-xl md:text-2xl mb-4'>
-          About {university?.fullname}
-        </h2>
-        <div
-          dangerouslySetInnerHTML={{
-            __html: he.decode(university?.description || '')
-          }}
-          className="leading-7 text-justify space-y-4
-          [&>iframe]:w-full 
-             [&>iframe]:max-w-[calc(100vw-40px)] 
-             [&>iframe]:aspect-video 
-             [&>iframe]:h-auto
-             [&>iframe]:rounded-md 
-             [&>iframe]:mt-4
-             [&>iframe]:mx-auto
-             [&>iframe]:block
+      {/* About Section with Map Sidebar */}
+      <div className='w-full lg:w-[85%] px-4 sm:px-8 md:px-12 lg:px-24 mb-12 flex flex-col lg:flex-row gap-8 lg:gap-16'>
+        {/* Main Content: About */}
+        <div className='flex-1'>
+          <h2 className='font-bold text-xl md:text-2xl mb-6 flex items-center gap-3'>
+            <div className='w-1.5 h-8 bg-[#30AD8F] rounded-full' />
+            About {university?.fullname}
+          </h2>
+          <div
+            dangerouslySetInnerHTML={{
+              __html: he.decode(university?.description || '')
+            }}
+            className="leading-7 text-justify space-y-4
+            text-xs md:text-sm lg:text-base
+            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-4
+            [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3
+            [&_ol]:pl-8 [&_ul]:pl-8 [&_li]:pl-2
+            [&_table]:min-w-full [&_table]:border-collapse [&_th]:bg-gray-100 [&_th]:p-2 [&_td]:p-2 [&_td]:border
+            "
+          />
+        </div>
 
-             /* Table wrapper styles */
-             [&_.table-wrapper]:overflow-x-auto
-             [&_.table-wrapper]:my-4
-             [&_.table-wrapper]:w-full
-             [&_.table-wrapper]:[scrollbar-width:thin]
-             [&_.table-wrapper]:[scrollbar-color:gray-300_transparent]
-
-             /* Table styles */
-             [&_table]:min-w-full
-             [&_table]:border-collapse
-             [&_th]:bg-gray-100
-             [&_th]:p-2
-             [&_th]:text-left
-             [&_th]:border
-             [&_th]:border-gray-300
-             [&_td]:p-2
-             [&_td]:border
-             [&_td]:border-gray-300
-             [&_tr:nth-child(even)]:bg-gray-50
-
-             /* Other styles */
-             [&_h1]:text-2xl
-             [&_h1]:font-bold
-             [&_h1]:mt-8
-             [&_h1]:mb-4
-             [&_h2]:text-xl
-             [&_h2]:font-bold
-             [&_h2]:mt-6
-             [&_h2]:mb-3
-             text-xs md:text-sm lg:text-base
-             [&_ol]:pl-8 
-             [&_ol]:my-4
-             [&_ol]:space-y-2
-             [&_ul]:list-disc 
-             [&_ul]:pl-8 
-             [&_ul]:my-4
-             [&_ul]:space-y-2
-             [&_li]:pl-2
-             max-lg:[&_ol]:text-sm
-             max-lg:[&_ul]:text-sm
-             max-lg:[&_ol]:space-y-1
-             max-lg:[&_ul]:space-y-1'
-          "
-        />
+        {/* Sidebar: Map Widget */}
+        <div className='lg:w-[320px] shrink-0'>
+          <MapSection university={university} />
+        </div>
       </div>
 
       {/* college programs */}
-
       {Array.isArray(university?.programs) &&
         university.programs.length > 0 && (
-          <section className="w-full mb-14 max-md:mb-7">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#30AD8F]/10 to-[#30AD8F]/5 p-10 max-md:p-6 px-[75px] max-md:px-[30px]">
-
+          <section className="w-full mb-14 max-md:mb-7 px-4 sm:px-8 md:px-12 lg:px-24">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#30AD8F]/10 to-[#30AD8F]/5 p-10 max-md:p-6">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="font-bold text-lg md:text-xl mb-4 text-gray-900">
+                <h2 className="font-bold text-lg md:text-xl text-gray-900">
                   Programs Offered
                 </h2>
-
                 <span className="text-sm font-medium bg-[#30AD8F]/20 text-[#30AD8F] px-4 py-1.5 rounded-full">
-                  {university.programs.length} Program
-                  {university.programs.length > 1 && "s"}
+                  {university.programs.length} Program{university.programs.length > 1 && "s"}
                 </span>
               </div>
-
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {university.programs.map((item, idx) => (
                   <li
@@ -228,7 +184,6 @@ const UpperSection = ({ university }) => {
                     className="group flex items-center gap-3 rounded-md bg-white px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
                   >
                     <span className="h-2.5 w-2.5 rounded-full bg-[#30AD8F] group-hover:scale-125 transition-transform" />
-
                     <span className="text-sm md:text-base font-medium text-gray-800">
                       {item?.program?.title || "N/A"}
                     </span>
@@ -239,30 +194,13 @@ const UpperSection = ({ university }) => {
           </section>
         )}
 
-      {/* levels */}
       <LevelSections university={university} />
-
-
-      {/* members */}
       <MemberSection university={university} />
-
-
-
-
-      {/* contact section */}
-
-
-      {/* Gallery Section */}
       <ImageGallery
         images={university?.gallery}
         universityName={university?.fullname}
       />
-
-      {/* video */}
       <VideoSection university={university} />
-
-      {/* Map */}
-      <MapSection university={university} />
     </div>
   )
 }

@@ -11,18 +11,20 @@ const SmallCardList = ({ blogs }) => {
   }
 
 
-console.log(blogs,"blog.featured_image")
   return (
-    <div className=''>
-      <h1 className='text-2xl text-center font-bold mb-7'>Related Blogs</h1>
-      <div className='w-full grid grid-cols-4 gap-7 max-[1265px]:grid-cols-3 max-[795px]:grid-cols-2 max-[513px]:grid-cols-1 '>
+    <div className='pb-20'>
+      <div className='flex flex-col items-center mb-12'>
+        <h2 className='text-3xl md:text-4xl font-black text-gray-900 mb-4 text-center'>Related Blogs</h2>
+        <div className='w-24 h-1.5 bg-blue-600 rounded-full'></div>
+      </div>
+      <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
         {blogs.map((blog) => (
-          <Link href={`/blogs/${blog.slug}`} key={blog.id}>
+          <Link href={`/blogs/${blog.slug}`} key={blog.id} className='group'>
             <RelatedCard
               image={blog.featured_image || 'https://placehold.co/600x400'}
               date={formatDate(blog.createdAt)}
               description={truncateString(blog.description, 100)}
-              title={truncateString(blog.title, 20)}
+              title={truncateString(blog.title, 60)}
               key={blog.id}
               slug={blog.slug}
             />
