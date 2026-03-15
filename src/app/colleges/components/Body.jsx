@@ -265,7 +265,7 @@ const CollegeFinder = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     degree: [],
     uni: [],
-    state: [],
+    district: [],
     type: []
   })
 
@@ -482,7 +482,7 @@ const CollegeFinder = () => {
               className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
               onClick={() => {
                 setSearchQuery('')
-                setSelectedFilters({ state: [], degree: [], uni: [], type: [] })
+                setSelectedFilters({ district: [], degree: [], uni: [], type: [] })
                 setFilterInputs({
                   degree: '',
                   affiliation: '',
@@ -508,7 +508,7 @@ const CollegeFinder = () => {
             title='District'
             inputField='district'
             options={filteredDistricts}
-            selectedValues={selectedFilters.state}
+            selectedValues={selectedFilters.district}
             onCheckboxChange={(val) => handleFilterChange('district', val)}
             defaultValue={filterInputs.district}
             onSearchChange={handleFilterSearchChange}
@@ -567,13 +567,13 @@ const CollegeFinder = () => {
                 onClick: () => {
                   setSearchQuery('')
                   setSelectedFilters({
-                    state: [],
+                    district: [],
                     degree: [],
                     uni: [],
                     type: []
                   })
                   setFilterInputs({
-                    discipline: '',
+                    degree: '',
                     affiliation: '',
                     district: '',
                     instituteType: ''
