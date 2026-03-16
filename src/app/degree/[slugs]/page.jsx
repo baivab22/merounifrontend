@@ -52,6 +52,43 @@ const ShareSection = ({ degree }) => {
   )
 }
 
+const ProgramCard = ({ program }) => {
+  if (!program.slugs) {
+    return (
+      <div className='h-full p-6 rounded-2xl border border-gray-100 bg-gray-50/50 grayscale opacity-60'>
+        <div className='mb-4'>
+          <div className='w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400'>
+            <GraduationCap className='w-5 h-5' />
+          </div>
+        </div>
+        <h3 className='font-bold text-gray-500 line-clamp-2'>{program.title}</h3>
+        <p className='text-xs text-gray-400 mt-2 italic'>Coming soon</p>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-lg transition-all duration-300'
+    >
+      <div className='flex flex-col h-full'>
+        <div className='flex items-start justify-between mb-4'>
+          <div className='p-2 rounded-xl bg-[#30AD8F]/5 text-[#30AD8F] group-hover:bg-[#30AD8F] group-hover:text-white transition-colors duration-300'>
+            <GraduationCap className='w-5 h-5' />
+          </div>
+        </div>
+        <h3 className='font-bold text-gray-900 leading-snug line-clamp-2 mb-2'>
+          {program.title}
+        </h3>
+        <div className='mt-auto pt-4 border-t border-gray-50 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+          <span>{program.duration || 'Full Time'}</span>
+          {program.code && <span>{program.code}</span>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const CourseDescription = ({ params }) => {
   const [degree, setDegree] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -209,36 +246,13 @@ const CourseDescription = ({ params }) => {
                     {degree.programs && degree.programs.length > 0 && (
                       <div className='mb-20'>
                         <h2 className='text-2xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
-                          Programs under this degree
+                          Available Programs
                         </h2>
-                        <ul className='grid gap-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                           {degree.programs.map((program) => (
-                            <li key={program.id}>
-                              {program.slugs ? (
-                                <Link
-                                  href={`/program/${encodeURIComponent(program.slugs)}`}
-                                  className='block p-5 rounded-2xl border border-gray-100 hover:border-[#0A6FA7] hover:bg-[#0A6FA7]/5 transition-all group'
-                                >
-                                  <div className='flex justify-between items-center'>
-                                    <div>
-                                      <h3 className='font-bold text-gray-800 group-hover:text-[#0A6FA7]'>
-                                        {program.title}
-                                      </h3>
-                                      <p className='text-xs text-gray-500 mt-1'>
-                                        {program.duration} {program.code && `· ${program.code}`}
-                                      </p>
-                                    </div>
-                                    <span className='text-xs font-bold text-[#0A6FA7] opacity-0 group-hover:opacity-100 transition-opacity'>View Details →</span>
-                                  </div>
-                                </Link>
-                              ) : (
-                                <div className='block p-5 rounded-2xl border border-gray-100 bg-gray-50'>
-                                  <h3 className='font-bold text-gray-400'>{program.title}</h3>
-                                </div>
-                              )}
-                            </li>
+                            <ProgramCard key={program.id} program={program} />
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -266,46 +280,13 @@ const CourseDescription = ({ params }) => {
                   <div className='container mx-auto px-4 py-20'>
                     <div className='max-w-4xl mx-auto'>
                       <h2 className='text-2xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
-                        Programs under this degree
+                        Available Programs
                       </h2>
-                      <ul className='grid gap-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                         {degree.programs.map((program) => (
-                          <li key={program.id}>
-                            {program.slugs ? (
-                              <Link
-                                href={`/program/${encodeURIComponent(program.slugs)}`}
-                                className='block p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#0A6FA7] hover:shadow-lg transition-all group'
-                              >
-                                <div className='flex items-center justify-between'>
-                                  <div className='flex-1'>
-                                    <h3 className='font-bold text-gray-900 text-lg group-hover:text-[#0A6FA7] transition-colors'>
-                                      {program.title}
-                                    </h3>
-                                    <div className='flex flex-wrap gap-x-4 mt-2 text-sm text-gray-500 font-medium'>
-                                      {program.code && <span>Code: {program.code}</span>}
-                                      {program.duration && <span>· {program.duration}</span>}
-                                      {program.credits && <span>· {program.credits} Credits</span>}
-                                    </div>
-                                  </div>
-                                  <div className='ml-4'>
-                                    <span className='px-6 py-2 rounded-full bg-gray-50 text-[#0A70A7] text-xs font-bold uppercase tracking-wider group-hover:bg-[#0A70A7] group-hover:text-white transition-all'>
-                                      View Program
-                                    </span>
-                                  </div>
-                                </div>
-                              </Link>
-                            ) : (
-                              <div className='block p-6 rounded-3xl border border-gray-100 bg-white text-gray-800'>
-                                <h3 className='font-bold text-lg'>{program.title}</h3>
-                                <div className='flex flex-wrap gap-x-4 mt-2 text-sm text-gray-500 font-medium'>
-                                  {program.code && <span>Code: {program.code}</span>}
-                                  {program.duration && <span>· {program.duration}</span>}
-                                </div>
-                              </div>
-                            )}
-                          </li>
+                          <ProgramCard key={program.id} program={program} />
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -313,14 +294,16 @@ const CourseDescription = ({ params }) => {
             )}
 
             {uniqueColleges.length > 0 && (
-              <div className='container mx-auto px-4 py-20 border-t border-gray-50'>
-                <div className='max-w-4xl mx-auto'>
-                  <h2 className='text-2xl font-bold text-gray-900 mb-10 border-l-4 border-[#30AD8F] pl-4'>
-                    Colleges offering this course
+              <div className='container mx-auto px-4 py-16 border-t border-gray-50'>
+                <div className='max-w-5xl mx-auto'>
+                  <h2 className='text-xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
+                    Offered by these Colleges
                   </h2>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
                     {uniqueColleges.map((college, index) => (
-                      <CollegeCard key={index} college={college} />
+                      <div key={index} className='scale-[0.95] origin-top-left'>
+                        <CollegeCard college={college} />
+                      </div>
                     ))}
                   </div>
                 </div>

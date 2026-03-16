@@ -41,11 +41,6 @@ const FacilityCard = ({ item }) => {
       >
         {item?.icon ? (
           <div className='w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center p-3 shadow-sm'>
-            {/* <img
-              src={item.icon}
-              alt={item?.title}
-              className='w-full h-full object-contain'
-            /> */}
             {item?.icon}
           </div>
         ) : (
