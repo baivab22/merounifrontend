@@ -82,6 +82,30 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
   }
 }
 
+
+
+const fetchSchoolAffiliationsFromAPI = async (searchQuery = '') => {
+  try {
+    const queryParams = new URLSearchParams()
+    if (searchQuery) queryParams.append('q', searchQuery)
+    const url = `${process.env.baseUrl}/school/affiliations?${queryParams.toString()}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    })
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+    const data = await response.json()
+    return data.items || []
+  } catch (error) {
+    console.error('Failed to fetch school affiliations:', error)
+    return []
+  }
+}
+
 const SchoolFinder = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -109,6 +133,9 @@ const SchoolFinder = () => {
     affiliation: ''
   })
 
+  const [affiliations, setAffiliations] = useState([])
+  const [isAffiliationsLoading, setIsAffiliationsLoading] = useState(false)
+
   // Selected Filter Values
   const [selectedFilters, setSelectedFilters] = useState({
     affiliation: initialAffiliation,
@@ -118,18 +145,22 @@ const SchoolFinder = () => {
   const user = useSelector((state) => state.user.data)
   const [wishlistCollegeIds, setWishlistCollegeIds] = useState(new Set())
 
+  // Initial Fetch for Affiliations
+  useEffect(() => {
+    const initAffiliations = async () => {
+      setIsAffiliationsLoading(true)
+      const data = await fetchSchoolAffiliationsFromAPI()
+      setAffiliations(data.map(a => ({ id: String(a.id), name: a.fullname })))
+      setIsAffiliationsLoading(false)
+    }
+    initAffiliations()
+  }, [])
+
   // Static Filter Options
   const staticOptions = useMemo(() => ({
-    affiliation: [
-      { id: 'NEB', name: 'NEB' },
-      { id: 'CBSE', name: 'CBSE' },
-      { id: 'Cambridge / A-Level', name: 'Cambridge / A-Level' },
-      { id: 'IB', name: 'IB' }
-    ],
     type: [
-      { id: 'Public', name: 'Public' },
-      { id: 'Private', name: 'Private' },
-      { id: 'Community', name: 'Community' }
+      { id: 'public', name: 'Public' },
+      { id: 'private', name: 'Private' },
     ]
   }), [])
 
@@ -225,8 +256,15 @@ const SchoolFinder = () => {
     fetchData()
   }, [searchParams])
 
-  const handleFilterSearchChange = (field, value) => {
+  const handleFilterSearchChange = async (field, value) => {
     setFilterInputs((prev) => ({ ...prev, [field]: value }))
+
+    if (field === 'affiliation') {
+      setIsAffiliationsLoading(true)
+      const data = await fetchSchoolAffiliationsFromAPI(value)
+      setAffiliations(data.map(a => ({ id: String(a.id), name: a.fullname })))
+      setIsAffiliationsLoading(false)
+    }
   }
 
   const handleFilterChange = (filterType, value) => {
@@ -250,11 +288,8 @@ const SchoolFinder = () => {
   }
 
   const filteredAffiliations = useMemo(
-    () =>
-      staticOptions.affiliation.filter((a) =>
-        a.name.toLowerCase().includes(filterInputs.affiliation.toLowerCase())
-      ),
-    [filterInputs.affiliation, staticOptions.affiliation]
+    () => affiliations,
+    [affiliations]
   )
 
   const filteredInstituteTypes = useMemo(
@@ -334,6 +369,7 @@ const SchoolFinder = () => {
             onCheckboxChange={(val) => handleFilterChange('affiliation', val)}
             defaultValue={filterInputs.affiliation}
             onSearchChange={handleFilterSearchChange}
+            isLoading={isAffiliationsLoading}
           />
           <FilterSection
             title='Institute type'
