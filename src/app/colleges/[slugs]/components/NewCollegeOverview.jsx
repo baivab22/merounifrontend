@@ -28,6 +28,7 @@ const CollegeOverview = ({ college }) => {
   const hasAddress = !!(
     college?.collegeAddress?.country ||
     college?.collegeAddress?.state ||
+    college?.collegeAddress?.district ||
     college?.collegeAddress?.city ||
     college?.collegeAddress?.street ||
     college?.collegeAddress?.postal_code
@@ -77,7 +78,7 @@ const CollegeOverview = ({ college }) => {
       component: <FaqSection faqs={college.faqs || []} />
     }
   ]
-  
+
 
   const visibleSections = allSections.filter((section) => section.visible)
 
@@ -138,11 +139,10 @@ const CollegeOverview = ({ college }) => {
               <li
                 key={index}
                 onClick={() => handleScroll(index)}
-                className={`text-sm font-medium cursor-pointer whitespace-nowrap px-4 py-2 md:px-0 md:py-2.5 transition-all relative group ${
-                  activeSection === index
+                className={`text-sm font-medium cursor-pointer whitespace-nowrap px-4 py-2 md:px-0 md:py-2.5 transition-all relative group ${activeSection === index
                     ? 'text-[#0A6FA7]'
                     : 'text-gray-500 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 {section.name}
                 {activeSection === index && (
