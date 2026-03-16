@@ -21,10 +21,10 @@ const Syllabus = ({ degree }) => {
   }, {})
 
   return (
-    <section className='bg-gradient-to-b from-[#f8fafc] to-[#edf6f9] pt-10 px-6 mt-12 rounded-md'>
-      <div className='max-w-6xl mx-auto'>
-        <h2 className='text-xl md:text-2xl font-extrabold text-gray-800 text-center mb-12'>
-          📘 Syllabus
+    <section className='bg-white pt-10 mt-12 overflow-hidden'>
+      <div className='max-w-4xl mx-auto'>
+        <h2 className='text-2xl font-bold text-gray-900 mb-10 border-l-4 border-[#30AD8F] pl-4'>
+          Syllabus
         </h2>
 
         {groupedSyllabus &&

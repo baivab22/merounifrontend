@@ -3,7 +3,7 @@ import React from 'react'
 
 const Hero = ({ blog }) => {
   return (
-    <div className='relative px-6 md:px-16 pt-10 md:pt-20 max-w-[1600px] mx-auto'>
+    <div className='relative px-6 md:px-16 pt-10 md:pt-24 max-w-[1600px] mx-auto'>
       <div className='max-w-[900px] mx-auto'>
         {/* Category Badge & Date */}
         <div className='flex items-center gap-3 mb-6'>

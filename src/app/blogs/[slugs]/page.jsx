@@ -123,7 +123,7 @@ const NewsDetailsPage = ({ params }) => {
       ) : (
         <>
           <Hero blog={blog} />
-          <div className='px-6 md:px-16 pt-10 max-w-[1600px] mx-auto'>
+          <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
             <Banner />
           </div>
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12'>
