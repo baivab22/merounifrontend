@@ -47,9 +47,7 @@ const SearchBar = ({ value, onChange, onClear }) => (
   </div>
 )
 
-const MaterialRow = ({ material }) => {
-  console.log(material,"dsfYO");
-  
+const MaterialRow = ({ material }) => {  
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
