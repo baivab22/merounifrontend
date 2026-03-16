@@ -68,3 +68,42 @@ export async function getMaterialCategories() {
     throw error
   }
 }
+// Fetches classes and subjects
+export async function getMaterialHierarchy() {
+  try {
+    const response = await fetch(
+      `${process.env.baseUrl}/materials?type=MATERIAL&depth=2`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      }
+    )
+    if (!response.ok) throw new Error('Failed to fetch hierarchy')
+    const result = await response.json()
+    return result.data || []
+  } catch (error) {
+    console.error('Error fetching material hierarchy:', error)
+    return []
+  }
+}
+
+// Fetches materials for a specific subject (topic)
+export async function getMaterialsBySubject(subjectId) {
+  try {
+    const response = await fetch(
+      `${process.env.baseUrl}/materials/topic/${subjectId}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      }
+    )
+    if (!response.ok) throw new Error('Failed to fetch materials')
+    const result = await response.json()
+    return result.materials || result.items || result.data || []
+  } catch (error) {
+    console.error('Error fetching materials by subject:', error)
+    return []
+  }
+}
