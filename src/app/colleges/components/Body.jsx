@@ -257,7 +257,7 @@ const CollegeFinder = () => {
   const [filterInputs, setFilterInputs] = useState({
     degree: '',
     affiliation: '',
-    district: '',
+    districts: '',
     instituteType: ''
   })
   const [filteredDegrees, setFilteredDegrees] = useState([])
@@ -265,7 +265,7 @@ const CollegeFinder = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     degree: [],
     uni: [],
-    district: [],
+    districts: [],
     type: []
   })
 
@@ -413,9 +413,9 @@ const CollegeFinder = () => {
   const filteredDistricts = useMemo(
     () =>
       DistrictLists.filter((d) =>
-        d.toLowerCase().includes(filterInputs.district.toLowerCase())
+        d.toLowerCase().includes(filterInputs.districts.toLowerCase())
       ).map((d) => ({ name: d })),
-    [filterInputs.district]
+    [filterInputs.districts]
   )
 
   const filteredInstituteTypes = useMemo(
@@ -506,11 +506,11 @@ const CollegeFinder = () => {
           />
           <FilterSection
             title='District'
-            inputField='district'
+            inputField='districts'
             options={filteredDistricts}
-            selectedValues={selectedFilters.district}
-            onCheckboxChange={(val) => handleFilterChange('district', val)}
-            defaultValue={filterInputs.district}
+            selectedValues={selectedFilters.districts}
+            onCheckboxChange={(val) => handleFilterChange('districts', val)}
+            defaultValue={filterInputs.districts}
             onSearchChange={handleFilterSearchChange}
           />
           <FilterSection
