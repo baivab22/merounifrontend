@@ -58,7 +58,12 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
       schools:
         data.items?.map((school) => ({
           name: school.name,
-          location: `${school.address?.city || ''}, ${school.address?.district || ''}`,
+          location: (() => {
+            const city = school.address?.city || ''
+            const district = school.address?.district || ''
+            const parts = [city, district].filter(Boolean)
+            return parts.length > 0 ? parts.join(', ') : null
+          })(),
           description: school.description || 'No description available.',
           googleMapUrl: school.google_map_url,
           instituteType: school.institute_type || 'Unknown',
