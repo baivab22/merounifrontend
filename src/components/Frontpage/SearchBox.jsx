@@ -206,17 +206,13 @@ const SearchBox = ({ onClose }) => {
                   }}
                 >
                   {/* Full-bleed image banner */}
-                  <div className='w-full h-36 overflow-hidden rounded-t-[22px] shrink-0 bg-gray-50'>
-                    <img
+                  <div className='w-full h-36 overflow-hidden rounded-t-[22px] shrink-0 bg-gray-50 relative'>
+                    <Image
                       src={imageUrl ? (imageUrl.startsWith('http') ? encodeURI(imageUrl) : `${process.env.mediaUrl}/${imageUrl}`) : '/images/logo.png'}
                       alt={item.name || item.title}
-                      className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${imageUrl ? 'object-cover' : 'object-contain p-4'}`}
-                      onError={(e) => {
-                        e.target.onerror = null
-                        e.target.src = '/images/logo.png'
-                        e.target.classList.remove('object-cover')
-                        e.target.classList.add('object-contain', 'p-4')
-                      }}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className={`transition-transform duration-500 group-hover:scale-105 ${imageUrl ? 'object-cover' : 'object-contain p-4'}`}
                     />
                   </div>
 

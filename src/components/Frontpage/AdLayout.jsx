@@ -1,5 +1,6 @@
 import { Skeleton } from '../../ui/shadcn/Skeleton'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const isExpired = (banner) => {
   if (!banner?.date_of_expiry) return false
@@ -40,17 +41,14 @@ const AdLayout = ({ banners = [], size = '', number = 1, loading = false }) => {
                 href={banner.website_url}
                 target='_blank'
                 rel=''
-                className='block h-full'
+                className='block h-full relative h-[44px] md:h-[58px] lg:h-[70px]'
               >
-                <img
-                  src={
-                    banner.banner_image || '/images/meroUniLarge.gif'
-                  }
-                  onError={(e) => {
-                    e.target.src = '/images/meroUniLarge.gif'
-                  }}
+                <Image
+                  src={banner.banner_image || '/images/meroUniLarge.gif'}
                   alt={`Banner ${banner.title}`}
-                  className='w-full h-[44px] md:h-[58px] lg:h-[70px] object-cover'
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className='object-cover'
                 />
               </a>
             ) : (

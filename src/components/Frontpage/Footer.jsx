@@ -1,25 +1,48 @@
-'use client'
-
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaFacebook, FaInstagram } from 'react-icons/fa6'
 import { TiSocialLinkedinCircular } from 'react-icons/ti'
 import { PiXLogoLight } from 'react-icons/pi'
-import { ChevronDown, MapPin, Mail, Phone } from 'lucide-react'
+import { MapPin, Mail, Phone } from 'lucide-react'
 
 import { getSiteConfig } from '@/app/actions/siteConfigActions'
 import { THEME_BLUE } from '@/constants/constants'
+import FooterMobileAccordion from './FooterMobileAccordion'
 
-const Footer = () => {
-  const [openSections, setOpenSections] = useState({})
-  const [socialLinks, setSocialLinks] = useState({})
-  const [contactInfo, setContactInfo] = useState({
+const Footer = async () => {
+  let socialLinks = {}
+  let contactInfo = {
     phone: '',
     email: '',
     address: ''
-  })
-  const [sections, setSections] = useState({
+  }
+
+  try {
+    const socialRes = await getSiteConfig({ types: 'social_facebook,social_instagram,social_linkedin,social_twitter' })
+    if (socialRes?.items && Array.isArray(socialRes.items)) {
+      socialRes.items.forEach(item => {
+        socialLinks[item.type] = item.value
+      })
+    }
+  } catch (e) {
+    console.error('Footer: Error fetching social links:', e)
+  }
+
+  try {
+    const contactRes = await getSiteConfig({ types: 'contact_phone,contact_email,contact_address' })
+    if (contactRes?.items) {
+      contactRes.items.forEach(item => {
+        if (item.type === 'contact_phone') contactInfo.phone = item.value
+        if (item.type === 'contact_email') contactInfo.email = item.value
+        if (item.type === 'contact_address') contactInfo.address = item.value
+      })
+    }
+  } catch (e) {
+    console.error('Footer: Error fetching contact info:', e)
+  }
+
+  const sections = {
     Info: {
       header: 'Info',
       list: [
@@ -48,51 +71,10 @@ const Footer = () => {
         { title: 'Careers at MeroUni', href: '/career' }
       ]
     }
-  })
-
-  useEffect(() => {
-    const fetchFooterData = async () => {
-      // 1. Fetch Social Links
-      try {
-        const socialRes = await getSiteConfig({ types: 'social_facebook,social_instagram,social_linkedin,social_twitter' })
-        const socials = {}
-        if (socialRes?.items && Array.isArray(socialRes.items)) {
-          socialRes.items.forEach(item => {
-            socials[item.type] = item.value
-          })
-          setSocialLinks(socials)
-        }
-      } catch (e) {
-        console.error('Footer: Error fetching social links:', e)
-      }
-
-      // 2. Fetch Contact Info
-      try {
-        const contactRes = await getSiteConfig({ types: 'contact_phone,contact_email,contact_address' })
-        if (contactRes?.items) {
-          const info = {}
-          contactRes.items.forEach(item => {
-            if (item.type === 'contact_phone') info.phone = item.value
-            if (item.type === 'contact_email') info.email = item.value
-            if (item.type === 'contact_address') info.address = item.value
-          })
-          setContactInfo(prev => ({ ...prev, ...info }))
-        }
-      } catch (e) {
-        console.error('Footer: Error fetching contact info:', e)
-      }
-    }
-    fetchFooterData()
-  }, [])
-
-  const toggleSection = (index) => {
-    setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }))
   }
 
-  const linkClass =
-    'text-sm text-gray-600 hover:text-[#387cae] transition-colors'
-  const headingClass =
-    'text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4'
+  const linkClass = 'text-sm text-gray-600 hover:text-[#387cae] transition-colors'
+  const headingClass = 'text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4'
 
   return (
     <footer className='bg-gray-50 border-t border-gray-200/80'>
@@ -140,79 +122,13 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Links accordion - mobile */}
-        <div className='md:hidden space-y-0 pb-6 border-b border-gray-200/80'>
-          {Object.entries(sections).map(([key, section], index) => (
-            <div
-              key={key}
-              className='border-b border-gray-200/80 last:border-b-0'
-            >
-              <button
-                type='button'
-                onClick={() => toggleSection(index)}
-                className='w-full flex items-center justify-between py-4 text-left'
-                aria-expanded={openSections[index]}
-              >
-                <span className={headingClass + ' mb-0'}>{section.header}</span>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-500 transition-transform ${openSections[index] ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {openSections[index] && (
-                <ul className='space-y-3 pb-4'>
-                  {section.list.map((item, i) => (
-                    <li key={i}>
-                      <Link
-                        href={item.href || '#'}
-                        className={linkClass}
-                        onClick={() => setOpenSections({})}
-                      >
-                        {item.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-
-          {/* Contact Us Accordion */}
-          <div className='border-b border-gray-200/80 last:border-b-0'>
-            <button
-              type='button'
-              onClick={() => toggleSection('contact')}
-              className='w-full flex items-center justify-between py-4 text-left'
-              aria-expanded={openSections['contact']}
-            >
-              <span className={headingClass + ' mb-0'}>Contact Us</span>
-              <ChevronDown
-                className={`w-4 h-4 text-gray-500 transition-transform ${openSections['contact'] ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {openSections['contact'] && (
-              <ul className='space-y-4 pb-4'>
-                <li className='flex items-start gap-3'>
-                  <MapPin className='w-4 h-4 shrink-0 mt-0.5' style={{ color: THEME_BLUE }} />
-                  <span className='text-sm text-gray-600'>
-                    {contactInfo.address || 'Putalisadak, Kathmandu'}
-                  </span>
-                </li>
-                <li className='flex items-center gap-3'>
-                  <Phone className='w-4 h-4 shrink-0' style={{ color: THEME_BLUE }} />
-                  <a href={`tel:${contactInfo.phone || '+9779840747576'}`} className={linkClass}>
-                    {contactInfo.phone || '+977 9840747576'}
-                  </a>
-                </li>
-                <li className='flex items-center gap-3'>
-                  <Mail className='w-4 h-4 shrink-0' style={{ color: THEME_BLUE }} />
-                  <a href={`mailto:${contactInfo.email || 'info@merouni.com'}`} className={linkClass}>
-                    {contactInfo.email || 'info@merouni.com'}
-                  </a>
-                </li>
-              </ul>
-            )}
-          </div>
-        </div>
+        {/* Links accordion - mobile (Client Component) */}
+        <FooterMobileAccordion 
+          sections={sections} 
+          contactInfo={contactInfo} 
+          linkClass={linkClass} 
+          headingClass={headingClass} 
+        />
 
         {/* Bottom: logo, socials, legal, copyright */}
         <div className='pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6'>
@@ -297,6 +213,5 @@ const Footer = () => {
     </footer>
   )
 }
-
 
 export default Footer
