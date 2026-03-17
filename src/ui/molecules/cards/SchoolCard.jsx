@@ -183,21 +183,19 @@ const SchoolCard = ({
             );
           })()}
         </div>
-
-        {location && (
-          <div className='absolute bottom-3 left-4 right-4 z-10'>
-            <div className='flex items-center gap-1 text-white/90 text-xs font-medium'>
-              <MapPin className='w-3 h-3 text-blue-400 flex-shrink-0' />
-              <span className='line-clamp-1'>{location}</span>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className='p-6 flex flex-col flex-1'>
         <h3 className='font-semibold text-base text-gray-800 mb-1 group-hover:text-[#0A70A7] transition-colors leading-tight line-clamp-2 min-h-[2.5rem]'>
           {name}
         </h3>
+        
+        {location && (
+          <div className='flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-2'>
+            <MapPin className='w-4 h-4 text-[#0A70A7] flex-shrink-0' />
+            <span className='line-clamp-1'>{location}</span>
+          </div>
+        )}
         {universityName && (
           <p className='text-sm text-gray-600 line-clamp-1 mb-2'>
             {universityName}
