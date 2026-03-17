@@ -1,30 +1,17 @@
-'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const isExpired = (banner) => {
   if (!banner?.date_of_expiry) return false
   return new Date(banner.date_of_expiry) < new Date()
 }
 
-const SideBanner = ({ banners = [], loading = false }) => {
+const SideBanner = ({ banners = [] }) => {
   // Get banners for positions 4,5,6,7
   const displayBanners = [4, 5, 6, 7].map((position) => {
     const banner = banners.find((b) => b.display_position === position)
     return (!banner || isExpired(banner)) ? null : banner
   })
-
-  if (loading) {
-    return (
-      <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
-        {[...Array(4)].map((_, index) => (
-          <div
-            key={index}
-            className='w-full h-32 md:h-36 rounded-md shadow-lg animate-pulse bg-slate-200'
-          />
-        ))}
-      </div>
-    )
-  }
 
   return (
     <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
@@ -35,18 +22,14 @@ const SideBanner = ({ banners = [], loading = false }) => {
             target='_blank'
             rel='noopener noreferrer'
             key={banner.id}
-            className='group relative block overflow-hidden rounded-md shadow-lg transition-transform hover:scale-[1.02]'
+            className='group relative block overflow-hidden rounded-md shadow-lg transition-transform hover:scale-[1.02] h-32 md:h-36'
           >
-            <img
-              src={
-                banner.banner_image || '/images/meroUniLarge.gif'
-              }
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = '/images/meroUniLarge.gif'
-              }}
+            <Image
+              src={banner.banner_image || '/images/meroUniLarge.gif'}
               alt={`Banner position ${banner.display_position}`}
-              className='w-full h-32 md:h-36 object-cover'
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 20vw, 300px"
+              className='object-cover'
             />
             <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300' />
           </a>

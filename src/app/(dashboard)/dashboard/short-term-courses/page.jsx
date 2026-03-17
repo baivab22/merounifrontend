@@ -216,14 +216,25 @@ export default function SkillsCoursesManager() {
             header: 'Course Information',
             accessorKey: 'title',
             cell: ({ row }) => (
-                <div className='flex flex-col'>
-                    <span className="font-semibold text-gray-900">{row.original.title}</span>
-                    <span className='text-[10px] text-gray-400 uppercase font-bold tracking-wider'>{row.original.institution_name || 'Individual'}</span>
+                <div className='flex items-center gap-3'>
+                    <div className='w-10 h-10 rounded-md border overflow-hidden flex-shrink-0 bg-gray-50'>
+                        {row.original.thumbnail_image ? (
+                            <img src={row.original.thumbnail_image} alt="" className='w-full h-full object-cover' />
+                        ) : (
+                            <div className='w-full h-full flex items-center justify-center text-gray-300'>
+                                <Award className='w-5 h-5' />
+                            </div>
+                        )}
+                    </div>
+                    <div className='flex flex-col'>
+                        <span className="font-semibold text-gray-900 line-clamp-1">{row.original.title}</span>
+                        <span className='text-[10px] text-gray-400 uppercase font-bold tracking-wider line-clamp-1'>{row.original.institution_name || 'Individual'}</span>
+                    </div>
                 </div>
             )
         },
         {
-            header: 'Investment',
+            header: 'Price',
             accessorKey: 'price',
             cell: ({ getValue }) => (
                 getValue() > 0
@@ -403,7 +414,7 @@ export default function SkillsCoursesManager() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Course Details</DialogTitle>
-                        <DialogClose />
+                        <DialogClose onClick={() => setIsViewModalOpen(false)} />
                     </DialogHeader>
                     {viewingCourse && (
                         <div className='space-y-4 text-sm'>

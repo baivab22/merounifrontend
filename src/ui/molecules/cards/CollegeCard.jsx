@@ -9,6 +9,8 @@ import { useRouter } from '@bprogress/next/app'
 import Link from 'next/link'
 
 
+import Image from 'next/image'
+
 const CollegeCard = ({
   college: collegeProp,
   name: nameProp,
@@ -132,20 +134,6 @@ const CollegeCard = ({
     }
   }
 
-  const handleDetails = (e) => {
-    e.stopPropagation()
-    if (slug) {
-      router.push(`/colleges/${slug}`)
-    }
-  }
-
-  const handleApply = (e) => {
-    e.stopPropagation()
-    if (slug) {
-      router.push(`/colleges/apply/${slug}`)
-    }
-  }
-
   return (
     <div
       role='button'
@@ -155,10 +143,12 @@ const CollegeCard = ({
       className='group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col h-full'
     >
       <div className='relative aspect-[16/10] overflow-hidden bg-gray-100'>
-        <img
+        <Image
           src={collegeImage || '/images/logo.png'}
           alt={name || 'College'}
-          className='w-full h-full aspect-auto object-cover group-hover:scale-105 transition-transform duration-500'
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className='object-cover group-hover:scale-105 transition-transform duration-500'
         />
         <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none' />
 

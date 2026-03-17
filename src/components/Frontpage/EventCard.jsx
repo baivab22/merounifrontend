@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 const EventCard = ({ event }) => {
   let month = ''
@@ -21,10 +22,12 @@ const EventCard = ({ event }) => {
     <div className='h-full flex flex-col rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 bg-white transition-all duration-300 overflow-hidden'>
       {/* Top Section: Image */}
       <div className='relative h-[180px] overflow-hidden'>
-        <img
+        <Image
           src={event?.image || '/images/events.webp'}
           alt={event.title}
-          className='w-full h-full object-cover transition-transform duration-500 hover:scale-110'
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className='object-cover transition-transform duration-500 hover:scale-110'
         />
         {collegeName && (
           <div className='absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm'>
