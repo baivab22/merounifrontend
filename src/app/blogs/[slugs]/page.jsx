@@ -100,7 +100,7 @@ const NewsDetailsPage = ({ params }) => {
         const slugs = resolvedParams.slugs
         const newsData = await services.blogs.getBySlug(slugs)
 
-        setBlog(newsData.blog || null) 
+        setBlog(newsData.blog || null)
         setRelatedBlogs(newsData.similarBlogs || [])
       } catch (err) {
         setError(err.message)
@@ -110,7 +110,7 @@ const NewsDetailsPage = ({ params }) => {
     }
 
     fetchBlogDetails()
-  }, [params]) 
+  }, [params])
 
   if (error) return <div>Error: {error}</div>
 
@@ -123,25 +123,35 @@ const NewsDetailsPage = ({ params }) => {
       ) : (
         <>
           <Hero blog={blog} />
-          <div className='px-16 max-sm:px-9 pt-10 max-w-[1600px] mx-auto'>
+          <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
             <Banner />
           </div>
-          <div className=' px-16 max-sm:px-9 max-w-[1600px] mx-auto mt-12'>
+          <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12'>
             <Description blog={blog} />
           </div>
-          <div className='px-16 max-sm:px-9 max-w-[1600px] mx-auto mt-12'>
+          <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12'>
             {
               blog?.pdf_file && (
-                  <a href={blog.pdf_file} target='_blank' rel='noopener noreferrer' className='bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded'>
-                      View PDF
-                  </a>
+                <a
+                  href={blog.pdf_file}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 px-10 rounded-2xl font-bold transition-all hover:shadow-xl hover:-translate-y-1 active:scale-95 shadow-lg shadow-blue-100'
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  </svg>
+                  Read Attached PDF Document
+                </a>
               )
             }
-          </div>  
+          </div>
 
-{/* BIG BREAK LINE  */}
-<div className='h-[1px] bg-gray-200 my-12'></div>
-          <div className=' px-16 max-sm:px-9 my-14 max-w-[1600px] mx-auto'>
+          {/* BIG BREAK LINE  */}
+          <div className='max-w-[1600px] mx-auto px-6 md:px-16'>
+            <div className='h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-16'></div>
+          </div>
+          <div className='px-6 md:px-16 my-14 max-w-[1600px] mx-auto'>
             <SmallCardList blogs={relatedBlogs} />
           </div>
 

@@ -8,14 +8,86 @@ import Header from '../../../components/Frontpage/Header'
 import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import { getDegreeBySlug } from '../actions'
-import CollegeTeach from './components/collegeTeach'
 import RelatedCourses from './components/RelatedCourses'
 import Syllabus from './components/syllabus'
 import ImageSection from './components/upperSection'
+import ApplyNow from './components/applyNow'
 import { slugify } from '@/lib/slugify'
-import { BookOpen, GraduationCap, Building2 } from 'lucide-react'
+import { BookOpen, GraduationCap, Building2, ArrowLeft } from 'lucide-react'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import CollegeCard from '@/ui/molecules/cards/CollegeCard'
+
+// Shared Share Section
+const ShareSection = ({ degree }) => {
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
+  const shareTitle = `Check out ${degree?.title} on our platform`
+
+  const shareLinks = [
+    { name: 'Facebook', icon: '/images/fb.png', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(shareTitle)}`, popup: { w: 626, h: 436 } },
+    { name: 'Twitter', icon: '/images/twitter.png', url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareTitle)}`, popup: { w: 550, h: 420 } },
+    { name: 'LinkedIn', icon: '/images/linkedin.png', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`, popup: { w: 550, h: 420 } },
+  ]
+
+  const handleShare = (link) => {
+    window.open(link.url, `${link.name}-share-dialog`, `width=${link.popup.w},height=${link.popup.h}`)
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`${shareTitle}\n${currentUrl}`)
+    alert('Link copied to clipboard!')
+  }
+
+  return (
+    <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-gray-100 shadow-xl z-50 py-3 px-6 rounded-2xl flex items-center gap-4 transition-all hover:shadow-2xl'>
+      <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mr-2'>Share</span>
+      {shareLinks.map((link) => (
+        <button key={link.name} onClick={() => handleShare(link)} className='hover:-translate-y-1 transition-transform'>
+          <img src={link.icon} alt={link.name} className='w-5 h-5 object-contain' />
+        </button>
+      ))}
+      <button onClick={handleCopy} className='hover:-translate-y-1 transition-transform'>
+        <img src='/images/insta.png' alt='Copy Link' className='w-5 h-5 object-contain' />
+      </button>
+    </div>
+  )
+}
+
+const ProgramCard = ({ program }) => {
+  if (!program.slugs) {
+    return (
+      <div className='h-full p-6 rounded-2xl border border-gray-100 bg-gray-50/50 grayscale opacity-60'>
+        <div className='mb-4'>
+          <div className='w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400'>
+            <GraduationCap className='w-5 h-5' />
+          </div>
+        </div>
+        <h3 className='font-bold text-gray-500 line-clamp-2'>{program.title}</h3>
+        <p className='text-xs text-gray-400 mt-2 italic'>Coming soon</p>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-lg transition-all duration-300'
+    >
+      <div className='flex flex-col h-full'>
+        <div className='flex items-start justify-between mb-4'>
+          <div className='p-2 rounded-xl bg-[#30AD8F]/5 text-[#30AD8F] group-hover:bg-[#30AD8F] group-hover:text-white transition-colors duration-300'>
+            <GraduationCap className='w-5 h-5' />
+          </div>
+        </div>
+        <h3 className='font-bold text-gray-900 leading-snug line-clamp-2 mb-2'>
+          {program.title}
+        </h3>
+        <div className='mt-auto pt-4 border-t border-gray-50 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+          <span>{program.duration || 'Full Time'}</span>
+          {program.code && <span>{program.code}</span>}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const CourseDescription = ({ params }) => {
   const [degree, setDegree] = useState(null)
@@ -119,145 +191,71 @@ const CourseDescription = ({ params }) => {
           <>
             {isSimpleDegree ? (
               <div className='bg-white min-h-screen'>
-                <div className='w-full bg-gray-50 border-b border-gray-100 py-10 md:py-10'>
+                <div className='w-full bg-gray-50 border-b border-gray-100 py-16 md:py-20 relative'>
+                  <div className='absolute top-6 left-6 md:left-24 z-10'>
+                    <Link
+                      href='/degree'
+                      className='inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white backdrop-blur-md text-gray-700 rounded-full text-sm font-medium transition-all shadow-sm border border-gray-100'
+                    >
+                      <ArrowLeft className='w-4 h-4' />
+                      <span>Back to Degrees</span>
+                    </Link>
+                  </div>
                   <div className='container mx-auto px-4'>
                     <div className='max-w-4xl mx-auto'>
                       {degree.short_name && (
-                        <p className='text-sm font-semibold text-[#0A6FA7] uppercase tracking-wide mb-2'>
+                        <p className='text-xs font-bold text-[#30AD8F] uppercase tracking-[0.2em] mb-3'>
                           {degree.short_name}
                         </p>
                       )}
-                      <h1 className='text-3xl md:text-4xl font-bold text-gray-900 mb-6'>
+                      <h1 className='text-3xl md:text-5xl font-bold text-gray-900 mb-6'>
                         {degree.title}
                       </h1>
                       {degree.description && (
-                        <p className='text-gray-600 text-lg max-w-2xl leading-relaxed mb-8'>
+                        <p className='text-gray-600 text-lg max-w-2xl leading-relaxed italic'>
                           {degree.description}
                         </p>
-                      )}
-
-                      <div className='w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-gray-50 flex items-center justify-center mb-8'>
-                        <img
-                          src={degree.cover_image || degree.featured_image || '/images/logo.png'}
-                          alt={degree.title}
-                          className={
-                            degree.cover_image || degree.featured_image
-                              ? 'w-full h-full object-cover'
-                              : 'w-2/3 h-auto object-contain opacity-50'
-                          }
-                        />
-                      </div>
-
-                      {degree.content && (
-                        <div
-                          className='prose prose-blue max-w-none mb-8'
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(degree.content) }}
-                        />
                       )}
                     </div>
                   </div>
                 </div>
-                {degree.programs && degree.programs.length > 0 && (
-                  <div className='container mx-auto px-4 py-12'>
-                    <div className='max-w-4xl mx-auto'>
-                      <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-                        <GraduationCap className='w-6 h-6 text-[#0A6FA7]' />
-                        Programs under this degree
-                      </h2>
-                      <ul className='space-y-2'>
-                        {degree.programs.map((program) => (
-                          <li key={program.id}>
-                            {program.slugs ? (
-                              <Link
-                                href={`/program/${encodeURIComponent(program.slugs)}`}
-                                className='block py-2 px-4 rounded-md border border-gray-200 hover:border-[#0A6FA7] hover:bg-[#0A6FA7]/5 transition-colors text-gray-800 hover:text-[#0A6FA7]'
-                              >
-                                <span className='font-medium'>
-                                  {program.title}
-                                  {program.university_programs?.[0]?.university?.fullname && (
-                                    <span className='text-gray-500 font-normal'>
-                                      {' '}
-                                      - {program.university_programs[0].university.fullname}
-                                    </span>
-                                  )}
-                                </span>
-                                {program.code && (
-                                  <span className='text-sm text-gray-500 ml-2'>
-                                    ({program.code})
-                                  </span>
-                                )}
-                                {program.duration && (
-                                  <span className='text-sm text-gray-500 ml-2'>
-                                    · {program.duration}
-                                  </span>
-                                )}
-                              </Link>
-                            ) : (
-                              <div className='block py-2 px-4 rounded-md border border-gray-200 text-gray-800'>
-                                <span className='font-medium'>
-                                  {program.title}
-                                  {program.university_programs?.[0]?.university?.fullname && (
-                                    <span className='text-gray-500 font-normal'>
-                                      {' '}
-                                      - {program.university_programs[0].university.fullname}
-                                    </span>
-                                  )}
-                                </span>
-                                {program.code && (
-                                  <span className='text-sm text-gray-500 ml-2'>
-                                    ({program.code})
-                                  </span>
-                                )}
-                                {program.duration && (
-                                  <span className='text-sm text-gray-500 ml-2'>
-                                    · {program.duration}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+
+                <div className='container mx-auto px-4 pt-16'>
+                  <div className='max-w-4xl mx-auto'>
+                    <div className='w-full aspect-video rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50 flex items-center justify-center mb-16'>
+                      <img
+                        src={degree.cover_image || degree.featured_image || '/images/logo.png'}
+                        alt={degree.title}
+                        className={
+                          degree.cover_image || degree.featured_image
+                            ? 'w-full h-full object-cover'
+                            : 'w-1/3 h-auto object-contain opacity-50'
+                        }
+                      />
                     </div>
-                  </div>
-                )}
-                {uniqueColleges.length > 0 && (
-                  <div className='container mx-auto px-4 py-12'>
-                    <div className='max-w-4xl mx-auto'>
-                      <h2 className='text-3xl font-bold text-gray-900 mb-8 flex items-center bg-gray-50/50 p-4 rounded-2xl w-full'>
-                        <Building2 className='w-8 h-8 text-[#30AD8F] mr-4' />
-                        Colleges offering this course
-                      </h2>
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 w-full'>
-                        {uniqueColleges.map((college, index) => (
-                          <Link key={index} href={`/colleges/${college.slugs || college.slug}`}>
-                            <div className='group bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 flex items-center space-x-5 h-full'>
-                              <div className='w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 group-hover:border-[#30AD8F]/20 transition-colors'>
-                                <img
-                                  src={college.college_logo || college.logo || '/images/collegePhoto.png'}
-                                  alt={college.name}
-                                  className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                                />
-                              </div>
-                              <div className='flex-1'>
-                                <h3 className='font-bold text-gray-900 group-hover:text-[#0A70A7] transition-colors line-clamp-1'>
-                                  {college.name}
-                                </h3>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
+
+                    {degree.content && (
+                      <div className='mb-20'>
+                        <div
+                          className='prose prose-lg prose-gray max-w-none'
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(degree.content) }}
+                        />
                       </div>
-                    </div>
+                    )}
+
+                    {degree.programs && degree.programs.length > 0 && (
+                      <div className='mb-20'>
+                        <h2 className='text-2xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
+                          Available Programs
+                        </h2>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                          {degree.programs.map((program) => (
+                            <ProgramCard key={program.id} program={program} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className='container mx-auto px-4 py-12'>
-                  <a
-                    href='/degree'
-                    className='inline-flex items-center text-sm font-medium text-[#0A6FA7] hover:underline'
-                  >
-                    ← Browse all degrees
-                  </a>
                 </div>
               </div>
             ) : (
@@ -265,10 +263,10 @@ const CourseDescription = ({ params }) => {
                 <ImageSection degree={degree} />
 
                 {degree.content && (
-                  <div className='container mx-auto px-4 py-12'>
+                  <div className='container mx-auto px-4 py-20'>
                     <div className='max-w-4xl mx-auto'>
                       <div
-                        className='prose prose-blue max-w-none'
+                        className='prose prose-lg prose-gray max-w-none'
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(degree.content) }}
                       />
                     </div>
@@ -276,60 +274,45 @@ const CourseDescription = ({ params }) => {
                 )}
 
                 <Syllabus degree={degree} />
-                <CollegeTeach degree={degree} />
                 <RelatedCourses degree={degree} />
+
                 {degree.programs && degree.programs.length > 0 && (
-                  <div className='container mx-auto px-4 py-12'>
+                  <div className='container mx-auto px-4 py-20'>
                     <div className='max-w-4xl mx-auto'>
-                      <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-                        <GraduationCap className='w-6 h-6 text-[#0A6FA7]' />
-                        Programs under this degree
+                      <h2 className='text-2xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
+                        Available Programs
                       </h2>
-                      <ul className='space-y-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                         {degree.programs.map((program) => (
-                          <li key={program.id}>
-                            <Link
-                              href={`/program/${encodeURIComponent(program.slugs || program.slug)}`}
-                              className='block p-4 rounded-md border border-gray-100 bg-white hover:border-[#0A6FA7] hover:shadow-md transition-all group'
-                            >
-                              <div className='flex items-center justify-between'>
-                                <div className='flex-1'>
-                                  <h3 className='font-bold text-gray-900 group-hover:text-[#0A6FA7] transition-colors'>
-                                    {program.title}
-                                    {program.university_programs?.[0]?.university?.fullname && (
-                                      <span className='text-gray-500 font-normal'>
-                                        {' '}
-                                        - {program.university_programs[0].university.fullname}
-                                      </span>
-                                    )}
-                                  </h3>
-                                  <div className='flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-gray-500'>
-                                    {program.code && (
-                                      <span>Code: {program.code}</span>
-                                    )}
-                                    {program.duration && (
-                                      <span>· {program.duration}</span>
-                                    )}
-                                    {program.credits && (
-                                      <span>· {program.credits} Credits</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className='ml-4'>
-                                  <span className='px-4 py-2 rounded-md bg-gray-50 text-[#0A6FA7] text-sm font-semibold group-hover:bg-[#0A6FA7] group-hover:text-white transition-all'>
-                                    View Program
-                                  </span>
-                                </div>
-                              </div>
-                            </Link>
-                          </li>
+                          <ProgramCard key={program.id} program={program} />
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   </div>
                 )}
               </>
             )}
+
+            {uniqueColleges.length > 0 && (
+              <div className='container mx-auto px-4 py-16 border-t border-gray-50'>
+                <div className='max-w-5xl mx-auto'>
+                  <h2 className='text-xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
+                    Offered by these Colleges
+                  </h2>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+                    {uniqueColleges.map((college, index) => (
+                      <div key={index} className='scale-[0.95] origin-top-left'>
+                        <CollegeCard college={college} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className='container mx-auto px-4 pb-20'>
+              <ShareSection degree={degree} />
+            </div>
           </>
         )}
         <Footer />

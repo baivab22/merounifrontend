@@ -50,6 +50,17 @@ const SearchBox = ({ onClose }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Close search overlay when Esc is pressed
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
   // Fetch popular searches
   useEffect(() => {
     const fetchPopularSearches = async () => {
@@ -178,7 +189,7 @@ const SearchBox = ({ onClose }) => {
 
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'>
           {items.slice(0, slice).map((item, index) => {
-            const imageUrl = item.logo
+            const imageUrl = item.image
             return (
               <Link
                 href={`/${path}/${item.slugs}`}
@@ -195,26 +206,18 @@ const SearchBox = ({ onClose }) => {
                   }}
                 >
                   {/* Full-bleed image banner */}
-                  <div className='w-full h-36 overflow-hidden rounded-t-[22px] shrink-0'>
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={item.name || item.title}
-                        className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.style.display = 'none'
-                          e.target.parentElement.classList.add('fallback-active')
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className='w-full h-full flex items-center justify-center text-3xl font-bold'
-                        style={{ backgroundColor: `${THEME_BLUE}12`, color: THEME_BLUE }}
-                      >
-                        {item.name?.charAt(0)?.toUpperCase() || item.title?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
+                  <div className='w-full h-36 overflow-hidden rounded-t-[22px] shrink-0 bg-gray-50'>
+                    <img
+                      src={imageUrl ? (imageUrl.startsWith('http') ? encodeURI(imageUrl) : `${process.env.mediaUrl}/${imageUrl}`) : '/images/logo.png'}
+                      alt={item.name || item.title}
+                      className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${imageUrl ? 'object-cover' : 'object-contain p-4'}`}
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = '/images/logo.png'
+                        e.target.classList.remove('object-cover')
+                        e.target.classList.add('object-contain', 'p-4')
+                      }}
+                    />
                   </div>
 
                   {/* Name */}

@@ -227,7 +227,7 @@ export default function SearchSelectCreate({
                                 )
                             })
                         ) : !loading && query.length > 0 ? (
-                            <div className="px-4 py-3 text-sm text-gray-500 text-center italic">
+                            <div className="px-4 py-3 text-sm text-gray-500 text-centerw">
                                 No results found
                             </div>
                         ) : null}

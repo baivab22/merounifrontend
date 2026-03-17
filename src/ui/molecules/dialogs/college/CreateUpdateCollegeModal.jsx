@@ -806,8 +806,8 @@ const CreateUpdateCollegeModal = ({
                                                 >
                                                     <option value=''>Select District</option>
                                                     {DistrictLists.map((district) => (
-                                                        <option key={district.name} value={district.name}>
-                                                            {district.name}
+                                                        <option key={district} value={district}>
+                                                            {district}
                                                         </option>
                                                     ))}
                                                 </select>

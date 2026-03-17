@@ -102,11 +102,19 @@ export default function SkillsCoursesManager() {
     const onSubmit = async (data) => {
         const formattedData = {
             ...data,
-            thumbnail_image: uploadedFiles.thumbnail_image,
+            thumbnail_image: uploadedFiles.thumbnail_image || undefined,
             is_featured: data.is_featured === 'true' || data.is_featured === true,
-            price: data.price ? parseFloat(data.price) : 0,
-            seats_available: data.seats_available ? parseInt(data.seats_available) : null
+            price: data.price !== '' ? parseFloat(data.price) : undefined,
+            seats_available: data.seats_available !== '' ? parseInt(data.seats_available) : undefined
         }
+
+        // Replace any remaining empty strings with undefined so they aren't sent to the API
+        Object.keys(formattedData).forEach(key => {
+            if (formattedData[key] === '') {
+                formattedData[key] = undefined
+            }
+        })
+
         try {
             if (editingId) {
                 const res = await authFetch(`${process.env.baseUrl}/skills-based-courses/${editingId}`, {
@@ -268,7 +276,12 @@ export default function SkillsCoursesManager() {
                     />
                 </div>
                 <Button
-                    onClick={() => { setIsOpen(true); setEditing(false); reset(); }}
+                    onClick={() => {
+                        setIsOpen(true);
+                        setEditing(false);
+                        reset();
+
+                    }}
                     className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 rounded-md shadow-sm"
                 >
                     <Plus className="w-4 h-4" />
@@ -288,8 +301,8 @@ export default function SkillsCoursesManager() {
             </div>
 
             {/* Modal for Create/Edit */}
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-md border-none'>
+            <Dialog isOpen={isOpen} onClose={handleCloseModal} className='max-w-5xl'>
+                <DialogContent className='p-0'>
                     <DialogHeader className='px-6 py-4 border-b bg-white sticky top-0 z-10'>
                         <DialogTitle className="text-lg font-bold text-gray-900">
                             {editing ? 'Update Course' : 'Create New Course'}
@@ -386,8 +399,8 @@ export default function SkillsCoursesManager() {
             </Dialog>
 
             {/* View Dialog */}
-            <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-                <DialogContent className='max-w-xl'>
+            <Dialog isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} className="max-w-xl">
+                <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Course Details</DialogTitle>
                         <DialogClose />

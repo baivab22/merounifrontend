@@ -1,6 +1,6 @@
-import React from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, GraduationCap, Globe, BookOpen } from 'lucide-react'
+import Link from 'next/link'
+import { Calendar, Clock, GraduationCap, Globe, BookOpen, ArrowLeft } from 'lucide-react'
 
 const ImageSection = ({ degree }) => {
   const infoItems = [
@@ -27,7 +27,16 @@ const ImageSection = ({ degree }) => {
   return (
     <div className='flex flex-col items-center w-full bg-white'>
       {/* Page Header / Hero Area */}
-      <div className='w-full bg-gray-50 border-b border-gray-100 py-16 md:py-24'>
+      <div className='w-full bg-gray-50 border-b border-gray-100 py-16 md:py-24 relative'>
+        <div className='absolute top-6 left-6 md:left-24 z-10'>
+          <Link
+            href='/degree'
+            className='inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white backdrop-blur-md text-gray-700 rounded-full text-sm font-medium transition-all shadow-sm border border-gray-100'
+          >
+            <ArrowLeft className='w-4 h-4' />
+            <span>Back to Degrees</span>
+          </Link>
+        </div>
         <div className='container mx-auto px-4'>
           <motion.div
             initial={{ opacity: 0, y: 10 }}

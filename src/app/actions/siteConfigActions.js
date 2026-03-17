@@ -4,13 +4,16 @@ export async function getSiteConfig(params = {}) {
     try {
         const query = new URLSearchParams(params).toString()
         const url = `${process.env.baseUrl}/config${query ? `?${query}` : ''}`
+        console.log('Fetching config from URL:', url)
 
-        const response = await authFetch(url, {
+        const response = await fetch(url, {
             cache: 'no-store'
         })
 
         if (!response.ok) {
-            throw new Error('Failed to fetch site configuration')
+            const errorText = await response.text().catch(() => 'No error text')
+            console.error(`Fetch failed: ${response.status} ${response.statusText}`, errorText)
+            throw new Error(`Failed to fetch site configuration: ${response.status}`)
         }
 
         return await response.json()

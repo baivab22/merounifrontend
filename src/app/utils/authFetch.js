@@ -84,14 +84,17 @@ export const authFetch = async (url, options = {}) => {
     }
     return response
   } catch (error) {
-    // Only log errors that aren't related to session invalidation or logout
+    // Only log errors that aren't related to session invalidation, logout, or aborted requests
     const isLogoutScenario = !localStorage.getItem('refreshToken')
+    const isAbortError = error?.name === 'AbortError' || error?.message === 'superseded'
+
     if (
       !isLogoutScenario &&
-      !error.message?.includes('401') &&
-      !error.message?.includes('403')
+      !isAbortError &&
+      !error?.message?.includes('401') &&
+      !error?.message?.includes('403')
     ) {
-      console.error('Auth Fetch Error:', error)
+      console.log('Auth Fetch Error:', error)
     }
     throw error
   }

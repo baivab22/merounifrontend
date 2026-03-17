@@ -1,10 +1,16 @@
 import { authFetch } from "../utils/authFetch"
 
-export async function getConsultancies(page = 1, searchQuery = '', courseId = '') {
+export async function getConsultancies(page = 1, searchQuery = '', courseId = '', city = '', destination = '') {
   try {
     let url = `${process.env.baseUrl}/consultancy?page=${page}&sort=desc&q=${searchQuery}&limit=24`
     if (courseId) {
       url += `&courseId=${courseId}`
+    }
+    if (city) {
+      url += `&city=${city}`
+    }
+    if (destination) {
+      url += `&destination=${destination}`
     }
     const response = await fetch(
       url,
@@ -24,6 +30,20 @@ export async function getConsultancies(page = 1, searchQuery = '', courseId = ''
   } catch (error) {
     console.error('Error fetching consultancies:', error)
     throw error
+  }
+}
+
+export async function getConsultancyLocations() {
+  try {
+    const response = await fetch(`${process.env.baseUrl}/consultancy/locations`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (!response.ok) throw new Error('Failed to fetch locations')
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching locations:', error)
+    return { data: { cities: [], destinations: [] } }
   }
 }
 

@@ -4,11 +4,17 @@
 
 let url = `${process.env.baseUrl}/category`
 
-export async function fetchCategories(page = 1, limit = 1000, type = "") {
+export async function fetchCategories(page = 1, limit = 1000, type = "", parent_id = "", q = "") {
   try {
     let fetchUrl = `${url}?page=${page}&limit=${limit}`;
     if (type) {
       fetchUrl += `&type=${type}`;
+    }
+    if (parent_id !== undefined && parent_id !== "") {
+      fetchUrl += `&parent_id=${parent_id}`;
+    }
+    if (q) {
+      fetchUrl += `&q=${q}`;
     }
     const response = await fetch(fetchUrl, {
       cache: 'no-store'

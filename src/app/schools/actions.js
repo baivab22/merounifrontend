@@ -130,3 +130,28 @@ export async function getSchoolBySlug(slug) {
     throw error
   }
 }
+
+export async function getSchoolAffiliations(searchQuery = '') {
+  try {
+    const queryParams = new URLSearchParams()
+    if (searchQuery) queryParams.append('q', searchQuery)
+    const url = `${process.env.baseUrl}/school/affiliations?${queryParams.toString()}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch school affiliations')
+    }
+
+    const data = await response.json()
+    return data.items || []
+  } catch (error) {
+    console.error('Error fetching school affiliations:', error)
+    return []
+  }
+}

@@ -100,14 +100,14 @@ const ImageSection = ({ college }) => {
       {/* College details section */}
       <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full'>
         <div className='flex flex-wrap justify-center gap-4 md:gap-5'>
-          {/* University */}
+          {/* Affiliation */}
           {hasUniversity && (
             <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
               <div className='bg-blue-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
                 <FaUniversity className='w-5 h-5 sm:w-6 sm:h-6 text-[#0A6FA7]' />
               </div>
               <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
-                University
+                Affiliation
               </p>
               <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
                 {college?.university?.fullname}
@@ -115,34 +115,7 @@ const ImageSection = ({ college }) => {
             </div>
           )}
 
-          {/* Institute Level */}
-          {hasInstituteLevel && (
-            <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-              <div className='bg-indigo-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-indigo-100 transition-colors duration-300'>
-                <img
-                  src='/images/level.png'
-                  alt='level'
-                  className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-80'
-                />
-              </div>
-              <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
-                Levels
-              </p>
-              <div className='flex flex-wrap justify-center gap-1 sm:gap-1.5'>
-                {instituteLevels.slice(0, 2).map((level, index) => (
-                  <span
-                    key={index}
-                    className='text-[10px] sm:text-xs text-gray-700 bg-gray-50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-medium'
-                  >
-                    {level}
-                  </span>
-                ))}
-                {instituteLevels.length > 2 && (
-                  <span className='text-[10px] sm:text-xs text-gray-400 font-medium'>+{instituteLevels.length - 2}</span>
-                )}
-              </div>
-            </div>
-          )}
+
 
           {/* Contact */}
           {hasContacts && (

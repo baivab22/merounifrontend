@@ -42,8 +42,8 @@ const RelatedCourses = ({ degree }) => {
   }
 
   return (
-    <div className='flex flex-col max-w-[1150px] mx-auto mb-20 px-4 my-16'>
-      <h2 className='font-bold text-2xl md:text-3xl leading-10 mb-6 md:mb-9 text-center md:text-left'>
+    <div className='flex flex-col max-w-4xl mx-auto mb-20 my-16 px-4'>
+      <h2 className='text-2xl font-bold text-gray-900 mb-10 border-l-4 border-[#30AD8F] pl-4'>
         Other Degrees You Might Like
       </h2>
 

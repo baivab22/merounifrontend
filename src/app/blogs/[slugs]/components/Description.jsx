@@ -11,41 +11,54 @@ const Description = ({ blog }) => {
   }
 
   return (
-    <div className='max-w-[1000px] mx-auto px-6'>
-      <div
-        className='text-[13px] mt-4 leading-7 max-md:leading-5 md:text-sm lg:text-base text-justify'
-        dangerouslySetInnerHTML={{ __html: blog?.description }}
-      />
+    <div className='max-w-[900px] mx-auto mb-10'>
+      {/* Blog Introduction/Description */}
+      {blog?.description && (
+        <div
+          className='prose prose-slate max-w-none mb-10 
+          prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-lg md:prose-xl'
+          dangerouslySetInnerHTML={{ __html: blog?.description }}
+        />
+      )}
 
+      {/* Main Blog Content */}
       <div
-        className='text-[13px] md:text-sm text-justify lg:text-base mt-4 !leading-7 
-        [&_ul]:list-disc 
-        [&_ol]:list-decimal 
-        [&_li]:ml-10 
-        [&_li]:mb-1 
-        [&_li]:mt-1 
-        !max-w-none 
-        text-black
+        className='prose prose-slate max-w-none 
+        /* Typography Scale */
+        prose-base md:prose-lg
         
-        /* Table wrapper styles */
-        [&_.table-wrapper]:overflow-x-auto
-        [&_.table-wrapper]:my-4
-        [&_.table-wrapper]:w-full
-        [&_.table-wrapper]:[scrollbar-width:thin]
-        [&_.table-wrapper]:[scrollbar-color:gray-300_transparent]
+        /* Heading Styles */
+        prose-headings:font-bold prose-headings:text-black 
+        prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+        
+        /* Paragraph & Text Styles */
+        prose-p:text-black/80 prose-p:leading-relaxed prose-p:text-justify
+        prose-li:text-black/80 prose-li:my-2
+        prose-strong:text-black prose-strong:font-bold
+        
+        /* Link Styles */
+        prose-a:text-blue-600 prose-a:font-medium hover:prose-a:text-blue-700 prose-a:no-underline hover:prose-a:underline
+        
+        /* List Styles */
+        prose-ul:list-disc prose-ol:list-decimal
+        
+        /* Blockquote Styles */
+        prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50/50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:italic
         
         /* Table styles */
-        [&_table]:min-w-full
-        [&_table]:border-collapse
-        [&_th]:bg-gray-100
-        [&_th]:p-2
-        [&_th]:text-left
-        [&_th]:border
-        [&_th]:border-gray-300
-        [&_td]:p-2
-        [&_td]:border
-        [&_td]:border-gray-300
-        [&_tr:nth-child(even)]:bg-gray-50'
+        [&_table]:w-full [&_table]:border-collapse [&_table]:my-8
+        [&_th]:bg-gray-100 [&_th]:p-3 [&_th]:border [&_th]:border-gray-300 [&_th]:text-left
+        [&_td]:p-3 [&_td]:border [&_td]:border-gray-300
+        
+        /* Image styles inside content */
+        prose-img:rounded-2xl prose-img:shadow-lg prose-img:mx-auto prose-img:my-10
+        
+        /* Table wrapper from processContent */
+        [&_.table-wrapper]:overflow-x-auto
+        [&_.table-wrapper]:my-6
+        [&_.table-wrapper]:w-full
+        [&_.table-wrapper]:[scrollbar-width:thin]
+        [&_.table-wrapper]:[scrollbar-color:rgb(209,213,219)_transparent]'
         dangerouslySetInnerHTML={{ __html: processContent(blog?.content) }}
       />
     </div>
@@ -53,3 +66,4 @@ const Description = ({ blog }) => {
 }
 
 export default Description
+

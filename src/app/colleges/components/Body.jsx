@@ -1,31 +1,29 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useRouter } from '@bprogress/next/app'
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { debounce } from 'lodash'
-import { Search, Building2, School, X } from 'lucide-react'
-import { FaExpandAlt } from 'react-icons/fa'
-import { useSelector } from 'react-redux'
-import { motion, AnimatePresence } from 'framer-motion'
-import EmptyState from '@/ui/shadcn/EmptyState'
-import UniversityCardShimmer from './UniversityShimmerCard'
 import Pagination from '@/app/blogs/components/Pagination'
-import CollegeCard from '@/ui/molecules/cards/CollegeCard'
 import { authFetch } from '@/app/utils/authFetch'
 import { DistrictLists } from '@/constants/district'
+import CollegeCard from '@/ui/molecules/cards/CollegeCard'
+import EmptyState from '@/ui/shadcn/EmptyState'
+import { useRouter } from '@bprogress/next/app'
+import { debounce } from 'lodash'
+import { Building2, Search, X } from 'lucide-react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
+import UniversityCardShimmer from './UniversityShimmerCard'
 
 // Client-side fetch functions
-const fetchCollegesFromAPI = async (page = 1, filters = {}) => {
+const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
   try {
     const body = {
       page,
       limit: 24,
-      degree_ids: filters.degree || [],
-      state: filters.district || [],
-      university: filters.uni || [],
-      type: filters.type || []
+      degree_ids: filters.degree_ids || [],
+      districts: filters.districts || [],
+      university_ids: filters.university_ids || [],
+      types: (filters.types || []).map(t => t.toLowerCase()),
+      q: q || ''
     }
 
     const url = `${process.env.baseUrl}/college/filter`
@@ -219,7 +217,7 @@ const FilterSection = React.memo(function FilterSection({
             >
               <input
                 type='checkbox'
-                checked={selectedValues.includes(opt.id || opt.name)}
+                checked={selectedValues.includes(String(opt.id || opt.name))}
                 onChange={() => onCheckboxChange(opt.id || opt.name)}
                 className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
               />
@@ -240,37 +238,32 @@ const CollegeFinder = () => {
   const searchParams = useSearchParams()
   const pathname = usePathname()
 
-  // Initial values from URL
-  const initialSearch = searchParams.get('q') || ''
-  const initialPage = parseInt(searchParams.get('page')) || 1
+  // Derived Values from URL (Single Source of Truth)
+  const q = searchParams.get('q') || ''
+  const page = parseInt(searchParams.get('page')) || 1
+  const selectedDegreeIds = useMemo(() => searchParams.get('degree_ids')?.split(',').filter(Boolean) || [], [searchParams])
+  const selectedDistricts = useMemo(() => searchParams.get('districts')?.split(',').filter(Boolean) || [], [searchParams])
+  const selectedUniversityIds = useMemo(() => searchParams.get('university_ids')?.split(',').filter(Boolean) || [], [searchParams])
+  const selectedTypes = useMemo(() => searchParams.get('types')?.split(',').filter(Boolean) || [], [searchParams])
 
-  const [universities, setUniversities] = useState([])
-  const [pagination, setPagination] = useState({
-    totalPages: 1,
-    currentPage: initialPage,
-    totalCount: 0
-  })
+  // UI States
+  const [colleges, setColleges] = useState([])
+  const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1, totalCount: 0 })
   const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState(initialSearch)
+  const [searchInputValue, setSearchInputValue] = useState(q)
   const [isSearching, setIsSearching] = useState(false)
 
-  const [filterInputs, setFilterInputs] = useState({
+  // Filter Data States
+  const [filteredDegrees, setFilteredDegrees] = useState([])
+  const [filteredAffiliations, setFilteredAffiliations] = useState([])
+  const [isDegreesLoading, setIsDegreesLoading] = useState(false)
+  const [isAffiliationLoading, setIsAffiliationLoading] = useState(false)
+  const [filterSearchInputs, setFilterSearchInputs] = useState({
     degree: '',
     affiliation: '',
     district: '',
     instituteType: ''
   })
-  const [filteredDegrees, setFilteredDegrees] = useState([])
-  const [filteredAffiliations, setFilteredAffiliations] = useState([])
-  const [selectedFilters, setSelectedFilters] = useState({
-    degree: [],
-    uni: [],
-    state: [],
-    type: []
-  })
-
-  const [isDegreesLoading, setIsDegreesLoading] = useState(false)
-  const [isAffiliationLoading, setIsAffiliationLoading] = useState(false)
 
   const user = useSelector((state) => state.user.data)
   const [wishlistCollegeIds, setWishlistCollegeIds] = useState(new Set())
@@ -279,7 +272,10 @@ const CollegeFinder = () => {
   const updateURL = useCallback((params) => {
     const newParams = new URLSearchParams(searchParams.toString())
     Object.entries(params).forEach(([key, value]) => {
-      if (value) {
+      if (Array.isArray(value)) {
+        if (value.length > 0) newParams.set(key, value.join(','))
+        else newParams.delete(key)
+      } else if (value !== undefined && value !== null && value !== '') {
         newParams.set(key, value)
       } else {
         newParams.delete(key)
@@ -288,184 +284,145 @@ const CollegeFinder = () => {
     router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
   }, [searchParams, pathname, router])
 
+  // Initial Data for Filters
+  useEffect(() => {
+    const initFilters = async () => {
+      const degrees = await getDegrees()
+      setFilteredDegrees(degrees.map((p) => ({ id: p.id, name: p.title })))
+      const unis = await getUniversity()
+      setFilteredAffiliations(unis.map((u) => ({ id: u.id, name: u.fullname })))
+    }
+    initFilters()
+  }, [])
+
+  // Sync Search Input with URL (e.g. back button)
+  useEffect(() => {
+    setSearchInputValue(q)
+  }, [q])
+
+  // Debounced Search Update
+  const debouncedSearch = useMemo(
+    () => debounce((value) => updateURL({ q: value, page: 1 }), 500),
+    [updateURL]
+  )
+
+  const handleSearchInputChange = (e) => {
+    const val = e.target.value
+    setSearchInputValue(val)
+    debouncedSearch(val)
+  }
+
+  // Filter Event Handlers
+  const handleFilterChange = (type, value) => {
+    const currentParam = type === 'uni' ? 'university_ids' :
+      type === 'degree' ? 'degree_ids' :
+        type === 'type' ? 'types' : 'districts'
+
+    const currentValues = type === 'uni' ? selectedUniversityIds :
+      type === 'degree' ? selectedDegreeIds :
+        type === 'type' ? selectedTypes : selectedDistricts
+
+    const nextValues = currentValues.includes(String(value))
+      ? currentValues.filter((v) => v !== String(value))
+      : [...currentValues, String(value)]
+
+    updateURL({ [currentParam]: nextValues, page: 1 })
+  }
+
+  const handleFilterSearch = async (field, value) => {
+    setFilterSearchInputs(prev => ({ ...prev, [field]: value }))
+    if (field === 'degree') {
+      setIsDegreesLoading(true)
+      const data = await getDegrees(value)
+      setFilteredDegrees(data.map(p => ({ id: p.id, name: p.title })))
+      setIsDegreesLoading(false)
+    }
+    if (field === 'affiliation') {
+      setIsAffiliationLoading(true)
+      const data = await getUniversity(value)
+      setFilteredAffiliations(data.map(u => ({ id: u.id, name: u.fullname })))
+      setIsAffiliationLoading(false)
+    }
+  }
+
+  // Main Data Fetch (Triggers on any URL change)
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      if (q) setIsSearching(true)
+
+      const filters = {
+        degree_ids: selectedDegreeIds,
+        districts: selectedDistricts,
+        university_ids: selectedUniversityIds,
+        types: selectedTypes
+      }
+
+      try {
+        const data = await fetchCollegesFromAPI(page, filters, q)
+        setColleges(data.colleges)
+        setPagination(data.pagination)
+      } catch (error) {
+        setColleges([])
+      } finally {
+        setIsLoading(false)
+        setIsSearching(false)
+        window.scrollTo({ top: 0, behavior: 'auto' })
+      }
+    }
+    loadData()
+  }, [page, q, selectedDegreeIds, selectedDistricts, selectedUniversityIds, selectedTypes])
+
+  // Wishlist Logic
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!user?.id) return setWishlistCollegeIds(new Set())
       try {
-        const response = await authFetch(
-          `${process.env.baseUrl}/wishlist?user_id=${user.id}`
-        )
+        const response = await authFetch(`${process.env.baseUrl}/wishlist?user_id=${user.id}`)
         if (response.ok) {
           const data = await response.json()
-          setWishlistCollegeIds(
-            new Set(
-              (data.items || []).map((item) => item.college?.id).filter(Boolean)
-            )
-          )
+          setWishlistCollegeIds(new Set((data.items || []).map((item) => item.college?.id).filter(Boolean)))
         }
-      } catch (error) {
-        setWishlistCollegeIds(new Set())
-      }
+      } catch (error) { }
     }
     fetchWishlist()
   }, [user?.id])
 
-  const fetchDegrees = useCallback(async (q = '') => {
-    setIsDegreesLoading(true)
-    const degrees = await getDegrees(q)
-    setFilteredDegrees(degrees.map((p) => ({ id: p.id, name: p.title })))
-    setIsDegreesLoading(false)
-  }, [])
+  // Filter Option Lists
+  const districts = useMemo(() =>
+    DistrictLists.filter(d => d.toLowerCase().includes(filterSearchInputs.district.toLowerCase()))
+      .map(d => ({ id: d, name: d })),
+    [filterSearchInputs.district])
 
-  const fetchAffiliations = useCallback(async (q = '') => {
-    setIsAffiliationLoading(true)
-    const unis = await getUniversity(q)
-    setFilteredAffiliations(unis.map((u) => ({ name: u.fullname })))
-    setIsAffiliationLoading(false)
-  }, [])
-
-  useEffect(() => {
-    const init = async () => {
-      const degrees = await getDegrees()
-      setFilteredDegrees(degrees.map((p) => ({ id: p.id, name: p.title })))
-
-      const unis = await getUniversity()
-      setFilteredAffiliations(unis.map((u) => ({ name: u.fullname })))
-    }
-    init()
-  }, [])
-
-
-  // Sync state on URL change (e.g. Back button)
-  useEffect(() => {
-    const q = searchParams.get('q') || ''
-    const pg = parseInt(searchParams.get('page')) || 1
-    setSearchQuery(q)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
-  }, [searchParams])
-
-  // Scroll to top on URL change
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }, [searchParams])
-
-  const debouncedCollegeSearch = useMemo(
-    () =>
-      debounce(async (query) => {
-        updateURL({ q: query, page: 1 })
-      }, 500),
-    [updateURL]
-  )
-
-  useEffect(() => {
-    if (searchQuery !== initialSearch) {
-      debouncedCollegeSearch(searchQuery)
-      return () => debouncedCollegeSearch.cancel()
-    }
-  }, [searchQuery, initialSearch, debouncedCollegeSearch])
-
-  // Fetch data when URL changes
-  useEffect(() => {
-    const fetchData = async () => {
-      const q = searchParams.get('q') || ''
-      const pg = parseInt(searchParams.get('page')) || 1
-
-      setIsLoading(true)
-      try {
-        if (q) {
-          setIsSearching(true)
-          const results = await searchColleges(q)
-          setUniversities(results.colleges)
-          setPagination(results.pagination)
-          setIsSearching(false)
-        } else {
-          const data = await fetchCollegesFromAPI(pg, selectedFilters)
-          setUniversities(data.colleges)
-          setPagination(data.pagination)
-        }
-      } catch (err) {
-        setUniversities([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [searchParams, selectedFilters])
-
-  const handleFilterSearchChange = (field, value) => {
-    setFilterInputs((prev) => ({ ...prev, [field]: value }))
-    if (field === 'degree') fetchDegrees(value)
-    if (field === 'affiliation') fetchAffiliations(value)
-  }
-
-  const handleFilterChange = (filterType, value) => {
-    setSelectedFilters((prev) => {
-      const arr = prev[filterType]
-      return {
-        ...prev,
-        [filterType]: arr.includes(value)
-          ? arr.filter((v) => v !== value)
-          : [...arr, value]
-      }
-    })
-  }
-
-  const filteredDistricts = useMemo(
-    () =>
-      DistrictLists.filter((d) =>
-        d.toLowerCase().includes(filterInputs.district.toLowerCase())
-      ).map((d) => ({ name: d })),
-    [filterInputs.district]
-  )
-
-  const filteredInstituteTypes = useMemo(
-    () =>
-      ['private', 'public']
-        .filter((t) =>
-          t.toLowerCase().includes(filterInputs.instituteType.toLowerCase())
-        )
-        .map((t) => ({ name: t })),
-    [filterInputs.instituteType]
-  )
-
-  const handlePageChange = (page) => {
-    if (page > 0 && page <= pagination.totalPages) {
-      updateURL({ page })
-    }
-  }
+  const instituteTypes = useMemo(() =>
+    ['Private', 'Public'].filter(t => t.toLowerCase().includes(filterSearchInputs.instituteType.toLowerCase()))
+      .map(t => ({ id: t.toLowerCase(), name: t })),
+    [filterSearchInputs.instituteType])
 
   return (
     <div className='max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 mb-20'>
+      {/* Header & Search */}
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>
           <div className='flex items-center gap-4 mb-2'>
-            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
-              Colleges
-            </h2>
+            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Colleges</h2>
             <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
               {pagination.totalCount || '0'} Results
             </span>
           </div>
-
-          <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-            <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+          <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] px-5 py-2.5 relative w-full group'>
+            <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7]' />
             <input
               type='text'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Search by college name, city or state...'
+              value={searchInputValue}
+              onChange={handleSearchInputChange}
+              placeholder='Search by college name, city or district...'
               className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
             />
             <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-              {isSearching && (
-                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-              )}
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                  title='Clear search'
-                >
+              {isSearching && <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>}
+              {searchInputValue && (
+                <button onClick={() => { setSearchInputValue(''); updateURL({ q: '', page: 1 }) }} className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500'>
                   <X className='w-5 h-5' />
                 </button>
               )}
@@ -475,21 +432,13 @@ const CollegeFinder = () => {
       </div>
 
       <div className='flex flex-col lg:flex-row gap-12'>
+        {/* Sidebar Filters */}
         <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
           <div className='flex justify-between items-center mb-[-16px] px-1'>
             <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
             <button
-              className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
-              onClick={() => {
-                setSearchQuery('')
-                setSelectedFilters({ state: [], degree: [], uni: [], type: [] })
-                setFilterInputs({
-                  degree: '',
-                  affiliation: '',
-                  district: '',
-                  instituteType: ''
-                })
-              }}
+              className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider'
+              onClick={() => router.push(pathname, { scroll: false })}
             >
               Clear All
             </button>
@@ -498,52 +447,51 @@ const CollegeFinder = () => {
             title='Degree'
             inputField='degree'
             options={filteredDegrees}
-            selectedValues={selectedFilters.degree}
+            selectedValues={selectedDegreeIds}
             onCheckboxChange={(val) => handleFilterChange('degree', val)}
-            defaultValue={filterInputs.degree}
-            onSearchChange={handleFilterSearchChange}
+            defaultValue={filterSearchInputs.degree}
+            onSearchChange={handleFilterSearch}
             isLoading={isDegreesLoading}
           />
           <FilterSection
             title='District'
             inputField='district'
-            options={filteredDistricts}
-            selectedValues={selectedFilters.state}
+            options={districts}
+            selectedValues={selectedDistricts}
             onCheckboxChange={(val) => handleFilterChange('district', val)}
-            defaultValue={filterInputs.district}
-            onSearchChange={handleFilterSearchChange}
+            defaultValue={filterSearchInputs.district}
+            onSearchChange={(f, v) => setFilterSearchInputs(prev => ({ ...prev, district: v }))}
           />
           <FilterSection
             title='Affiliation'
             inputField='affiliation'
             options={filteredAffiliations}
-            selectedValues={selectedFilters.uni}
+            selectedValues={selectedUniversityIds}
             onCheckboxChange={(val) => handleFilterChange('uni', val)}
-            defaultValue={filterInputs.affiliation}
-            onSearchChange={handleFilterSearchChange}
+            defaultValue={filterSearchInputs.affiliation}
+            onSearchChange={handleFilterSearch}
             isLoading={isAffiliationLoading}
           />
           <FilterSection
             title='Institute type'
             inputField='instituteType'
-            options={filteredInstituteTypes}
-            selectedValues={selectedFilters.type}
+            options={instituteTypes}
+            selectedValues={selectedTypes}
             onCheckboxChange={(val) => handleFilterChange('type', val)}
-            defaultValue={filterInputs.instituteType}
-            onSearchChange={handleFilterSearchChange}
+            defaultValue={filterSearchInputs.instituteType}
+            onSearchChange={(f, v) => setFilterSearchInputs(prev => ({ ...prev, instituteType: v }))}
           />
         </div>
 
+        {/* Content Area */}
         <div className='flex-1'>
           {isLoading ? (
             <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
-              {Array.from({ length: 9 }).map((_, idx) => (
-                <UniversityCardShimmer key={idx} />
-              ))}
+              {Array.from({ length: 9 }).map((_, idx) => <UniversityCardShimmer key={idx} />)}
             </div>
-          ) : universities.length > 0 ? (
+          ) : colleges.length > 0 ? (
             <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
-              {universities.map((u, idx) => (
+              {colleges.map((u, idx) => (
                 <CollegeCard
                   key={u.collegeId ?? idx}
                   name={u.name}
@@ -561,41 +509,18 @@ const CollegeFinder = () => {
             <EmptyState
               icon={Building2}
               title='No Colleges Found'
-              description="We couldn't find any colleges matching your current search or filter criteria. Try clearing some filters to see more results."
-              action={{
-                label: 'Clear All Filters',
-                onClick: () => {
-                  setSearchQuery('')
-                  setSelectedFilters({
-                    state: [],
-                    degree: [],
-                    uni: [],
-                    type: []
-                  })
-                  setFilterInputs({
-                    discipline: '',
-                    affiliation: '',
-                    district: '',
-                    instituteType: ''
-                  })
-                }
-              }}
+              description="We couldn't find any colleges matching your criteria. Try clearing filters."
+              action={{ label: 'Clear All Filters', onClick: () => router.push(pathname, { scroll: false }) }}
             />
           )}
 
-          {!searchQuery &&
-            universities.length > 0 &&
-            pagination.totalPages > 1 && (
-              <div className='mt-16 flex justify-center'>
-                <Pagination
-                  pagination={pagination}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
+          {colleges.length > 0 && pagination.totalPages > 1 && (
+            <div className='mt-16 flex justify-center'>
+              <Pagination pagination={pagination} onPageChange={(p) => updateURL({ page: p })} />
+            </div>
+          )}
         </div>
       </div>
-
     </div>
   )
 }

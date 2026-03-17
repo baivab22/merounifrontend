@@ -17,6 +17,7 @@ import { Label } from '@/ui/shadcn/label'
 import { Textarea } from '@/ui/shadcn/textarea'
 import SearchInput from '@/ui/molecules/SearchInput'
 import { formatDate } from '@/utils/date.util'
+import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 
 export default function CategoryManager() {
   const { setHeading } = usePageHeading()
@@ -26,10 +27,13 @@ export default function CategoryManager() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm({
-    defaultValues: { title: '', description: '', type: '' }
+    defaultValues: { title: '', description: '', type: '', parent_id: null }
   })
+
+  const formParentId = watch('parent_id')
 
   const [categories, setCategories] = useState([])
   const [tableLoading, setTableLoading] = useState(false)
@@ -44,6 +48,8 @@ export default function CategoryManager() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
+  const [selectedParent, setSelectedParent] = useState(null)
+  const [parentFilter, setParentFilter] = useState(null)
 
   useEffect(() => {
     setHeading('Category Management')
@@ -53,18 +59,17 @@ export default function CategoryManager() {
 
   useEffect(() => {
     loadCategories(1)
-  }, [selectedType])
+  }, [selectedType, parentFilter])
 
   useEffect(() => {
     return () => { if (searchTimeout) clearTimeout(searchTimeout) }
   }, [searchTimeout])
 
-  const loadCategories = async (page = 1) => {
+  const loadCategories = async (page = 1, query = searchQuery) => {
     try {
       setTableLoading(true)
-      const response = await fetchCategories(page, 10, selectedType)
+      const response = await fetchCategories(page, 10, selectedType, parentFilter?.id || "", query)
       setCategories(response.items)
-      console.log(response, "responseresponse")
       setPagination({
         currentPage: response.pagination.currentPage,
         totalPages: response.pagination.totalPages,
@@ -81,6 +86,7 @@ export default function CategoryManager() {
     setIsOpen(false)
     setEditing(false)
     setEditingId(null)
+    setSelectedParent(null)
     reset()
   }
 
@@ -120,6 +126,33 @@ export default function CategoryManager() {
     setValue('title', category.title)
     setValue('description', category.description || '')
     setValue('type', category.type || '')
+    setValue('parent_id', category.parent_id || null)
+
+    if (category.parent_id) {
+      // Find the parent in current categories, or it might need fetching
+      const parent = categories.find(c => c.id === category.parent_id)
+      if (parent) {
+        setSelectedParent(parent)
+      } else {
+        // If not in current list, we could fetch it, but for now we'll just set what we have
+        // Ideally we fetch the parent by ID
+        fetchParentById(category.parent_id)
+      }
+    } else {
+      setSelectedParent(null)
+    }
+  }
+
+  const fetchParentById = async (id) => {
+    try {
+      const res = await authFetch(`${process.env.baseUrl}/category?category_id=${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedParent(data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch parent", err)
+    }
   }
 
   const handleView = (category) => {
@@ -147,15 +180,7 @@ export default function CategoryManager() {
   }
 
   const handleSearch = async (query) => {
-    if (!query) { loadCategories(); return }
-    try {
-      const res = await authFetch(`${process.env.baseUrl}/category?q=${query}`)
-      if (res.ok) {
-        const data = await res.json()
-        setCategories(data.items)
-        if (data.pagination) setPagination({ currentPage: data.pagination.currentPage, totalPages: data.pagination.totalPages, total: data.pagination.totalCount })
-      } else setCategories([])
-    } catch { setCategories([]) }
+    loadCategories(1, query)
   }
 
   const handleSearchInput = (value) => {
@@ -163,6 +188,25 @@ export default function CategoryManager() {
     if (searchTimeout) clearTimeout(searchTimeout)
     if (value === '') handleSearch('')
     else setSearchTimeout(setTimeout(() => handleSearch(value), 300))
+  }
+
+  const handleParentSearch = async (query) => {
+    try {
+      // Fetch categories with parent_id=null
+      let fetchUrl = `${process.env.baseUrl}/category`
+      if (query) fetchUrl += `&q=${query}`
+
+      const res = await authFetch(fetchUrl)
+      if (res.ok) {
+        const data = await res.json()
+        // Filter out the current category being edited to avoid circular dependency
+        return data.items.filter(cat => cat.id !== editingId)
+      }
+      return []
+    } catch (err) {
+      console.error("Parent search failed", err)
+      return []
+    }
   }
 
   const columns = useMemo(() => [
@@ -176,6 +220,13 @@ export default function CategoryManager() {
       accessorKey: 'type',
       cell: ({ getValue }) => getValue()
         ? <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold uppercase">{getValue()}</span>
+        : <span className="text-gray-400 italic text-xs">—</span>
+    },
+    {
+      header: 'Parent',
+      accessorKey: 'parent',
+      cell: ({ row }) => row.original.parent?.title
+        ? <span className="text-gray-600 text-xs font-medium">{row.original.parent.title}</span>
         : <span className="text-gray-400 italic text-xs">—</span>
     },
     {
@@ -217,25 +268,41 @@ export default function CategoryManager() {
           <div className="flex flex-col sm:flex-row gap-3 w-full items-start sm:items-center">
             <SearchInput value={searchQuery} onChange={(e) => handleSearchInput(e.target.value)} placeholder='Search categories...' className='max-w-md w-full' />
 
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="h-10 px-3 pr-8 rounded-md border border-gray-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#387cae]/20 transition-all appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '1rem'
+            <SearchSelectCreate
+              placeholder="Filter by Type..."
+              onSearch={async (q) => {
+                const types = [
+                  { id: 'BLOG', title: 'Blog' },
+                  { id: 'EVENT', title: 'Event' },
+                  { id: 'NEWS', title: 'News' },
+                  { id: 'MATERIAL', title: 'Material' },
+                  { id: 'SCHOLARSHIP', title: 'Scholarship' },
+                  { id: 'EXAM', title: 'Exam' }
+                ]
+                return types.filter(t => t.title.toLowerCase().includes(q.toLowerCase()))
               }}
-            >
-              <option value="">All Types</option>
-              <option value="BLOG">Blog</option>
-              <option value="EVENT">Event</option>
-              <option value="NEWS">News</option>
-              <option value="MATERIAL">Material</option>
-              <option value="SCHOLARSHIP">Scholarship</option>
-              <option value="EXAM">Exam</option>
-            </select>
+              onSelect={(item) => setSelectedType(item.id)}
+              onRemove={() => setSelectedType('')}
+              selectedItems={selectedType ? { id: selectedType, title: selectedType } : null}
+              isMulti={false}
+              displayKey="title"
+              valueKey="id"
+              className="max-w-[200px]"
+              inputSize="sm"
+            />
+
+            <SearchSelectCreate
+              placeholder="Filter by Parent..."
+              onSearch={handleParentSearch}
+              onSelect={(item) => setParentFilter(item)}
+              onRemove={() => setParentFilter(null)}
+              selectedItems={parentFilter}
+              isMulti={false}
+              displayKey="title"
+              valueKey="id"
+              className="max-w-[200px]"
+              inputSize="sm"
+            />
           </div>
 
           <Button onClick={handleAddClick} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 shrink-0">
@@ -275,21 +342,28 @@ export default function CategoryManager() {
 
               <div className="space-y-2">
                 <Label htmlFor="type" required>Type</Label>
-                <select
-                  id="type"
-                  {...register('type', { required: 'Type is required' })}
-                  className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#387cae] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.type ? 'border-destructive' : 'border-input'}`}
-                >
-                  <option value=''>Select type…</option>
-                  <option value='BLOG'>Blog</option>
-                  <option value='EVENT'>Event</option>
-                  <option value='NEWS'>News</option>
-                  <option value='MATERIAL'>Material</option>
-                  <option value='SCHOLARSHIP'>Scholarship</option>
-                  <option value='EXAM'>Exam</option>
-
-
-                </select>
+                <SearchSelectCreate
+                  placeholder="Select type…"
+                  onSearch={async (q) => {
+                    const types = [
+                      { id: 'BLOG', title: 'Blog' },
+                      { id: 'EVENT', title: 'Event' },
+                      { id: 'NEWS', title: 'News' },
+                      { id: 'MATERIAL', title: 'Material' },
+                      { id: 'SCHOLARSHIP', title: 'Scholarship' },
+                      { id: 'EXAM', title: 'Exam' }
+                    ]
+                    return types.filter(t => t.title.toLowerCase().includes(q.toLowerCase()))
+                  }}
+                  onSelect={(item) => setValue('type', item.id, { shouldValidate: true })}
+                  onRemove={() => setValue('type', '', { shouldValidate: true })}
+                  selectedItems={watch('type') ? { id: watch('type'), title: watch('type') } : null}
+                  isMulti={false}
+                  displayKey="title"
+                  valueKey="id"
+                  inputSize="sm"
+                  className={errors.type ? 'border-destructive' : ''}
+                />
                 {errors.type && <p className='text-xs text-destructive mt-1'>{errors.type.message}</p>}
               </div>
 
@@ -303,6 +377,27 @@ export default function CategoryManager() {
                   className={`resize-none ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
                 {errors.description && <p className='text-xs text-destructive mt-1'>{errors.description.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Parent Category (Optional)</Label>
+                <SearchSelectCreate
+                  placeholder="Selection Parent Category..."
+                  onSearch={handleParentSearch}
+                  onSelect={(item) => {
+                    setSelectedParent(item)
+                    setValue('parent_id', item.id)
+                  }}
+                  onRemove={() => {
+                    setSelectedParent(null)
+                    setValue('parent_id', null)
+                  }}
+                  selectedItems={selectedParent}
+                  isMulti={false}
+                  displayKey="title"
+                  valueKey="id"
+                />
+                <p className='text-[10px] text-gray-500'>Leave empty if this is a top-level category.</p>
               </div>
 
             </form>
@@ -344,6 +439,12 @@ export default function CategoryManager() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Description</p>
               <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">{viewingCategory?.description || 'No description provided.'}</p>
             </div>
+            {viewingCategory?.parent && (
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Parent Category</p>
+                <p className="text-sm font-medium text-gray-900">{viewingCategory.parent.title}</p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Created</p>

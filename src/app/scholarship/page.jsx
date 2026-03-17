@@ -3,6 +3,7 @@ import React, { useEffect, useState, useLayoutEffect, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Search, Award, Filter, X } from 'lucide-react'
 import { Select } from '@/ui/shadcn/select'
+import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import {
   fetchScholarships,
@@ -115,6 +116,25 @@ const ScholarshipPage = () => {
   const clearFilters = () => {
     setSearchTerm('')
     setFilters({ category: '' })
+    setSelectedCategory(null)
+  }
+
+  const [selectedCategory, setSelectedCategory] = useState(null)
+
+  useEffect(() => {
+    if (categories.length > 0 && filters.category) {
+      const cat = categories.find((c) => String(c.id) === String(filters.category))
+      if (cat) setSelectedCategory(cat)
+    } else if (!filters.category) {
+      setSelectedCategory(null)
+    }
+  }, [categories, filters.category])
+
+  const handleCategorySearch = async (query) => {
+    if (!query) return categories
+    return categories.filter((cat) =>
+      cat.title.toLowerCase().includes(query.toLowerCase())
+    )
   }
 
   return (
@@ -169,27 +189,32 @@ const ScholarshipPage = () => {
               </div>
 
               <div className='lg:col-span-4'>
-                <label className='block text-[10px] uppercase font-bold  mb-2'>
+                <label className='block text-[10px] uppercase font-bold mb-2'>
                   Category
                 </label>
                 <div className='relative group'>
-                  <Select
-                    value={filters.category}
-                    onChange={(e) =>
+                  <SearchSelectCreate
+                    onSearch={handleCategorySearch}
+                    onSelect={(item) =>
                       setFilters((prev) => ({
                         ...prev,
-                        category: e.target.value
+                        category: item.id
                       }))
                     }
-                    className='w-full pl-6 rounded-md'
-                  >
-                    <option value=''>All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.title}
-                      </option>
-                    ))}
-                  </Select>
+                    onRemove={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        category: ''
+                      }))
+                    }
+                    selectedItems={selectedCategory}
+                    isMulti={false}
+                    placeholder='Filter by category...'
+                    displayKey='title'
+                    valueKey='id'
+                    inputSize='md'
+                    inputClassName='bg-gray-50/50 border-gray-100'
+                  />
                 </div>
               </div>
             </div>
