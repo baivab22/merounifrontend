@@ -216,7 +216,7 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                 setInputValue('')
                 setSearchQuery('')
               }}
-              placeholder='Search menus...'
+              placeholder='Search menus, sub-menus...'
               className='w-full'
             />
           </div>
