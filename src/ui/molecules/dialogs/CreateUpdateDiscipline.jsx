@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
@@ -19,6 +19,7 @@ export default function CreateUpdateDiscipline({
     initialData = null,
     authorId
 }) {
+    const { toast } = useToast()
     const [uploadedFiles, setUploadedFiles] = useState({ featured_image: '' })
 
     const {
@@ -71,11 +72,18 @@ export default function CreateUpdateDiscipline({
                 })
             }
             if (!response.ok) throw new Error(`Failed to ${initialData ? 'update' : 'create'} discipline`)
-            toast.success(`Discipline ${initialData ? 'updated' : 'created'} successfully`)
+            toast({
+                title: 'Success',
+                description: `Discipline ${initialData ? 'updated' : 'created'} successfully`
+            })
             onSuccess?.()
             onClose()
         } catch (err) {
-            toast.error(err.message || `Failed to ${initialData ? 'update' : 'create'} discipline`)
+            toast({
+                title: 'Error',
+                description: err.message || `Failed to ${initialData ? 'update' : 'create'} discipline`,
+                variant: 'destructive'
+            })
         }
     }
 

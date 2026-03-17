@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { apiAuth } from '../../app/utils/agentverify'
 import { usePageHeading } from '../../contexts/PageHeadingContext'
 import { FaUserCircle, FaUser, FaSignOutAlt } from 'react-icons/fa'
@@ -19,6 +19,7 @@ import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { authFetch } from '@/app/utils/authFetch'
 
 const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
+  const { toast } = useToast()
   const { heading, subheading } = usePageHeading()
   const [loading, setLoading] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -98,7 +99,11 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
 
   const handleAgentVerification = async () => {
     if (!currentUser?.id) {
-      toast.error('User ID not found')
+      toast({
+        title: 'Error',
+        description: 'User ID not found',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -123,15 +128,17 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
       }
 
       const data = await response.json()
-      toast.success(
-        data.message || 'Agent verification request sent successfully!'
-      )
+      toast({
+        title: 'Success',
+        description: data.message || 'Agent verification request sent successfully!'
+      })
     } catch (error) {
       console.error('Error during agent verification:', error)
-      toast.error(
-        error.message ||
-        'Failed to send verification request. Please try again.'
-      )
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send verification request. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

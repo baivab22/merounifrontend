@@ -10,7 +10,7 @@ import {
 import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ExportModal from './ExportModal'
 import UserTypeFilter from './UserTypeFilter'
 import StudentDetailsModal from './StudentDetailsModal'
@@ -47,6 +47,7 @@ const EMPTY_FORM = {
 }
 
 export default function UsersManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
@@ -126,7 +127,11 @@ export default function UsersManager() {
         throw new Error('Failed to fetch users')
       }
     } catch (err) {
-      toast.error('Failed to load users')
+      toast({
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive'
+      })
       console.error('Error loading users:', err)
     } finally {
       setLoading(false)
@@ -216,18 +221,28 @@ export default function UsersManager() {
           delete updatedData.password
         }
         await updateUser(editingId, updatedData)
-        toast.success('User updated successfully')
+        toast({
+          title: 'Success',
+          description: 'User updated successfully'
+        })
       } else {
         submitData.created_by_admin = 1
         await createUser(submitData)
-        toast.success('User created successfully')
+        toast({
+          title: 'Success',
+          description: 'User created successfully'
+        })
       }
 
       handleCloseForm()
       try { await loadUsers() } catch (err) { console.error(err) }
     } catch (err) {
       setFormError(err.message || `Failed to ${editingId ? 'update' : 'create'} user`)
-      toast.error(err.message || `Failed to ${editingId ? 'update' : 'create'} user`)
+      toast({
+        title: 'Error',
+        description: err.message || `Failed to ${editingId ? 'update' : 'create'} user`,
+        variant: 'destructive'
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -280,10 +295,17 @@ export default function UsersManager() {
     if (!deleteId) return
     try {
       await deleteUser(deleteId, userData)
-      toast.success('User deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully'
+      })
       loadUsers()
     } catch (err) {
-      toast.error('Failed to delete user')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user',
+        variant: 'destructive'
+      })
     } finally {
       setIsDeleteDialogOpen(false)
       setDeleteId(null)

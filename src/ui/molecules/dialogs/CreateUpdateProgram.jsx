@@ -8,7 +8,7 @@ import { Building2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 
 import { Input } from '@/ui/shadcn/input'
@@ -18,6 +18,7 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 
 const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
+    const { toast } = useToast()
     const author_id = useSelector((state) => state.user.data?.id)
     const [loading, setLoading] = useState(false)
     const [submitting, setSubmitting] = useState(false)
@@ -200,7 +201,11 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             }
         } catch (error) {
             console.error('Error in handleEdit:', error)
-            toast.error('Failed to fetch program details')
+            toast({
+                title: 'Error',
+                description: 'Failed to fetch program details',
+                variant: 'destructive'
+            })
             onClose()
         } finally {
             setLoading(false)
@@ -287,7 +292,11 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             (f) => f.course_id === currentCourse.id && f.year === currentYear && f.semester === currentSemester
         )
         if (alreadyAdded) {
-            toast.warn('This course is already in the current semester.')
+            toast({
+                title: 'Already Added',
+                description: 'This course is already in the current semester.',
+                variant: 'destructive'
+            })
             return
         }
         appendSyllabus({
@@ -331,22 +340,35 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cleanedData)
             })
-
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))
                 throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
             }
-
-            toast.success(slug ? 'Program updated successfully!' : 'Program created successfully!')
+            toast({
+                title: 'Success',
+                description: slug ? 'Program updated successfully!' : 'Program created successfully!'
+            })
             if (onSuccess) onSuccess()
             onClose()
         } catch (error) {
             if (error.message.includes('timeout') || error.message === 'Operation timeout') {
-                toast.error('Operation timed out. Please try again.')
+                toast({
+                    title: 'Error',
+                    description: 'Operation timed out. Please try again.',
+                    variant: 'destructive'
+                })
             } else if (error.name === 'AbortError') {
-                toast.error('Request was aborted.')
+                toast({
+                    title: 'Error',
+                    description: 'Request was aborted.',
+                    variant: 'destructive'
+                })
             } else {
-                toast.error(error.message || 'Failed to save program')
+                toast({
+                    title: 'Error',
+                    description: error.message || 'Failed to save program',
+                    variant: 'destructive'
+                })
             }
         } finally {
             setSubmitting(false)

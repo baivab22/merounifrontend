@@ -15,12 +15,12 @@ import { Award, Edit2, Eye, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../colleges/FileUpload'
 import { fetchSkillsCourses } from './action'
 
 export default function SkillsCoursesManager() {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const user = useSelector((state) => state.user.data)
     const author_id = user?.id
@@ -93,7 +93,11 @@ export default function SkillsCoursesManager() {
                 total: response.pagination.totalCount
             })
         } catch (err) {
-            toast.error('Failed to load courses')
+            toast({
+                title: 'Error',
+                description: 'Failed to load courses',
+                variant: 'destructive'
+            })
         } finally {
             setTableLoading(false)
         }
@@ -123,7 +127,10 @@ export default function SkillsCoursesManager() {
                     body: JSON.stringify(formattedData)
                 })
                 if (!res.ok) throw new Error('Update failed')
-                toast.success('Course updated successfully')
+                toast({
+                    title: 'Success',
+                    description: 'Course updated successfully',
+                })
             } else {
                 const res = await authFetch(`${process.env.baseUrl}/skills-based-courses`, {
                     method: 'POST',
@@ -131,12 +138,19 @@ export default function SkillsCoursesManager() {
                     body: JSON.stringify(formattedData)
                 })
                 if (!res.ok) throw new Error('Creation failed')
-                toast.success('Course created successfully')
+                toast({
+                    title: 'Success',
+                    description: 'Course created successfully',
+                })
             }
             handleCloseModal()
             loadCourses(pagination.currentPage)
         } catch (err) {
-            toast.error(err.message || 'Action failed')
+            toast({
+                title: 'Error',
+                description: err.message || 'Action failed',
+                variant: 'destructive'
+            })
         }
     }
 
@@ -177,10 +191,17 @@ export default function SkillsCoursesManager() {
     const handleDeleteConfirm = async () => {
         try {
             await authFetch(`${process.env.baseUrl}/skills-based-courses/${deleteId}`, { method: 'DELETE' })
-            toast.success('Course deleted')
+            toast({
+                title: 'Success',
+                description: 'Course deleted',
+            })
             loadCourses(pagination.currentPage)
         } catch (err) {
-            toast.error('Delete failed')
+            toast({
+                title: 'Error',
+                description: 'Delete failed',
+                variant: 'destructive'
+            })
         } finally {
             setIsDialogOpen(false)
         }
@@ -275,7 +296,6 @@ export default function SkillsCoursesManager() {
 
     return (
         <div className='w-full'>
-            <ToastContainer />
 
             <div className='flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-md shadow-sm border mb-4'>
                 <div className='flex flex-1 w-full max-w-md'>

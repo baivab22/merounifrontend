@@ -6,8 +6,7 @@ import { useSelector } from 'react-redux'
 import Table from '@/ui/shadcn/DataTable'
 import { Edit2, Trash2, Plus } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
@@ -18,6 +17,7 @@ import { Label } from '@/ui/shadcn/label'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function LevelForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const { requireAdmin } = useAdminPermission()
@@ -63,7 +63,11 @@ export default function LevelForm() {
       setPagination({ currentPage: data.pagination.currentPage, totalPages: data.pagination.totalPages, total: data.pagination.totalCount })
     } catch (error) {
       if (error.name === 'AbortError') return
-      toast.error('Failed to fetch levels')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch levels',
+        variant: 'destructive'
+      })
     } finally {
       if (abortControllerRef.current?.signal?.aborted === false) setTableLoading(false)
     }
@@ -78,18 +82,28 @@ export default function LevelForm() {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         })
         if (!res.ok) throw new Error('Failed to update level')
-        toast.success('Level updated successfully!')
+        toast({
+          title: 'Success',
+          description: 'Level updated successfully!'
+        })
       } else {
         const res = await authFetch(`${process.env.baseUrl}/level`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         })
         if (!res.ok) throw new Error('Failed to create level')
-        toast.success('Level created successfully!')
+        toast({
+          title: 'Success',
+          description: 'Level created successfully!'
+        })
       }
       handleCloseModal()
       fetchLevels(pagination.currentPage)
     } catch (error) {
-      toast.error(error.message || 'Failed to save level')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save level',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -115,10 +129,17 @@ export default function LevelForm() {
     try {
       const res = await authFetch(`${process.env.baseUrl}/level?id=${deleteId}`, { method: 'DELETE' })
       const data = await res.json()
-      toast.success(data.message || 'Level deleted')
+      toast({
+        title: 'Level Deleted',
+        description: data.message || 'Level deleted successfully'
+      })
       fetchLevels(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message || 'Failed to delete')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)

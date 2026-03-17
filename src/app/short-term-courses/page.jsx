@@ -7,8 +7,6 @@ import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { Search, BookOpen, X, Filter, DollarSign, ChevronDown, Layers, CreditCard } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 import { fetchPublicSkillCourses } from './actions'
 import { THEME_BLUE } from '@/constants/constants'
 
@@ -188,7 +186,6 @@ const SkillCoursesPage = () => {
             </div>
 
             <Footer />
-            <ToastContainer position='top-right' autoClose={3000} />
         </>
     )
 }

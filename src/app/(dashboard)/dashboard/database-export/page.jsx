@@ -14,7 +14,7 @@ import {
     Calendar
 } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { exportDatabase } from '../../../actions/databaseActions'
 import { authFetch } from '@/app/utils/authFetch'
 import dayjs from 'dayjs'
@@ -23,6 +23,7 @@ import SearchInput from '@/ui/molecules/SearchInput'
 
 
 export default function DatabaseExportPage() {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [isExporting, setIsExporting] = useState(false)
     const [history, setHistory] = useState([])
@@ -71,7 +72,11 @@ export default function DatabaseExportPage() {
             })
         } catch (error) {
             console.error('Error fetching history:', error)
-            toast.error('Failed to load export history')
+            toast({
+                title: 'Error',
+                description: 'Failed to load export history',
+                variant: 'destructive'
+            })
         } finally {
             setIsLoadingHistory(false)
         }
@@ -81,10 +86,17 @@ export default function DatabaseExportPage() {
         setIsExporting(true)
         try {
             await exportDatabase()
-            toast.success('Backup generated and downloaded successfully')
+            toast({
+                title: 'Success',
+                description: 'Backup generated and downloaded successfully'
+            })
             setTimeout(fetchDownloadHistory, 1500)
         } catch (error) {
-            toast.error(error.message || "Export failed")
+            toast({
+                title: 'Error',
+                description: error.message || 'Export failed',
+                variant: 'destructive'
+            })
         } finally {
             setIsExporting(false)
         }

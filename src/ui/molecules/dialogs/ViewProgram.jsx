@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const ViewProgram = ({ isOpen, onClose, slug }) => {
+    const { toast } = useToast()
     const [viewProgram, setViewProgram] = useState(null)
     const [viewLoading, setViewLoading] = useState(false)
 
@@ -28,7 +29,11 @@ const ViewProgram = ({ isOpen, onClose, slug }) => {
             setViewProgram(program)
         } catch (error) {
             console.error(error)
-            toast.error('Failed to load program details')
+            toast({
+                title: 'Error',
+                description: 'Failed to load program details',
+                variant: 'destructive'
+            })
             onClose()
         } finally {
             setViewLoading(false)

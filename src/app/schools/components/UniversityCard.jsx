@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Share, Heart } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { authFetch } from '@/app/utils/authFetch'
@@ -12,6 +12,7 @@ const UniversityCard = ({
   slug,
   isWishlistPage = false
 }) => {
+  const { toast } = useToast()
   const [isInWishlist, setIsInWishlist] = useState(isWishlistPage)
   const [isLoading, setIsLoading] = useState(false)
   const user = useSelector((state) => state.user.data)
@@ -51,9 +52,10 @@ const UniversityCard = ({
 
   const handleWishlistToggle = async () => {
     if (!user) {
-      toast.warning('Please sign in to manage your wishlist', {
-        position: 'top-right',
-        autoClose: 3000
+      toast({
+        title: 'Sign in Required',
+        description: 'Please sign in to manage your wishlist',
+        variant: 'destructive'
       })
       return
     }
@@ -76,21 +78,18 @@ const UniversityCard = ({
         throw new Error(`HTTP Error! Status: ${response.status}`)
       }
       setIsInWishlist(!isInWishlist)
-
-      toast.success(
-        method === 'DELETE'
+      toast({
+        title: 'Wishlist Updated',
+        description: method === 'DELETE'
           ? 'Successfully removed from wishlist'
-          : 'Successfully added to wishlist',
-        {
-          position: 'top-right',
-          autoClose: 2000
-        }
-      )
+          : 'Successfully added to wishlist'
+      })
     } catch (error) {
       console.error('Error updating wishlist:', error)
-      toast.error('Failed to update wishlist. Please try again.', {
-        position: 'top-right',
-        autoClose: 3000
+      toast({
+        title: 'Error',
+        description: 'Failed to update wishlist. Please try again.',
+        variant: 'destructive'
       })
     } finally {
       setIsLoading(false)

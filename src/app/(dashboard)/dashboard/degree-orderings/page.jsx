@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ShimmerEffect from '@/ui/molecules/ShimmerEffect'
 import {
     DndContext,
@@ -78,6 +78,7 @@ const SortableItem = ({ degree }) => {
 }
 
 const DegreeOrderingsPage = () => {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [degrees, setDegrees] = useState([])
     const [loading, setLoading] = useState(true)
@@ -136,7 +137,11 @@ const DegreeOrderingsPage = () => {
             setDegrees(sortedDegrees)
         } catch (err) {
             console.error('Error loading degrees:', err)
-            toast.error(err.message || 'Failed to load degrees')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to load degrees',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }

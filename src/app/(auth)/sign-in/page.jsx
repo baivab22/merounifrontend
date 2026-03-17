@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import { v4 as uuidv4 } from 'uuid'
@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
 
 const SignInPage = ({ defaultMode = 'login' }) => {
+  const { toast } = useToast()
   const dispatch = useDispatch()
   const router = useRouter()
 
@@ -127,17 +128,25 @@ const SignInPage = ({ defaultMode = 'login' }) => {
         try {
           const decodedToken = jwtDecode(data.accessToken)
           dispatch(addUser({ ...decodedToken }))
-          toast.success('Login successful!')
+          toast({
+            title: 'Success',
+            description: 'Login successful!'
+          })
           router.push('/dashboard')
         } catch (e) {
-          toast.error('Error signing in. Please try again.')
+          toast({
+            title: 'Error',
+            description: 'Error signing in. Please try again.',
+            variant: 'destructive'
+          })
         }
       } else {
-        toast.success(
-          formData.role === 'agent'
+        toast({
+          title: 'Success',
+          description: formData.role === 'agent'
             ? 'Application submitted! Your agent request is pending admin approval. You will be notified once approved.'
             : 'Account created! Please sign in.'
-        )
+        })
         setIsLogin(true)
         setFormData({
           firstName: '',
@@ -152,7 +161,11 @@ const SignInPage = ({ defaultMode = 'login' }) => {
     },
     onError: (error) => {
       const message = error.response?.data?.message || 'Something went wrong. Please try again.'
-      toast.error(message)
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive'
+      })
     }
   })
 

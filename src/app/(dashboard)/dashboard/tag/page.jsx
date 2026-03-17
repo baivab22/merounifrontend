@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux'
 import Loader from '../../../../ui/molecules/Loading'
 import { Edit2, Trash2, Search } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
@@ -17,6 +17,7 @@ import SearchInput from '@/ui/molecules/SearchInput'
 import { THEME_BLUE } from '@/constants/constants'
 
 export default function TagForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const [isOpen, setIsOpen] = useState(false)
@@ -77,7 +78,11 @@ export default function TagForm() {
         total: data.pagination.totalCount
       })
     } catch (error) {
-      toast.error('Failed to fetch tags')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch tags',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -112,9 +117,10 @@ export default function TagForm() {
         await response.json()
       }
 
-      toast.success(
-        editing ? 'Tag updated successfully!' : 'Tag created successfully!'
-      )
+      toast({
+        title: 'Tag Created',
+        description: editing ? 'Tag updated successfully!' : 'Tag created successfully!'
+      })
       setEditing(false)
       reset()
       fetchTags()
@@ -122,7 +128,11 @@ export default function TagForm() {
       setEditingId(null)
       setSubmitting(false)
     } catch (error) {
-      toast.error(error.message || 'Failed to save tag')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save tag',
+        variant: 'destructive'
+      })
       setSubmitting(false)
     }
   }
@@ -182,10 +192,17 @@ export default function TagForm() {
         }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({
+        title: 'Tag Deleted',
+        description: res.message || 'Tag deleted successfully'
+      })
       await fetchTags()
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)

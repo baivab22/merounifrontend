@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
 
 const CONFIG_TYPE_REFERRAL_POINT = 'referral_point'
 
 export default function SetReferralPointPage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -46,7 +47,11 @@ export default function SetReferralPointPage() {
     } catch (err) {
       // 404 is ok – no config yet
       if (err.status !== 404) {
-        toast.error('Failed to load current referral point')
+        toast({
+          title: 'Error',
+          description: 'Failed to load current referral point',
+          variant: 'destructive'
+        })
       }
     } finally {
       setLoading(false)
@@ -71,9 +76,16 @@ export default function SetReferralPointPage() {
       if (!response.ok) {
         throw new Error(result.message || 'Failed to save')
       }
-      toast.success('Referral point saved successfully')
+      toast({
+        title: 'Success',
+        description: 'Referral point saved successfully'
+      })
     } catch (err) {
-      toast.error(err.message || 'Failed to save referral point')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save referral point',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -89,7 +101,6 @@ export default function SetReferralPointPage() {
 
   return (
     <div className='p-4 w-full max-w-lg'>
-      <ToastContainer />
       <p className='text-gray-600 mb-4'>
         Set the referral point awarded to agents when they refer a student.
       </p>

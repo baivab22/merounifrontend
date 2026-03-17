@@ -11,7 +11,7 @@ import Loader from '../../../../ui/molecules/Loading'
 import Table from '@/ui/shadcn/DataTable'
 import { Edit2, Trash2, Search, Eye } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import {
   Dialog,
@@ -27,6 +27,7 @@ import ViewFaculty from '@/ui/molecules/dialogs/ViewFaculty'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function FacultyManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [faculties, setFaculties] = useState([])
   const [loading, setLoading] = useState(true)
@@ -138,7 +139,11 @@ export default function FacultyManager() {
       })
     } catch (error) {
       console.error('Error loading faculties:', error)
-      toast.error('Failed to fetch faculties')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch faculties',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
       setLoading(false)
@@ -153,10 +158,16 @@ export default function FacultyManager() {
 
       if (editingId) {
         await updateFaculty(editingId, requestData)
-        toast.success('Faculty updated successfully!')
+        toast({
+          title: 'Success',
+          description: 'Faculty updated successfully!'
+        })
       } else {
         await createFaculty(requestData)
-        toast.success('Faculty created successfully!')
+        toast({
+          title: 'Success',
+          description: 'Faculty created successfully!'
+        })
       }
 
       setFormData({ title: '', description: '' })
@@ -165,7 +176,11 @@ export default function FacultyManager() {
       loadFaculties()
       setSubmitting(false)
     } catch (error) {
-      toast.error(error.message || 'Failed to save faculty')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save faculty',
+        variant: 'destructive'
+      })
       setSubmitting(false)
     }
   }
@@ -207,10 +222,17 @@ export default function FacultyManager() {
 
     try {
       await deleteFaculty(deleteId)
-      toast.success('Faculty deleted successfully!')
+      toast({
+        title: 'Success',
+        description: 'Faculty deleted successfully!'
+      })
       await loadFaculties()
     } catch (err) {
-      toast.error(err.message || 'Failed to delete faculty')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete faculty',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -295,7 +317,6 @@ export default function FacultyManager() {
             </Button>
           </div>
         </div>
-        <ToastContainer />
 
         {/* Table */}
         <div className='mt-8'>

@@ -229,8 +229,6 @@ const DegreePage = () => {
 
   return (
     <>
-      <Header />
-      <Navbar />
       <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
         <div className='max-w-7xl mx-auto'>
 
@@ -365,7 +363,6 @@ const DegreePage = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   )
 }

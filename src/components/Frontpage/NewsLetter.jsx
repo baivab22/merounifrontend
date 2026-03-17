@@ -2,26 +2,38 @@
 import React, { useState } from 'react'
 import { FaLocationArrow } from 'react-icons/fa6'
 import services from '@/app/apiService'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const Newsletter = () => {
+  const { toast } = useToast()
   const [email, setEmail] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!email) {
-      toast.warning('Please enter a valid email.')
+      toast({
+        title: 'Input Required',
+        description: 'Please enter a valid email.',
+        variant: 'destructive'
+      })
       return
     }
 
     try {
       await services.newsletter.create({ email })
-      toast.success('Subscribed successfully!')
+      toast({
+        title: 'Success',
+        description: 'Subscribed successfully!'
+      })
       setEmail('')
     } catch (error) {
       console.error('Newsletter error:', error)
-      toast.error('Failed to subscribe. Please try again later.')
+      toast({
+        title: 'Error',
+        description: 'Failed to subscribe. Please try again later.',
+        variant: 'destructive'
+      })
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
@@ -189,6 +189,7 @@ const CardSkeleton = ({ i = 0 }) => (
 )
 
 export default function DisciplineManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
 
@@ -241,7 +242,11 @@ export default function DisciplineManager() {
       })
       setDisciplines(items)
     } catch (err) {
-      toast.error(err.message || 'Failed to load disciplines')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load disciplines',
+        variant: 'destructive'
+      })
     } finally {
       if (!silent) setLoading(false)
     }
@@ -289,9 +294,16 @@ export default function DisciplineManager() {
           return updated ? { ...d, order_no_for_website: updated.order_no } : d
         })
       )
-      toast.success('Order saved', { autoClose: 1500 })
+      toast({
+        title: 'Order Saved',
+        description: 'Discipline order updated successfully'
+      })
     } catch (err) {
-      toast.error(err.message || 'Failed to save order')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save order',
+        variant: 'destructive'
+      })
       loadDisciplines(true)
     } finally {
       setSaving(false)
@@ -321,10 +333,17 @@ export default function DisciplineManager() {
         headers: { 'Content-Type': 'application/json' }
       })
       const data = await res.json()
-      toast.success(data.message || 'Discipline deleted')
+      toast({
+        title: 'Discipline Deleted',
+        description: data.message || 'Discipline deleted successfully'
+      })
       loadDisciplines(true)
     } catch (err) {
-      toast.error(err.message || 'Failed to delete')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -334,7 +353,6 @@ export default function DisciplineManager() {
   return (
     <>
       <div className='w-full'>
-        <ToastContainer position='bottom-right' />
 
         <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
           <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>

@@ -23,9 +23,10 @@ import { Select } from '@/ui/shadcn/select'
 import Loading from '@/ui/molecules/Loading'
 import SearchInput from '@/ui/molecules/SearchInput'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const ApplicationsPage = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +74,11 @@ const ApplicationsPage = () => {
     } catch (err) {
       console.error('Error loading applications:', err)
       setError(err.message || 'Failed to load applications')
-      toast.error(err.message || 'Failed to load applications')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load applications',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -119,11 +124,18 @@ const ApplicationsPage = () => {
         throw new Error('Failed to update application status')
       }
 
-      toast.success('Status updated successfully')
+      toast({
+        title: 'Success',
+        description: 'Status updated successfully'
+      })
       await loadApplications()
       handleCloseStatusModal()
     } catch (err) {
-      toast.error(err.message || 'Failed to update application status')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to update application status',
+        variant: 'destructive'
+      })
     } finally {
       setUpdatingId(null)
     }
@@ -152,10 +164,17 @@ const ApplicationsPage = () => {
         throw new Error('Failed to delete application')
       }
 
-      toast.success('Application deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Application deleted successfully'
+      })
       await loadApplications()
     } catch (err) {
-      toast.error(err.message || 'Failed to delete application')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete application',
+        variant: 'destructive'
+      })
     } finally {
       setDeletingId(null)
       setIsConfirmOpen(false)
@@ -275,7 +294,6 @@ const ApplicationsPage = () => {
   return (
     <div className='w-full'>
 
-      <ToastContainer />
 
       {/* Sticky Header */}
       <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>

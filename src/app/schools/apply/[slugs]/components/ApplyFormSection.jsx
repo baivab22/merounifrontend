@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const ApplyFormSection = ({ id, college }) => {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     college_id: college?.id || 0,
     student_name: '',
@@ -88,7 +89,10 @@ const ApplyFormSection = ({ id, college }) => {
 
       const data = await response.json()
       if (response.ok) {
-        toast.success(data.message || 'College Applied Successfully')
+        toast({
+          title: 'Success',
+          description: data.message || 'School Applied Successfully'
+        })
         setFormData({
           college_id: '',
           student_name: '',
@@ -98,10 +102,19 @@ const ApplyFormSection = ({ id, college }) => {
           course: ''
         })
       } else {
-        toast.error(data?.message || 'Something went wrong. Please try again.')
+        toast({
+          title: 'Error',
+          description: data?.message || 'Something went wrong. Please try again.',
+          variant: 'destructive'
+        })
       }
     } catch (error) {
-      toast.error('Connection error: ' + error.message)
+      toast({
+        title: 'Error',
+        description: 'Please upload all required files before submitting.',
+        variant: 'destructive'
+      })
+      return
     } finally {
       setLoading(false)
     }

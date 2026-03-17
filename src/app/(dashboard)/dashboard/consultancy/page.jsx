@@ -2,8 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Edit2, Trash2, Eye, Key } from 'lucide-react'
 
 import { Button } from '@/ui/shadcn/button'
@@ -29,6 +28,7 @@ export default function ConsultancyManager() {
     return <EditConsultancyPage />
   }
 
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -99,7 +99,11 @@ export default function ConsultancyManager() {
         totalCount: data.pagination?.totalCount || 0
       })
     } catch (error) {
-      toast.error('Failed to load consultancies')
+      toast({
+        title: 'Error',
+        description: 'Failed to load consultancies',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
       setLoading(false)
@@ -134,10 +138,12 @@ export default function ConsultancyManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteConsultancy(deleteId)
-      toast.success('Consultancy deleted successfully')
-      loadConsultancies(pagination.currentPage)
     } catch (error) {
-      toast.error(error.message || 'Failed to delete')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete',
+        variant: 'destructive'
+      })
     } finally {
       setIsConfirmOpen(false)
       setDeleteId(null)
@@ -250,7 +256,6 @@ export default function ConsultancyManager() {
 
   return (
     <div className='w-full '>
-      <ToastContainer />
 
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
         <SearchInput

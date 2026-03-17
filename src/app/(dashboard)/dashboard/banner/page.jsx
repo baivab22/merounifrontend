@@ -9,7 +9,7 @@ import { formatDate } from '@/utils/date.util'
 import { Edit, X, GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../colleges/FileUpload'
 import {
   DndContext,
@@ -132,6 +132,7 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
 }
 
 export default function BannerForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [maxPosition, setMaxPosition] = useState(1)
   const [activePosition, setActivePosition] = useState(1)
@@ -202,7 +203,11 @@ export default function BannerForm() {
           : 1
       )
     } catch (error) {
-      toast.error('Failed to fetch banners')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch banners',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -227,18 +232,21 @@ export default function BannerForm() {
         body: JSON.stringify(bannerData)
       })
 
-      toast.success(
-        editing
-          ? 'Banner updated successfully!'
-          : 'Banner created successfully!'
-      )
+      toast({
+        title: editing ? 'Banner Updated' : 'Banner Created',
+        description: editing ? 'Banner updated successfully!' : 'Banner created successfully!'
+      })
 
       setEditing(false)
       resetFormForPosition(activePosition)
       fetchBannersByPosition()
       setIsOpen(false)
     } catch (error) {
-      toast.error(error.message || 'Failed to save banner')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save banner',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -263,7 +271,11 @@ export default function BannerForm() {
         banner_image: banner.banner_image
       })
     } catch (error) {
-      toast.error('Failed to fetch banner details')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch banner details',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -278,10 +290,17 @@ export default function BannerForm() {
         `${process.env.baseUrl}/banner/${deleteId}`,
         { method: 'DELETE' }
       )
-      toast.success('Banner deleted successfully')
+      toast({
+        title: 'Banner Deleted',
+        description: 'Banner deleted successfully'
+      })
       await fetchBannersByPosition()
     } catch (error) {
-      toast.error('Failed to delete banner')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete banner',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -365,10 +384,17 @@ export default function BannerForm() {
         })
       }
 
-      toast.success('Banner position updated!')
+      toast({
+        title: 'Position Updated',
+        description: 'Banner position updated successfully!'
+      })
       await fetchBannersByPosition()
     } catch (err) {
-      toast.error('Failed to update banner position')
+      toast({
+        title: 'Error',
+        description: 'Failed to update banner position',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -389,7 +415,6 @@ export default function BannerForm() {
 
   return (
     <div className='container mx-auto p-4'>
-      <ToastContainer />
 
       <DndContext
         sensors={sensors}

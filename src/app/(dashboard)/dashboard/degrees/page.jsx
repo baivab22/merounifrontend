@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
@@ -203,6 +202,7 @@ const CardSkeleton = ({ i = 0 }) => (
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DegreePage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
 
   const [degrees, setDegrees] = useState([])
@@ -268,7 +268,11 @@ export default function DegreePage() {
 
       setDegrees(all)
     } catch (err) {
-      toast.error(err.message || 'Failed to load degrees')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load degrees',
+        variant: 'destructive'
+      })
     } finally {
       if (!silent) setLoading(false)
     }
@@ -316,9 +320,16 @@ export default function DegreePage() {
           return updated ? { ...d, order_no_for_website: updated.order_no } : d
         })
       )
-      toast.success('Order saved', { autoClose: 1500 })
+      toast({
+        title: 'Success',
+        description: 'Order saved'
+      })
     } catch (err) {
-      toast.error(err.message || 'Failed to save order')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save order',
+        variant: 'destructive'
+      })
       loadDegrees(searchQuery, true)
     } finally {
       setSaving(false)
@@ -346,10 +357,17 @@ export default function DegreePage() {
       const res = await authFetch(`${process.env.baseUrl}/degree/${deleteId}`, { method: 'DELETE' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Delete failed')
-      toast.success(data.message || 'Degree deleted')
+      toast({
+        title: 'Success',
+        description: data.message || 'Degree deleted'
+      })
       loadDegrees(searchQuery, true)
     } catch (err) {
-      toast.error(err.message || 'Failed to delete degree')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete degree',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -494,7 +512,6 @@ export default function DegreePage() {
         cancelText='Cancel'
       />
 
-      <ToastContainer position='bottom-right' />
     </>
   )
 }

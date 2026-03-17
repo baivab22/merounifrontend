@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useForm, Controller } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 import Table from '@/ui/shadcn/DataTable'
 import FileUpload from '../colleges/FileUpload'
@@ -29,6 +29,7 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 const VacancyManager = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -106,7 +107,11 @@ const VacancyManager = () => {
       }
     } catch (err) {
       if (err.name === 'AbortError') return
-      toast.error('Failed to load vacancies')
+      toast({
+        title: 'Error',
+        description: 'Failed to load vacancies',
+        variant: 'destructive'
+      })
     } finally {
       if (abortControllerRef.current?.signal?.aborted === false) {
         setTableLoading(false)
@@ -175,12 +180,18 @@ const VacancyManager = () => {
       if (!response.ok) {
         throw new Error(result.message || 'Failed to save vacancy')
       }
-
-      toast.success(editing ? 'Vacancy updated successfully' : 'Vacancy created successfully')
+      toast({
+        title: editing ? 'Vacancy Updated' : 'Vacancy Created',
+        description: editing ? 'Vacancy updated successfully' : 'Vacancy created successfully'
+      })
       handleCloseModal()
       loadVacancies(pagination.currentPage)
     } catch (error) {
-      toast.error(error.message || 'Failed to save vacancy')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save vacancy',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -204,7 +215,11 @@ const VacancyManager = () => {
       setValue('associated_organization_name', vacancy.associated_organization_name || '')
       setUploadedFiles({ featuredImage: vacancy.featuredImage || '' })
     } catch (error) {
-      toast.error('Failed to fetch vacancy details')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch vacancy details',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -226,10 +241,17 @@ const VacancyManager = () => {
       )
       const res = await response.json()
       if (!response.ok) throw new Error(res.message || 'Failed to delete vacancy')
-      toast.success(res.message || 'Vacancy deleted')
+      toast({
+        title: 'Deleted',
+        description: res.message || 'Vacancy deleted'
+      })
       loadVacancies(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -245,7 +267,11 @@ const VacancyManager = () => {
       const data = await response.json()
       setViewVacancyData(data.item)
     } catch (err) {
-      toast.error(err.message || 'Failed to load vacancy details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load vacancy details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -371,7 +397,6 @@ const VacancyManager = () => {
 
   return (
     <div className="w-full">
-      <ToastContainer position="top-right" autoClose={3000} />
       {/* Sticky Header */}
       <div className="sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border">

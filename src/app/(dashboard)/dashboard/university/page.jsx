@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
@@ -271,6 +271,7 @@ const CardSkeleton = ({ i = 0 }) => (
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function UniversityPage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const { requireAdmin } = useAdminPermission()
 
@@ -348,7 +349,11 @@ export default function UniversityPage() {
 
       setUniversities(uniqueItems)
     } catch (err) {
-      toast.error(err.message || 'Failed to load universities')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load universities',
+        variant: 'destructive'
+      })
     } finally {
       if (!silent) setLoading(false)
     }
@@ -401,9 +406,16 @@ export default function UniversityPage() {
           return updated ? { ...u, order_no_for_website: updated.order_no } : u
         })
       )
-      toast.success('Order saved', { autoClose: 1500 })
+      toast({
+        title: 'Success',
+        description: 'Order saved'
+      })
     } catch (err) {
-      toast.error(err.message || 'Failed to save order')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save order',
+        variant: 'destructive'
+      })
       loadUniversities(searchQuery, statusFilter, true)
     } finally {
       setSaving(false)
@@ -418,7 +430,11 @@ export default function UniversityPage() {
       if (!res.ok) throw new Error('Failed to fetch university details')
       setViewUniversityData(await res.json())
     } catch (err) {
-      toast.error(err.message || 'Failed to load university details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load university details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -440,13 +456,20 @@ export default function UniversityPage() {
       )
       const data = await res.json()
       if (res.ok) {
-        toast.success(data.message || 'Deleted successfully')
+        toast({
+          title: 'Success',
+          description: data.message || 'Deleted successfully'
+        })
         loadUniversities(searchQuery, statusFilter, true)
       } else {
         throw new Error(data.message || 'Failed to delete')
       }
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete university',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -602,8 +625,6 @@ export default function UniversityPage() {
         imageUrl={lightbox.imageUrl}
         altText={lightbox.altText}
       />
-
-      <ToastContainer position='bottom-right' />
     </>
   )
 }

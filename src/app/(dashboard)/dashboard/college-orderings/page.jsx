@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ShimmerEffect from '@/ui/molecules/ShimmerEffect'
 import {
   DndContext,
@@ -84,6 +84,7 @@ const SortableItem = ({ college }) => {
 }
 
 const CollegeOrderingsPage = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [colleges, setColleges] = useState([])
   const [loading, setLoading] = useState(true)
@@ -142,7 +143,11 @@ const CollegeOrderingsPage = () => {
       setColleges(sortedColleges)
     } catch (err) {
       console.error('Error loading colleges:', err)
-      toast.error(err.message || 'Failed to load colleges')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load colleges',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

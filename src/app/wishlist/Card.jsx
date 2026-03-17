@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { Share, Heart } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { getToken } from '../action'
 import { useSelector } from 'react-redux'
 import { authFetch } from '../utils/authFetch'
@@ -12,6 +12,7 @@ const WishlistCollegeCard = ({
   collegeId,
   imageUrl = '/images/pu.png'
 }) => {
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isRemoved, setIsRemoved] = useState(false)
   const user = useSelector((state) => state.user.data)
@@ -38,19 +39,16 @@ const WishlistCollegeCard = ({
       }
 
       setIsRemoved(true)
-      toast.success('College removed from wishlist!', {
-        position: 'top-right',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
+      toast({
+        title: 'Removed from Wishlist',
+        description: 'College removed from wishlist!'
       })
     } catch (error) {
       console.error('Error removing from wishlist:', error)
-      toast.error('Failed to remove from wishlist. Please try again.', {
-        position: 'top-right',
-        autoClose: 3000
+      toast({
+        title: 'Error',
+        description: 'Failed to remove from wishlist. Please try again.',
+        variant: 'destructive'
       })
     } finally {
       setIsLoading(false)

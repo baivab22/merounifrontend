@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Share } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 /**
  * Reusable blog card. Accepts either a `blog` object or flat props.
@@ -15,6 +15,7 @@ const BlogCard = ({
   description: descriptionProp,
   slug: slugProp
 }) => {
+  const { toast } = useToast()
   const slug = blogProp?.slug ?? slugProp
   const image =
     blogProp?.featuredImage ?? blogProp?.featured_image ?? imageProp ?? '/images/logo.png'
@@ -42,7 +43,10 @@ const BlogCard = ({
     if (typeof window === 'undefined' || !slug) return
     const blogUrl = `${window.location.origin}/blogs/${slug}`
     navigator.clipboard.writeText(blogUrl).then(() => {
-      toast.success('Blog URL copied to clipboard!')
+      toast({
+        title: 'Link Copied',
+        description: 'Blog URL copied to clipboard!'
+      })
     })
   }
 
