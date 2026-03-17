@@ -29,11 +29,11 @@ import {
   FaUserTag
 } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../colleges/FileUpload'
 
 const ProfileUpdate = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
 
   useEffect(() => {
@@ -134,9 +134,11 @@ const ProfileUpdate = () => {
   const handleNameSubmit = async (e) => {
     e.preventDefault()
     if (!validateName(nameForm.firstName) || !validateName(nameForm.lastName)) {
-      toast.error(
-        'Names must be at least 2 characters and contain only letters'
-      )
+      toast({
+        title: 'Error',
+        description: 'Names must be at least 2 characters and contain only letters',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -162,16 +164,24 @@ const ProfileUpdate = () => {
       )
 
       if (!response.ok) {
-        throw new Error('Failed to update profile')
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to update profile')
       }
 
-      toast.success('Profile updated successfully')
+      toast({
+        title: 'Success',
+        description: 'Profile updated successfully!'
+      })
       setShowNameModal(false)
       fetchUserProfile()
 
     } catch (error) {
       console.error('Update error:', error)
-      toast.error(error.message || 'Failed to update profile')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update profile',
+        variant: 'destructive'
+      })
     } finally {
       setIsLoading(false)
     }

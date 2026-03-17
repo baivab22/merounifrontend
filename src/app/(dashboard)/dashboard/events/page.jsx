@@ -12,7 +12,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import Table from '@/ui/shadcn/DataTable'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import FileUpload from '../colleges/FileUpload'
@@ -24,6 +24,7 @@ import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 
 export default function EventManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const searchParams = useSearchParams()
@@ -190,7 +191,11 @@ export default function EventManager() {
         total: response.pagination.totalCount
       })
     } catch (err) {
-      toast.error('Failed to load events')
+      toast({
+        title: 'Error',
+        description: 'Failed to load events',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -325,7 +330,11 @@ export default function EventManager() {
       setValue('is_featured', eventData.is_featured === 1)
       setValue('meta_description', eventData.meta_description || '')
     } catch (error) {
-      toast.error('Failed to fetch event data')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch event data',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -344,10 +353,17 @@ export default function EventManager() {
         { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({
+        title: 'Event Deleted',
+        description: res.message
+      })
       loadEvents()
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -363,7 +379,11 @@ export default function EventManager() {
       const data = await response.json()
       setViewEventData(data.item)
     } catch (err) {
-      toast.error(err.message || 'Failed to load event details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load event details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -493,7 +513,6 @@ export default function EventManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer position='top-right' autoClose={3000} />
 
       {/* Sticky Header */}
       <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>

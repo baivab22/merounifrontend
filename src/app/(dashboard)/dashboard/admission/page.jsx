@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import { Edit2, Eye, Trash2, Plus, GripVertical, Building2, GraduationCap } from 'lucide-react'
 
 import { Button } from '@/ui/shadcn/button'
@@ -184,6 +183,7 @@ const CardSkeleton = ({ i = 0 }) => (
 )
 
 export default function AdmissionManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -262,7 +262,11 @@ export default function AdmissionManager() {
 
       setAdmissions(uniqueItems)
     } catch (err) {
-      toast.error('Failed to load admissions')
+      toast({
+        title: 'Error',
+        description: 'Failed to load admissions',
+        variant: 'destructive'
+      })
     } finally {
       if (!silent) setLoading(false)
     }
@@ -305,9 +309,16 @@ export default function AdmissionManager() {
           return updated ? { ...a, order_no: updated.order_no } : a
         })
       )
-      toast.success('Order saved', { autoClose: 1500 })
+      toast({
+        title: 'Success',
+        description: 'Order saved'
+      })
     } catch (err) {
-      toast.error(err.message || 'Failed to save order')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save order',
+        variant: 'destructive'
+      })
       loadAdmissions(searchQuery, true)
     } finally {
       setSaving(false)
@@ -337,15 +348,18 @@ export default function AdmissionManager() {
       if (editing) payload.id = editingId
 
       await createOrUpdateAdmission(payload)
-      toast.success(
-        editing
-          ? 'Admission updated successfully'
-          : 'Admission created successfully'
-      )
+      toast({
+        title: 'Success',
+        description: editing ? 'Admission updated successfully' : 'Admission created successfully'
+      })
       handleCloseModal()
       loadAdmissions(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message || 'Failed to save admission')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save admission',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -395,10 +409,17 @@ export default function AdmissionManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteAdmission(deleteId)
-      toast.success('Admission deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Admission deleted successfully'
+      })
       loadAdmissions(pagination.currentPage)
     } catch (err) {
-      toast.error('Failed to delete admission')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete admission',
+        variant: 'destructive'
+      })
     } finally {
       setIsConfirmOpen(false)
       setDeleteId(null)
@@ -411,7 +432,11 @@ export default function AdmissionManager() {
       setViewData(data)
       setViewModalOpen(true)
     } catch (err) {
-      toast.error('Failed to load details')
+      toast({
+        title: 'Error',
+        description: 'Failed to load details',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -426,7 +451,6 @@ export default function AdmissionManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer />
 
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200'>
         <div className='flex items-center gap-3 w-full sm:w-auto'>

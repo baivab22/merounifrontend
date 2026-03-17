@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
@@ -19,6 +19,7 @@ export default function CreateUpdateDegree({
     onSuccess,
     initialData = null
 }) {
+    const { toast } = useToast()
     const [submitting, setSubmitting] = useState(false)
     const [selectedDisciplines, setSelectedDisciplines] = useState([])
     const [disciplineError, setDisciplineError] = useState('')
@@ -144,11 +145,18 @@ export default function CreateUpdateDegree({
             const result = await response.json()
             if (!response.ok) throw new Error(result.error || 'Operation failed')
 
-            toast.success(`Degree ${initialData ? 'updated' : 'created'} successfully!`)
+            toast({
+                title: 'Success',
+                description: `Degree ${initialData ? 'updated' : 'created'} successfully!`,
+            })
             onSuccess?.()
             onClose()
         } catch (error) {
-            toast.error(error.message || 'Failed to save degree')
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to save degree',
+                variant: 'destructive'
+            })
         } finally {
             setSubmitting(false)
         }

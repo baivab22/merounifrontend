@@ -1,4 +1,5 @@
-import React from 'react'
+'use client'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaFacebook, FaInstagram } from 'react-icons/fa6'
@@ -10,37 +11,47 @@ import { getSiteConfig } from '@/app/actions/siteConfigActions'
 import { THEME_BLUE } from '@/constants/constants'
 import FooterMobileAccordion from './FooterMobileAccordion'
 
-const Footer = async () => {
-  let socialLinks = {}
-  let contactInfo = {
+const Footer = () => {
+  const [socialLinks, setSocialLinks] = useState({})
+  const [contactInfo, setContactInfo] = useState({
     phone: '',
     email: '',
     address: ''
-  }
+  })
 
-  try {
-    const socialRes = await getSiteConfig({ types: 'social_facebook,social_instagram,social_linkedin,social_twitter' })
-    if (socialRes?.items && Array.isArray(socialRes.items)) {
-      socialRes.items.forEach(item => {
-        socialLinks[item.type] = item.value
-      })
-    }
-  } catch (e) {
-    console.error('Footer: Error fetching social links:', e)
-  }
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const socialRes = await getSiteConfig({ types: 'social_facebook,social_instagram,social_linkedin,social_twitter' })
+        if (socialRes?.items && Array.isArray(socialRes.items)) {
+          const links = {}
+          socialRes.items.forEach(item => {
+            links[item.type] = item.value
+          })
+          setSocialLinks(links)
+        }
+      } catch (e) {
+        console.error('Footer: Error fetching social links:', e)
+      }
 
-  try {
-    const contactRes = await getSiteConfig({ types: 'contact_phone,contact_email,contact_address' })
-    if (contactRes?.items) {
-      contactRes.items.forEach(item => {
-        if (item.type === 'contact_phone') contactInfo.phone = item.value
-        if (item.type === 'contact_email') contactInfo.email = item.value
-        if (item.type === 'contact_address') contactInfo.address = item.value
-      })
+      try {
+        const contactRes = await getSiteConfig({ types: 'contact_phone,contact_email,contact_address' })
+        if (contactRes?.items) {
+          const info = { phone: '', email: '', address: '' }
+          contactRes.items.forEach(item => {
+            if (item.type === 'contact_phone') info.phone = item.value
+            if (item.type === 'contact_email') info.email = item.value
+            if (item.type === 'contact_address') info.address = item.value
+          })
+          setContactInfo(info)
+        }
+      } catch (e) {
+        console.error('Footer: Error fetching contact info:', e)
+      }
     }
-  } catch (e) {
-    console.error('Footer: Error fetching contact info:', e)
-  }
+    
+    fetchConfigs()
+  }, [])
 
   const sections = {
     Info: {

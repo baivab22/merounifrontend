@@ -1,8 +1,7 @@
 import { Poppins } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import 'react-toastify/dist/ReactToastify.css'
-import { ToastContainer } from 'react-toastify'
+import { Toaster } from '@/ui/shadcn/toaster'
 import ReduxProvider from '../ui/molecules/ReduxProvider'
 import ReactQueryContainer from '@/container/HOC/ReactQueryContainer'
 import BProgressProvider from '../ui/molecules/BProgressProvider'
@@ -27,14 +26,7 @@ export default function RootLayout({ children }) {
             <BProgressProvider>
               <main>{children}</main>
             </BProgressProvider>
-            <ToastContainer
-              position='top-right'
-              autoClose={3000}
-              hideProgressBar={false}
-              closeOnClick
-              pauseOnHover
-              draggable
-            />
+            <Toaster />
           </ReactQueryContainer>
         </ReduxProvider>
         <Script

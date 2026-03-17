@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
@@ -32,6 +32,7 @@ import { createExam, deleteExam, fetchCategory, fetchLevel, fetchUniversities, g
 import ExamViewModal from './ExamViewModal'
 
 export default function ExamManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const searchParams = useSearchParams()
@@ -143,7 +144,11 @@ export default function ExamManager() {
       })
     } catch (error) {
       console.error('Failed to fetch exams:', error)
-      toast.error('Failed to fetch exams')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch exams',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
       setTableLoading(false)
@@ -238,11 +243,19 @@ export default function ExamManager() {
   const onSubmit = async (data) => {
     // Basic date validation
     if (data.opening_date && data.closing_date && new Date(data.opening_date) >= new Date(data.closing_date)) {
-      toast.error('Opening date must be before closing date')
+      toast({
+        title: 'Invalid Dates',
+        description: 'Opening date must be before closing date',
+        variant: 'destructive'
+      })
       return
     }
     if (data.closing_date && data.exam_date && new Date(data.closing_date) >= new Date(data.exam_date)) {
-      toast.error('Closing date must be before exam date')
+      toast({
+        title: 'Invalid Dates',
+        description: 'Closing date must be before exam date',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -261,12 +274,19 @@ export default function ExamManager() {
       }
 
       await createExam(formattedData)
-      toast.success(`Exam ${editingId ? 'updated' : 'created'} successfully`)
+      toast({
+        title: 'Success',
+        description: `Exam ${editingId ? 'updated' : 'created'} successfully`
+      })
       handleModalClose()
       loadExams()
     } catch (error) {
       console.error('Error saving exam:', error)
-      toast.error(`Failed to ${editingId ? 'update' : 'create'} exam`)
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingId ? 'update' : 'create'} exam`,
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -282,10 +302,17 @@ export default function ExamManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteExam(deleteId)
-      toast.success('Exam deleted successfully')
+      toast({
+        title: 'Exam Deleted',
+        description: 'Exam deleted successfully'
+      })
       loadExams()
     } catch (error) {
-      toast.error('Failed to delete exam')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete exam',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -389,7 +416,6 @@ export default function ExamManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer />
 
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
         <SearchInput

@@ -12,7 +12,7 @@ import { Select } from '@/ui/shadcn/select'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CreateUpdateConsultancy({
     isOpen,
@@ -20,6 +20,7 @@ export default function CreateUpdateConsultancy({
     onSuccess,
     initialData = null
 }) {
+    const { toast } = useToast()
     const [loading, setLoading] = useState(false)
     const [selectedCourses, setSelectedCourses] = useState([])
     const [selectedDestinations, setSelectedDestinations] = useState([])
@@ -165,11 +166,18 @@ export default function CreateUpdateConsultancy({
             }
 
             await createOrUpdateConsultancy(payload)
-            toast.success(initialData ? 'Consultancy updated successfully!' : 'Consultancy created successfully!')
+            toast({
+                title: 'Success',
+                description: initialData ? 'Consultancy updated successfully!' : 'Consultancy created successfully!'
+            })
             onSuccess?.()
             onClose()
         } catch (error) {
-            toast.error(error.message || 'Failed to save consultancy')
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to save consultancy',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }

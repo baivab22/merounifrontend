@@ -37,8 +37,7 @@ import {
     useSortable
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import Skeleton from 'react-loading-skeleton'
@@ -231,6 +230,7 @@ const SortableItem = ({
 // --- MAIN PAGE ---
 
 export default function MaterialDashboard() {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
 
     // State
@@ -289,7 +289,11 @@ export default function MaterialDashboard() {
             const data = await res.json()
             setL1List(data.data || [])
         } catch (error) {
-            toast.error('Failed to load classes')
+            toast({
+                title: 'Error',
+                description: 'Failed to load classes',
+                variant: 'destructive'
+            })
         } finally {
             setLoadingL1(false)
         }
@@ -305,7 +309,11 @@ export default function MaterialDashboard() {
                 [subjectId]: data.materials || data.items || data.data || []
             }))
         } catch (error) {
-            toast.error('Failed to load materials')
+            toast({
+                title: 'Error',
+                description: 'Failed to load materials',
+                variant: 'destructive'
+            })
         } finally {
             setLoadingMaterials(false)
         }
@@ -397,9 +405,16 @@ export default function MaterialDashboard() {
                     positions: newList.map(item => item.id)
                 })
             })
-            toast.success('Order saved ✓')
+            toast({
+                title: 'Success',
+                description: 'Order saved successfully'
+            })
         } catch (error) {
-            toast.error('Failed to sync order')
+            toast({
+                title: 'Error',
+                description: 'Failed to sync order',
+                variant: 'destructive'
+            })
             // Revert if needed? Usually better to just show error.
         }
     }
@@ -431,10 +446,17 @@ export default function MaterialDashboard() {
                     setIsAddingL2(false)
                 }
                 setInlineInput('')
-                toast.success(`${type === 'L1' ? 'Class' : 'Subject'} added ✓`)
+                toast({
+                    title: 'Success',
+                    description: `${type === 'L1' ? 'Class' : 'Subject'} added successfully`
+                })
             } catch (error) {
                 console.log(error, "DONDONE")
-                toast.error('Failed to add')
+                toast({
+                    title: 'Error',
+                    description: 'Failed to add',
+                    variant: 'destructive'
+                })
             }
         }
     }
@@ -539,10 +561,17 @@ export default function MaterialDashboard() {
             setIsAddingL3(false)
             setEditingItem(null)
             reset({ title: '', file_url: '', description: '' })
-            toast.success(`Material ${successStatus} ✓`)
+            toast({
+                title: 'Success',
+                description: `Material ${successStatus} successfully`
+            })
         } catch (error) {
             console.error("onMaterialSubmit Error:", error);
-            toast.error(error.message || 'Error occurred while saving material')
+            toast({
+                title: 'Error',
+                description: error.message || 'Error occurred while saving material',
+                variant: 'destructive'
+            })
         }
     }
 
@@ -674,7 +703,6 @@ export default function MaterialDashboard() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] font-[Figtree] text-gray-800 overflow-hidden bg-gradient-to-br from-[#f0f4f8] to-[#e8eef5]">
-            <ToastContainer position="bottom-right" hideProgressBar />
 
             {/* Breadcrumb / Top Bar */}
             <div className="flex items-center justify-between px-6 py-4">

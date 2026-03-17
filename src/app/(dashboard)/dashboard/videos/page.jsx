@@ -14,8 +14,7 @@ import { Edit2, ExternalLink, Eye, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import Loader from '../../../../ui/molecules/Loading'
 import FileUpload from '../colleges/FileUpload'
 import { fetchVideos } from './action'
@@ -168,6 +167,11 @@ export default function VideoManager() {
       })
     } catch (err) {
       console.error('Error loading videos:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to load videos',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -227,10 +231,10 @@ export default function VideoManager() {
     try {
       if (editingId) {
         await updateVideo(formattedData, editingId)
-        toast.success('Video updated successfully')
+        toast({ title: 'Success', description: 'Video updated successfully' })
       } else {
         await createVideo(formattedData)
-        toast.success('Video created successfully')
+        toast({ title: 'Success', description: 'Video created successfully' })
       }
       reset()
       setEditingId(null)
@@ -240,9 +244,11 @@ export default function VideoManager() {
       loadVideos()
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Network error occurred'
-      toast.error(
-        `Failed to ${editingId ? 'update' : 'create'} video: ${errorMsg}`
-      )
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingId ? 'update' : 'create'} video: ${errorMsg}`,
+        variant: 'destructive'
+      })
       console.error('Error saving video:', err)
     }
   }
@@ -281,10 +287,10 @@ export default function VideoManager() {
         }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({ title: 'Success', description: res.message })
       loadVideos()
     } catch (err) {
-      toast.error(err.message)
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -367,7 +373,6 @@ export default function VideoManager() {
           <Plus className="w-4 h-4" />
         </Button>
       </div>
-      <ToastContainer />
 
       <Dialog
         isOpen={isOpen}

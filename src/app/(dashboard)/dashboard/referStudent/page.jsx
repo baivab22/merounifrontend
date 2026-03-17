@@ -8,12 +8,13 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import { Button } from '@/ui/shadcn/button'
 import { Plus, Trash2, X, Check, Building2, ChevronDown, GraduationCap, Send } from 'lucide-react'
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/app/lib/utils'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 const ReferStudentPage = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [formData, setFormData] = useState([])
   const [errors, setErrors] = useState({})
@@ -40,7 +41,11 @@ const ReferStudentPage = () => {
       setAllColleges(data.items || [])
     } catch (error) {
       console.error('Error fetching colleges:', error)
-      toast.error('Could not load colleges')
+      toast({
+        title: 'Error',
+        description: 'Could not load colleges',
+        variant: 'destructive'
+      })
     } finally {
       setFetchingColleges(false)
     }
@@ -124,7 +129,11 @@ const ReferStudentPage = () => {
     let isValid = true
 
     if (formData.length === 0) {
-      toast.error('Please select at least one college')
+      toast({
+        title: 'Selection Required',
+        description: 'Please select at least one college',
+        variant: 'destructive'
+      })
       return false
     }
 
@@ -150,7 +159,13 @@ const ReferStudentPage = () => {
     })
 
     setErrors(newErrors)
-    if (!isValid) toast.error('Please fill all required fields correctly')
+    if (!isValid) {
+      toast({
+        title: 'Form Error',
+        description: 'Please fill all required fields correctly',
+        variant: 'destructive'
+      })
+    }
     return isValid
   }
 
@@ -170,13 +185,24 @@ const ReferStudentPage = () => {
 
       const data = await res.json()
       if (res.ok) {
-        toast.success(data.message || 'Applications submitted successfully')
+        toast({
+          title: 'Success',
+          description: data.message || 'Applications submitted successfully'
+        })
         setFormData([])
       } else {
-        toast.error(data.message || 'Something went wrong')
+        toast({
+          title: 'Error',
+          description: data.message || 'Something went wrong',
+          variant: 'destructive'
+        })
       }
     } catch (err) {
-      toast.error('Connection error: ' + err.message)
+      toast({
+        title: 'Error',
+        description: 'Connection error: ' + err.message,
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

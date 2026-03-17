@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import {
   Edit2,
@@ -33,6 +33,7 @@ import { cn } from '@/app/lib/utils'
 import * as actions from './actions'
 
 export default function CollegeRankingsPage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [rankings, setRankings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,7 +57,11 @@ export default function CollegeRankingsPage() {
       const data = await actions.fetchRankings()
       setRankings(data)
     } catch (error) {
-      toast.error('Failed to fetch rankings')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch rankings',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -72,10 +77,17 @@ export default function CollegeRankingsPage() {
     if (!deleteDegreeId) return
     try {
       await actions.deleteDegreeRankings(deleteDegreeId)
-      toast.success('Rankings deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Rankings deleted successfully'
+      })
       loadRankings()
     } catch (error) {
-      toast.error('Failed to delete rankings')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete rankings',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteDegreeId(null)
@@ -91,10 +103,17 @@ export default function CollegeRankingsPage() {
     if (!deleteRankingId) return
     try {
       await actions.deleteRanking(deleteRankingId)
-      toast.success('Ranking removed')
+      toast({
+        title: 'Success',
+        description: 'Ranking removed'
+      })
       loadRankings()
     } catch (error) {
-      toast.error('Failed to remove ranking')
+      toast({
+        title: 'Error',
+        description: 'Failed to remove ranking',
+        variant: 'destructive'
+      })
     } finally {
       setIsRemoveRankingDialogOpen(false)
       setDeleteRankingId(null)
@@ -142,10 +161,17 @@ export default function CollegeRankingsPage() {
 
     try {
       await actions.updateRankingOrder(degreeId, updatedRankings)
-      toast.success('Ranking order updated')
+      toast({
+        title: 'Success',
+        description: 'Ranking order updated'
+      })
       loadRankings()
     } catch (error) {
-      toast.error('Failed to update ranking order')
+      toast({
+        title: 'Error',
+        description: 'Failed to update ranking order',
+        variant: 'destructive'
+      })
     } finally {
       setDraggedItem(null)
     }
@@ -183,10 +209,17 @@ export default function CollegeRankingsPage() {
 
     try {
       await actions.updateDegreeOrder(updatedDegreeOrders)
-      toast.success('Degree order updated')
+      toast({
+        title: 'Success',
+        description: 'Degree order updated'
+      })
       loadRankings()
     } catch (error) {
-      toast.error('Failed to update degree order')
+      toast({
+        title: 'Error',
+        description: 'Failed to update degree order',
+        variant: 'destructive'
+      })
     } finally {
       setDraggedDegree(null)
     }
@@ -194,14 +227,21 @@ export default function CollegeRankingsPage() {
 
   const handleAddRanking = async () => {
     if (!selectedDegree || !selectedCollege) {
-      toast.error('Please select both degree and college')
+      toast({
+        title: 'Selection Required',
+        description: 'Please select both degree and college',
+        variant: 'destructive'
+      })
       return
     }
 
     try {
       setSubmitting(true)
       await actions.addRanking(selectedDegree.id, selectedCollege.id)
-      toast.success('College added to ranking')
+      toast({
+        title: 'Success',
+        description: 'College added to ranking'
+      })
       loadRankings()
 
       // Close modal and clear selection
@@ -209,7 +249,11 @@ export default function CollegeRankingsPage() {
       setSelectedDegree(null)
       setSelectedCollege(null)
     } catch (error) {
-      toast.error(error.message || 'Failed to add ranking')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add ranking',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -220,13 +264,20 @@ export default function CollegeRankingsPage() {
     try {
       setSubmitting(true)
       await actions.updateDegreeDescription(selectedDegree.id, description)
-      toast.success('Description updated successfully')
+      toast({
+        title: 'Success',
+        description: 'Description updated successfully'
+      })
       loadRankings()
       setIsDescModalOpen(false)
       setSelectedDegree(null)
       setDescription('')
     } catch (error) {
-      toast.error(error.message || 'Failed to update description')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update description',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -650,8 +701,6 @@ export default function CollegeRankingsPage() {
         confirmText='Remove'
         cancelText='Cancel'
       />
-
-      <ToastContainer position='bottom-right' />
     </div>
   )
 }

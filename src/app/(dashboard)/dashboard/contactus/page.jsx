@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import Loading from '@/ui/molecules/Loading'
 import Table from '@/ui/shadcn/DataTable'
@@ -17,6 +17,7 @@ import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function ContactUsManager() {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [contacts, setContacts] = useState([])
     const [tableLoading, setTableLoading] = useState(true)
@@ -63,7 +64,11 @@ export default function ContactUsManager() {
                 ...data.pagination
             }))
         } catch (error) {
-            toast.error('Failed to load messages')
+            toast({
+                title: 'Error',
+                description: 'Failed to load messages',
+                variant: 'destructive'
+            })
             console.error(error)
         } finally {
             setTableLoading(false)
@@ -110,7 +115,11 @@ export default function ContactUsManager() {
 
             setStatusModalOpen(false)
         } catch (error) {
-            toast.error('Failed to update status')
+            toast({
+                title: 'Error',
+                description: 'Failed to update status',
+                variant: 'destructive'
+            })
         } finally {
             setUpdatingStatusId(null)
         }
@@ -126,10 +135,17 @@ export default function ContactUsManager() {
 
         try {
             await deleteContact(deleteId)
-            toast.success('Message deleted successfully')
+            toast({
+                title: 'Success',
+                description: 'Message deleted successfully'
+            })
             loadContacts()
         } catch (error) {
-            toast.error('Failed to delete message')
+            toast({
+                title: 'Error',
+                description: 'Failed to delete message',
+                variant: 'destructive'
+            })
         } finally {
             setDeleteConfirmationOpen(false)
             setDeleteId(null)

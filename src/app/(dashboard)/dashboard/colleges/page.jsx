@@ -4,7 +4,7 @@ import Table from '@/ui/shadcn/DataTable'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Plus } from 'lucide-react'
 import {
   fetchAllDegrees
@@ -24,6 +24,7 @@ import ImageLightbox from '@/ui/molecules/image-lightbox'
 
 
 export default function CollegeForm() {
+  const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -171,7 +172,10 @@ export default function CollegeForm() {
         }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({
+        title: 'Success',
+        description: res.message || 'College deleted successfully'
+      })
       // Reload colleges using authFetch
       const reloadResponse = await authFetch(
         `${process.env.baseUrl}/college?limit=10&page=${pagination.currentPage}`
@@ -189,7 +193,11 @@ export default function CollegeForm() {
       }
       setEditSlug('')
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete college',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -242,7 +250,11 @@ export default function CollegeForm() {
         throw new Error('Failed to fetch colleges')
       }
     } catch (err) {
-      toast.error('Failed to load colleges')
+      toast({
+        title: 'Error',
+        description: 'Failed to load colleges',
+        variant: 'destructive'
+      })
       console.error('Error loading colleges:', err)
     } finally {
       setTableLoading(false)
@@ -319,7 +331,11 @@ export default function CollegeForm() {
       const data = await response.json()
       setViewCollegeData(data.item)
     } catch (err) {
-      toast.error(err.message || 'Failed to load college details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load college details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -371,8 +387,7 @@ export default function CollegeForm() {
           Add College
         </Button>
       </div>
-      <ToastContainer />
-
+ 
       <CreateUpdateCollegeModal
         isOpen={isOpen}
         handleCloseModal={handleCloseModal}

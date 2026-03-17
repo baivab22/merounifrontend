@@ -9,8 +9,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import Table from '@/ui/shadcn/DataTable'
 import {
   Dialog,
@@ -33,7 +32,8 @@ import { formatDate, formatDateTime } from '@/utils/date.util'
 import SearchInput from '@/ui/molecules/SearchInput'
 import ImageLightbox from '@/ui/molecules/image-lightbox'
 
-export default function NewsManager() {
+export default function NewsPage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const searchParams = useSearchParams()
@@ -277,7 +277,11 @@ export default function NewsManager() {
       })
     } catch (error) {
       console.error('Error loading news:', error)
-      toast.error('Failed to fetch news')
+      toast({
+        title: 'Error',
+        description: 'Failed to load news',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -306,10 +310,16 @@ export default function NewsManager() {
 
       if (editing && editingId) {
         await updateNews(editingId, newsData)
-        toast.success('News updated successfully')
+        toast({
+          title: 'Success',
+          description: 'News updated successfully'
+        })
       } else {
         await createNews(newsData)
-        toast.success('News created successfully')
+        toast({
+          title: 'Success',
+          description: 'News created successfully'
+        })
       }
 
       setIsOpen(false)
@@ -319,7 +329,11 @@ export default function NewsManager() {
       loadData(pagination.currentPage, searchQuery)
     } catch (error) {
       console.error('Error saving news:', error)
-      toast.error(`Failed to ${editing ? 'update' : 'create'} news: ${error.message || ''}`)
+      toast({
+        title: 'Error',
+        description: `Failed to ${editing ? 'update' : 'create'} news: ${error.message || ''}`,
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -342,7 +356,11 @@ export default function NewsManager() {
       setViewNewsData(newsData)
     } catch (error) {
       console.error('Error fetching news details:', error)
-      toast.error('Failed to load news details')
+      toast({
+        title: 'Error',
+        description: 'Failed to load news details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -371,11 +389,19 @@ export default function NewsManager() {
 
     try {
       await deleteNews(deleteId)
-      toast.success('News deleted successfully')
+      setNews((prev) => prev.filter((n) => n.id !== deleteId))
+      toast({
+        title: 'Success',
+        description: 'News deleted successfully'
+      })
       loadData(pagination.currentPage, searchQuery)
     } catch (error) {
       console.error('Error deleting news:', error)
-      toast.error('Failed to delete news')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete news',
+        variant: 'destructive'
+      })
     } finally {
       handleDialogClose()
     }
@@ -390,7 +416,6 @@ export default function NewsManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer position='top-right' />
 
       {/* Sticky Header */}
       <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>
@@ -450,14 +475,14 @@ export default function NewsManager() {
         open={isDialogOpen}
         onClose={handleDialogClose}
         onConfirm={handleDeleteConfirm}
-        title='Confirm Deletion'
-        message='Are you sure you want to delete this news? This action cannot be undone.'
+        title='Delete News'
+        message='Are you sure you want to delete this news item?'
       />
 
       {/* View News Details Modal */}
       <Dialog
-        isOpen={viewModalOpen}
-        onClose={handleCloseViewModal}
+        open={viewModalOpen}
+        onOpenChange={setViewModalOpen}
       >
         <DialogContent className='max-w-3xl'>
           <DialogHeader>

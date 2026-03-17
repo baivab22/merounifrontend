@@ -11,10 +11,11 @@ import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { fetchCourses } from './actions'
 
 export default function EditConsultancyPage() {
+  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState({
@@ -74,7 +75,10 @@ export default function EditConsultancyPage() {
       const consultancy = responseData.consultancy || responseData.item || responseData
 
       if (!consultancy) {
-        toast.info('No consultancy profile found. Please create one.')
+        toast({
+          title: 'Info',
+          description: 'No consultancy profile found. Please create one.'
+        })
         setLoading(false)
         return
       }
@@ -163,7 +167,11 @@ export default function EditConsultancyPage() {
 
     } catch (error) {
       console.error('Error loading consultancy data:', error)
-      toast.error('Failed to load consultancy info')
+      toast({
+        title: 'Error',
+        description: 'Failed to load consultancy info',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -243,11 +251,18 @@ export default function EditConsultancyPage() {
       }
 
       await response.json()
-      toast.success('Consultancy info updated successfully!')
+      toast({
+        title: 'Success',
+        description: 'Consultancy info updated successfully!'
+      })
 
     } catch (error) {
       console.error('Submit Error:', error)
-      toast.error(error.message || 'Failed to save consultancy')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save consultancy',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }

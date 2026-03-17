@@ -125,8 +125,8 @@ export default function ConsultanciesPage() {
       const res = await getConsultancyLocations()
       if (res?.data) {
         setLocations({
-          cities: res.data.cities || [],
-          destinations: res.data.destinations || []
+          cities: (res.data.cities || []).map(c => typeof c === 'string' ? c : c.city || c.name || '').filter(Boolean),
+          destinations: (res.data.destinations || []).map(d => typeof d === 'string' ? d : d.country || d.name || '').filter(Boolean)
         })
       }
     }
@@ -205,8 +205,6 @@ export default function ConsultanciesPage() {
 
   return (
     <>
-      <Header />
-      <Navbar />
       <div className='bg-gray-50/50'>
         <div className='max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 mb-20'>
           {/* Header & Search Section */}
@@ -338,7 +336,6 @@ export default function ConsultanciesPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   )
 }

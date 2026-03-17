@@ -5,7 +5,7 @@ import useAdminPermission from '@/hooks/useAdminPermission'
 import { Button } from '@/ui/shadcn/button'
 import { Edit2, Eye, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import Table from '@/ui/shadcn/DataTable'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import CreateUpdateProgram from '@/ui/molecules/dialogs/CreateUpdateProgram'
@@ -14,6 +14,7 @@ import SearchInput from '@/ui/molecules/SearchInput'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 
 export default function ProgramForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [programs, setPrograms] = useState([])
   const [tableLoading, setTableLoading] = useState(false)
@@ -85,7 +86,11 @@ export default function ProgramForm() {
         total: data.pagination.totalCount
       })
     } catch (error) {
-      toast.error('Failed to fetch programs')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch programs',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -129,10 +134,17 @@ export default function ProgramForm() {
         }
       )
       await response.json()
-      toast.success('Program deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Program deleted successfully'
+      })
       await fetchPrograms()
     } catch (error) {
-      toast.error('Failed to delete program')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete program',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)

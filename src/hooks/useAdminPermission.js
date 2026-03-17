@@ -2,9 +2,10 @@
 
 import { useCallback, useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const useAdminPermission = () => {
+  const { toast } = useToast()
   // Get role from Redux store
   const roleData = useSelector((state) => state.user?.data?.role)
 
@@ -28,7 +29,11 @@ const useAdminPermission = () => {
       fallbackMessage = 'You do not have permission to perform this action.'
     ) => {
       if (!isAdmin) {
-        toast.error(fallbackMessage)
+        toast({
+          title: 'Permission Denied',
+          description: fallbackMessage,
+          variant: 'destructive'
+        })
         return
       }
       action?.()

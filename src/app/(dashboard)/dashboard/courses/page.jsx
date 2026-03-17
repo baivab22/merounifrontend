@@ -6,8 +6,7 @@ import { useSelector } from 'react-redux'
 import Table from '@/ui/shadcn/DataTable'
 import { Edit2, Trash2, Eye, Plus } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { fetchFaculties } from './action'
 import { useDebounce } from 'use-debounce'
@@ -28,6 +27,7 @@ import SearchInput from '@/ui/molecules/SearchInput'
 const TipTapEditor = dynamic(() => import('@/ui/shadcn/tiptap-editor'), { ssr: false })
 
 export default function CourseForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   //for faculties search
   const [facSearch, setFacSearch] = useState('')
@@ -126,7 +126,11 @@ export default function CourseForm() {
         total: data.pagination.totalCount
       })
     } catch (error) {
-      toast.error('Failed to fetch courses', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch courses',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -175,11 +179,12 @@ export default function CourseForm() {
 
       const result = await response.json()
 
-      toast.success(
-        editing
+      toast({
+        title: 'Success',
+        description: editing
           ? 'Course updated successfully!'
           : 'Course created successfully!'
-      )
+      })
       setEditing(false)
       reset()
       setFacSearch('')
@@ -187,7 +192,11 @@ export default function CourseForm() {
       fetchCourses()
       setIsOpen(false)
     } catch (error) {
-      toast.error(error.message || 'Failed to save course')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save course',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -226,7 +235,11 @@ export default function CourseForm() {
       setValue('syllabus', JSON.parse(course.syllabus))
     } catch (error) {
       console.error('Error in handleEdit:', error)
-      toast.error('Failed to fetch course details')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch course details',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -268,10 +281,17 @@ export default function CourseForm() {
         }
       )
       await response.json()
-      toast.success('Course deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Course deleted successfully'
+      })
       await fetchCourses()
     } catch (error) {
-      toast.error('Failed to delete course')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete course',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -292,7 +312,11 @@ export default function CourseForm() {
       const data = await response.json()
       setViewCourseData(data)
     } catch (err) {
-      toast.error(err.message || 'Failed to load course details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load course details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -361,8 +385,6 @@ export default function CourseForm() {
 
   return (
     <div className='w-full'>
-
-      <ToastContainer />
 
       {/* Header */}
       <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>

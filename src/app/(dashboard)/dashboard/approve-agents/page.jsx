@@ -7,12 +7,12 @@ import { Button } from '@/ui/shadcn/button'
 import Table from '@/ui/shadcn/DataTable'
 import { useMemo } from 'react'
 import { Check, X, UserCheck, Loader2 } from 'lucide-react'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { formatDate } from '@/utils/date.util'
 
 export default function ApproveAgentsPage() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [agents, setAgents] = useState([])
   const [loading, setLoading] = useState(false)
@@ -47,7 +47,11 @@ export default function ApproveAgentsPage() {
         total: data.pagination?.totalCount || 0
       })
     } catch (err) {
-      toast.error(err.message || 'Failed to load pending agents')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load pending agents',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -79,14 +83,17 @@ export default function ApproveAgentsPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Failed to update')
-      toast.success(
-        confirmAction === 'approve'
-          ? 'Agent approved successfully'
-          : 'Agent request rejected'
-      )
+      toast({
+        title: 'Success',
+        description: `Agent ${confirmAction === 'approve' ? 'approved' : 'rejected'} successfully`
+      })
       loadPendingAgents(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message || 'Failed to update')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to update agent status',
+        variant: 'destructive'
+      })
     } finally {
       setActioningId(null)
       setConfirmOpen(false)
@@ -193,8 +200,6 @@ export default function ApproveAgentsPage() {
 
   return (
     <div className='w-full'>
-      <ToastContainer position='bottom-right' />
-
       <div className='sticky top-0 z-30 bg-[#F7F8FA] py-3 mb-3'>
         <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3'>
           <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>

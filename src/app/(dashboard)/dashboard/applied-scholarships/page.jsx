@@ -16,14 +16,14 @@ import {
   XCircle
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import {
   deleteScholarshipApplication,
   fetchStudentScholarshipApplications
 } from './actions'
 
 const AppliedScholarshipsPage = () => {
+  const { toast } = useToast()
   const { setHeading, setSubheading } = usePageHeading()
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
@@ -119,7 +119,10 @@ const AppliedScholarshipsPage = () => {
     try {
       setDeletingId(deleteId)
       await deleteScholarshipApplication(deleteId)
-      toast.success('Application deleted successfully!')
+      toast({
+        title: 'Success',
+        description: 'Application deleted successfully!'
+      })
 
       // Reload applications
       const data = await fetchStudentScholarshipApplications({
@@ -141,7 +144,11 @@ const AppliedScholarshipsPage = () => {
       setIsDialogOpen(false)
       setDeleteId(null)
     } catch (error) {
-      toast.error(error.message || 'Failed to delete application')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete application',
+        variant: 'destructive'
+      })
       setError(error.message || 'Failed to delete application')
     } finally {
       setDeletingId(null)
@@ -304,8 +311,6 @@ const AppliedScholarshipsPage = () => {
         confirmText='Delete'
         cancelText='Cancel'
       />
-
-      <ToastContainer position='top-right' autoClose={3000} />
     </div>
   )
 }

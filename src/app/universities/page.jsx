@@ -1,5 +1,4 @@
-'use client'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 // import AdLayout from '../../components/Frontpage/AdLayout'
 import Footer from '../../components/Frontpage/Footer'
 import Header from '../../components/Frontpage/Header'

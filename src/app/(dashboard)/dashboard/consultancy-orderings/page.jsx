@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ShimmerEffect from '@/ui/molecules/ShimmerEffect'
 import {
     DndContext,
@@ -86,6 +86,7 @@ const SortableItem = ({ consultancy }) => {
 }
 
 const ConsultancyOrderingsPage = () => {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [consultancies, setConsultancies] = useState([])
     const [loading, setLoading] = useState(true)
@@ -143,7 +144,11 @@ const ConsultancyOrderingsPage = () => {
             setConsultancies(sortedConsultancies)
         } catch (err) {
             console.error('Error loading consultancies:', err)
-            toast.error(err.message || 'Failed to load consultancies')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to load consultancies',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }
@@ -202,10 +207,17 @@ const ConsultancyOrderingsPage = () => {
                 })
             })
 
-            toast.success('Consultancy order updated successfully')
+            toast({
+                title: 'Success',
+                description: 'Consultancy order updated successfully'
+            })
         } catch (err) {
             console.error('Error saving order:', err)
-            toast.error(err.message || 'Failed to save order')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to save order',
+                variant: 'destructive'
+            })
             // Reload consultancies on error to restore original order
             loadConsultancies()
         } finally {

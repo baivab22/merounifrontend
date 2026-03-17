@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import ShimmerEffect from '@/ui/molecules/ShimmerEffect'
 import {
     DndContext,
@@ -86,6 +86,7 @@ const SortableItem = ({ school }) => {
 }
 
 const SchoolOrderingsPage = () => {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [schools, setSchools] = useState([])
     const [loading, setLoading] = useState(true)
@@ -144,7 +145,11 @@ const SchoolOrderingsPage = () => {
             setSchools(sortedSchools)
         } catch (err) {
             console.error('Error loading schools:', err)
-            toast.error(err.message || 'Failed to load schools')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to load schools',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }
@@ -204,10 +209,17 @@ const SchoolOrderingsPage = () => {
                 })
             })
 
-            toast.success('School order updated successfully')
+            toast({
+                title: 'Success',
+                description: 'School order updated successfully'
+            })
         } catch (err) {
             console.error('Error saving order:', err)
-            toast.error(err.message || 'Failed to save order')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to save order',
+                variant: 'destructive'
+            })
             // Reload schools on error to restore original order
             loadSchools()
         } finally {

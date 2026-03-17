@@ -18,13 +18,13 @@ import { Search, X, Filter, ChevronDown, Edit2, Trash2 } from 'lucide-react'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Select } from '@/ui/shadcn/select'
 import { Label } from '@/ui/shadcn/label'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import SearchInput from '@/ui/molecules/SearchInput'
 import { Textarea } from '@/ui/shadcn/textarea'
 
 const ReferralsPage = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [referrals, setReferrals] = useState([])
   const [allReferrals, setAllReferrals] = useState([])
@@ -108,7 +108,11 @@ const ReferralsPage = () => {
     } catch (err) {
       setError(err.message)
       console.error('Error loading referrals:', err)
-      toast.error('Failed to load referrals')
+      toast({
+        title: 'Error',
+        description: 'Failed to load referrals',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -240,12 +244,19 @@ const ReferralsPage = () => {
         prev.map((ref) => ref.id === selectedReferral.id ? updatedItem : ref)
       )
 
-      toast.success('Referral status updated successfully')
+      toast({
+        title: 'Success',
+        description: 'Referral status updated successfully'
+      })
       handleCloseStatusModal()
     } catch (err) {
       const errorMsg = err.message || 'Failed to update referral status'
       setError(errorMsg)
-      toast.error(errorMsg)
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive'
+      })
     } finally {
       setUpdatingId(null)
     }
@@ -263,11 +274,18 @@ const ReferralsPage = () => {
       setDeletingId(referralToDelete)
       await deleteReferral(referralToDelete)
       setAllReferrals((prev) => prev.filter((ref) => ref.id !== referralToDelete))
-      toast.success('Referral deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Referral deleted successfully'
+      })
     } catch (err) {
       const errorMsg = err.message || 'Failed to delete referral'
       setError(errorMsg)
-      toast.error(errorMsg)
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive'
+      })
     } finally {
       setDeletingId(null)
       setDeleteConfirmationOpen(false)
@@ -421,7 +439,6 @@ const ReferralsPage = () => {
 
   return (
     <div className='w-full space-y-4 p-4'>
-      <ToastContainer />
 
       {/* Filter Header */}
       <div className='flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
