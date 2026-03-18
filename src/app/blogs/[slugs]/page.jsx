@@ -92,7 +92,7 @@ const NewsDetailsPage = ({ params }) => {
             {/* Right side: Sidebar with Banners/Ads */}
             <div className='lg:w-[320px] shrink-0'>
               <div className='sticky top-28'>
-                <h3 className='text-sm font-bold mb-6'>
+                <h3 className='text-sm font-semibold mb-6'>
                   Sponsored Content
                 </h3>
                 <SideBanner banners={banners} />
