@@ -296,21 +296,15 @@ const Materials = () => {
 
       <main className="max-w-4xl mx-auto px-6 pt-12 pb-24">
         {/* Page Header */}
-        <div className="text-center mb-10 space-y-3">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-[#0A70A7] rounded-full text-[10px] font-bold uppercase tracking-widest mb-1 shadow-sm border border-blue-100/50"
-          >
-            <FileSearch size={12} />
-            Study Resources
-          </motion.div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Materials <span className="text-[#0A70A7]">Library</span>
-          </h1>
-          <p className="text-gray-500 text-sm max-w-md mx-auto font-medium">
-            Structured academic resources organized by class and subject for easier learning.
-          </p>
+        <div className='flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12'>
+          <div>
+            <div className='relative inline-block mb-3'>
+              <h1 className='text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight'>
+                Materials <span className='text-[#0A6FA7]'>Library</span>
+              </h1>
+              <div className='absolute -bottom-2 left-0 w-16 h-1 bg-[#0A6FA7] rounded-full'></div>
+            </div>
+          </div>
         </div>
 
         <FiltersSection
