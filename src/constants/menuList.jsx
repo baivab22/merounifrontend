@@ -189,22 +189,8 @@ export const menuItems = [
       {
         icon: <FaHandshake className='text-xl' />,
         label: 'Consultancy',
-        href: null,
-        visible: ['admin', 'editor'],
-        submenus: [
-          {
-            icon: <FaHandshake className='text-lg' />,
-            label: 'Manage Consultancy',
-            href: '/dashboard/consultancy',
-            visible: ['admin', 'editor']
-          },
-          {
-            icon: <SortAsc className='text-lg' />,
-            label: 'Consultancy Orderings',
-            href: '/dashboard/consultancy-orderings',
-            visible: ['admin', 'editor']
-          }
-        ]
+        href: '/dashboard/consultancy',
+        visible: ['admin', 'editor']
       },
       {
         icon: <BsCalendarEvent className='text-xl' />,
