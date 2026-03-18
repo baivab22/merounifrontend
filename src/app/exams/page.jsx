@@ -1,28 +1,33 @@
 'use client'
 import EmptyState from '@/ui/shadcn/EmptyState'
-import { FormatDate } from '@/lib/date'
+import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Building2, ClipboardCheck, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import Footer from '../../components/Frontpage/Footer'
 import Header from '../../components/Frontpage/Header'
 import Navbar from '../../components/Frontpage/Navbar'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Pagination from '../blogs/components/Pagination'
 import {
   fetchFaculties,
   fetchLevels,
   fetchUniversities,
-  getExams
+  getExams,
+  fetchExamCategories
 } from './actions'
 import ExamShimmer from './components/ExamShimmer'
 import SingleExam from './components/SingleExam'
 import { formatDate } from '@/utils/date.util'
 
+const EXAM_TYPES = [
+  { id: 'Written', title: 'Written' },
+  { id: 'Practical', title: 'Practical' },
+  { id: 'Oral', title: 'Oral' },
+]
+
 export default function ExamsPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const pathname = usePathname()
 
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
@@ -34,15 +39,18 @@ export default function ExamsPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebounce(search, 300)
 
-  // Filter states
+  // Filter data
   const [faculties, setFaculties] = useState([])
   const [levels, setLevels] = useState([])
   const [universities, setUniversities] = useState([])
+  const [examCategories, setExamCategories] = useState([])
 
-  const [selectedType, setSelectedType] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('')
-  const [selectedAffiliation, setSelectedAffiliation] = useState('')
-  const [selectedFaculty, setSelectedFaculty] = useState('')
+  // Selected filter values (single object or null)
+  const [selectedType, setSelectedType] = useState(null)
+  const [selectedLevel, setSelectedLevel] = useState(null)
+  const [selectedAffiliation, setSelectedAffiliation] = useState(null)
+  const [selectedFaculty, setSelectedFaculty] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('')
 
   const [isScrolling, setIsScrolling] = useState(false)
   const [pagination, setPagination] = useState({
@@ -55,14 +63,16 @@ export default function ExamsPage() {
   useEffect(() => {
     const getOptions = async () => {
       try {
-        const [facList, levelList, uniList] = await Promise.all([
+        const [facList, levelList, uniList, catList] = await Promise.all([
           fetchFaculties(),
           fetchLevels(),
-          fetchUniversities()
+          fetchUniversities(),
+          fetchExamCategories()
         ])
         setFaculties(facList || [])
         setLevels(levelList || [])
         setUniversities(uniList || [])
+        setExamCategories(catList || [])
       } catch (err) {
         console.error('Error fetching filter options:', err)
       }
@@ -76,13 +86,13 @@ export default function ExamsPage() {
       const response = await getExams(
         pagination.currentPage,
         debouncedSearch,
-        selectedType,
-        selectedLevel,
-        selectedAffiliation,
-        selectedFaculty
+        selectedType?.id || '',
+        selectedLevel?.id || '',
+        selectedAffiliation?.id || '',
+        selectedFaculty?.id || '',
+        selectedCategory
       )
       setExams(response.items)
-
       setPagination((prev) => ({
         ...prev,
         currentPage: response.pagination.currentPage,
@@ -95,19 +105,20 @@ export default function ExamsPage() {
       setLoading(false)
     }
   }, [
-    debouncedSearch,
     pagination.currentPage,
+    debouncedSearch,
     selectedType,
     selectedLevel,
     selectedAffiliation,
-    selectedFaculty
+    selectedFaculty,
+    selectedCategory
   ])
 
   useEffect(() => {
     fetchExams()
   }, [fetchExams])
 
-  // Scroll to top on URL or pagination change
+  // Scroll to top on pagination change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [searchParams, pagination.currentPage])
@@ -115,16 +126,10 @@ export default function ExamsPage() {
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
-  }, [
-    debouncedSearch,
-    selectedType,
-    selectedLevel,
-    selectedAffiliation,
-    selectedFaculty
-  ])
+  }, [debouncedSearch, selectedType, selectedLevel, selectedAffiliation, selectedFaculty, selectedCategory])
 
   const handleClick = (id) => {
-    let single = exams.find((items) => items.id === id)
+    const single = exams.find((item) => item.id === id)
     setSingleExam(single ? [single] : [])
     setShowSingle(true)
   }
@@ -138,18 +143,21 @@ export default function ExamsPage() {
     }
   }
 
+  const hasFilters = search || selectedType || selectedLevel || selectedAffiliation || selectedFaculty || selectedCategory
+
   const clearFilters = () => {
     setSearch('')
-    setSelectedType('')
-    setSelectedLevel('')
-    setSelectedAffiliation('')
-    setSelectedFaculty('')
+    setSelectedType(null)
+    setSelectedLevel(null)
+    setSelectedAffiliation(null)
+    setSelectedFaculty(null)
+    setSelectedCategory('')
   }
 
   if (error) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-        <div className='bg-red-50 border border-red-100 text-red-600 px-8 py-4 rounded-[24px] font-bold shadow-sm'>
+        <div className='bg-red-50 border border-red-100 text-red-600 px-8 py-4 rounded-2xl font-bold shadow-sm'>
           {error}
         </div>
       </div>
@@ -160,241 +168,272 @@ export default function ExamsPage() {
     <>
       <Header />
       <Navbar />
+
       {!showSingle ? (
-        <div className='min-h-screen bg-gray-50/50 py-12 px-6'>
+        <div className='min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6'>
           <div className='max-w-7xl mx-auto'>
-            {/* Title Section */}
-            <div className='flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12'>
+
+            {/* ── Page Header ── */}
+            <div className='flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8'>
               <div>
                 <div className='relative inline-block mb-3'>
                   <h1 className='text-3xl md:text-4xl font-extrabold text-gray-900'>
                     Explore <span className='text-[#0A6FA7]'>Exams</span>
                   </h1>
-                  <div className='absolute -bottom-2 left-0 w-16 h-1 bg-[#0A6FA7] rounded-full'></div>
+                  <div className='absolute -bottom-2 left-0 w-14 h-1 bg-[#0A6FA7] rounded-full' />
                 </div>
-                <p className='text-gray-500 max-w-xl font-medium mt-2'>
-                  Find upcoming entrance and periodic exams tailored to your
-                  academic path.
+                <p className='text-gray-500 max-w-xl text-sm font-medium mt-2'>
+                  Find upcoming entrance and periodic exams tailored to your academic path.
                 </p>
               </div>
 
-              {/* Clear All Button */}
-              {(search ||
-                selectedType ||
-                selectedLevel ||
-                selectedAffiliation ||
-                selectedFaculty) && (
-                  <button
-                    onClick={clearFilters}
-                    className='flex items-center gap-2 text-sm font-bold text-red-500 hover:text-red-600 transition-colors'
-                  >
-                    <X className='w-4 h-4' />
-                    Clear All Filters
-                  </button>
-                )}
+              {hasFilters && (
+                <button
+                  onClick={clearFilters}
+                  className='flex items-center gap-1.5 text-sm font-bold text-red-500 hover:text-red-600 transition-colors shrink-0'
+                >
+                  <X className='w-4 h-4' />
+                  Clear Filters
+                </button>
+              )}
             </div>
 
-            {/* Filter Bar */}
-            <div className='bg-white rounded-[32px] p-8 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-gray-100 mb-12'>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6'>
+            {/* ── Category Pills ── */}
+            <div className='flex flex-wrap gap-2 mb-6'>
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${selectedCategory === ''
+                    ? 'bg-[#0A6FA7] text-white border-[#0A6FA7] shadow-md shadow-[#0A6FA7]/20'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#0A6FA7] hover:text-[#0A6FA7]'
+                  }`}
+              >
+                All Exams
+              </button>
+              {examCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${selectedCategory === cat.id
+                      ? 'bg-[#0A6FA7] text-white border-[#0A6FA7] shadow-md shadow-[#0A6FA7]/20'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-[#0A6FA7] hover:text-[#0A6FA7]'
+                    }`}
+                >
+                  {cat.title}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Filter Bar ── */}
+            <div className='bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+
                 {/* Search */}
-                <div className='lg:col-span-4'>
-                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2'>
+                <div>
+                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1.5'>
                     Search
                   </label>
-                  <div className='relative group'>
-                    <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+                  <div className='relative'>
+                    <Search className='absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
                     <input
                       type='text'
                       placeholder='Search by exam title...'
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className='w-full px-5 py-3.5 pl-12 rounded-2xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A6FA7]/10 focus:border-[#0A6FA7] focus:bg-white transition-all text-sm'
+                      className='w-full h-10 pl-10 pr-4 rounded-md border border-gray-200 bg-white outline-none focus:ring-2 focus:ring-[#0A6FA7]/20 focus:border-[#0A6FA7] transition-all text-sm'
                     />
                   </div>
                 </div>
 
                 {/* Exam Type */}
-                <div className='lg:col-span-2'>
-                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2'>
+                <div>
+                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1.5'>
                     Type
                   </label>
-                  <select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className='w-full px-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A6FA7]/10 focus:border-[#0A6FA7] focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer'
-                  >
-                    <option value=''>All Types</option>
-                    <option value='Written'>Written</option>
-                    <option value='Practical'>Practical</option>
-                    <option value='Oral'>Oral</option>
-                  </select>
+                  <SearchSelectCreate
+                    isMulti={false}
+                    allowCreate={false}
+                    placeholder='All Types'
+                    displayKey='title'
+                    valueKey='id'
+                    selectedItems={selectedType ? [selectedType] : []}
+                    onSearch={async (q) =>
+                      EXAM_TYPES.filter((t) =>
+                        t.title.toLowerCase().includes(q.toLowerCase())
+                      )
+                    }
+                    onSelect={(item) => setSelectedType(item)}
+                    onRemove={() => setSelectedType(null)}
+                    inputSize='sm'
+                  />
                 </div>
 
-                {/* Study Level */}
-                <div className='lg:col-span-2'>
-                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2'>
+                {/* Level */}
+                <div>
+                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1.5'>
                     Level
                   </label>
-                  <select
-                    value={selectedLevel}
-                    onChange={(e) => setSelectedLevel(e.target.value)}
-                    className='w-full px-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A6FA7]/10 focus:border-[#0A6FA7] focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer'
-                  >
-                    <option value=''>All Levels</option>
-                    {levels.map((lvl) => (
-                      <option key={lvl.id} value={lvl.id}>
-                        {lvl.title}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelectCreate
+                    isMulti={false}
+                    allowCreate={false}
+                    placeholder='All Levels'
+                    displayKey='title'
+                    valueKey='id'
+                    selectedItems={selectedLevel ? [selectedLevel] : []}
+                    onSearch={async (q) =>
+                      levels.filter((l) =>
+                        l.title.toLowerCase().includes(q.toLowerCase())
+                      )
+                    }
+                    onSelect={(item) => setSelectedLevel(item)}
+                    onRemove={() => setSelectedLevel(null)}
+                    inputSize='sm'
+                  />
                 </div>
 
                 {/* Affiliation */}
-                <div className='lg:col-span-2'>
-                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2'>
+                <div>
+                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1.5'>
                     Affiliation
                   </label>
-                  <select
-                    value={selectedAffiliation}
-                    onChange={(e) => setSelectedAffiliation(e.target.value)}
-                    className='w-full px-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A6FA7]/10 focus:border-[#0A6FA7] focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer'
-                  >
-                    <option value=''>All Universities</option>
-                    {universities.map((uni) => (
-                      <option key={uni.id} value={uni.id}>
-                        {uni.fullname}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelectCreate
+                    isMulti={false}
+                    allowCreate={false}
+                    placeholder='All Universities'
+                    displayKey='fullname'
+                    valueKey='id'
+                    selectedItems={selectedAffiliation ? [selectedAffiliation] : []}
+                    onSearch={async (q) =>
+                      universities.filter((u) =>
+                        u.fullname.toLowerCase().includes(q.toLowerCase())
+                      )
+                    }
+                    onSelect={(item) => setSelectedAffiliation(item)}
+                    onRemove={() => setSelectedAffiliation(null)}
+                    inputSize='sm'
+                  />
                 </div>
 
                 {/* Discipline */}
-                <div className='lg:col-span-2'>
-                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2'>
+                <div>
+                  <label className='block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1.5'>
                     Discipline
                   </label>
-                  <select
-                    value={selectedFaculty}
-                    onChange={(e) => setSelectedFaculty(e.target.value)}
-                    className='w-full px-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A6FA7]/10 focus:border-[#0A6FA7] focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer'
-                  >
-                    <option value=''>All Disciplines</option>
-                    {faculties.map((fac) => (
-                      <option key={fac.id} value={fac.id}>
-                        {fac.title}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelectCreate
+                    isMulti={false}
+                    allowCreate={false}
+                    placeholder='All Disciplines'
+                    displayKey='title'
+                    valueKey='id'
+                    selectedItems={selectedFaculty ? [selectedFaculty] : []}
+                    onSearch={async (q) =>
+                      faculties.filter((f) =>
+                        f.title.toLowerCase().includes(q.toLowerCase())
+                      )
+                    }
+                    onSelect={(item) => setSelectedFaculty(item)}
+                    onRemove={() => setSelectedFaculty(null)}
+                    inputSize='sm'
+                  />
                 </div>
+
               </div>
             </div>
 
-            {/* Content Section */}
+            {/* ── Results count ── */}
+            {!loading && pagination.totalCount > 0 && (
+              <p className='text-sm text-gray-400 font-medium mb-5'>
+                Showing <span className='text-gray-700 font-bold'>{pagination.totalCount}</span> exam{pagination.totalCount !== 1 ? 's' : ''}
+              </p>
+            )}
+
+            {/* ── Content ── */}
             {loading || isScrolling ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-                {[...Array(6)].map((_, index) => (
-                  <ExamShimmer key={index} />
-                ))}
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                {[...Array(6)].map((_, i) => <ExamShimmer key={i} />)}
               </div>
             ) : exams.length === 0 ? (
-              <div className='bg-white rounded-[40px] p-20 shadow-[0_2px_15px_rgba(0,0,0,0.01)] border border-gray-100'>
+              <div className='bg-white rounded-2xl p-20 border border-gray-100 shadow-sm'>
                 <EmptyState
                   icon={ClipboardCheck}
                   title='No Exams Found'
                   description={
-                    search ||
-                      selectedType ||
-                      selectedLevel ||
-                      selectedAffiliation ||
-                      selectedFaculty
+                    hasFilters
                       ? 'No exams match your current filter criteria. Try adjusting your selections.'
                       : 'No exams are currently available at the moment.'
                   }
-                  action={
-                    search ||
-                      selectedType ||
-                      selectedLevel ||
-                      selectedAffiliation ||
-                      selectedFaculty
-                      ? {
-                        label: 'Clear All Filters',
-                        onClick: clearFilters
-                      }
-                      : null
-                  }
+                  action={hasFilters ? { label: 'Clear All Filters', onClick: clearFilters } : null}
                 />
               </div>
             ) : (
               <>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                   {exams.map((exam) => (
                     <div
                       key={exam.id}
-                      className='group h-full bg-white rounded-[32px] p-8 border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:border-[#0A6FA7]/20 transition-all duration-300 flex flex-col'
+                      className='group h-full bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-[#0A6FA7]/20 transition-all duration-300 flex flex-col'
                     >
-                      <div className='flex items-start justify-between mb-6'>
-                        <div className='bg-blue-50 p-4 rounded-2xl group-hover:bg-[#0A6FA7]/10 transition-colors'>
-                          <ClipboardCheck className='w-6 h-6 text-[#0A6FA7]' />
+                      {/* Card Header */}
+                      <div className='flex items-start justify-between mb-5'>
+                        <div className='bg-blue-50 p-3 rounded-xl group-hover:bg-[#0A6FA7]/10 transition-colors'>
+                          <ClipboardCheck className='w-5 h-5 text-[#0A6FA7]' />
                         </div>
-                        <div className='flex flex-col items-end gap-2'>
+                        <div className='flex flex-col items-end gap-1.5'>
                           {exam.level?.title && (
-                            <span className='px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-100'>
+                            <span className='px-2.5 py-1 bg-gray-50 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-100'>
                               {exam.level.title}
                             </span>
                           )}
                           {exam.exam_details?.[0]?.exam_type && (
-                            <span className='px-3 py-1 bg-[#30AD8F]/10 rounded-full text-[10px] font-bold text-[#30AD8F] uppercase tracking-wider'>
+                            <span className='px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider'>
                               {exam.exam_details[0].exam_type}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <h2 className='text-xl font-bold text-gray-900 mb-4 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 min-h-[3.5rem]'>
+                      {/* Title */}
+                      <h2 className='text-base font-bold text-gray-900 mb-3 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 min-h-[3rem]'>
                         {exam.title}
                       </h2>
 
+                      {/* University */}
                       {exam.examUniversity?.fullname && (
-                        <p className='text-sm text-gray-500 font-bold mb-6 flex items-center gap-2'>
-                          <Building2 className='w-4 h-4 text-gray-400' />
-                          {exam.examUniversity.fullname}
+                        <p className='text-xs text-gray-500 font-semibold mb-4 flex items-center gap-1.5'>
+                          <Building2 className='w-3.5 h-3.5 text-gray-400 shrink-0' />
+                          <span className='line-clamp-1'>{exam.examUniversity.fullname}</span>
                         </p>
                       )}
 
-                      <div className='mt-auto space-y-4 pt-6 border-t border-gray-50'>
+                      {/* Dates + CTA */}
+                      <div className='mt-auto pt-4 border-t border-gray-50 space-y-4'>
                         {exam.application_details?.length > 0 ? (
-                          <div className='grid grid-cols-2 gap-4'>
+                          <div className='grid grid-cols-2 gap-3'>
                             <div className='flex flex-col'>
-                              <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400'>
-                                Closing Date
+                              <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-0.5'>
+                                Closing
                               </span>
                               <span className='text-sm font-bold text-gray-700'>
-                                {formatDate(
-                                  exam.application_details[0].closing_date
-                                ) ?? 'TBD'}
+                                {formatDate(exam.application_details[0].closing_date) ?? 'TBD'}
                               </span>
                             </div>
                             <div className='flex flex-col text-right'>
-                              <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400'>
+                              <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-0.5'>
                                 Exam Date
                               </span>
                               <span className='text-sm font-bold text-[#0A6FA7]'>
-                                {formatDate(
-                                  exam.application_details[0].exam_date
-                                ) ?? 'TBD'}
+                                {formatDate(exam.application_details[0].exam_date) ?? 'TBD'}
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <p className='text-xs font-bold text-gray-400 text-center py-2 bg-gray-50 rounded-md'>
+                          <p className='text-xs font-semibold text-gray-400 text-center py-2 bg-gray-50 rounded-lg'>
                             Dates to be announced
                           </p>
                         )}
 
                         <button
                           onClick={() => handleClick(exam?.id)}
-                          className='w-full py-3.5 rounded-2xl bg-[#0A6FA7] hover:bg-[#085e8a] text-white text-sm font-extrabold shadow-md shadow-[#0A6FA7]/20 transition-all hover:scale-[1.02] active:scale-95'
+                          className='w-full py-3 rounded-xl bg-[#0A6FA7] hover:bg-[#085e8a] text-white text-sm font-bold shadow-sm shadow-[#0A6FA7]/20 transition-all hover:scale-[1.01] active:scale-95'
                         >
                           View Exam Details
                         </button>
@@ -405,11 +444,8 @@ export default function ExamsPage() {
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                  <div className='mt-16 bg-white py-6 px-10 rounded-[32px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.01)] flex justify-center'>
-                    <Pagination
-                      pagination={pagination}
-                      onPageChange={handlePageChange}
-                    />
+                  <div className='mt-10 bg-white py-5 px-8 rounded-2xl border border-gray-100 shadow-sm flex justify-center'>
+                    <Pagination pagination={pagination} onPageChange={handlePageChange} />
                   </div>
                 )}
               </>
@@ -419,6 +455,7 @@ export default function ExamsPage() {
       ) : (
         <SingleExam exam={singleExam} />
       )}
+
       <Footer />
     </>
   )
