@@ -12,10 +12,11 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { FaSpinner as FaSpinnerIcon } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { applyForScholarship } from '../../../actions'
 
 const FormSection = ({ scholarship }) => {
+    const { toast } = useToast()
     const user = useSelector((state) => state.user?.data)
     const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -51,7 +52,11 @@ const FormSection = ({ scholarship }) => {
             }))
         },
         onError: (error) => {
-            toast.error(error.message || 'Something went wrong. Please try again.')
+            toast({
+                title: 'Error',
+                description: error.message || 'Something went wrong. Please try again.',
+                variant: 'destructive'
+            })
         }
     })
 

@@ -266,7 +266,6 @@ export default function TagForm() {
             </Button>
           </div>
         </div>
-        <ToastContainer />
 
         {/* Badge Layout */}
         <div className='mt-8'>

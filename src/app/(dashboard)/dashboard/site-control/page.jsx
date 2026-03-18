@@ -5,7 +5,7 @@ import Loading from '@/ui/molecules/Loading'
 import { Button } from '@/ui/shadcn/button'
 import { Edit2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { getSiteConfig } from '../../../actions/siteConfigActions'
 import Table from '@/ui/shadcn/DataTable'
 import { CONFIG_TYPES } from './siteControlConstants'
@@ -15,6 +15,7 @@ import SiteControlDeleteModal from './SiteControlDeleteModal'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function SiteControlPage() {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [loading, setLoading] = useState(true)
     const [configs, setConfigs] = useState([])
@@ -75,7 +76,11 @@ export default function SiteControlPage() {
             setConfigs(configItems)
         } catch (error) {
             console.error(error)
-            toast.error('Failed to load site configuration')
+            toast({
+                title: 'Error',
+                description: 'Failed to load site configuration',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }

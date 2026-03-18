@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Search, Edit2, Trash2, Eye, Users, Plus } from 'lucide-react'
 
 import {
@@ -38,6 +38,7 @@ import ScholarshipViewModal from './ScholarshipViewModal'
 import { authFetch } from '@/app/utils/authFetch'
 
 export default function ScholarshipManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const searchParams = useSearchParams()
@@ -122,7 +123,11 @@ export default function ScholarshipManager() {
       })
     } catch (error) {
       console.error('Failed to fetch scholarships:', error)
-      toast.error('Failed to fetch scholarships')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch scholarships',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -187,16 +192,26 @@ export default function ScholarshipManager() {
 
       if (editingId) {
         await updateScholarship(editingId, payload)
-        toast.success('Scholarship updated successfully')
+        toast({
+          title: 'Success',
+          description: 'Scholarship updated successfully'
+        })
       } else {
         await createScholarship(payload)
-        toast.success('Scholarship created successfully')
+        toast({
+          title: 'Success',
+          description: 'Scholarship created successfully'
+        })
       }
       handleModalClose()
       loadScholarships(pagination.currentPage)
     } catch (error) {
       console.error('Error saving scholarship:', error)
-      toast.error(`Failed to ${editingId ? 'update' : 'create'} scholarship`)
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingId ? 'update' : 'create'} scholarship`,
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -210,10 +225,17 @@ export default function ScholarshipManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteScholarship(deleteId)
-      toast.success('Scholarship deleted successfully')
+      toast({
+        title: 'Success',
+        description: 'Scholarship deleted successfully'
+      })
       loadScholarships(pagination.currentPage)
     } catch (error) {
-      toast.error('Failed to delete scholarship')
+      toast({
+        title: 'Error',
+        description: 'Failed to delete scholarship',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -229,7 +251,11 @@ export default function ScholarshipManager() {
       const data = await getScholarshipApplications(scholarshipId)
       setApplicationsData(data.applications || [])
     } catch (err) {
-      toast.error('Failed to load applications')
+      toast({
+        title: 'Error',
+        description: 'Failed to load applications',
+        variant: 'destructive'
+      })
     } finally {
       setApplicationsLoading(false)
     }
@@ -304,7 +330,6 @@ export default function ScholarshipManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer />
 
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
         <SearchInput

@@ -10,11 +10,12 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { FaSpinner as FaSpinnerIcon } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { applyToConsultancy } from '../query/applyConsultancy.query'
 import { THEME_BLUE } from '@/constants/constants'
 
 const FormSection = ({ consultancy }) => {
+  const { toast } = useToast()
   const user = useSelector((state) => state.user?.data)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -50,7 +51,11 @@ const FormSection = ({ consultancy }) => {
       }))
     },
     onError: (error) => {
-      toast.error(error.message || 'Something went wrong. Please try again.')
+      toast({
+        title: 'Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive'
+      })
     }
   })
 

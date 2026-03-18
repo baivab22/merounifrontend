@@ -33,7 +33,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 import {
     createOrUpdateCollege,
@@ -69,6 +69,7 @@ const CreateUpdateCollegeModal = ({
     onSuccess,
     allDegrees
 }) => {
+    const { toast } = useToast()
     const [submitting, setSubmitting] = useState(false)
     const [submittingDraft, setSubmittingDraft] = useState(false)
     const [loadingData, setLoadingData] = useState(false)
@@ -321,7 +322,11 @@ const CreateUpdateCollegeModal = ({
 
                 } catch (error) {
                     console.error('Error fetching college data:', error)
-                    toast.error('Failed to load college details')
+                    toast({
+                        title: 'Error',
+                        description: 'Failed to load college details',
+                        variant: 'destructive'
+                    })
                 } finally {
                     setLoadingData(false)
                 }
@@ -433,7 +438,11 @@ const CreateUpdateCollegeModal = ({
             return response.data?.media?.url
         } catch (error) {
             console.error('Image upload failed:', error)
-            toast.error('Failed to upload image')
+            toast({
+                title: 'Error',
+                description: 'Failed to upload image',
+                variant: 'destructive'
+            })
             throw error
         }
     }
@@ -489,18 +498,23 @@ const CreateUpdateCollegeModal = ({
                 await createOrUpdateCollege(data)
             }
 
-            toast.success(
-                status === 'draft'
+            toast({
+                title: 'Success',
+                description: status === 'draft'
                     ? 'Draft saved successfully!'
                     : editSlug
                         ? 'College updated successfully!'
                         : 'College created successfully!'
-            )
+            })
             onSuccess?.()
             onSystemClose()
         } catch (error) {
             console.log('Submission error:', error)
-            toast.error(error.message || 'Failed to submit data')
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to submit data',
+                variant: 'destructive'
+            })
         } finally {
             setSubmitting(false)
             setSubmittingDraft(false)
@@ -514,7 +528,11 @@ const CreateUpdateCollegeModal = ({
     const onSaveDraft = async () => {
         const data = getValues()
         if (!data.name || !data.name.trim()) {
-            toast.error('College name is required even for drafts')
+            toast({
+                title: 'Error',
+                description: 'College name is required even for drafts',
+                variant: 'destructive'
+            })
             return
         }
         await handleSave(data, 'draft')

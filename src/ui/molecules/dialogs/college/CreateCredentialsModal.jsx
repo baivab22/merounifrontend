@@ -5,7 +5,7 @@ import { Label } from "@/ui/shadcn/label"
 import { Eye, EyeOff } from "lucide-react"
 import { useEffect, useState } from "react"
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 import { useForm } from 'react-hook-form'
 
@@ -19,6 +19,7 @@ const CreateCredentialsModal = ({
     setPagination,
     setColleges
 }) => {
+    const { toast } = useToast()
     const [showPassword, setShowPassword] = useState(false)
     const {
         register,
@@ -107,7 +108,10 @@ const CreateCredentialsModal = ({
             }
 
             const resData = await response.json()
-            toast.success(resData.message || 'Credentials created successfully!')
+            toast({
+                title: 'Success',
+                description: resData.message || 'Credentials created successfully!'
+            })
             handleCloseCredentialsModal()
 
             // Reload colleges to update has_account status
@@ -131,7 +135,11 @@ const CreateCredentialsModal = ({
                 setTableLoading(false)
             }
         } catch (err) {
-            toast.error(err.message || 'Failed to create credentials')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to create credentials',
+                variant: 'destructive'
+            })
         }
     }
     return (

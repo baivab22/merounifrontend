@@ -7,7 +7,7 @@ import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CreateConsultencyUser({
     isOpen,
@@ -15,6 +15,7 @@ export default function CreateConsultencyUser({
     selectedConsultancy,
     onSuccess
 }) {
+    const { toast } = useToast()
     const [showPassword, setShowPassword] = React.useState(false)
 
     const {
@@ -101,11 +102,18 @@ export default function CreateConsultencyUser({
             const responseData = await response.json()
             if (!response.ok) throw new Error(responseData.message || 'Failed to create credentials')
 
-            toast.success('Credentials created successfully!')
+            toast({
+                title: 'Success',
+                description: 'Credentials created successfully!'
+            })
             if (onSuccess) onSuccess()
             onClose()
         } catch (err) {
-            toast.error(err.message || 'Failed to create credentials')
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to create credentials',
+                variant: 'destructive'
+            })
         }
     }
 

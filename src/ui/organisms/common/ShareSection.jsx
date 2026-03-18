@@ -3,9 +3,10 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Copy, Share2 } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 const ShareSection = ({ title, type = 'blog' }) => {
+    const { toast } = useToast()
     const [copied, setCopied] = useState(false)
     const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
     const shareTitle = `Check out ${title || 'this ' + type} on our platform`
@@ -37,10 +38,9 @@ const ShareSection = ({ title, type = 'blog' }) => {
     const handleCopyLink = () => {
         navigator.clipboard.writeText(`${shareTitle}\n${currentUrl}`)
         setCopied(true)
-        toast.success('Link copied to clipboard!', {
-            position: "bottom-center",
-            autoClose: 2000,
-            hideProgressBar: true,
+        toast({
+            title: 'Copied',
+            description: 'Link copied to clipboard!'
         })
         setTimeout(() => setCopied(false), 2000)
     }

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
@@ -20,6 +20,7 @@ const schema = yup.object({
 }).required()
 
 export default function ApplyCareerModal({ isOpen, onClose, careerId, careerTitle }) {
+    const { toast } = useToast()
     const [loading, setLoading] = useState(false)
 
 
@@ -59,11 +60,18 @@ export default function ApplyCareerModal({ isOpen, onClose, careerId, careerTitl
                 throw new Error(errData.message || 'Failed to submit application')
             }
 
-            toast.success('Your application has been submitted successfully!')
+            toast({
+                title: 'Success',
+                description: 'Your application has been submitted successfully!'
+            })
             reset()
             onClose()
         } catch (error) {
-            toast.error(error.message || 'Error parsing application.')
+            toast({
+                title: 'Error',
+                description: error.message || 'Error parsing application.',
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }

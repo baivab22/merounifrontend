@@ -14,10 +14,11 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { FaSpinner as FaSpinnerIcon } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 
 const FormSection = ({ id, college }) => {
+  const { toast } = useToast()
   const user = useSelector((state) => state.user?.data)
   const parsedRole =
     typeof user?.role === 'string' ? destr(user.role) || {} : user?.role || {}
@@ -126,19 +127,30 @@ const FormSection = ({ id, college }) => {
       if (!response.ok) {
         const errorMessage = data?.error || data?.message || 'Failed to submit application. Please try again.'
         console.error('Application submission error:', errorMessage)
-        toast.error(errorMessage)
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        })
         setIsSubmitting(false)
         return
       }
 
       if (data?.result?.hasApplied) {
-        toast.error('You have already applied for this college.')
+        toast({
+          title: 'Already Applied',
+          description: 'You have already applied for this college.',
+          variant: 'destructive'
+        })
         setIsSubmitting(false)
         return
       }
 
       // Success: Show success message and reset form
-      toast.success('Application submitted successfully!')
+      toast({
+        title: 'Success',
+        description: 'Application submitted successfully!'
+      })
       setIsSubmitted(true)
 
       // Reset form data
@@ -156,7 +168,11 @@ const FormSection = ({ id, college }) => {
 
     } catch (error) {
       console.error('Application submission error:', error)
-      toast.error(error.message || 'Something went wrong. Please try again.')
+      toast({
+        title: 'Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive'
+      })
       setIsSubmitting(false)
     }
   }

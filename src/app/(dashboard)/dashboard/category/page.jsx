@@ -5,8 +5,7 @@ import { useForm } from 'react-hook-form'
 import { fetchCategories } from './action'
 import Table from '@/ui/shadcn/DataTable'
 import { Edit2, Trash2, Eye, Plus } from 'lucide-react'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/ui/shadcn/dialog'
@@ -20,6 +19,7 @@ import { formatDate } from '@/utils/date.util'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 
 export default function CategoryManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
 
   const {
@@ -76,7 +76,11 @@ export default function CategoryManager() {
         total: response.pagination.totalCount
       })
     } catch (err) {
-      toast.error('Failed to load categories')
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -104,18 +108,28 @@ export default function CategoryManager() {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         })
         if (!res.ok) throw new Error('Failed to update category')
-        toast.success('Category updated successfully')
+        toast({
+          title: 'Success',
+          description: 'Category updated successfully'
+        })
       } else {
         const res = await authFetch(`${process.env.baseUrl}/category`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
         })
         if (!res.ok) throw new Error('Failed to create category')
-        toast.success('Category created successfully')
+        toast({
+          title: 'Success',
+          description: 'Category created successfully'
+        })
       }
       handleCloseModal()
       loadCategories(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message || `Failed to ${editingId ? 'update' : 'create'} category`)
+      toast({
+        title: 'Error',
+        description: err.message || `Failed to ${editingId ? 'update' : 'create'} category`,
+        variant: 'destructive'
+      })
     }
   }
 
@@ -169,10 +183,17 @@ export default function CategoryManager() {
         method: 'DELETE', headers: { 'Content-Type': 'application/json' }
       })
       const data = await res.json()
-      toast.success(data.message || 'Category deleted')
+      toast({
+        title: 'Success',
+        description: data.message || 'Category deleted'
+      })
       loadCategories(pagination.currentPage)
     } catch (err) {
-      toast.error(err.message || 'Failed to delete')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -260,7 +281,6 @@ export default function CategoryManager() {
   return (
     <div className='w-full'>
 
-      <ToastContainer />
 
       {/* Header */}
       <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>
