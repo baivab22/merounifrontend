@@ -12,6 +12,7 @@ import RelatedCourses from './components/RelatedCourses'
 import Syllabus from './components/syllabus'
 import ImageSection from './components/upperSection'
 import ApplyNow from './components/applyNow'
+import OfferedColleges from './components/OfferedColleges'
 import { slugify } from '@/lib/slugify'
 import { BookOpen, GraduationCap, Building2, ArrowLeft } from 'lucide-react'
 import EmptyState from '@/ui/shadcn/EmptyState'
@@ -175,7 +176,6 @@ const CourseDescription = ({ params }) => {
             }}
           />
         </div>
-        <Footer />
       </>
     )
   }
@@ -293,22 +293,7 @@ const CourseDescription = ({ params }) => {
               </>
             )}
 
-            {uniqueColleges.length > 0 && (
-              <div className='container mx-auto px-4 py-16 border-t border-gray-50'>
-                <div className='max-w-5xl mx-auto'>
-                  <h2 className='text-xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
-                    Offered by these Colleges
-                  </h2>
-                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                    {uniqueColleges.map((college, index) => (
-                      <div key={index} className='scale-[0.95] origin-top-left'>
-                        <CollegeCard college={college} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            <OfferedColleges colleges={uniqueColleges} />
 
             <div className='container mx-auto px-4 pb-20'>
               <ShareSection degree={degree} />
