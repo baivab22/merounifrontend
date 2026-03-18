@@ -2,7 +2,6 @@
 
 // import { useState, useEffect } from 'react'
 // import { Heart } from 'lucide-react'
-// import { toast } from 'react-toastify'
 // import { useSelector } from 'react-redux'
 // import { authFetch } from '@/app/utils/authFetch'
 // import { useRouter } from 'next/navigation'

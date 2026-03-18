@@ -1,6 +1,6 @@
 import { Upload, X, FileText, Loader2 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import axios from 'axios'
 import { Label } from '@/ui/shadcn/label'
 import { cn } from '@/app/lib/utils'
@@ -16,6 +16,7 @@ const FileUpload = ({
   autoUpload = false,
   authorId = '1' // Added support for dynamic authorId
 }) => {
+  const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const [preview, setPreview] = useState(defaultPreview)
   const [fileType, setFileType] = useState(null)
@@ -85,10 +86,17 @@ const FileUpload = ({
       )
       const data = response.data
       if (data.success === false) {
-        toast.error(data.message || 'Upload failed.')
+        toast({
+          title: 'Error',
+          description: data.message || 'Upload failed.',
+          variant: 'destructive'
+        })
         return
       }
-      toast.success('File uploaded successfully!')
+      toast({
+        title: 'Success',
+        description: 'File uploaded successfully!'
+      })
       setSelectedFile(null)
       setDescription('')
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -96,11 +104,23 @@ const FileUpload = ({
     } catch (error) {
       console.error('Upload failed:', error)
       if (error.response) {
-        toast.error(error.response.data?.message || 'Upload failed.')
+        toast({
+          title: 'Error',
+          description: error.response.data?.message || 'Upload failed.',
+          variant: 'destructive'
+        })
       } else if (error.request) {
-        toast.error('No response from server.')
+        toast({
+          title: 'Error',
+          description: 'No response from server.',
+          variant: 'destructive'
+        })
       } else {
-        toast.error('Error: ' + error.message)
+        toast({
+          title: 'Error',
+          description: 'Error: ' + error.message,
+          variant: 'destructive'
+        })
       }
     } finally {
       setIsUploading(false)

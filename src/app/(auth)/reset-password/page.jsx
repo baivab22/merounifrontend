@@ -1,11 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import Link from 'next/link'
 
 const ResetPassword = () => {
+  const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
   const emailFromURL = searchParams.get('email') || ''
@@ -44,12 +45,20 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (formData.otp.length !== 6) {
-      toast.error('OTP must be 6 digits')
+      toast({
+        title: 'Error',
+        description: 'OTP must be 6 digits',
+        variant: 'destructive'
+      })
       return
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      toast.error('Passwords do not match!')
+      toast({
+        title: 'Error',
+        description: 'Passwords do not match!',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -72,15 +81,26 @@ const ResetPassword = () => {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('Password reset successfully! You can now sign in.')
+        toast({
+          title: 'Success',
+          description: 'Password reset successfully! You can now sign in.'
+        })
         setTimeout(() => {
           router.push('/sign-in')
         }, 3000)
       } else {
-        toast.error(data.message || 'Failed to reset password')
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to reset password',
+          variant: 'destructive'
+        })
       }
     } catch (error) {
-      toast.error('Something went wrong. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

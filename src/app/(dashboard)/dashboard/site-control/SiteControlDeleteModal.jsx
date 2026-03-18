@@ -3,11 +3,12 @@ import React, { useState } from 'react'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { deleteSiteConfig } from '../../../actions/siteConfigActions'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { AlertCircle } from 'lucide-react'
 import { CONFIG_TYPES } from './siteControlConstants'
 
 export default function SiteControlDeleteModal({ isOpen, onClose, onSuccess, config }) {
+    const { toast } = useToast()
     const [deleting, setDeleting] = useState(false)
 
     const handleDelete = async () => {
@@ -17,11 +18,18 @@ export default function SiteControlDeleteModal({ isOpen, onClose, onSuccess, con
         try {
             await deleteSiteConfig(config.type)
             const label = CONFIG_TYPES.find(ct => ct.value === config.type)?.label || config.type
-            toast.success(`Configuration for "${label}" deleted successfully`)
+            toast({
+                title: 'Success',
+                description: `Configuration for "${label}" deleted successfully`
+            })
             onSuccess && onSuccess()
             onClose()
         } catch (error) {
-            toast.error('Failed to delete configuration')
+            toast({
+                title: 'Error',
+                description: 'Failed to delete configuration',
+                variant: 'destructive'
+            })
         } finally {
             setDeleting(false)
         }

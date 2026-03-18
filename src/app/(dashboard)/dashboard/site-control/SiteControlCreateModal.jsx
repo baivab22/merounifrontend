@@ -13,11 +13,12 @@ import { Label } from '@/ui/shadcn/label'
 import { Input } from '@/ui/shadcn/input'
 import { Select } from '@/ui/shadcn/select'
 import { updateSiteConfig } from '../../../actions/siteConfigActions'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { CONFIG_TYPES } from './siteControlConstants'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 
 export default function SiteControlCreateModal({ isOpen, onClose, onSuccess }) {
+    const { toast } = useToast()
     const [saving, setSaving] = useState(false)
 
     const { control, handleSubmit, reset, watch, register, formState: { errors } } = useForm({
@@ -41,11 +42,18 @@ export default function SiteControlCreateModal({ isOpen, onClose, onSuccess }) {
         try {
             await updateSiteConfig({ type: data.type, value: data.value })
             const label = CONFIG_TYPES.find(ct => ct.value === data.type)?.label || data.type
-            toast.success(`Configuration for "${label}" created successfully`)
+            toast({
+                title: 'Success',
+                description: `Configuration for "${label}" created successfully`
+            })
             onSuccess && onSuccess()
             handleClose()
         } catch (error) {
-            toast.error('Failed to create configuration')
+            toast({
+                title: 'Error',
+                description: 'Failed to create configuration',
+                variant: 'destructive'
+            })
         } finally {
             setSaving(false)
         }

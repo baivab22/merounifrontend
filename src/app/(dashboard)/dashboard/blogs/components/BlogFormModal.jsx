@@ -9,7 +9,7 @@ import axios from 'axios'
 import { Image as ImageIcon, Info, Layers, Loader2, Settings } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../../colleges/FileUpload'
 import { Textarea } from '@/ui/shadcn/textarea'
 import { Select } from '@/ui/shadcn/select'
@@ -36,6 +36,7 @@ const BlogFormModal = ({
     submitting,
     authors
 }) => {
+    const { toast } = useToast()
     const [uploadedFiles, setUploadedFiles] = useState({
         featured_image: '',
         pdf_file: ''
@@ -184,12 +185,19 @@ const BlogFormModal = ({
             })
             const data = await response.json()
             if (response.ok) {
-                toast.success('Tag created successfully')
+                toast({
+                    title: 'Success',
+                    description: 'Tag created successfully'
+                })
                 return data.tag || data.item || data
             }
             throw new Error(data.message || 'Failed to create tag')
         } catch (error) {
-            toast.error(error.message)
+            toast({
+                title: 'Error',
+                description: error.message,
+                variant: 'destructive'
+            })
             return null
         }
     }
@@ -253,7 +261,11 @@ const BlogFormModal = ({
             return response.data?.media?.url
         } catch (error) {
             console.error('Image upload failed:', error)
-            toast.error('Failed to upload image')
+            toast({
+                title: 'Error',
+                description: 'Failed to upload image',
+                variant: 'destructive'
+            })
             throw error
         }
     }

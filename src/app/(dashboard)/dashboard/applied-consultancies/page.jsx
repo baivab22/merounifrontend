@@ -19,7 +19,6 @@ import {
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import 'react-toastify/dist/ReactToastify.css'
 import { fetchStudentConsultancyApplications } from './actions'
 
 const AppliedConsultanciesPage = () => {

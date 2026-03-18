@@ -1,5 +1,5 @@
 
-export async function getExams(page = 1, search = '', examType = '', level = '', affiliation = '', faculty = '') {
+export async function getExams(page = 1, search = '', examType = '', levelId = '', universityId = '', discipline = '', categoryId = '') {
   try {
     const url = new URL(`${process.env.baseUrl}/exam`)
     url.searchParams.append('page', page)
@@ -7,9 +7,10 @@ export async function getExams(page = 1, search = '', examType = '', level = '',
 
     if (search) url.searchParams.append('q', search)
     if (examType) url.searchParams.append('examType', examType)
-    if (level) url.searchParams.append('level', level)
-    if (affiliation) url.searchParams.append('affiliation', affiliation)
-    if (faculty) url.searchParams.append('faculty', faculty)
+    if (levelId) url.searchParams.append('levelId', levelId)
+    if (universityId) url.searchParams.append('universityId', universityId)
+    if (discipline) url.searchParams.append('discipline', discipline)
+    if (categoryId) url.searchParams.append('categoryId', categoryId)
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -61,6 +62,18 @@ export const fetchUniversities = async () => {
     return data.items
   } catch (error) {
     console.error('Error fetching universities:', error)
+    return []
+  }
+}
+
+export const fetchExamCategories = async () => {
+  try {
+    const response = await fetch(`${process.env.baseUrl}/category?type=EXAM`)
+    if (!response.ok) throw new Error('Failed to fetch categories')
+    const data = await response.json()
+    return data.items
+  } catch (error) {
+    console.error('Error fetching categories:', error)
     return []
   }
 }

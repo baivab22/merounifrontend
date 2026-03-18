@@ -1,10 +1,10 @@
 'use client'
+import { useToast } from '@/hooks/use-toast'
 import { Edit2, Eye, Plus, Trash2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { useToast } from '@/hooks/use-toast'
 
 import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
@@ -23,7 +23,6 @@ import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { formatDate } from '@/utils/date.util'
-import Loading from '../../../../ui/molecules/Loading'
 import { Button } from '../../../../ui/shadcn/button'
 import { Input } from '../../../../ui/shadcn/input'
 import { Label } from '../../../../ui/shadcn/label'
@@ -264,14 +263,21 @@ export default function ExamManager() {
       const formattedData = {
         ...data,
         author: author_id,
-        full_marks: data.full_marks ? Number(data.full_marks) : null,
-        pass_marks: data.pass_marks ? Number(data.pass_marks) : null,
-        questions_count: data.questions_count ? Number(data.questions_count) : null,
-        normal_fee: data.normal_fee ? Number(data.normal_fee) : null,
-        late_fee: data.late_fee ? Number(data.late_fee) : null,
-        category_id: data.category_id || null,
+        full_marks: data.full_marks ? Number(data.full_marks) : undefined,
+        pass_marks: data.pass_marks ? Number(data.pass_marks) : undefined,
+        questions_count: data.questions_count ? Number(data.questions_count) : undefined,
+        normal_fee: data.normal_fee ? Number(data.normal_fee) : undefined,
+        late_fee: data.late_fee ? Number(data.late_fee) : undefined,
+        category_id: data.category_id || undefined,
         ...(editingId && { id: editingId })
       }
+
+      // Convert all null and "" to undefined before sending to API
+      Object.keys(formattedData).forEach(key => {
+        if (formattedData[key] === null || formattedData[key] === "") {
+          formattedData[key] = undefined
+        }
+      })
 
       await createExam(formattedData)
       toast({
@@ -284,7 +290,7 @@ export default function ExamManager() {
       console.error('Error saving exam:', error)
       toast({
         title: 'Error',
-        description: `Failed to ${editingId ? 'update' : 'create'} exam`,
+        description: error.message || `Failed to ${editingId ? 'update' : 'create'} exam`,
         variant: 'destructive'
       })
     } finally {

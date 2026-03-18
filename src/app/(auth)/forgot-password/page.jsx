@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import Link from 'next/link'
@@ -16,6 +16,7 @@ const STEPS = [STEP_EMAIL, STEP_OTP, STEP_RESET]
 const STEP_LABELS = ['Email', 'Verify OTP', 'New Password']
 
 export default function ForgotPasswordPage() {
+    const { toast } = useToast()
     const router = useRouter()
 
     const [step, setStep] = useState(STEP_EMAIL)
@@ -50,11 +51,18 @@ export default function ForgotPasswordPage() {
             return res.data
         },
         onSuccess: () => {
-            toast.success('OTP sent to your email!')
+            toast({
+                title: 'Success',
+                description: 'OTP sent to your email!'
+            })
             setStep(STEP_OTP)
         },
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Failed to send OTP. Please try again.')
+            toast({
+                title: 'Error',
+                description: err.response?.data?.message || 'Failed to send OTP. Please try again.',
+                variant: 'destructive'
+            })
         }
     })
 
@@ -105,11 +113,18 @@ export default function ForgotPasswordPage() {
             return res.data
         },
         onSuccess: () => {
-            toast.success('OTP verified!')
+            toast({
+                title: 'Success',
+                description: 'OTP verified!'
+            })
             setStep(STEP_RESET)
         },
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Invalid OTP. Please try again.')
+            toast({
+                title: 'Error',
+                description: err.response?.data?.message || 'Invalid OTP. Please try again.',
+                variant: 'destructive'
+            })
         }
     })
 
@@ -129,9 +144,16 @@ export default function ForgotPasswordPage() {
             )
             return res.data
         },
-        onSuccess: () => toast.success('New OTP sent!'),
+        onSuccess: () => toast({
+            title: 'Success',
+            description: 'New OTP sent!'
+        }),
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Failed to resend OTP.')
+            toast({
+                title: 'Error',
+                description: err.response?.data?.message || 'Failed to resend OTP.',
+                variant: 'destructive'
+            })
         }
     })
 
@@ -146,11 +168,18 @@ export default function ForgotPasswordPage() {
             return res.data
         },
         onSuccess: () => {
-            toast.success('Password reset successfully!')
+            toast({
+                title: 'Success',
+                description: 'Password reset successfully!'
+            })
             setStep(STEP_SUCCESS)
         },
         onError: (err) => {
-            toast.error(err.response?.data?.message || 'Failed to reset password.')
+            toast({
+                title: 'Error',
+                description: err.response?.data?.message || 'Failed to reset password.',
+                variant: 'destructive'
+            })
         }
     })
 

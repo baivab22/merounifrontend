@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Heart, Info, GraduationCap, MapPin } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { useSelector } from 'react-redux'
 import { authFetch } from '@/app/utils/authFetch'
 import { useRouter } from 'next/navigation'
@@ -19,6 +19,7 @@ const UniversityCard = ({
   onWishlistUpdate,
   instituteType
 }) => {
+  const { toast } = useToast()
   const user = useSelector((state) => state.user.data)
   const router = useRouter()
 
@@ -31,9 +32,10 @@ const UniversityCard = ({
   const handleWishlistToggle = async (e) => {
     e.stopPropagation()
     if (!user) {
-      toast.warning('Please sign in to manage your wishlist', {
-        position: 'top-right',
-        autoClose: 3000
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to manage your wishlist',
+        variant: 'destructive'
       })
       return
     }
@@ -66,20 +68,18 @@ const UniversityCard = ({
         onWishlistUpdate(newSet)
       }
 
-      toast.success(
-        method === 'DELETE'
+      toast({
+        title: 'Success',
+        description: method === 'DELETE'
           ? 'Successfully removed from wishlist'
-          : 'Successfully added to wishlist',
-        {
-          position: 'top-right',
-          autoClose: 2000
-        }
-      )
+          : 'Successfully added to wishlist'
+      })
     } catch (error) {
       console.error('Error updating wishlist:', error)
-      toast.error('Failed to update wishlist. Please try again.', {
-        position: 'top-right',
-        autoClose: 3000
+      toast({
+        title: 'Error',
+        description: 'Failed to update wishlist. Please try again.',
+        variant: 'destructive'
       })
     } finally {
       setIsLoading(false)

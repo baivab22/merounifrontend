@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Plus, Trash2, Video, Play, ExternalLink, Link as LinkIcon, AlertCircle } from 'lucide-react'
 import { Input } from '@/ui/shadcn/input'
 import { Button } from '@/ui/shadcn/button'
@@ -12,6 +12,7 @@ const VideoSection = ({
   setUploadedFiles,
   getValues
 }) => {
+  const { toast } = useToast()
   const [youtubeLink, setYoutubeLink] = useState('')
   const [isValidLink, setIsValidLink] = useState(true)
   const [isHovered, setIsHovered] = useState(null)
@@ -30,13 +31,21 @@ const VideoSection = ({
 
   const handleAddYoutubeLink = () => {
     if (!youtubeLink.trim()) {
-      toast.error('Please enter a YouTube URL')
+      toast({
+        title: 'Input Required',
+        description: 'Please enter a YouTube URL',
+        variant: 'destructive'
+      })
       return
     }
 
     if (!validateYouTubeUrl(youtubeLink)) {
       setIsValidLink(false)
-      toast.error('Please enter a valid YouTube URL')
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid YouTube URL',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -55,7 +64,11 @@ const VideoSection = ({
     // Check if video already exists
     const currentVideos = uploadedFiles.videos || []
     if (currentVideos.some(v => v.youtubeId === youtubeId)) {
-      toast.warning('This video is already in the gallery')
+      toast({
+        title: 'Duplicate Video',
+        description: 'This video is already in the gallery',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -69,7 +82,10 @@ const VideoSection = ({
     const currentImages = getValues('images') || []
     setValue('images', [...currentImages, newVideo], { shouldDirty: true })
 
-    toast.success('YouTube video added successfully!')
+    toast({
+      title: 'Success',
+      description: 'YouTube video added successfully!'
+    })
     setYoutubeLink('')
   }
 

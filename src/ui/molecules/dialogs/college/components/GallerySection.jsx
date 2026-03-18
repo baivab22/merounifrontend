@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import axios from 'axios'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Trash2, Image as ImageIcon, Plus, Loader2, X, AlertCircle } from 'lucide-react'
 import { Button } from '@/ui/shadcn/button'
 import { cn } from '@/app/lib/utils'
@@ -12,6 +12,7 @@ const GallerySection = ({
   setUploadedFiles,
   getValues
 }) => {
+  const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -53,10 +54,17 @@ const GallerySection = ({
       const currentMedia = getValues('images') || []
       setValue('images', [...currentMedia, ...newImages], { shouldDirty: true })
 
-      toast.success(`Successfully uploaded ${newImages.length} images`)
+      toast({
+        title: 'Success',
+        description: `Successfully uploaded ${newImages.length} images`
+      })
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Failed to upload some images. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'Failed to upload some images. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''

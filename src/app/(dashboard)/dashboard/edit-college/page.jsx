@@ -6,7 +6,7 @@ import axios from 'axios'
 import { useSelector } from 'react-redux'
 import FileUpload from '../colleges/FileUpload'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import {
@@ -28,6 +28,7 @@ const FileUploadWithPreview = ({
   accept = 'image/*',
   onClear
 }) => {
+  const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const [preview, setPreview] = useState(defaultPreview)
 
@@ -72,15 +73,26 @@ const FileUploadWithPreview = ({
 
       const data = response.data
       if (data.success === false) {
-        toast.error(data.message || 'Upload failed.')
+        toast({
+          title: 'Error',
+          description: data.message || 'Upload failed.',
+          variant: 'destructive'
+        })
         return
       }
 
-      toast.success('File uploaded successfully!')
+      toast({
+        title: 'Success',
+        description: 'File uploaded successfully!'
+      })
       onUploadComplete(data.media.url)
     } catch (error) {
       console.error('Upload failed:', error)
-      toast.error(error.response?.data?.message || 'Upload failed.')
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Upload failed.',
+        variant: 'destructive'
+      })
       setPreview(defaultPreview)
     } finally {
       setIsUploading(false)
@@ -151,6 +163,7 @@ const FileUploadWithPreview = ({
 }
 
 const EditCollegePage = () => {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -296,7 +309,11 @@ const EditCollegePage = () => {
       collegeData = collegeData.item
 
       if (!collegeData) {
-        toast.error('College data not found')
+        toast({
+          title: 'Error',
+          description: 'College data not found',
+          variant: 'destructive'
+        })
         return
       }
 
@@ -423,7 +440,11 @@ const EditCollegePage = () => {
       }
     } catch (err) {
       console.error('Error loading college data:', err)
-      toast.error('Failed to load college data')
+      toast({
+        title: 'Error',
+        description: 'Failed to load college data',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -532,10 +553,17 @@ const EditCollegePage = () => {
         throw new Error(errorData.error || 'Failed to update college')
       }
 
-      toast.success('College updated successfully!')
+      toast({
+        title: 'Success',
+        description: 'College updated successfully!'
+      })
     } catch (err) {
       console.error('Error updating college:', err)
-      toast.error(err.message || 'Failed to update college')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to update college',
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }

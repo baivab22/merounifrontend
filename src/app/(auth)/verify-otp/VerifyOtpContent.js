@@ -1,11 +1,12 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { FaArrowLeft } from 'react-icons/fa'
 
 const VerifyOtpContent = () => {
+  const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
@@ -74,12 +75,23 @@ const VerifyOtpContent = () => {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('New OTP sent successfully!')
+        toast({
+          title: 'Success',
+          description: 'New OTP sent successfully!'
+        })
       } else {
-        toast.error(data.message || 'Failed to resend OTP')
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to resend OTP',
+          variant: 'destructive'
+        })
       }
     } catch (err) {
-      toast.error('Connection error. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'Connection error. Please try again.',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -87,7 +99,11 @@ const VerifyOtpContent = () => {
     e.preventDefault()
     const otpString = otp.join('')
     if (otpString.length !== 6) {
-      toast.error('Please enter complete OTP')
+      toast({
+        title: 'Error',
+        description: 'Please enter complete OTP',
+        variant: 'destructive'
+      })
       return
     }
 
@@ -108,13 +124,24 @@ const VerifyOtpContent = () => {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('Successfully verified!')
+        toast({
+          title: 'Success',
+          description: 'Successfully verified!'
+        })
         router.push('/sign-in')
       } else {
-        toast.error(data.message || 'OTP verification failed')
+        toast({
+          title: 'Error',
+          description: data.message || 'OTP verification failed',
+          variant: 'destructive'
+        })
       }
     } catch (err) {
-      toast.error('Connection error. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'Connection error. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

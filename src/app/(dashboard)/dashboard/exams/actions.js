@@ -10,7 +10,7 @@ export async function getAllExams(page) {
     const data = await response.json()
     return data
   } catch (error) {
-    throw new Error('Failed to fetch exams')
+    throw error
   }
 }
 
@@ -26,7 +26,7 @@ export async function createExam(data) {
     })
     return await response.json()
   } catch (error) {
-    throw new Error('Failed to create exam')
+    throw error
   }
 }
 
@@ -38,7 +38,7 @@ export async function deleteExam(id) {
     const res = await response.json()
     return res
   } catch (error) {
-    throw new Error(error)
+    throw error
   }
 }
 

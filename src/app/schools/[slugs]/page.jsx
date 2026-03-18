@@ -7,7 +7,7 @@ import Header from '../../../components/Frontpage/Header'
 import Footer from '../../../components/Frontpage/Footer'
 import ImageSection from './components/upperSection'
 import ApplyNow from './components/applyNow'
-import RelatedColleges from './components/RelatedSchool'
+import RelatedSchool from './components/RelatedSchool'
 import Loading from '../../../ui/molecules/Loading'
 import SchoolOverview from './components/SchoolOverview'
 
@@ -134,8 +134,6 @@ const CollegeDetailPage = ({ params }) => {
       const data = await response.json()
       const collegeData = data.item
 
-      console.log(collegeData,"collegeDatacollegeDatacollegeDatacollegeData");
-      
       if (collegeData) {
         setCollege(collegeData)
       } else {
@@ -169,7 +167,7 @@ const CollegeDetailPage = ({ params }) => {
       <div className='h-4 md:h-6' />
       <SchoolOverview college={college} />
       <ApplyNow college={college} />
-      <RelatedColleges college={college} />
+      <RelatedSchool school={college} />
       <ShareSection college={college} />
 
       <Footer />

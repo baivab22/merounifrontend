@@ -9,7 +9,7 @@ import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import { getUniversityBySlug } from '../actions'
 import RelatedUniversities from './components/RelatedUniversities'
-import ShareSection from './components/ShareSection'
+import ShareSection from '@/ui/organisms/common/ShareSection'
 import UpperSection from './components/upperSection'
 
 const UniversityDetailPage = ({ params }) => {
@@ -68,7 +68,7 @@ const UniversityDetailPage = ({ params }) => {
 
       <UpperSection university={university} />
       <RelatedUniversities university={university} />
-      <ShareSection university={university} />
+      <ShareSection title={university?.name} type='university' />
       <Footer />
     </div>
   )

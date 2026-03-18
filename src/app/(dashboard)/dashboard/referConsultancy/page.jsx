@@ -8,12 +8,13 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import { Button } from '@/ui/shadcn/button'
 import { Plus, Trash2, X, Check, Building2, ChevronDown, Briefcase, Send } from 'lucide-react'
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/app/lib/utils'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import SearchInput from '@/ui/molecules/SearchInput'
 
 const ReferConsultancyPage = () => {
+    const { toast } = useToast()
     const { setHeading } = usePageHeading()
     const [selectedConsultancy, setSelectedConsultancy] = useState(null)
     const [students, setStudents] = useState([
@@ -42,7 +43,11 @@ const ReferConsultancyPage = () => {
             setAllConsultancies(data.items || [])
         } catch (error) {
             console.error('Error fetching consultancies:', error)
-            toast.error('Could not load consultancies')
+            toast({
+                title: 'Error',
+                description: 'Could not load consultancies',
+                variant: 'destructive'
+            })
         } finally {
             setFetchingConsultancies(false)
         }
@@ -104,7 +109,11 @@ const ReferConsultancyPage = () => {
         let isValid = true
 
         if (!selectedConsultancy) {
-            toast.error('Please select a consultancy')
+            toast({
+                title: 'Error',
+                description: 'Please select a consultancy',
+                variant: 'destructive'
+            })
             return false
         }
 
@@ -128,7 +137,13 @@ const ReferConsultancyPage = () => {
         })
 
         setErrors(newErrors)
-        if (!isValid) toast.error('Please fill all required fields correctly')
+        if (!isValid) {
+            toast({
+                title: 'Error',
+                description: 'Please fill all required fields correctly',
+                variant: 'destructive'
+            })
+        }
         return isValid
     }
 
@@ -153,15 +168,26 @@ const ReferConsultancyPage = () => {
 
             const data = await res.json()
             if (res.ok) {
-                toast.success(data.message || 'Application submitted successfully')
+                toast({
+                    title: 'Success',
+                    description: data.message || 'Application submitted successfully'
+                })
                 setSelectedConsultancy(null)
                 setStudents([{ student_name: '', student_phone_no: '', student_email: '', student_description: '' }])
                 setErrors({})
             } else {
-                toast.error(data.message || 'Something went wrong')
+                toast({
+                    title: 'Error',
+                    description: data.message || 'Something went wrong',
+                    variant: 'destructive'
+                })
             }
         } catch (err) {
-            toast.error('Connection error: ' + err.message)
+            toast({
+                title: 'Error',
+                description: 'Connection error: ' + err.message,
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }

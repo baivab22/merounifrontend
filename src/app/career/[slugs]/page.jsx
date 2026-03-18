@@ -8,7 +8,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { ToastContainer } from 'react-toastify'
 import Footer from '../../../components/Frontpage/Footer'
 import Header from '../../../components/Frontpage/Header'
 import Navbar from '../../../components/Frontpage/Navbar'
@@ -308,7 +307,6 @@ const ShowCareer = ({ params }) => {
         careerTitle={data.title}
       />
 
-      <ToastContainer />
 
       <Footer />
     </div>

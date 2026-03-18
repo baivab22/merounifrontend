@@ -15,13 +15,13 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/use-toast'
 import { fetchBlogs } from './action'
 import BlogFormModal from './components/BlogFormModal'
 import BlogViewModal from './components/BlogViewModal'
 
 export default function BlogsManager() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const searchParams = useSearchParams()
@@ -411,10 +411,16 @@ export default function BlogsManager() {
     try {
       if (editingId) {
         await updateBlogs(data, editingId)
-        toast.success('News updated successfully')
+        toast({
+          title: 'Success',
+          description: 'News updated successfully'
+        })
       } else {
         await createBlogs(data)
-        toast.success('News created successfully')
+        toast({
+          title: 'Success',
+          description: 'News created successfully'
+        })
       }
       setIsOpen(false)
       setEditingId(null)
@@ -423,9 +429,11 @@ export default function BlogsManager() {
       loadData()
     } catch (err) {
       const errorMsg = err.message || 'Network error occurred'
-      toast.error(
-        `Failed to ${editingId ? 'update' : 'create'} news: ${errorMsg}`
-      )
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingId ? 'update' : 'create'} news: ${errorMsg}`,
+        variant: 'destructive'
+      })
     } finally {
       setSubmitting(false)
     }
@@ -451,10 +459,17 @@ export default function BlogsManager() {
         }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({
+        title: 'Success',
+        description: res.message
+      })
       loadData()
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -480,7 +495,11 @@ export default function BlogsManager() {
       const data = await response.json()
       setViewNewsData(data.blog)
     } catch (err) {
-      toast.error(err.message || 'Failed to load news details')
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to load news details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -502,7 +521,6 @@ export default function BlogsManager() {
 
   return (
     <div className='w-full'>
-      <ToastContainer />
       {/* Sticky Header */}
       <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>

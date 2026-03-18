@@ -1,56 +1,23 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { slugify } from '@/lib/slugify'
+import EmptyState from '@/ui/shadcn/EmptyState'
 import DOMPurify from 'dompurify'
+import { ArrowLeft, BookOpen, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import Footer from '../../../components/Frontpage/Footer'
 import Header from '../../../components/Frontpage/Header'
 import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import { getDegreeBySlug } from '../actions'
+import OfferedColleges from './components/OfferedColleges'
 import RelatedCourses from './components/RelatedCourses'
 import Syllabus from './components/syllabus'
 import ImageSection from './components/upperSection'
-import ApplyNow from './components/applyNow'
-import { slugify } from '@/lib/slugify'
-import { BookOpen, GraduationCap, Building2, ArrowLeft } from 'lucide-react'
-import EmptyState from '@/ui/shadcn/EmptyState'
-import CollegeCard from '@/ui/molecules/cards/CollegeCard'
 
-// Shared Share Section
-const ShareSection = ({ degree }) => {
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const shareTitle = `Check out ${degree?.title} on our platform`
-
-  const shareLinks = [
-    { name: 'Facebook', icon: '/images/fb.png', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(shareTitle)}`, popup: { w: 626, h: 436 } },
-    { name: 'Twitter', icon: '/images/twitter.png', url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareTitle)}`, popup: { w: 550, h: 420 } },
-    { name: 'LinkedIn', icon: '/images/linkedin.png', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`, popup: { w: 550, h: 420 } },
-  ]
-
-  const handleShare = (link) => {
-    window.open(link.url, `${link.name}-share-dialog`, `width=${link.popup.w},height=${link.popup.h}`)
-  }
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(`${shareTitle}\n${currentUrl}`)
-    alert('Link copied to clipboard!')
-  }
-
-  return (
-    <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-gray-100 shadow-xl z-50 py-3 px-6 rounded-2xl flex items-center gap-4 transition-all hover:shadow-2xl'>
-      <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mr-2'>Share</span>
-      {shareLinks.map((link) => (
-        <button key={link.name} onClick={() => handleShare(link)} className='hover:-translate-y-1 transition-transform'>
-          <img src={link.icon} alt={link.name} className='w-5 h-5 object-contain' />
-        </button>
-      ))}
-      <button onClick={handleCopy} className='hover:-translate-y-1 transition-transform'>
-        <img src='/images/insta.png' alt='Copy Link' className='w-5 h-5 object-contain' />
-      </button>
-    </div>
-  )
-}
+import ShareSection from '@/ui/organisms/common/ShareSection'
+import HTMLRenderer from '@/ui/HTMLRenderer'
 
 const ProgramCard = ({ program }) => {
   if (!program.slugs) {
@@ -175,7 +142,6 @@ const CourseDescription = ({ params }) => {
             }}
           />
         </div>
-        <Footer />
       </>
     )
   }
@@ -236,10 +202,7 @@ const CourseDescription = ({ params }) => {
 
                     {degree.content && (
                       <div className='mb-20'>
-                        <div
-                          className='prose prose-lg prose-gray max-w-none'
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(degree.content) }}
-                        />
+                        <HTMLRenderer html={degree.content} />
                       </div>
                     )}
 
@@ -265,10 +228,7 @@ const CourseDescription = ({ params }) => {
                 {degree.content && (
                   <div className='container mx-auto px-4 py-20'>
                     <div className='max-w-4xl mx-auto'>
-                      <div
-                        className='prose prose-lg prose-gray max-w-none'
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(degree.content) }}
-                      />
+                      <HTMLRenderer html={degree.content} />
                     </div>
                   </div>
                 )}
@@ -293,25 +253,10 @@ const CourseDescription = ({ params }) => {
               </>
             )}
 
-            {uniqueColleges.length > 0 && (
-              <div className='container mx-auto px-4 py-16 border-t border-gray-50'>
-                <div className='max-w-5xl mx-auto'>
-                  <h2 className='text-xl font-bold text-gray-900 mb-8 border-l-4 border-[#30AD8F] pl-4'>
-                    Offered by these Colleges
-                  </h2>
-                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                    {uniqueColleges.map((college, index) => (
-                      <div key={index} className='scale-[0.95] origin-top-left'>
-                        <CollegeCard college={college} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            <OfferedColleges colleges={uniqueColleges} />
 
             <div className='container mx-auto px-4 pb-20'>
-              <ShareSection degree={degree} />
+              <ShareSection title={degree?.title} type='degree' />
             </div>
           </>
         )}

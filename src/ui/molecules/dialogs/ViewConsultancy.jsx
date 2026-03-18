@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Globe, MapPin, Phone, Mail, GraduationCap, Info } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/ui/shadcn/button'
 
 export default function ViewConsultancy({ isOpen, onClose, slug }) {
+    const { toast } = useToast()
     const [consultancy, setConsultancy] = useState(null)
     const [loading, setLoading] = useState(false)
 
@@ -31,7 +32,11 @@ export default function ViewConsultancy({ isOpen, onClose, slug }) {
             const data = await response.json()
             setConsultancy(data.consultancy)
         } catch (err) {
-            toast.error('Failed to load consultancy details')
+            toast({
+                title: 'Error',
+                description: 'Failed to load consultancy details',
+                variant: 'destructive'
+            })
             onClose()
         } finally {
             setLoading(false)

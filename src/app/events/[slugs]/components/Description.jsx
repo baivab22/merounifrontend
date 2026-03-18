@@ -1,16 +1,9 @@
+import HTMLRenderer from '@/ui/HTMLRenderer'
 import GoogleMap from '@/app/colleges/[slugs]/components/GoogleMap'
 import { FaMapMarkerAlt, FaCalendarCheck, FaClock, FaUserTie } from 'react-icons/fa'
 
 const Description = ({ event }) => {
   const hostData = event?.event_host ? (typeof event.event_host === 'string' ? JSON.parse(event.event_host) : event.event_host) : {}
-
-  const processContent = (html) => {
-    if (!html) return ''
-    return html.replace(
-      /<table([^>]*)>([\s\S]*?)<\/table>/g,
-      '<div class="table-wrapper"><table$1>$2</table></div>'
-    )
-  }
 
   const MetaItem = ({ icon: Icon, label, value }) => (
     <div className='flex items-start gap-4 py-4 border-b border-gray-50 last:border-0'>
@@ -48,17 +41,8 @@ const Description = ({ event }) => {
                 <span className='w-1.5 h-8 bg-[#0A6FA7] rounded-full'></span>
                 About This Event
               </h2>
-              <div
-                className='prose prose-lg prose-slate max-w-none
-                prose-headings:font-bold prose-headings:text-gray-900
-                prose-p:text-gray-600 prose-p:leading-relaxed
-                prose-a:text-[#0A6FA7] prose-a:no-underline hover:prose-a:underline
-                prose-img:rounded-md'
-                dangerouslySetInnerHTML={{ __html: event?.description }}
-              />
+              <HTMLRenderer html={event?.description} />
             </section>
-
-          
           </div>
         </div>
 
@@ -92,5 +76,6 @@ const Description = ({ event }) => {
     </div>
   )
 }
+
 
 export default Description

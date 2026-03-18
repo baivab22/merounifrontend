@@ -16,6 +16,7 @@ import {
   PenTool
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { THEME_BLUE } from '@/constants/constants'
 

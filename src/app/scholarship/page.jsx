@@ -15,8 +15,6 @@ import Footer from '../../components/Frontpage/Footer'
 import Header from '../../components/Frontpage/Header'
 import ScholarshipCard from '@/ui/molecules/cards/ScholarshipCard'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 
 const ScholarshipPage = () => {
   const router = useRouter()
@@ -274,7 +272,6 @@ const ScholarshipPage = () => {
       </div>
 
       <Footer />
-      <ToastContainer position='top-right' autoClose={3000} />
     </>
   )
 }

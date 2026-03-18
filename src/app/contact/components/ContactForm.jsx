@@ -2,9 +2,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, CheckCircle } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 
 export default function ContactForm() {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
@@ -39,14 +40,25 @@ export default function ContactForm() {
 
       if (res.ok) {
         setIsSuccess(true)
-        toast.success('Message sent successfully!')
+        toast({
+          title: 'Success',
+          description: 'Message sent successfully!'
+        })
         setFormData({ fullname: '', email: '', subject: '', message: '' })
         setTimeout(() => setIsSuccess(false), 5000)
       } else {
-        toast.error(data.message || 'Something went wrong!')
+        toast({
+          title: 'Error',
+          description: data.message || 'Something went wrong!',
+          variant: 'destructive'
+        })
       }
     } catch (error) {
-      toast.error('Failed to send message. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }

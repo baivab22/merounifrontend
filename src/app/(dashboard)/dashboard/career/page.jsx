@@ -21,15 +21,17 @@ import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { Edit2, Eye, Trash2, Users } from 'lucide-react'
+import HTMLRenderer from '@/ui/HTMLRenderer'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
-import { toast, ToastContainer } from 'react-toastify'
+import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../colleges/FileUpload'
 
 
 
 export default function CareerForm() {
+  const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const author_id = useSelector((state) => state.user.data?.id)
   const [isOpen, setIsOpen] = useState(false)
@@ -107,7 +109,11 @@ export default function CareerForm() {
         total: data.pagination.totalCount
       })
     } catch (error) {
-      toast.error('Failed to fetch careers')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch careers',
+        variant: 'destructive'
+      })
     } finally {
       setTableLoading(false)
     }
@@ -191,18 +197,23 @@ export default function CareerForm() {
         const result = await response.json()
       }
 
-      toast.success(
-        editing
+      toast({
+        title: 'Success',
+        description: editing
           ? 'Career updated successfully!'
           : 'Career created successfully!'
-      )
+      })
       setEditing(false)
       reset()
       setUploadedFiles({ featured: '' })
       fetchCareers()
       setIsOpen(false)
     } catch (error) {
-      toast.error(error.message || 'Failed to save career')
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save career',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -230,7 +241,11 @@ export default function CareerForm() {
         featured: career.featuredImage || ''
       })
     } catch (error) {
-      toast.error('Failed to fetch career details')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch career details',
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -259,7 +274,11 @@ export default function CareerForm() {
       const data = await response.json()
       setApplicantsData(data?.items || data || [])
     } catch (error) {
-      toast.error('Failed to fetch applicants')
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch applicants',
+        variant: 'destructive'
+      })
       setApplicantsData([])
     } finally {
       setLoadingApplicants(false)
@@ -278,7 +297,11 @@ export default function CareerForm() {
       const data = await response.json()
       setViewCareerData(data.item ?? data)
     } catch (err) {
-      toast.error(err.message ?? 'Failed to load career details')
+      toast({
+        title: 'Error',
+        description: err.message ?? 'Failed to load career details',
+        variant: 'destructive'
+      })
       setViewModalOpen(false)
     } finally {
       setLoadingView(false)
@@ -301,10 +324,17 @@ export default function CareerForm() {
         }
       )
       const res = await response.json()
-      toast.success(res.message)
+      toast({
+        title: 'Success',
+        description: res.message
+      })
       await fetchCareers()
     } catch (err) {
-      toast.error(err.message)
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -407,7 +437,6 @@ export default function CareerForm() {
             </Button>
           </div>
         </div>
-        <ToastContainer />
 
         <Dialog
           isOpen={isOpen}
@@ -639,10 +668,7 @@ export default function CareerForm() {
               {viewCareerData.content && (
                 <div>
                   <h3 className='text-lg font-semibold mb-2'>Content</h3>
-                  <div
-                    className='text-gray-700 prose max-w-none'
-                    dangerouslySetInnerHTML={{ __html: viewCareerData.content }}
-                  />
+                  <HTMLRenderer html={viewCareerData.content} />
                 </div>
               )}
             </div>

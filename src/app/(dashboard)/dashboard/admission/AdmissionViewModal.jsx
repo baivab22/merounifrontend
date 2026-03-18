@@ -1,5 +1,6 @@
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { formatDate } from '@/utils/date.util'
+import HTMLRenderer from '@/ui/HTMLRenderer'
 
 const AdmissionViewModal = ({ isOpen, onClose, admission }) => {
     if (!admission) return null
@@ -32,10 +33,9 @@ const AdmissionViewModal = ({ isOpen, onClose, admission }) => {
 
                         <div className="space-y-1 col-span-2">
                             <h4 className="text-sm font-medium text-gray-500 mb-2">Description</h4>
-                            <div
-                                className="prose prose-sm max-w-none bg-gray-50 p-4 rounded-md border"
-                                dangerouslySetInnerHTML={{ __html: admission.description || 'No description available.' }}
-                            />
+                            <div className="bg-gray-50 p-4 rounded-md border">
+                                <HTMLRenderer html={admission.description || 'No description available.'} />
+                            </div>
                         </div>
 
                         <div className="space-y-1 col-span-2">
