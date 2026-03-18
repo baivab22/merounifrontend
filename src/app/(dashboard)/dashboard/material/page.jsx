@@ -17,10 +17,8 @@ import {
     FileDown,
     ExternalLink,
     ChevronDown,
-    AlertCircle,
-    Search
+    AlertCircle
 } from 'lucide-react'
-import SearchInput from '@/ui/molecules/SearchInput'
 import {
     DndContext,
     closestCenter,
@@ -262,8 +260,6 @@ export default function MaterialDashboard() {
     const [deleteType, setDeleteType] = useState(null) // 'L1', 'L2', 'L3'
     const [editingInlineId, setEditingInlineId] = useState(null)
     const [inlineInput, setInlineInput] = useState('')
-    const [searchQuery, setSearchQuery] = useState('')
-    const [searchTimeout, setSearchTimeout] = useState(null)
 
     const {
         register,
@@ -286,12 +282,10 @@ export default function MaterialDashboard() {
         return () => setHeading(null)
     }, [setHeading])
 
-    const fetchInitialData = async (query = '') => {
+    const fetchInitialData = async () => {
         try {
             setLoadingL1(true)
-            let url = `${process.env.baseUrl}/materials?type=MATERIAL&depth=2`
-            if (query) url += `&q=${encodeURIComponent(query)}`
-            const res = await authFetch(url)
+            const res = await authFetch(`${process.env.baseUrl}/materials?type=MATERIAL&depth=2`)
             const data = await res.json()
             setL1List(data.data || [])
         } catch (error) {
@@ -303,16 +297,6 @@ export default function MaterialDashboard() {
         } finally {
             setLoadingL1(false)
         }
-    }
-
-    const handleSearchInput = (value) => {
-        setSearchQuery(value)
-        if (searchTimeout) clearTimeout(searchTimeout)
-
-        const timeoutId = setTimeout(() => {
-            fetchInitialData(value)
-        }, 350)
-        setSearchTimeout(timeoutId)
     }
 
     const fetchMaterials = async (subjectId) => {
@@ -721,13 +705,13 @@ export default function MaterialDashboard() {
         <div className="flex flex-col h-[calc(100vh-100px)] font-[Figtree] text-gray-800 overflow-hidden bg-gradient-to-br from-[#f0f4f8] to-[#e8eef5]">
 
             {/* Breadcrumb / Top Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 gap-4">
+            <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                    <span className="text-gray-900 font-bold uppercase tracking-wider">Materials</span>
+                    <span className="text-gray-900">Materials</span>
                     {selectedL1 && (
                         <>
                             <ChevronRight size={12} />
-                            <span className="px-2 py-0.5 rounded bg-blue-50 text-[#387cae] cursor-pointer hover:bg-blue-100 transition-colors font-semibold" onClick={() => { setSelectedL2(null) }}>
+                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors" onClick={() => { setSelectedL2(null) }}>
                                 {selectedL1.title}
                             </span>
                         </>
@@ -740,18 +724,6 @@ export default function MaterialDashboard() {
                             </span>
                         </>
                     )}
-                </div>
-
-                <div className='flex items-center gap-3 w-full sm:w-auto'>
-                    <div className='relative w-full sm:w-72 shrink-0'>
-                        <SearchInput
-                            value={searchQuery}
-                            onChange={(e) => handleSearchInput(e.target.value)}
-                            onClear={() => handleSearchInput('')}
-                            placeholder='Search classes/materials...'
-                            className='w-full'
-                        />
-                    </div>
                 </div>
             </div>
 
