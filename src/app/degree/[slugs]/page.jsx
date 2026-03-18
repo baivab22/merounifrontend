@@ -1,22 +1,20 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { slugify } from '@/lib/slugify'
+import EmptyState from '@/ui/shadcn/EmptyState'
 import DOMPurify from 'dompurify'
+import { ArrowLeft, BookOpen, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import Footer from '../../../components/Frontpage/Footer'
 import Header from '../../../components/Frontpage/Header'
 import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import { getDegreeBySlug } from '../actions'
+import OfferedColleges from './components/OfferedColleges'
 import RelatedCourses from './components/RelatedCourses'
 import Syllabus from './components/syllabus'
 import ImageSection from './components/upperSection'
-import ApplyNow from './components/applyNow'
-import OfferedColleges from './components/OfferedColleges'
-import { slugify } from '@/lib/slugify'
-import { BookOpen, GraduationCap, Building2, ArrowLeft } from 'lucide-react'
-import EmptyState from '@/ui/shadcn/EmptyState'
-import CollegeCard from '@/ui/molecules/cards/CollegeCard'
 
 // Shared Share Section
 const ShareSection = ({ degree }) => {
