@@ -2,6 +2,7 @@ import React from 'react'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { formatDate } from '@/utils/date.util'
+import HTMLRenderer from '@/ui/HTMLRenderer'
 
 const BlogViewModal = ({ isOpen, onClose, data, loading }) => {
     return (
@@ -100,24 +101,14 @@ const BlogViewModal = ({ isOpen, onClose, data, loading }) => {
                         {data.description && (
                             <div>
                                 <h3 className='text-lg font-semibold mb-2'>Description</h3>
-                                <div
-                                    className='text-gray-700 prose max-w-none'
-                                    dangerouslySetInnerHTML={{
-                                        __html: data.description
-                                    }}
-                                />
+                                <HTMLRenderer html={data.description} />
                             </div>
                         )}
 
                         {data.content && (
                             <div>
                                 <h3 className='text-lg font-semibold mb-2'>Content</h3>
-                                <div
-                                    className='text-gray-700 prose prose-sm max-w-none'
-                                    dangerouslySetInnerHTML={{
-                                        __html: data.content
-                                    }}
-                                />
+                                <HTMLRenderer html={data.content} />
                             </div>
                         )}
 

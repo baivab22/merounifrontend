@@ -21,6 +21,7 @@ import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { Edit2, Eye, Trash2, Users } from 'lucide-react'
+import HTMLRenderer from '@/ui/HTMLRenderer'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
@@ -639,10 +640,7 @@ export default function CareerForm() {
               {viewCareerData.content && (
                 <div>
                   <h3 className='text-lg font-semibold mb-2'>Content</h3>
-                  <div
-                    className='text-gray-700 prose max-w-none'
-                    dangerouslySetInnerHTML={{ __html: viewCareerData.content }}
-                  />
+                  <HTMLRenderer html={viewCareerData.content} />
                 </div>
               )}
             </div>
