@@ -76,9 +76,6 @@ const SortableCard = ({ discipline, rank, onView, onEdit, onDelete }) => {
           <GripVertical size={18} />
         </div>
 
-        <div className='w-8 h-8 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-          <span className='text-[11px] font-bold text-[#387cae] tabular-nums'>{rank}</span>
-        </div>
 
         <div className='w-[52px] h-[52px] rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm'>
           {discipline.featured_image ? (
@@ -144,9 +141,6 @@ const OverlayCard = ({ discipline, rank }) => (
   <div className='bg-white border-2 border-[#387cae]/40 rounded-2xl shadow-2xl rotate-[0.6deg] scale-[1.01]'>
     <div className='flex items-center gap-3 px-4 py-3'>
       <GripVertical size={18} className='text-[#387cae]/50 cursor-grabbing shrink-0' />
-      <div className='w-8 h-8 rounded-full bg-[#387cae]/15 flex items-center justify-center shrink-0'>
-        <span className='text-[11px] font-bold text-[#387cae]'>{rank}</span>
-      </div>
       <div className='w-[52px] h-[52px] rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0'>
         {discipline.featured_image ? (
           <img
@@ -173,7 +167,6 @@ const CardSkeleton = ({ i = 0 }) => (
   >
     <div className='flex items-center gap-3 px-4 py-3'>
       <div className='w-[18px] h-[18px] bg-gray-200 rounded shrink-0' />
-      <div className='w-8 h-8 bg-gray-200 rounded-full shrink-0' />
       <div className='w-[52px] h-[52px] bg-gray-200 rounded-md shrink-0' />
       <div className='flex-1 space-y-2.5'>
         <div className='h-4 bg-gray-200 rounded-md w-48' />

@@ -22,26 +22,32 @@ import { getMaterialHierarchy, getMaterialsBySubject } from './action'
 
 // --- Components ---
 
-const SearchBar = ({ value, onChange, onClear }) => (
-  <div className="relative w-full max-w-xl mx-auto mb-10">
-    <div className="relative group">
-      <div className="relative bg-white border border-gray-200 shadow-sm group-focus-within:ring-2 group-focus-within:ring-[#0A70A7]/20 group-focus-within:border-[#0A70A7] rounded-xl flex items-center px-5 py-3 transition-all">
-        <Search className="w-4 h-4 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors" />
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Search by chapter, subject, or class..."
-          className="w-full bg-transparent border-none outline-none px-3 text-sm text-gray-700 placeholder:text-gray-400 font-medium"
-        />
-        {value && (
-          <button
-            onClick={onClear}
-            className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        )}
+const FiltersSection = ({ searchTerm, onSearchChange, onClear }) => (
+  <div className='bg-white rounded-[32px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 mb-12'>
+    <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
+      {/* Search */}
+      <div className='md:col-span-12'>
+        <label className='block text-[11px] font-bold mb-2 uppercase tracking-wider text-gray-500'>
+          Search Materials
+        </label>
+        <div className='relative group'>
+          <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+          <input
+            type='text'
+            placeholder='Search by chapter, subject, or class...'
+            onChange={(e) => onSearchChange(e.target.value)}
+            value={searchTerm}
+            className='w-full px-5 py-3.5 pl-12 rounded-xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A70A7]/10 focus:border-[#0A70A7] focus:bg-white transition-all text-sm font-semibold text-gray-700'
+          />
+          {searchTerm && (
+            <button
+              onClick={onClear}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   </div>
@@ -290,26 +296,20 @@ const Materials = () => {
 
       <main className="max-w-4xl mx-auto px-6 pt-12 pb-24">
         {/* Page Header */}
-        <div className="text-center mb-10 space-y-3">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-[#0A70A7] rounded-full text-[10px] font-bold uppercase tracking-widest mb-1 shadow-sm border border-blue-100/50"
-          >
-            <FileSearch size={12} />
-            Study Resources
-          </motion.div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Materials <span className="text-[#0A70A7]">Library</span>
-          </h1>
-          <p className="text-gray-500 text-sm max-w-md mx-auto font-medium">
-            Structured academic resources organized by class and subject for easier learning.
-          </p>
+        <div className='flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12'>
+          <div>
+            <div className='relative inline-block mb-3'>
+              <h1 className='text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight'>
+                Materials <span className='text-[#0A6FA7]'>Library</span>
+              </h1>
+              <div className='absolute -bottom-2 left-0 w-16 h-1 bg-[#0A6FA7] rounded-full'></div>
+            </div>
+          </div>
         </div>
 
-        <SearchBar
-          value={searchTerm}
-          onChange={handleSearchChange}
+        <FiltersSection
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
           onClear={() => handleSearchChange('')}
         />
 
