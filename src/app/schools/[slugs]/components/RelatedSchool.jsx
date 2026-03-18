@@ -4,23 +4,23 @@ import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const RelatedSchools = ({ college }) => {
-  const [colleges, setColleges] = useState([])
+const RelatedSchools = ({ school }) => {
+  const [schools, setSchools] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const scrollContainerRef = useRef(null)
 
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') return
-    getRelatedColleges()
+    getRelatedSchools()
   }, [])
 
-  const getRelatedColleges = async () => {
+  const getRelatedSchools = async () => {
     setIsLoading(true)
     try {
       // Use direct fetch instead of server action to avoid SSR issues
       const response = await fetch(
-        `${process.env.baseUrl}/college?page=1&limit=24`,
+        `${process.env.baseUrl}/school?page=1&limit=24`,
         {
           method: 'GET',
           headers: {
@@ -32,31 +32,31 @@ const RelatedSchools = ({ college }) => {
 
       if (response.ok) {
         const data = await response.json()
-        const collegesData =
-          data.items?.map((collegeItem) => ({
-            name: collegeItem.name,
-            location: `${collegeItem.address?.city || ''}, ${collegeItem.address?.district || ''}`,
-            description: collegeItem.description,
-            googleMapUrl: collegeItem.google_map_url,
-            instituteType: collegeItem.institute_type,
-            slug: collegeItem.slugs,
-            collegeId: collegeItem.id,
-            collegeImage: collegeItem.featured_img,
-            logo: collegeItem.college_logo
+        const schoolsData =
+          data.items?.map((schoolItem) => ({
+            name: schoolItem.name,
+            location: `${schoolItem.address?.city || ''}, ${schoolItem.address?.district || ''}`,
+            description: schoolItem.description,
+            googleMapUrl: schoolItem.google_map_url,
+            instituteType: schoolItem.institute_type,
+            slug: schoolItem.slugs,
+            schoolId: schoolItem.id,
+            schoolImage: schoolItem.featured_img || "/images/logo.png",
+            logo: schoolItem.college_logo || "/images/logo.png"
           })) || []
 
-        // Filter out the current college
-        const filteredColleges = collegesData.filter(
-          (c) => c.collegeId !== college?.id && c.collegeId !== college?._id
+        // Filter out the current school
+        const filteredSchools = schoolsData.filter(
+          (s) => s.schoolId !== school?.id && s.schoolId !== school?._id
         )
-        setColleges(filteredColleges)
+        setSchools(filteredSchools)
       } else {
-        console.error('Failed to fetch colleges:', response.statusText)
-        setColleges([])
+        console.error('Failed to fetch schools:', response.statusText)
+        setSchools([])
       }
     } catch (error) {
-      console.error('Error fetching colleges:', error)
-      setColleges([])
+      console.error('Error fetching schools:', error)
+      setSchools([])
     } finally {
       setIsLoading(false)
     }
@@ -105,18 +105,18 @@ const RelatedSchools = ({ college }) => {
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
             </div>
           ) : (
-            colleges.map((college, index) => (
+            schools.map((schoolItem, index) => (
               <Link
-                href={`/schools/${college.slug}`}
+                href={`/schools/${schoolItem.slug}`}
                 key={index}
                 className='flex-shrink-0'
               >
                 <div className='cursor-pointer p-2 sm:p-4 w-48 sm:w-56 md:w-64'>
                   <div className='flex justify-center border-2 rounded-2xl sm:rounded-3xl items-center overflow-hidden mb-2 p-2 sm:p-4 bg-gray-50/50 aspect-square'>
-                    {college.logo ? (
+                    {schoolItem.logo ? (
                       <img
-                        src={college.logo}
-                        alt={college.name}
+                        src={schoolItem.logo}
+                        alt={schoolItem.name}
                         className='w-full h-full object-contain'
                         onError={(e) => {
                           e.target.style.display = 'none'
@@ -125,17 +125,17 @@ const RelatedSchools = ({ college }) => {
                       />
                     ) : null}
                     <div
-                      className={`${college.logo ? 'hidden' : 'flex'} w-full h-full items-center justify-center text-4xl sm:text-5xl font-bold bg-[#387cae]/10 text-[#387cae]`}
+                      className={`${schoolItem.logo ? 'hidden' : 'flex'} w-full h-full items-center justify-center text-4xl sm:text-5xl font-bold bg-[#387cae]/10 text-[#387cae]`}
                     >
-                      {college.name?.charAt(0) || '?'}
+                      {schoolItem.name?.charAt(0) || '?'}
                     </div>
                   </div>
                   <div className='px-2 sm:px-4 pb-2 sm:pb-4 flex flex-col'>
                     <h3 className='text-sm font-medium text-center line-clamp-2 text-gray-900'>
-                      {college.name}
+                      {schoolItem.name}
                     </h3>
                     <p className='text-xs text-gray-500 text-center line-clamp-1 mt-1'>
-                      {college.location}
+                      {schoolItem.location}
                     </p>
                   </div>
                 </div>
