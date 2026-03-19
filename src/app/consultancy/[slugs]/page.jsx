@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Navbar from '../../../components/Frontpage/Navbar'
-import Header from '../../../components/Frontpage/Header'
 import Footer from '../../../components/Frontpage/Footer'
 import ImageSection from './components/upperSection'
 import ConsultancyOverview from './components/ConsultancyOverview'
@@ -136,59 +134,47 @@ const ConsultancyDetailPage = ({ params }) => {
 
   if (error) {
     return (
-      <>
-        <Header />
-        <Navbar />
-        <div className='min-h-screen bg-gray-50/50 flex items-center justify-center px-4'>
-          <div className='text-center max-w-md'>
-            <h1 className='text-xl font-semibold text-gray-900 mb-3'>
-              Something went wrong
-            </h1>
-            <p className='text-gray-600 mb-6'>{error}</p>
-            <button
-              onClick={() => router.push('/consultancy')}
-              className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-6 py-3 rounded-md font-semibold transition-colors'
-            >
-              Back to Consultancies
-            </button>
-          </div>
+      <div className='min-h-screen bg-gray-50/50 flex items-center justify-center px-4'>
+        <div className='text-center max-w-md'>
+          <h1 className='text-xl font-semibold text-gray-900 mb-3'>
+            Something went wrong
+          </h1>
+          <p className='text-gray-600 mb-6'>{error}</p>
+          <button
+            onClick={() => router.push('/consultancy')}
+            className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-6 py-3 rounded-md font-semibold transition-colors'
+          >
+            Back to Consultancies
+          </button>
         </div>
-        <Footer />
-      </>
+      </div>
     )
   }
 
   if (!consultancy) {
     return (
-      <>
-        <Header />
-        <Navbar />
-        <div className='min-h-screen bg-gray-50/50 flex items-center justify-center px-4'>
-          <div className='text-center max-w-md'>
-            <h1 className='text-xl font-semibold text-gray-900 mb-3'>
-              Consultancy not found
-            </h1>
-            <p className='text-gray-600 mb-6'>
-              The consultancy you&apos;re looking for doesn&apos;t exist or was
-              removed.
-            </p>
-            <button
-              onClick={() => router.push('/consultancy')}
-              className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-6 py-3 rounded-md font-semibold transition-colors'
-            >
-              Back to Consultancies
-            </button>
-          </div>
+      <div className='min-h-screen bg-gray-50/50 flex items-center justify-center px-4'>
+        <div className='text-center max-w-md'>
+          <h1 className='text-xl font-semibold text-gray-900 mb-3'>
+            Consultancy not found
+          </h1>
+          <p className='text-gray-600 mb-6'>
+            The consultancy you&apos;re looking for doesn&apos;t exist or was
+            removed.
+          </p>
+          <button
+            onClick={() => router.push('/consultancy')}
+            className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-6 py-3 rounded-md font-semibold transition-colors'
+          >
+            Back to Consultancies
+          </button>
         </div>
-        <Footer />
-      </>
+      </div>
     )
   }
 
   return (
     <div>
-      <Header />
-      <Navbar />
       <ImageSection consultancy={consultancy} />
       <br />
       <br />
@@ -196,7 +182,6 @@ const ConsultancyDetailPage = ({ params }) => {
       <ApplyNow consultancy={consultancy} />
       <RelatedConsultancies consultancy={consultancy} />
       <ShareSection consultancy={consultancy} />
-      <Footer />
     </div>
   )
 }

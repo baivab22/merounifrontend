@@ -7,21 +7,25 @@ const MemberSection = ({ validMembers }) => {
   }
 
   return (
-    <div className='bg-white rounded-md border p-6'>
-      <h2 className='text-xl font-bold text-gray-900 mb-6'>Our Team</h2>
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6'>
+    <div className='bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm'>
+      <div className='flex items-center gap-3 mb-8'>
+        <div className='w-1.5 h-8 bg-[#30AD8F] rounded-full' />
+        <h2 className='text-2xl font-bold text-gray-900'>Our Team</h2>
+      </div>
+
+      <div className='flex overflow-x-auto md:grid md:grid-cols-2 gap-4 md:gap-6 no-scrollbar pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
         {validMembers.map((member, index) => (
           <div
             key={index}
-            className='group bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-md transition-all duration-300'
+            className='flex-shrink-0 w-[85vw] md:w-auto group bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-xl transition-all duration-500 hover:border-[#30AD8F]/30 h-auto'
           >
             {/* Member Name */}
             {member.name?.trim() && (
-              <div className='flex items-center gap-4 mb-5 pb-4 border-b border-gray-200'>
-                <div className='flex-shrink-0 w-12 h-12 rounded-2xl bg-white flex items-center justify-center group-hover:bg-[#30AD8F]/20 transition-colors border border-gray-100'>
+              <div className='flex items-center gap-4 mb-6 pb-4 border-b border-gray-200'>
+                <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 group-hover:bg-[#30AD8F]/10 transition-colors border border-gray-100 shadow-sm'>
                   <FaUser className='w-5 h-5 text-[#30AD8F]' />
                 </div>
-                <h3 className='text-base font-semibold text-gray-900 leading-tight'>
+                <h3 className='text-lg font-bold text-gray-900 leading-tight'>
                   {member.name}
                 </h3>
               </div>
@@ -30,15 +34,15 @@ const MemberSection = ({ validMembers }) => {
             <div className='space-y-4'>
               {/* Role */}
               {member.role?.trim() && (
-                <div className='flex items-start gap-3'>
-                  <div className='flex-shrink-0 w-8 h-8 rounded-md bg-white flex items-center justify-center mt-0.5 border border-gray-100'>
+                <div className='flex items-start gap-4'>
+                  <div className='flex-shrink-0 w-8 h-8 rounded-lg bg-white flex items-center justify-center mt-0.5 border border-gray-100'>
                     <FaBriefcase className='w-3.5 h-3.5 text-gray-400' />
                   </div>
                   <div>
-                    <p className='text-xs text-gray-500 uppercase tracking-wider font-medium'>
+                    <p className='text-[10px] text-gray-500 uppercase tracking-widest font-bold'>
                       Role
                     </p>
-                    <p className='text-sm text-gray-600 mt-0.5'>
+                    <p className='text-sm text-gray-700 font-medium'>
                       {member.role}
                     </p>
                   </div>
@@ -47,17 +51,17 @@ const MemberSection = ({ validMembers }) => {
 
               {/* Contact Number */}
               {member.contact_number?.trim() && (
-                <div className='flex items-start gap-3'>
-                  <div className='flex-shrink-0 w-8 h-8 rounded-md bg-white flex items-center justify-center mt-0.5 border border-gray-100'>
-                    <FaPhoneAlt className='w-3.5 h-3.5 text-orange-400' />
+                <div className='flex items-start gap-4'>
+                  <div className='flex-shrink-0 w-8 h-8 rounded-lg bg-white flex items-center justify-center mt-0.5 border border-gray-100'>
+                    <FaPhoneAlt className='w-3.5 h-3.5 text-[#0A6FA7]' />
                   </div>
                   <div>
-                    <p className='text-xs text-gray-500 uppercase tracking-wider font-medium'>
+                    <p className='text-[10px] text-gray-500 uppercase tracking-widest font-bold'>
                       Contact
                     </p>
                     <a
                       href={`tel:${member.contact_number}`}
-                      className='text-sm text-[#0A6FA7] mt-0.5 block hover:underline transition-all'
+                      className='text-sm text-[#0A6FA7] font-semibold hover:underline transition-all'
                     >
                       {member.contact_number}
                     </a>
@@ -67,8 +71,8 @@ const MemberSection = ({ validMembers }) => {
 
               {/* Description */}
               {member.description?.trim() && (
-                <div className='pt-2 mt-2 border-t border-gray-200/50'>
-                  <p className='text-xs md:text-sm text-gray-500 leading-relaxed italic'>
+                <div className='pt-4 mt-2 border-t border-gray-100'>
+                  <p className='text-sm text-gray-500 leading-relaxed italic opacity-80'>
                     "{member.description}"
                   </p>
                 </div>

@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, use, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '../../../../components/Frontpage/Header'
-import Navbar from '../../../../components/Frontpage/Navbar'
 import FormSection from './components/formSection'
 import { getConsultancyBySlug, checkIfConsultancyApplied } from '../../actions'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
@@ -192,14 +190,6 @@ const ApplyPage = ({ params }) => {
   return (
     <>
       <main className='w-full min-h-screen bg-gray-50 flex flex-col'>
-        <div
-          ref={headerRef}
-          className='sticky top-0 z-50 bg-white border-b border-gray-100'
-        >
-          <Header />
-          <Navbar />
-        </div>
-
         <div className='flex-1 py-12 px-4 sm:px-6 lg:px-8'>
           <div className='max-w-7xl mx-auto'>
             {/* Back Button */}
