@@ -22,6 +22,7 @@ import { formatDate } from '@/utils/date.util'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import EventFormModal from './components/EventFormModal'
 
 export default function EventManager() {
   const { toast } = useToast()
@@ -31,41 +32,12 @@ export default function EventManager() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    getValues,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      title: '',
-      category_id: '',
-      college_id: null,
-      author_id: author_id,
-      description: '',
-      content: '',
-      image: '',
-      event_host: {
-        start_date: '',
-        end_date: '',
-        time: '',
-        host: '',
-        map_url: ''
-      },
-      is_featured: false,
-      meta_description: ''
-    }
-  })
-
   const [events, setEvents] = useState([])
   const [editing, setEditing] = useState(false)
+  const [editingEventData, setEditingEventData] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [tableLoading, setTableLoading] = useState(false)
-  const [uploadedFiles, setUploadedFiles] = useState({ image: '' })
-  const [formErrors, setFormErrors] = useState({})
   const [pagination, setPagination] = useState({
     currentPage: parseInt(searchParams.get('page')) || 1,
     totalPages: 1,
@@ -75,8 +47,6 @@ export default function EventManager() {
   const [deleteId, setDeleteId] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingEventId, setEditingEventId] = useState(null)
-  const [selectedCollege, setSelectedCollege] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -88,15 +58,20 @@ export default function EventManager() {
     const loadCategories = async () => {
       try {
         const categoriesList = await fetchCategories(1, 1000, 'EVENT')
-        setCategories(categoriesList.items)
-      } catch (error) { }
+        if (categoriesList && categoriesList.items) {
+          setCategories(categoriesList.items)
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      }
     }
     loadCategories()
   }, [])
 
   useEffect(() => {
     setHeading('Events Management')
-    loadEvents()
+    const page = parseInt(searchParams.get('page')) || 1
+    loadEvents(page)
     return () => setHeading(null)
   }, [setHeading, searchParams])
 
@@ -106,7 +81,7 @@ export default function EventManager() {
       handleAddClick()
       router.replace(pathname, { scroll: false })
     }
-  }, [searchParams, router, reset])
+  }, [searchParams, router])
 
   useEffect(() => {
     return () => {
@@ -180,9 +155,6 @@ export default function EventManager() {
   const loadEvents = async (page = 1) => {
     try {
       setTableLoading(true)
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('page', page)
-      router.push(`${pathname}?${params.toString()}`, { scroll: false })
       const response = await getEvents(page)
       setEvents(response.items)
       setPagination({
@@ -201,52 +173,33 @@ export default function EventManager() {
     }
   }
 
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('page', page)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
   const handleCloseModal = () => {
     setIsOpen(false)
     setEditing(false)
+    setEditingEventData(null)
     setEditingEventId(null)
-    reset()
-    setUploadedFiles({ image: '' })
-    setSelectedCollege(null)
-    setSelectedCategory(null)
-    setFormErrors({})
   }
 
   const handleAddClick = () => {
-    setIsOpen(true)
     setEditing(false)
+    setEditingEventData(null)
     setEditingEventId(null)
-    reset()
-    setUploadedFiles({ image: '' })
-    setSelectedCollege(null)
-    setSelectedCategory(null)
-    setFormErrors({})
-    setValue('meta_description', '')
+    setIsOpen(true)
   }
 
-  const onSubmit = async (data) => {
-    // Validate description (TipTap returns HTML, check plain text)
-    const descPlain = (data.description || '').replace(/<[^>]*>/g, '').trim()
-    if (!descPlain) {
-      setFormErrors((prev) => ({ ...prev, description: 'Description is required' }))
-      return
-    }
-    setFormErrors({})
+  const onSubmit = async (formData) => {
     setLoading(true)
     try {
-      const formData = {
-        ...data,
-        is_featured: Number(data.is_featured),
-        image: uploadedFiles.image
-      }
-
-      if (!formData.college_id || formData.college_id === '' || formData.college_id === null) {
-        delete formData.college_id
-      }
-
       if (editing) {
         formData.id = editingEventId
       }
+      formData.author_id = author_id
 
       const response = await authFetch(`${process.env.baseUrl}/event`, {
         method: 'POST',
@@ -259,11 +212,18 @@ export default function EventManager() {
         throw new Error(responseData.message || 'Failed to process event')
       }
 
-      toast.success(editing ? 'Event updated successfully' : 'Event created successfully')
+      toast({
+        title: 'Success',
+        description: editing ? 'Event updated successfully' : 'Event created successfully'
+      })
       handleCloseModal()
       loadEvents()
     } catch (err) {
-      toast.error(`Failed to ${editing ? 'update' : 'create'} event: ${err.message || 'Network error'}`)
+      toast({
+        title: 'Error',
+        description: `Failed to ${editing ? 'update' : 'create'} event: ${err.message || 'Network error'}`,
+        variant: 'destructive'
+      })
     } finally {
       setLoading(false)
     }
@@ -271,68 +231,20 @@ export default function EventManager() {
 
   const handleEdit = async (data) => {
     try {
-      setEditing(true)
       setLoading(true)
-      setIsOpen(true)
+      const response = await authFetch(`${process.env.baseUrl}/event/${data.slugs}`)
+      if (!response.ok) throw new Error('Failed to fetch event details')
+      const result = await response.json()
+      const eventData = result.item
 
-      const response = await authFetch(`${process.env.baseUrl}/event/${data.slugs}`, {
-        headers: { 'Content-Type': 'application/json' }
-      })
-      let eventData = await response.json()
-      eventData = eventData.item
+      setEditingEventData(eventData)
       setEditingEventId(eventData.id)
-
-      setValue('title', eventData.title)
-
-      // Category
-      if (eventData.category) {
-        const cat = categories.find((c) => c.title === eventData.category.title)
-        if (cat) {
-          setValue('category_id', cat.id)
-          setSelectedCategory(cat)
-        }
-      }
-
-      // College
-      if (eventData?.college) {
-        const res = await authFetch(`${process.env.baseUrl}/college?q=${eventData.college.slugs}`)
-        const collegeData = await res.json()
-        const college = collegeData.items?.[0]
-        if (college) {
-          setValue('college_id', college.id)
-          setSelectedCollege({ id: college.id, name: eventData.college.name })
-        } else {
-          setValue('college_id', null)
-          setSelectedCollege(null)
-        }
-      } else {
-        setValue('college_id', null)
-        setSelectedCollege(null)
-      }
-
-      setValue('description', eventData.description)
-      setValue('content', eventData.content)
-      setValue('image', eventData.image)
-      setUploadedFiles({ image: eventData.image })
-
-      let eventHost = eventData.event_host
-      if (typeof eventHost === 'string') {
-        try { eventHost = JSON.parse(eventHost) } catch { eventHost = {} }
-      }
-      if (eventHost) {
-        setValue('event_host.start_date', eventHost.start_date || '')
-        setValue('event_host.end_date', eventHost.end_date || '')
-        setValue('event_host.time', eventHost.time || '')
-        setValue('event_host.host', eventHost.host || '')
-        setValue('event_host.map_url', eventHost.map_url || '')
-      }
-
-      setValue('is_featured', eventData.is_featured === 1)
-      setValue('meta_description', eventData.meta_description || '')
+      setEditing(true)
+      setIsOpen(true)
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch event data',
+        description: 'Failed to fetch event data for editing',
         variant: 'destructive'
       })
     } finally {
@@ -539,221 +451,22 @@ export default function EventManager() {
           columns={columns}
           data={events}
           pagination={pagination}
-          onPageChange={(page) => loadEvents(page)}
+          onPageChange={handlePageChange}
           loading={tableLoading}
           showSearch={false}
         />
       </div>
 
       {/* Add / Edit Modal */}
-      <Dialog
+      <EventFormModal
         isOpen={isOpen}
         onClose={handleCloseModal}
-        closeOnOutsideClick={false}
-        className='max-w-5xl'
-      >
-        <DialogContent className='max-w-5xl max-h-[90vh] flex flex-col p-0'>
-          <DialogHeader className='px-6 py-4 border-b'>
-            <DialogTitle className='text-lg font-semibold text-gray-900'>
-              {editing ? 'Edit Event' : 'Add New Event'}
-            </DialogTitle>
-            <DialogClose onClick={handleCloseModal} />
-          </DialogHeader>
-
-          <div className='flex-1 overflow-y-auto p-6'>
-            <form id='event-form' onSubmit={handleSubmit(onSubmit)} className='space-y-8'>
-
-              {/* Basic Information */}
-              <section className='space-y-4'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>Basic Information</h3>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <Label required>Event Title</Label>
-                    <Input
-                      {...register('title', { required: 'Title is required' })}
-                      placeholder='Enter event title'
-                      className={errors.title ? 'border-red-400' : ''}
-                    />
-                    {errors.title && (
-                      <p className='text-xs text-red-500'>{errors.title.message}</p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label required>Category</Label>
-                    <SearchSelectCreate
-                      onSearch={searchCategory}
-                      onSelect={(item) => {
-                        setSelectedCategory(item)
-                        setValue('category_id', item.id)
-                      }}
-                      onRemove={() => {
-                        setSelectedCategory(null)
-                        setValue('category_id', '')
-                      }}
-                      selectedItems={selectedCategory}
-                      placeholder='Search or select category...'
-                      isMulti={false}
-                      displayKey='title'
-                    />
-                    <input type='hidden' {...register('category_id', { required: 'Category is required' })} />
-                    {errors.category_id && (
-                      <p className='text-xs text-red-500'>{errors.category_id.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className='space-y-2'>
-                  <Label>Associated College</Label>
-                  <SearchSelectCreate
-                    onSearch={searchCollege}
-                    onSelect={(item) => {
-                      setSelectedCollege(item)
-                      setValue('college_id', item.id)
-                    }}
-                    onRemove={() => {
-                      setSelectedCollege(null)
-                      setValue('college_id', null)
-                    }}
-                    selectedItems={selectedCollege}
-                    placeholder='Search college...'
-                    isMulti={false}
-                    displayKey='name'
-                  />
-                </div>
-              </section>
-
-              {/* Event Host Information */}
-              <section className='space-y-4'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>Event Host & Schedule</h3>
-
-                <div className='space-y-2'>
-                  <Label required>Host</Label>
-                  <Input
-                    {...register('event_host.host', { required: 'Host is required' })}
-                    placeholder='Event host name or organization'
-                    className={errors.event_host?.host ? 'border-red-400' : ''}
-                  />
-                  {errors.event_host?.host && (
-                    <p className='text-xs text-red-500'>{errors.event_host.host.message}</p>
-                  )}
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <Label required>Start Date</Label>
-                    <Input
-                      type='date'
-                      {...register('event_host.start_date', { required: 'Start date is required' })}
-                      className={errors.event_host?.start_date ? 'border-red-400' : ''}
-                    />
-                    {errors.event_host?.start_date && (
-                      <p className='text-xs text-red-500'>{errors.event_host.start_date.message}</p>
-                    )}
-                  </div>
-                  <div className='space-y-2'>
-                    <Label required>End Date</Label>
-                    <Input
-                      type='date'
-                      {...register('event_host.end_date', { required: 'End date is required' })}
-                      className={errors.event_host?.end_date ? 'border-red-400' : ''}
-                    />
-                    {errors.event_host?.end_date && (
-                      <p className='text-xs text-red-500'>{errors.event_host.end_date.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <Label>Time</Label>
-                    <Input type='time' {...register('event_host.time')} />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label>Map Location URL</Label>
-                    <Input
-                      {...register('event_host.map_url')}
-                      placeholder='Google Maps URL'
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* Details & Media */}
-              <section className='space-y-4'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>Details & Media</h3>
-
-                <div className='space-y-2'>
-                  <Label>Description</Label>
-                  <div className={formErrors.description ? 'ring-2 ring-red-400/30 rounded-md' : ''}>
-                    <TipTapEditor
-                      value={getValues('description')}
-                      onChange={(html) => {
-                        setValue('description', html, { shouldDirty: true })
-                        const plain = html.replace(/<[^>]*>/g, '').trim()
-                        if (plain) setFormErrors((prev) => ({ ...prev, description: '' }))
-                      }}
-                      placeholder='Write the event description, details, schedule...'
-                      height='280px'
-                    />
-                  </div>
-                  {formErrors.description && (
-                    <p className='text-xs text-red-500 mt-1'>{formErrors.description}</p>
-                  )}
-                </div>
-
-                <div className='space-y-2'>
-                  <Label>Meta Description</Label>
-                  <Textarea
-                    {...register('meta_description')}
-                    placeholder='SEO Meta description...'
-                    className='min-h-[80px]'
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <FileUpload
-                    label='Featured Image (Optional)'
-                    onUploadComplete={(url) => {
-                      setUploadedFiles((prev) => ({ ...prev, image: url }))
-                      setValue('image', url)
-                    }}
-                    defaultPreview={uploadedFiles.image}
-                  />
-                </div>
-
-                <div className='flex items-center gap-3 pt-2'>
-                  <input
-                    type='checkbox'
-                    id='is_featured'
-                    {...register('is_featured')}
-                    className='w-4 h-4 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]/20'
-                  />
-                  <Label htmlFor='is_featured' className='cursor-pointer'>
-                    Mark as Featured Event
-                  </Label>
-                </div>
-              </section>
-            </form>
-          </div>
-
-          {/* Sticky Footer */}
-          <div className='sticky bottom-0 bg-white border-t p-4 px-6 flex justify-end gap-3'>
-            <Button type='button' variant='outline' onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button
-              type='submit'
-              form='event-form'
-              disabled={loading}
-              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white'
-            >
-              {loading ? 'Saving...' : editing ? 'Update Event' : 'Create Event'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        isEditing={editing}
+        initialData={editingEventData}
+        categories={categories}
+        onSave={onSubmit}
+        submitting={loading}
+      />
 
       <ConfirmationDialog
         open={isDialogOpen}

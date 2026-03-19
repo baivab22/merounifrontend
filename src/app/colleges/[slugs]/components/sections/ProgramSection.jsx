@@ -7,8 +7,8 @@ const ProgramSection = ({ college }) => {
   const handleApply = (id) => {
     route.push(`/colleges/apply/${college.slugs}/${id}`)
   }
-  const handleDegree = (degree) => {
-    route.push(`/degree/${degree}`)
+  const handleProgram = (slug) => {
+    route.push(`/programs/${slug}`)
   }
 
   if (!college?.collegeCourses || college.collegeCourses.length === 0) {
@@ -30,7 +30,7 @@ const ProgramSection = ({ college }) => {
           >
             <div>
               <h3
-                onClick={() => handleDegree(course?.program?.title)}
+                onClick={() => handleProgram(course?.program?.slugs)}
                 className='text-lg font-bold text-gray-800 cursor-pointer group-hover:text-[#0A6FA7] transition-colors leading-tight mb-6'
               >
                 {course.program.title}

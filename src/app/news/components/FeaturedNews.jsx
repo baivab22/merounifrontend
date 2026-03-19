@@ -17,6 +17,8 @@ const FeaturedNews = ({ news, loading, pagination, onPageChange }) => {
     return str || ''
   }
 
+  console.log(news)
+
 
   return (
     <div className='max-w-[1600px] mx-auto px-4 sm:px-8 mb-8'>
@@ -29,8 +31,7 @@ const FeaturedNews = ({ news, loading, pagination, onPageChange }) => {
               <div className='h-full'>
                 <NewsCard
                   date={formatDate(item.createdAt)}
-                  description={truncateString(item.description, 100)}
-                  image={item.featuredImage || 'https://placehold.co/600x400'}
+                  image={item.featured_image || 'https://placehold.co/600x400'}
                   title={truncateString(item.title, 60)}
                   slug={item.slug}
                 />
