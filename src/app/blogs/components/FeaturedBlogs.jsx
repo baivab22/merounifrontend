@@ -35,7 +35,7 @@ const FeaturedBlogs = ({ blogs, loading, pagination, onPageChange, searchQuery }
           <Link href={`/blogs/${blog.slug}`} key={index} className='h-full'>
             <div className='h-full'>
               <BlogCard
-                date={formatDate(blog.createdAt)}
+                date={blog.createdAt  ? formatDate(blog.createdAt) : ''}
                 description={truncateString(blog.description, 100)}
                 image={blog.featured_image || 'https://placehold.co/600x400'}
                 title={truncateString(blog.title, 60)}

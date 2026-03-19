@@ -1,16 +1,13 @@
 'use client'
-import React, { useEffect, useState, useCallback, useLayoutEffect, useMemo } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { debounce } from 'lodash'
-import { fetchDegrees, getDiscipline } from './actions'
-import { Search, BookOpen, X } from 'lucide-react'
-import EmptyState from '@/ui/shadcn/EmptyState'
-import Navbar from '../../components/Frontpage/Navbar'
-import Footer from '../../components/Frontpage/Footer'
-import Header from '../../components/Frontpage/Header'
-import Pagination from '../blogs/components/Pagination'
 import DegreeCard from '@/ui/molecules/cards/DegreeCard'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
+import EmptyState from '@/ui/shadcn/EmptyState'
+import { debounce } from 'lodash'
+import { BookOpen, Search, X } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Pagination from '../blogs/components/Pagination'
+import { fetchDegrees, getDiscipline } from './actions'
 
 // Memoized FilterSection with local state for performant typing
 const FilterSection = React.memo(function FilterSection({
