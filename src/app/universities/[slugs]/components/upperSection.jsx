@@ -179,15 +179,19 @@ const UpperSection = ({ university }) => {
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {university.programs.map((item, idx) => (
-                  <li
+                  <Link
                     key={item.id || idx}
-                    className="group flex items-center gap-3 rounded-md bg-white px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                    href={`/programs/${item?.program?.slugs}`}
+                    className="group flex items-center justify-between rounded-xl bg-white px-5 py-4 shadow-sm shadow-emerald-500/5 transition-all duration-300 hover:shadow-xl hover:shadow-[#30AD8F]/10 border border-transparent hover:border-[#30AD8F]/20"
                   >
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#30AD8F] group-hover:scale-125 transition-transform" />
-                    <span className="text-sm md:text-base font-medium text-gray-800">
-                      {item?.program?.title || "N/A"}
-                    </span>
-                  </li>
+                    <div className='flex items-center gap-3'>
+                      <span className="h-2 w-2 rounded-full bg-[#30AD8F] group-hover:scale-125 transition-transform" />
+                      <span className="text-sm md:text-base font-bold text-gray-700 group-hover:text-gray-900 transition-colors">
+                        {item?.program?.title || "N/A"}
+                      </span>
+                    </div>
+                    <span className='text-[#30AD8F] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all font-black text-xs uppercase tracking-widest'>View</span>
+                  </Link>
                 ))}
               </ul>
             </div>

@@ -35,8 +35,9 @@ const ProgramCard = ({ program }) => {
   }
 
   return (
-    <div
-      className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-lg transition-all duration-300'
+    <Link
+      href={`/programs/${program.slugs}`}
+      className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-xl transition-all duration-300 block'
     >
       <div className='flex flex-col h-full'>
         <div className='flex items-start justify-between mb-4'>
@@ -44,7 +45,7 @@ const ProgramCard = ({ program }) => {
             <GraduationCap className='w-5 h-5' />
           </div>
         </div>
-        <h3 className='font-bold text-gray-900 leading-snug line-clamp-2 mb-2'>
+        <h3 className='font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-[#30AD8F] transition-colors'>
           {program.title}
         </h3>
         <div className='mt-auto pt-4 border-t border-gray-50 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
@@ -52,7 +53,7 @@ const ProgramCard = ({ program }) => {
           {program.code && <span>{program.code}</span>}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

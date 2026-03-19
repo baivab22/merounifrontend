@@ -23,6 +23,7 @@ const navLinks = [
 
 const moreLinks = [
   { href: '/exams', label: 'Exams' },
+  { href: '/programs', label: 'Programs' },
   { href: '/vacancies', label: 'Vacancies' },
   { href: '/news', label: 'News' },
   { href: '/career', label: 'Careers at MeroUni' },
