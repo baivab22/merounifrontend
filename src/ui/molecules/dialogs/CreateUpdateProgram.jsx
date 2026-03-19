@@ -325,7 +325,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                 eligibility_criteria: eligibilityCriteria,
                 level_id: data.level_id ? Number(data.level_id) : undefined,
                 degree_id: data.degree_id ? Number(data.degree_id) : undefined,
-                credits: data.credits ? Number(data.credits) : undefined,
+                credits: data.credits || undefined,
                 universities: selectedUniversities.map((u) => u.id),
                 syllabus: data.syllabus.map((item) => ({
                     year: item.year,
@@ -438,13 +438,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                                     <div className="space-y-1.5">
                                         <Label>Credits</Label>
                                         <Input
-                                            type='number'
-                                            step='0.1'
-                                            placeholder='e.g., 120'
-                                            {...register('credits', {
-                                                valueAsNumber: true,
-                                                min: { value: 0, message: 'Credits must be a positive number' }
-                                            })}
+                                            placeholder='e.g., 120-140 or 4.0-5.0'
+                                            {...register('credits')}
                                             className={errors.credits ? 'border-red-400 focus-visible:ring-red-400' : ''}
                                         />
                                         {errors.credits && (
