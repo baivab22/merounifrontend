@@ -6,9 +6,6 @@ import DOMPurify from 'dompurify'
 import { ArrowLeft, BookOpen, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import { getDegreeBySlug } from '../actions'
 import OfferedColleges from './components/OfferedColleges'
@@ -122,28 +119,24 @@ const CourseDescription = ({ params }) => {
 
   if (error || !degree) {
     return (
-      <>
-        <Header />
-        <Navbar />
-        <div className='container mx-auto px-4 py-10'>
-          <EmptyState
-            icon={BookOpen}
-            title={
-              error === 'Degree not found' || !degree
-                ? 'Degree Not Found'
-                : 'Something went wrong'
-            }
-            description={
-              error ||
-              "We couldn't find the degree you're looking for. It might have been moved or deleted."
-            }
-            action={{
-              label: 'Browse All Degrees',
-              onClick: () => (window.location.href = '/degree')
-            }}
-          />
-        </div>
-      </>
+      <div className='container mx-auto px-4 py-10'>
+        <EmptyState
+          icon={BookOpen}
+          title={
+            error === 'Degree not found' || !degree
+              ? 'Degree Not Found'
+              : 'Something went wrong'
+          }
+          description={
+            error ||
+            "We couldn't find the degree you're looking for. It might have been moved or deleted."
+          }
+          action={{
+            label: 'Browse All Degrees',
+            onClick: () => (window.location.href = '/degree')
+          }}
+        />
+      </div>
     )
   }
 
@@ -151,10 +144,7 @@ const CourseDescription = ({ params }) => {
 
   return (
     <>
-      <div>
-        <Header />
-        <Navbar />
-        {degree && (
+      {degree && (
           <>
             {isSimpleDegree ? (
               <div className='bg-white min-h-screen'>
@@ -260,9 +250,7 @@ const CourseDescription = ({ params }) => {
               <ShareSection title={degree?.title} type='degree' />
             </div>
           </>
-        )}
-        <Footer />
-      </div>
+      )}
     </>
   )
 }
