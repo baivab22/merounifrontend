@@ -34,14 +34,14 @@ const Description = ({ event }) => {
     <div className='max-w-[1000px] mx-auto px-6 py-12 lg:py-20'>
       <div className='flex flex-col lg:flex-row gap-12 lg:gap-20'>
         {/* Main Content */}
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1 min-w-0 overflow-hidden break-words'>
           <div className='space-y-12'>
             <section>
               <h2 className='text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3'>
                 <span className='w-1.5 h-8 bg-[#0A6FA7] rounded-full'></span>
                 About This Event
               </h2>
-              <HTMLRenderer html={event?.description} />
+              <HTMLRenderer html={event?.content} />
             </section>
           </div>
         </div>
@@ -55,8 +55,10 @@ const Description = ({ event }) => {
 
             <div className='flex flex-col'>
               <MetaItem icon={FaUserTie} label='Host' value={hostData?.host} />
+              {hostData?.event_organizer && <MetaItem icon={FaUserTie} label='Organizer' value={hostData?.event_organizer} />}
               <MetaItem icon={FaCalendarCheck} label='Run Time' value={`${hostData?.start_date || 'N/A'} - ${hostData?.end_date || 'N/A'}`} />
               <MetaItem icon={FaClock} label='Time' value={formatTime(hostData?.time)} />
+              {hostData?.location && <MetaItem icon={FaMapMarkerAlt} label='Address' value={hostData?.location} />}
             </div>
 
             {hostData?.map_url && (

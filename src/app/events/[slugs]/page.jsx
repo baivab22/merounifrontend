@@ -8,6 +8,7 @@ import Loading from '../../../ui/molecules/Loading'
 import Cardlist from './components/Cardlist'
 import Description from './components/Description'
 import Hero from './components/Hero'
+import ShareSection from '@/ui/organisms/common/ShareSection'
 
 // Client-side fetch functions to replace server actions
 const fetchEventBySlug = async (slug) => {
@@ -92,7 +93,7 @@ const EventDetailsPage = ({ params }) => {
     }
 
     fetchEventDetails()
-  }, [params]) 
+  }, [params])
 
 
   if (error) return <div>Error: {error}</div>
@@ -116,6 +117,8 @@ const EventDetailsPage = ({ params }) => {
           <Description event={event} />
 
           <Cardlist events={relatedEvents} />
+
+          <ShareSection title={event?.title} type='event' />
         </main>
       )}
 

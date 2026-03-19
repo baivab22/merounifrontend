@@ -1,36 +1,9 @@
 import React from 'react'
-import { FaArrowLeft, FaFacebook, FaTwitter, FaLinkedin, FaLink, FaCalendarAlt, FaHashtag } from 'react-icons/fa'
+import { FaArrowLeft, FaCalendarAlt, FaHashtag } from 'react-icons/fa'
 import Link from 'next/link'
 import { formatDate } from '@/utils/date.util'
 
 const Hero = ({ event }) => {
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const shareTitle = event?.title || 'Check out this event on Mero Uni'
-
-  const handleShare = (platform) => {
-    let url = ''
-    switch (platform) {
-      case 'facebook':
-        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`
-        break
-      case 'twitter':
-        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareTitle)}`
-        break
-      case 'linkedin':
-        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`
-        break
-      default:
-        break
-    }
-    if (url) window.open(url, '_blank', 'width=600,height=400')
-  }
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(currentUrl)
-    // could add a toast here, but alert is fine for now per original code
-    alert('Link copied to clipboard!')
-  }
-
   return (
     <div className='max-w-[1000px] mx-auto px-6 pt-10 lg:pt-14'>
       {/* Navigation */}
@@ -67,29 +40,12 @@ const Hero = ({ event }) => {
                 </span>
               </div>
             </div>
-
-            {/* Share Buttons */}
-            <div className='flex items-center gap-3'>
-              <span className='text-xs font-bold text-gray-400 uppercase tracking-wider mr-2'>Share</span>
-              <button onClick={() => handleShare('facebook')} className='p-2 rounded-full bg-gray-50 hover:bg-[#1877F2] hover:text-white text-gray-400 transition-all'>
-                <FaFacebook size={18} />
-              </button>
-              <button onClick={() => handleShare('twitter')} className='p-2 rounded-full bg-gray-50 hover:bg-[#1DA1F2] hover:text-white text-gray-400 transition-all'>
-                <FaTwitter size={18} />
-              </button>
-              <button onClick={() => handleShare('linkedin')} className='p-2 rounded-full bg-gray-50 hover:bg-[#0A66C2] hover:text-white text-gray-400 transition-all'>
-                <FaLinkedin size={18} />
-              </button>
-              <button onClick={handleCopyLink} className='p-2 rounded-full bg-gray-50 hover:bg-gray-800 hover:text-white text-gray-400 transition-all'>
-                <FaLink size={16} />
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Image */}
         {event?.image && (
-          <div className='w-full aspect-[21/9] rounded-2xl overflow-hidden shadow-lg border border-gray-100 relative group'>
+          <div className='w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg border border-gray-100 relative group'>
             <img
               src={event?.image}
               alt={event?.title}

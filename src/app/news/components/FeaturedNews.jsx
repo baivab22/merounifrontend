@@ -31,7 +31,6 @@ const FeaturedNews = ({ news, loading, pagination, onPageChange }) => {
               <div className='h-full'>
                 <NewsCard
                   date={formatDate(item.createdAt)}
-                  description={truncateString(item.description, 100)}
                   image={item.featured_image || 'https://placehold.co/600x400'}
                   title={truncateString(item.title, 60)}
                   slug={item.slug}
