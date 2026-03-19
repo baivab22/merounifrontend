@@ -89,7 +89,7 @@ export async function deleteNews(id) {
 
 export async function getNewsById(id) {
     try {
-        const response = await authFetch(`${url}/id/${id}`)
+        const response = await authFetch(`${url}/${id}`)
         if (!response.ok) {
             throw new Error('Failed to fetch news details')
         }

@@ -59,7 +59,7 @@ const ShareSection = ({ title, type = 'blog' }) => {
         >
             <div className='pointer-events-auto bg-white/95 backdrop-blur-xl border border-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] py-3 px-8 rounded-full flex items-center gap-6'>
                 <div className='flex items-center gap-2 border-r border-gray-100 pr-4 mr-2'>
-                    <div className='p-1.5 bg-blue-50 text-[#0A6FA7] rounded-lg'>
+                    <div className='p-1.5 bg-[#387cae]/10 text-[#387cae] rounded-lg'>
                         <Share2 className='w-4 h-4' />
                     </div>
                     <span className='text-gray-900 text-xs uppercase tracking-[0.15em] font-extrabold'>
@@ -108,7 +108,7 @@ const ShareSection = ({ title, type = 'blog' }) => {
                                     initial={{ rotate: -90, opacity: 0 }}
                                     animate={{ rotate: 0, opacity: 1 }}
                                     exit={{ rotate: 90, opacity: 0 }}
-                                    className='text-gray-400 group-hover:text-[#0A6FA7] transition-colors'
+                                    className='text-gray-400 group-hover:text-[#387cae] transition-colors'
                                 >
                                     <Copy className='w-5 h-5' />
                                 </motion.div>

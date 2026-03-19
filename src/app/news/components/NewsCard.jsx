@@ -16,7 +16,7 @@ const NewsCard = ({ image, title, description, date, slug }) => {
 
             {/* Content */}
             <div className='p-5 flex flex-col flex-1'>
-                <h3 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#0A70A7] transition-colors'>
+                <h3 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#387cae] transition-colors'>
                     {title}
                 </h3>
                 <p className='text-sm text-gray-600 mb-4 line-clamp-3 flex-1'>

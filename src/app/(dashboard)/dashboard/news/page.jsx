@@ -1,36 +1,30 @@
 'use client'
 
 import { authFetch } from '@/app/utils/authFetch'
-import { Button } from '@/ui/shadcn/button'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
+import { useToast } from '@/hooks/use-toast'
 import useAdminPermission from '@/hooks/useAdminPermission'
-import { Edit2, Eye, Trash2, Plus } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
+import SearchInput from '@/ui/molecules/SearchInput'
+import ImageLightbox from '@/ui/molecules/image-lightbox'
+import Table from '@/ui/shadcn/DataTable'
+import { Button } from '@/ui/shadcn/button'
+import { Edit2, Eye, Plus, Trash2 } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { useToast } from '@/hooks/use-toast'
-import Table from '@/ui/shadcn/DataTable'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/ui/shadcn/dialog'
-import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { fetchCategories } from '../category/action.js'
 import {
   createNews,
   deleteNews,
   fetchNews,
   getNewsById,
+  getNewsBySlug,
   updateNews
 } from './action'
-import NewsForm from './components/NewsForm'
-import { FormatDate } from '@/lib/date'
-import { formatDate, formatDateTime } from '@/utils/date.util'
-import SearchInput from '@/ui/molecules/SearchInput'
-import ImageLightbox from '@/ui/molecules/image-lightbox'
+import ViewNewsModal from './components/ViewNewsModal'
+import NewsForm from './components/NewsForm.jsx'
+import { formatDateTime } from '@/utils/date.util.js'
 
 export default function NewsPage() {
   const { toast } = useToast()
@@ -117,14 +111,12 @@ export default function NewsPage() {
                 </div>
               )}
               <div className='flex-1 overflow-hidden'>
-                <Link
-                  href={slug ? `/news/${slug}` : '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className='truncate font-semibold text-slate-900 hover:text-[#387cae] hover:underline block'
+                <div
+                  onClick={() => handleView(row.original.slug || row.original.slugs)}
+                  className='truncate font-semibold text-slate-900 hover:text-[#387cae] hover:underline cursor-pointer block'
                 >
                   {title}
-                </Link>
+                </div>
                 <div className='flex flex-wrap gap-2 mt-1'>
                   {status && (
                     <span
@@ -176,7 +168,7 @@ export default function NewsPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleView(row.original.id)}
+              onClick={() => handleView(row.original.slug)}
               className='hover:bg-purple-50 text-purple-600'
               title='View Details'
             >
@@ -348,11 +340,11 @@ export default function NewsPage() {
     fetchAllCategories()
   }
 
-  const handleView = async (id) => {
+  const handleView = async (slug) => {
     try {
       setLoadingView(true)
       setViewModalOpen(true)
-      const newsData = await getNewsById(id)
+      const newsData = await getNewsBySlug(slug)
       setViewNewsData(newsData)
     } catch (error) {
       console.error('Error fetching news details:', error)
@@ -480,87 +472,12 @@ export default function NewsPage() {
       />
 
       {/* View News Details Modal */}
-      <Dialog
-        open={viewModalOpen}
-        onOpenChange={setViewModalOpen}
-      >
-        <DialogContent className='max-w-3xl'>
-          <DialogHeader>
-            <DialogTitle>News Details</DialogTitle>
-          </DialogHeader>
-          {loadingView ? (
-            <div className='flex justify-center items-center h-48'>
-              Loading...
-            </div>
-          ) : viewNewsData ? (
-            <div className='space-y-4 max-h-[70vh] overflow-y-auto p-2'>
-              {viewNewsData.featured_image && (
-                <div className='w-full h-64 rounded-md overflow-hidden'>
-                  <img
-                    src={viewNewsData.featured_image}
-                    alt={viewNewsData.title}
-                    className='w-full h-full object-cover'
-                  />
-                </div>
-              )}
-              <div>
-                <h2 className='text-2xl font-bold mb-2'>{viewNewsData.title}</h2>
-                <div className='flex gap-2 mb-4'>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${viewNewsData.status === 'published'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                  >
-                    {viewNewsData.status}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${viewNewsData.visibility === 'public'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                      }`}
-                  >
-                    {viewNewsData.visibility}
-                  </span>
-                </div>
-              </div>
-              {viewNewsData.description && (
-                <div>
-                  <h3 className='font-semibold mb-2'>Description</h3>
-                  <p className='text-gray-700'>{viewNewsData.description}</p>
-                </div>
-              )}
-              <div className='grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-md'>
-                <div>
-                  <h3 className='text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1'>
-                    Associated College
-                  </h3>
-                  <p className='text-sm font-medium'>
-                    {viewNewsData.newsCollege?.name || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <h3 className='text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1'>
-                    Category
-                  </h3>
-                  <p className='text-sm font-medium'>
-                    {viewNewsData.newsCategory?.title || 'N/A'}
-                  </p>
-                </div>
-              </div>
-              {viewNewsData.createdAt && (
-                <div className='text-sm text-gray-500'>
-                  Created: {formatDate(viewNewsData.createdAt)}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className='text-center py-8 text-gray-500'>
-              No data available
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ViewNewsModal
+        isOpen={viewModalOpen}
+        onClose={handleCloseViewModal}
+        news={viewNewsData}
+        loading={loadingView}
+      />
 
       <ImageLightbox
         isOpen={lightbox.isOpen}
