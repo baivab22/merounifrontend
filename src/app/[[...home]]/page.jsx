@@ -42,6 +42,7 @@ const Page = async () => {
       <div className='py-2 md:py-4'>
         <div className='container px-4 sm:px-6 md:px-8 mx-auto'>
           {/* Main Banner */}
+          
           <BannerLayout banners={banners} />
 
           <div className='flex gap-4 md:gap-6'>

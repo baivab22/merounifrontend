@@ -13,35 +13,37 @@ const BannerLayout = ({ banners = [] }) => {
   })
 
   return (
-    <div className='flex flex-col sm:flex-row gap-4 md:gap-3 lg:gap-3 justify-center sm:flex-nowrap xl:flex-nowrap'>
+    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4'>
       {displayBanners.map((banner, index) => (
         <div
           key={index}
-          className={`w-full sm:w-[350px] lg:w-[340px] xl:w-full rounded-md overflow-hidden relative ${!banner ? 'bg-gray-100' : ''}`}
-          style={{ height: '70px' }} // Fallback height to prevent layout shift
+          className={`w-full h-[50px] sm:h-[60px] lg:h-[70px] rounded-lg overflow-hidden relative ${!banner ? 'bg-gray-50 border-2 border-dashed border-gray-100' : 'bg-white shadow-sm ring-1 ring-black/5'
+            }`}
         >
           {banner ? (
             <a
               href={banner.website_url}
               target='_blank'
               rel='noopener noreferrer'
-              className='block relative w-full h-full'
+              className='block relative w-full h-full p-1'
             >
               <Image
                 src={banner.banner_image || '/images/meroUniLarge.gif'}
                 alt={`Banner ${banner.title}`}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 350px, 400px"
-                className='object-cover'
-                priority={index === 0} // Prioritize first banner for LCP
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className='object-contain transition-transform duration-300 hover:scale-[1.03]'
+                priority={index === 0}
               />
             </a>
           ) : (
-            <div className='group relative w-full h-full flex items-center justify-center text-gray-400 text-xs font-medium bg-gray-50 rounded-md overflow-hidden cursor-pointer'>
-              <span className='group-hover:opacity-0 transition-opacity duration-200'>Ads place available</span>
+            <div className='group relative w-full h-full flex flex-col items-center justify-center text-gray-400 p-2 cursor-pointer'>
+              <div className='text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-60 group-hover:opacity-0 transition-opacity duration-200'>
+                Ads placement
+              </div>
               <Link
                 href='/contact'
-                className='absolute inset-0 flex items-center justify-center bg-[#387cae]/90 text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200'
+                className='absolute inset-0 flex items-center justify-center bg-[#387cae]/90 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg'
               >
                 Contact Us
               </Link>
