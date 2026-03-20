@@ -104,10 +104,14 @@ function dispatch(action) {
 function toast({ ...props }) {
   const id = genId()
 
+  const variant = props.variant || 
+    (props.title === 'Success' ? 'success' : 
+     (props.title === 'Error' ? 'destructive' : undefined))
+
   const update = (props) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
-      toast: { ...props, id },
+      toast: { ...props, id, variant: props.variant || variant },
     })
   const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
 
@@ -115,6 +119,7 @@ function toast({ ...props }) {
     type: actionTypes.ADD_TOAST,
     toast: {
       ...props,
+      variant,
       id,
       open: true,
       onOpenChange: (open) => {
@@ -129,6 +134,10 @@ function toast({ ...props }) {
     update,
   }
 }
+
+toast.success = (props) => toast({ ...props, variant: "success" })
+toast.error = (props) => toast({ ...props, variant: "destructive" })
+toast.destructive = (props) => toast({ ...props, variant: "destructive" })
 
 function useToast() {
   const [state, setState] = React.useState(memoryState)
