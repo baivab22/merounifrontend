@@ -114,9 +114,9 @@ const RelatedColleges = ({ college }) => {
                 <div className='cursor-pointer p-2 sm:p-4 w-48 sm:w-56 md:w-64'>
                   <div className='flex justify-center border-2 rounded-2xl sm:rounded-3xl items-center overflow-hidden mb-2 p-2 sm:p-4'>
                     <img
-                      src={college.logo}
+                      src={college.logo || "/images/logo.png"}
                       alt={college.name}
-                      className='w-36 h-36 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover'
+                      className='w-36 h-36 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain'
                     />
                   </div>
                   <div className='px-2 sm:px-4 pb-2 sm:pb-4 flex flex-col'>
