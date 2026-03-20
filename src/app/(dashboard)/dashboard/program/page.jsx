@@ -187,7 +187,7 @@ export default function ProgramForm() {
     try {
       const response = await authFetch(`${process.env.baseUrl}/level?q=${query}`)
       const data = await response.json()
-      return data?.items  || []
+      return data?.items || []
     } catch (error) {
       console.error('Failed to fetch levels', error)
       return []
@@ -221,6 +221,19 @@ export default function ProgramForm() {
       header: 'Level',
       accessorKey: 'programlevel.title',
       cell: ({ row }) => row.original.programlevel?.title || '—'
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: ({ row }) => {
+        const status = row.original.status || 'published'
+        return (
+          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${status === 'draft' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
+            }`}>
+            {status}
+          </span>
+        )
+      }
     },
     {
       header: 'Actions',

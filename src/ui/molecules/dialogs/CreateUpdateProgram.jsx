@@ -70,6 +70,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             delivery_mode: 'On-campus',
             careers: '',
             exam_id: '',
+            status: 'published',
             syllabus: []
         }
     })
@@ -335,7 +336,10 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                 }))
             }
 
-            const response = await authFetch(`${process.env.baseUrl}/program`, {
+            const isDraftSave = data.status === 'draft'
+            const endpoint = isDraftSave ? `${process.env.baseUrl}/program/save-as-draft` : `${process.env.baseUrl}/program`
+
+            const response = await authFetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cleanedData)
@@ -794,19 +798,43 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     <Button type='button' variant='outline' onClick={onClose} disabled={submitting}>
                         Cancel
                     </Button>
-                    <Button
-                        type='submit'
-                        form="program-form"
-                        disabled={submitting || loading}
-                        className='bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[130px]'
-                    >
-                        {submitting ? (
-                            <span className='flex items-center gap-2'>
-                                <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
-                                Processing...
-                            </span>
-                        ) : slug ? 'Update Program' : 'Create Program'}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            type='button'
+                            variant='secondary'
+                            disabled={submitting || loading}
+                            onClick={async () => {
+                                const title = watch('title')
+                                if (!title) {
+                                    toast({
+                                        title: 'Required Field',
+                                        description: 'Please enter at least the program title to save as a draft',
+                                        variant: 'destructive'
+                                    })
+                                    return
+                                }
+                                setValue('status', 'draft')
+                                await handleSubmit(onSubmit)()
+                            }}
+                            className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        >
+                            Save as Draft
+                        </Button>
+                        <Button
+                            type='submit'
+                            form="program-form"
+                            disabled={submitting || loading}
+                            onClick={() => setValue('status', 'published')}
+                            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[120px]"
+                        >
+                            {submitting ? (
+                                <span className='flex items-center gap-2'>
+                                    <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
+                                    Saving...
+                                </span>
+                            ) : slug ? 'Update Program' : 'Publish Program'}
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
