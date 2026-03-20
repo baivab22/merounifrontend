@@ -1,7 +1,9 @@
 import React from 'react'
 import Image from 'next/image'
+import { stripHtml } from '@/lib/string.utils'
 
 const NewsCard = ({ image, title, description, date, slug }) => {
+    const cleanedDescription = stripHtml(description)
     return (
         <div className='bg-white rounded-md shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col group'>
             {/* Image */}
@@ -20,7 +22,7 @@ const NewsCard = ({ image, title, description, date, slug }) => {
                     {title}
                 </h3>
                 <p className='text-sm text-gray-600 mb-4 line-clamp-3 flex-1'>
-                    {description}
+                    {cleanedDescription}
                 </p>
                 <div className='flex items-center justify-between text-xs text-gray-500 mt-auto'>
                     <span>{date}</span>

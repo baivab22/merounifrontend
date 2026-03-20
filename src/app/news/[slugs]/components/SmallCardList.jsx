@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import RelatedCard from './RelatedCard'
 import { formatDate } from '@/utils/date.util'
+import { stripHtml } from '@/lib/string.utils'
 
 const SmallCardList = ({ news = [] }) => {
     const truncateString = (str, maxLength) => {
         if (!str) return ''
-        if (str.length > maxLength) {
-            return str.slice(0, maxLength) + '...'
+        const cleanedStr = stripHtml(str)
+        if (cleanedStr.length > maxLength) {
+            return cleanedStr.slice(0, maxLength) + '...'
         }
-        return str
+        return cleanedStr
     }
 
     return (

@@ -70,9 +70,9 @@ const NewsDetailsPage = ({ params }) => {
                         <Banner />
                     </div>
 
-                    <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
-                        {/* Left side: Content */}
-                        <div className='flex-1 min-w-0'>
+                    <div className='px-6 md:px-16 max-w-[900px] mx-auto mt-12'>
+                        {/* Main Content Area */}
+                        <div className='w-full'>
                             <Description news={news} />
 
                             {news?.pdf_file && (
@@ -102,15 +102,15 @@ const NewsDetailsPage = ({ params }) => {
                             )}
                         </div>
 
-                        {/* Right side: Sidebar with Banners/Ads */}
-                        <div className='lg:w-[320px] shrink-0'>
-                            <div className='sticky top-28'>
-                                <h3 className='text-sm font-semibold mb-6 text-gray-400 mt-2 uppercase tracking-widest text-[10px]'>
+                        {/* Sidebar content now at the bottom or as a centered section */}
+                        {banners.length > 0 && (
+                            <div className='mt-16 pt-16 border-t border-gray-100'>
+                                <h3 className='text-sm font-semibold mb-6 text-gray-400 uppercase tracking-widest text-[10px] text-center'>
                                     Sponsored Content
                                 </h3>
                                 <SideBanner banners={banners} />
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className='max-w-[1600px] mx-auto px-6 md:px-16'>
