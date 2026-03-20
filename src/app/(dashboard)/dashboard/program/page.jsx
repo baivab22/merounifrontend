@@ -67,7 +67,7 @@ export default function ProgramForm() {
   const fetchPrograms = async (page = 1, query = searchQuery) => {
     setTableLoading(true)
     try {
-      let url = `${process.env.baseUrl}/program?page=${page}`
+      let url = `${process.env.baseUrl}/program/admin/list?page=${page}`
       if (query) {
         url += `&q=${encodeURIComponent(query)}`
       }

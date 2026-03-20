@@ -111,6 +111,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
         setSelectedDegree(null)
         setSelectedScholarship(null)
         setSelectedExam(null)
+        setValue('status', 'published')
         setCurrentYear(1)
         setCurrentSemester(1)
         setCurrentCourse({ id: '', title: '' })
@@ -200,6 +201,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     }))
                 )
             }
+            setValue('status', program.status || 'published')
         } catch (error) {
             console.error('Error in handleEdit:', error)
             toast({
@@ -320,24 +322,30 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
     const onSubmit = async (data) => {
         try {
             setSubmitting(true)
-            const cleanedData = {
-                ...data,
-                learning_outcomes: learningOutcomes,
-                eligibility_criteria: eligibilityCriteria,
-                level_id: data.level_id ? Number(data.level_id) : undefined,
-                degree_id: data.degree_id ? Number(data.degree_id) : undefined,
-                credits: data.credits || undefined,
-                universities: selectedUniversities.map((u) => u.id),
-                syllabus: data.syllabus.map((item) => ({
-                    year: item.year,
-                    semester: item.semester,
-                    course_id: item.course_id,
-                    is_elective: item.is_elective || false
-                }))
-            }
+            const cleanedData = Object.fromEntries(
+                Object.entries({
+                    ...data,
+                    learning_outcomes: learningOutcomes || undefined,
+                    eligibility_criteria: eligibilityCriteria || undefined,
+                    level_id: data.level_id ? Number(data.level_id) : undefined,
+                    degree_id: data.degree_id ? Number(data.degree_id) : undefined,
+                    scholarship_id: data.scholarship_id ? Number(data.scholarship_id) : undefined,
+                    exam_id: data.exam_id ? Number(data.exam_id) : undefined,
+                    credits: data.credits || undefined,
+                    universities: selectedUniversities.map((u) => u.id),
+                    syllabus: data.syllabus.map((item) => ({
+                        year: item.year,
+                        semester: item.semester,
+                        course_id: item.course_id,
+                        is_elective: item.is_elective || false
+                    }))
+                }).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+            )
 
             const isDraftSave = data.status === 'draft'
             const endpoint = isDraftSave ? `${process.env.baseUrl}/program/save-as-draft` : `${process.env.baseUrl}/program`
+
+            isDraftSave ? cleanedData.status = 'draft' : cleanedData.status = 'published'
 
             const response = await authFetch(endpoint, {
                 method: 'POST',
