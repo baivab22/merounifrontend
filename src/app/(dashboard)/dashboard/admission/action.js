@@ -3,8 +3,6 @@ import { authFetch } from '@/app/utils/authFetch'
 export async function getAdmissions(page = 1, searchQuery = '') {
   try {
     const url = new URL(`${process.env.baseUrl}/college/admission`)
-    url.searchParams.append('page', page)
-    url.searchParams.append('limit', 10)
     if (searchQuery) url.searchParams.append('q', searchQuery)
 
     const response = await authFetch(url.toString(), {
@@ -138,6 +136,19 @@ export async function fetchPrograms(searchQuery = '') {
     return data.items
   } catch (error) {
     console.error('Error fetching programs:', error)
+    return []
+  }
+}
+
+export async function fetchProgramsByCollege(collegeId, searchQuery = '') {
+  if (!collegeId) return []
+  try {
+    const response = await authFetch(`${process.env.baseUrl}/college/${collegeId}/programs?limit=100&q=${encodeURIComponent(searchQuery)}`)
+    if (!response.ok) throw new Error('Failed to fetch programs for college')
+    const data = await response.json()
+    return data.items || []
+  } catch (error) {
+    console.error('Error fetching college programs:', error)
     return []
   }
 }

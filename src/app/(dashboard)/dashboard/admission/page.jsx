@@ -26,6 +26,7 @@ import {
   deleteAdmission,
   fetchColleges,
   fetchPrograms,
+  fetchProgramsByCollege,
   updateAdmissionOrder
 } from './action'
 import AdmissionViewModal from './AdmissionViewModal'
@@ -182,6 +183,18 @@ const CardSkeleton = ({ i = 0 }) => (
   </div>
 )
 
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+  <div className="flex items-center gap-3 mb-6">
+    <div className="w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20">
+      <Icon size={20} />
+    </div>
+    <div>
+      <h3 className="text-lg font-bold text-gray-900 leading-tight">{title}</h3>
+      {subtitle && <p className="text-xs text-gray-400 mt-0.5 font-medium">{subtitle}</p>}
+    </div>
+  </div>
+)
+
 export default function AdmissionManager() {
   const { toast } = useToast()
   const { setHeading } = usePageHeading()
@@ -211,15 +224,15 @@ export default function AdmissionManager() {
   const [isOpen, setIsOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
-  
+
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
   const [activeId, setActiveId] = useState(null)
-  
+
   const [deleteId, setDeleteId] = useState(null)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  
+
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewData, setViewData] = useState(null)
 
@@ -353,7 +366,7 @@ export default function AdmissionManager() {
         description: editing ? 'Admission updated successfully' : 'Admission created successfully'
       })
       handleCloseModal()
-      loadAdmissions(pagination.currentPage)
+      loadAdmissions(searchQuery, false)
     } catch (err) {
       toast({
         title: 'Error',
@@ -373,19 +386,19 @@ export default function AdmissionManager() {
     setSelectedCollege(
       item.collegeAdmissionCollege
         ? {
-            id: item.collegeAdmissionCollege.id,
-            name: item.collegeAdmissionCollege.name,
-            college_logo: item.collegeAdmissionCollege.college_logo
-          }
+          id: item.collegeAdmissionCollege.id,
+          name: item.collegeAdmissionCollege.name,
+          college_logo: item.collegeAdmissionCollege.college_logo
+        }
         : null
     )
 
     setSelectedProgram(
       item.program
         ? {
-            id: item.program.id,
-            title: item.program.title
-          }
+          id: item.program.id,
+          title: item.program.title
+        }
         : null
     )
 
@@ -413,7 +426,7 @@ export default function AdmissionManager() {
         title: 'Success',
         description: 'Admission deleted successfully'
       })
-      loadAdmissions(pagination.currentPage)
+      loadAdmissions(searchQuery, false)
     } catch (err) {
       toast({
         title: 'Error',
@@ -531,194 +544,199 @@ export default function AdmissionManager() {
         closeOnOutsideClick={false}
         className='max-w-5xl'
       >
-        <DialogContent className='max-w-5xl max-h-[90vh] flex flex-col p-0'>
-          <DialogHeader className='px-6 py-4 border-b'>
-            <DialogTitle className='text-lg font-semibold text-gray-900'>
-              {editing ? 'Edit Admission Detail' : 'Add Admission Detail'}
-            </DialogTitle>
-            <DialogClose onClick={handleCloseModal} />
-          </DialogHeader>
+        <DialogHeader className="bg-white border-b border-gray-100 p-6">
+          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <GraduationCap className="text-[#387cae]" size={28} />
+            {editing ? 'Edit Admission Detail' : 'Create Admission Record'}
+          </DialogTitle>
+          <DialogClose onClick={handleCloseModal} />
+        </DialogHeader>
 
-          <div className='flex-1 overflow-y-auto p-6'>
-            <form
-              id='admission-form'
-              onSubmit={handleSubmit(onSubmit)}
-              className='space-y-8'
-            >
-              {/* Basic Selection */}
-              <section className='space-y-4'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
-                  Basic Information
-                </h3>
+        <DialogContent className='p-0 bg-gray-50/50'>
+          <form
+            id='admission-form'
+            onSubmit={handleSubmit(onSubmit)}
+            className='flex flex-col max-h-[calc(100vh-160px)]'
+          >
+            <div className='flex-1 overflow-y-auto p-8'>
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                {/* Basic Selection Card */}
+                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Building2}
+                    title="Institution & Program"
+                    subtitle="Select the college and corresponding program"
+                  />
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  {/* College Selection */}
-                  <div className='space-y-2'>
-                    <Label required>College</Label>
-                    <SearchSelectCreate
-                      onSearch={fetchColleges}
-                      onSelect={(item) => {
-                        setSelectedCollege(item)
-                        setValue('college_id', item.id, {
-                          shouldValidate: true
-                        })
-                      }}
-                      onRemove={() => {
-                        setSelectedCollege(null)
-                        setValue('college_id', '', { shouldValidate: true })
-                      }}
-                      selectedItems={selectedCollege}
-                      placeholder='Search and select college...'
-                      isMulti={false}
-                      displayKey='name'
-                      renderItem={(item) => (
-                        <div className='flex items-center gap-3'>
-                          {item.college_logo ? (
-                            <img
-                              src={item.college_logo}
-                              alt={item.name}
-                              className='w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0'
-                            />
-                          ) : (
-                            <div className='w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-                              <span className='text-xs font-bold text-[#387cae]'>
-                                {item.name?.charAt(0)?.toUpperCase() || 'C'}
-                              </span>
-                            </div>
-                          )}
-                          <span className='text-sm font-medium text-gray-800'>
-                            {item.name}
-                          </span>
-                        </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                    {/* College Selection */}
+                    <div className='space-y-2.5'>
+                      <Label required className="text-gray-700 font-semibold mb-1.5 block text-sm">Target College</Label>
+                      <SearchSelectCreate
+                        onSearch={fetchColleges}
+                        onSelect={(item) => {
+                          setSelectedCollege(item)
+                          setValue('college_id', item.id, {
+                            shouldValidate: true
+                          })
+                          setSelectedProgram(null)
+                          setValue('program_id', '', { shouldValidate: true })
+                        }}
+                        onRemove={() => {
+                          setSelectedCollege(null)
+                          setValue('college_id', '', { shouldValidate: true })
+                          setSelectedProgram(null)
+                          setValue('program_id', '', { shouldValidate: true })
+                        }}
+                        selectedItems={selectedCollege}
+                        placeholder='Search and select college...'
+                        isMulti={false}
+                        displayKey='name'
+                        renderItem={(item) => (
+                          <div className='flex items-center gap-3'>
+                            {item.college_logo ? (
+                              <img
+                                src={item.college_logo}
+                                alt={item.name}
+                                className='w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0'
+                              />
+                            ) : (
+                              <div className='w-8 h-8 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                                <span className='text-xs font-bold text-[#387cae]'>
+                                  {item.name?.charAt(0)?.toUpperCase() || 'C'}
+                                </span>
+                              </div>
+                            )}
+                            <span className='text-sm font-medium text-gray-800 tracking-tight'>
+                              {item.name}
+                            </span>
+                          </div>
+                        )}
+                        renderSelected={(item) => (
+                          <div className='flex items-center gap-3'>
+                            {item.college_logo ? (
+                              <img
+                                src={item.college_logo}
+                                alt={item.name}
+                                className='w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0'
+                              />
+                            ) : (
+                              <div className='w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                                <span className='text-xs font-bold text-[#387cae]'>
+                                  {item.name?.charAt(0)?.toUpperCase() || 'C'}
+                                </span>
+                              </div>
+                            )}
+                            <span className='text-sm font-semibold text-gray-900 truncate'>
+                              {item.name}
+                            </span>
+                          </div>
+                        )}
+                      />
+                      <input type='hidden' {...register('college_id', { required: 'College is required' })} />
+                      {errors.college_id && (
+                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>{errors.college_id.message}</p>
                       )}
-                      renderSelected={(item) => (
-                        <div className='flex items-center gap-3'>
-                          {item.college_logo ? (
-                            <img
-                              src={item.college_logo}
-                              alt={item.name}
-                              className='w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0'
-                            />
-                          ) : (
-                            <div className='w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-                              <span className='text-xs font-bold text-[#387cae]'>
-                                {item.name?.charAt(0)?.toUpperCase() || 'C'}
-                              </span>
-                            </div>
-                          )}
-                          <span className='text-sm font-semibold text-gray-900 truncate'>
-                            {item.name}
-                          </span>
-                        </div>
-                      )}
-                    />
-                    <input
-                      type='hidden'
-                      {...register('college_id', {
-                        required: 'College is required'
-                      })}
-                    />
-                    {errors.college_id && (
-                      <p className='text-xs text-red-500'>
-                        {errors.college_id.message}
-                      </p>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Program Selection */}
-                  <div className='space-y-2'>
-                    <Label required>Program</Label>
-                    <SearchSelectCreate
-                      onSearch={fetchPrograms}
-                      onSelect={(item) => {
-                        setSelectedProgram(item)
-                        setValue('program_id', item.id, {
-                          shouldValidate: true
-                        })
-                      }}
-                      onRemove={() => {
-                        setSelectedProgram(null)
-                        setValue('program_id', '', { shouldValidate: true })
-                      }}
-                      selectedItems={selectedProgram}
-                      placeholder='Search and select program...'
-                      isMulti={false}
-                      displayKey='title'
-                    />
-                    <input
-                      type='hidden'
-                      {...register('program_id', {
-                        required: 'Program is required'
-                      })}
-                    />
-                    {errors.program_id && (
-                      <p className='text-xs text-red-500'>
-                        {errors.program_id.message}
-                      </p>
-                    )}
+                    {/* Program Selection */}
+                    <div className='space-y-2.5'>
+                      <Label required className="text-gray-700 font-semibold mb-1.5 block text-sm">Academic Program</Label>
+                      <SearchSelectCreate
+                        onSearch={(q) => fetchProgramsByCollege(selectedCollege?.id, q)}
+                        onSelect={(item) => {
+                          setSelectedProgram(item)
+                          setValue('program_id', item.id, {
+                            shouldValidate: true
+                          })
+                        }}
+                        onRemove={() => {
+                          setSelectedProgram(null)
+                          setValue('program_id', '', { shouldValidate: true })
+                        }}
+                        selectedItems={selectedProgram}
+                        placeholder={selectedCollege ? 'Search and select program...' : 'Select a college first'}
+                        isMulti={false}
+                        displayKey='title'
+                        isLoading={!selectedCollege}
+                      />
+                      <input type='hidden' {...register('program_id', { required: 'Program is required' })} />
+                      {errors.program_id && (
+                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>{errors.program_id.message}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </section>
 
-              {/* Details Sections */}
-              <section className='space-y-4'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
-                  Admission Process & Requirements
-                </h3>
+                {/* Details Sections Card */}
+                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Edit2}
+                    title="Admission Details"
+                    subtitle="Criteria, process, and fee information"
+                  />
 
-                <div className='grid grid-cols-1 gap-6'>
-                  <div className='space-y-2'>
-                    <Label>Eligibility Criteria</Label>
-                    <Textarea
-                      {...register('eligibility_criteria')}
-                      className='min-h-[100px]'
-                      placeholder='Describe the eligibility criteria for this course...'
-                    />
-                  </div>
+                  <div className='grid grid-cols-1 gap-8'>
+                    <div className='space-y-2.5'>
+                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Eligibility Criteria</Label>
+                      <Textarea
+                        {...register('eligibility_criteria')}
+                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                        placeholder='Describe who is eligible for this course...'
+                      />
+                    </div>
 
-                  <div className='space-y-2'>
-                    <Label>Admission Process</Label>
-                    <Textarea
-                      {...register('admission_process')}
-                      className='min-h-[100px]'
-                      placeholder='Step-by-step admission process...'
-                    />
-                  </div>
+                    <div className='space-y-2.5'>
+                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Admission Process</Label>
+                      <Textarea
+                        {...register('admission_process')}
+                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                        placeholder='Detail the step-by-step application and selection process...'
+                      />
+                    </div>
 
-                  <div className='space-y-2'>
-                    <Label>Fee Details</Label>
-                    <Textarea
-                      {...register('fee_details')}
-                      className='min-h-[100px]'
-                      placeholder='Detail the fee structure for this course...'
-                    />
-                  </div>
+                    <div className='space-y-2.5'>
+                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Fee Structure & Details</Label>
+                      <Textarea
+                        {...register('fee_details')}
+                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                        placeholder='Provide specific fee breakdown or important financial notes...'
+                      />
+                    </div>
 
-                  <div className='space-y-2'>
-                    <Label>Additional Description</Label>
-                    <TipTapEditor
-                      value={watch('description')}
-                      onChange={(html) => setValue('description', html)}
-                      placeholder='Enter additional details...'
-                    />
+                    <div className='space-y-3'>
+                      <Label className="text-gray-700 font-semibold mb-1 block text-sm">Comprehensive Description</Label>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <TipTapEditor
+                          value={watch('description')}
+                          onChange={(html) => setValue('description', html)}
+                          placeholder='Enter any additional admission related information...'
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </section>
-            </form>
-          </div>
+              </div>
+            </div>
 
-          <div className='sticky bottom-0 bg-white border-t p-4 px-6 flex justify-end gap-3'>
-            <Button type='button' variant='outline' onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button type='submit' form='admission-form' disabled={loading}>
-              {loading
-                ? 'Saving...'
-                : editing
-                  ? 'Update Admission'
-                  : 'Create Admission'}
-            </Button>
-          </div>
+            <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
+              <Button type='button' variant='outline' onClick={handleCloseModal}>
+                Discard Changes
+              </Button>
+              <Button
+                type='submit'
+                disabled={loading}
+                className="bg-[#387cae] hover:bg-[#2d658d] text-white min-w-[140px]"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Saving...
+                  </span>
+                ) : editing ? 'Update Record' : 'Create Admission'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
