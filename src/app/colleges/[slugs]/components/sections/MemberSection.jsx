@@ -20,16 +20,31 @@ const MemberSection = ({ validMembers }) => {
             className='flex-shrink-0 w-[85vw] md:w-auto group bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-xl transition-all duration-500 hover:border-[#30AD8F]/30 h-auto'
           >
             {/* Member Name */}
-            {member.name?.trim() && (
-              <div className='flex items-center gap-4 mb-6 pb-4 border-b border-gray-200'>
-                <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 group-hover:bg-[#30AD8F]/10 transition-colors border border-gray-100 shadow-sm'>
-                  <FaUser className='w-5 h-5 text-[#30AD8F]' />
+            {
+              member.image_url ? (
+                <div className='flex items-center gap-4 mb-6 pb-4 border-b border-gray-200'>
+                  <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 group-hover:bg-[#30AD8F]/10 transition-colors border border-gray-100 shadow-sm'>
+                    <img src={member.image_url} alt={member.name} className='w-full h-full object-cover rounded-2xl' width={48} height={48} />
+                  </div>
+                  {member.name?.trim() && (
+                    <h3 className='text-lg font-bold text-gray-900 leading-tight'>
+                      {member.name}
+                    </h3>
+                  )}
                 </div>
-                <h3 className='text-lg font-bold text-gray-900 leading-tight'>
-                  {member.name}
-                </h3>
-              </div>
-            )}
+              ) : (
+                <div className='flex items-center gap-4 mb-6 pb-4 border-b border-gray-200'>
+                  <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-white flex items-center justify-center p-2 group-hover:bg-[#30AD8F]/10 transition-colors border border-gray-100 shadow-sm'>
+                    <FaUser className='w-5 h-5 text-[#30AD8F]' />
+                  </div>
+                  {member.name?.trim() && (
+                    <h3 className='text-lg font-bold text-gray-900 leading-tight'>
+                      {member.name}
+                    </h3>
+                  )}
+                </div>
+              )
+            }
 
             <div className='space-y-4'>
               {/* Role */}
