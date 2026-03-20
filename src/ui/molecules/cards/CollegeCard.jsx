@@ -199,13 +199,34 @@ const CollegeCard = ({
       </div>
 
       <div className='p-6 flex flex-col flex-1'>
-        <h3 className='font-semibold text-base text-gray-800 mb-1 group-hover:text-[#0A70A7] transition-colors leading-tight line-clamp-2 min-h-[2.5rem]'>
+        <h3 className='font-bold text-sm text-gray-800 mb-1 group-hover:text-[#0A70A7] transition-colors leading-tight line-clamp-2 min-h-[2.2rem]'>
           {name}
         </h3>
         {universityName && (
-          <p className='text-sm text-gray-600 line-clamp-1 mb-2'>
+          <p className='text-xs text-gray-500 line-clamp-1 mb-2'>
             {universityName}
           </p>
+        )}
+
+        {collegeProp?.programs?.length > 0 && (
+          <div className='flex flex-wrap gap-1.5 mb-4'>
+            {collegeProp.programs.slice(0, 4).map((prog) => {
+              const abbreviation = prog.title.match(/\(([^)]+)\)/)?.[1] || prog.title
+              return (
+                <span
+                  key={prog.id}
+                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap'
+                >
+                  {abbreviation}
+                </span>
+              )
+            })}
+            {collegeProp.programs.length > 4 && (
+              <span className='text-[10px] text-gray-400 font-medium self-center ml-0.5'>
+                +{collegeProp.programs.length - 4} more
+              </span>
+            )}
+          </div>
         )}
 
         <div className='mt-auto pt-5 flex items-center gap-3 border-t border-gray-100'>

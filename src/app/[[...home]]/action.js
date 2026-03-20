@@ -26,7 +26,7 @@ export async function getItems(title) {
 export async function getFeaturedCollege() {
   try {
     const response = await fetch(
-      `${process.env.baseUrl}/college?pinned=true&page=1&limit=6`,
+      `${process.env.baseUrl}/college/featured?page=1&limit=6`,
       {
         method: 'GET',
         headers: {
@@ -36,12 +36,16 @@ export async function getFeaturedCollege() {
       }
     )
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch featured colleges')
-    }
+    // console.log(await response.json(),"YOYO");
+    
+
+    // if (!response.ok) {
+    //   throw new Error('Failed to fetch featured colleges')
+    // }
+    
     return await response.json()
   } catch (error) {
-    console.error('Error fetching colleges:', error)
+    console.log('Error fetching colleges:', error)
     throw error
   }
 }

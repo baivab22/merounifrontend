@@ -907,20 +907,8 @@ const CreateUpdateCollegeModal = ({
                                                         <Input
                                                             placeholder={`Phone Number ${index + 1}`}
                                                             className="h-11 pl-10 rounded-md border-gray-200 transition-all focus:ring-4 focus:ring-[#387cae]/5"
-                                                            {...register(`contacts[${index}]`, {
-                                                                pattern: {
-                                                                    value: /^[0-9]{10}$/,
-                                                                    message: 'Must be exactly 10 digits'
-                                                                }
-                                                            })}
-                                                            onInput={(e) => {
-                                                                e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
-                                                            }}
-                                                            maxLength={10}
+                                                            {...register(`contacts[${index}]`)}
                                                         />
-                                                        {errors?.contacts?.[index] && (
-                                                            <p className='text-[10px] font-semibold text-red-500 mt-1 ml-1'>{errors.contacts[index].message}</p>
-                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -1082,22 +1070,10 @@ const CreateUpdateCollegeModal = ({
                                                         <div>
                                                             <Label className='text-[10px] font-bold text-slate-500 uppercase mb-1 block'>Contact (Phone)</Label>
                                                             <Input
-                                                                {...register(`members[${index}].contact_number`, {
-                                                                    pattern: {
-                                                                        value: /^[0-9]{10}$/,
-                                                                        message: 'Contact must be exactly 10 digits'
-                                                                    }
-                                                                })}
-                                                                onInput={(e) => {
-                                                                    e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
-                                                                }}
-                                                                maxLength={10}
+                                                                {...register(`members[${index}].contact_number`)}
                                                                 placeholder='98XXXXXXXX'
                                                                 className='h-10 rounded-md'
                                                             />
-                                                            {errors?.members?.[index]?.contact_number && (
-                                                                <p className='text-[10px] font-semibold text-red-500 mt-1 ml-1'>{errors.members[index].contact_number.message}</p>
-                                                            )}
                                                         </div>
                                                         <div className='sm:col-span-3'>
                                                             <Label className='text-[10px] font-bold text-slate-500 uppercase mb-1 block'>Professional description</Label>
