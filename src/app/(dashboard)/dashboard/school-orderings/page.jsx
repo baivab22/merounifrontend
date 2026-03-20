@@ -52,11 +52,11 @@ const SortableItem = ({ school }) => {
                 >
                     <GripVertical className='w-5 h-5' />
                 </div>
-                {school.logo && (
+                {school.college_logo && (
                     <img
-                        src={school.logo}
+                        src={school.college_logo}
                         alt={school.name}
-                        className='w-16 h-16 object-contain rounded-md border bg-gray-50'
+                        className='w-16 h-16 object-contain rounded-md border'
                     />
                 )}
                 <div className='flex-1'>
@@ -76,9 +76,6 @@ const SortableItem = ({ school }) => {
                             }
                         </p>
                     )}
-                </div>
-                <div className='text-sm text-gray-500'>
-                    Order: {school.order_no_for_website ?? 'Not set'}
                 </div>
             </div>
         </div>
