@@ -16,14 +16,27 @@ const MemberSection = ({ validMembers }) => {
             className='group bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-md transition-all duration-300'
           >
             {/* Member Name */}
-            {member.name?.trim() && (
+            {member.image_url ? (
+              <div className='flex items-center gap-4 mb-5 pb-4 border-b border-gray-200'>
+                <div className='flex-shrink-0 w-12 h-12 rounded-2xl bg-white flex items-center justify-center transition-colors border border-gray-100'>
+                  <img src={member.image_url} alt={member.name} className='w-full h-full object-cover rounded-2xl' width={48} height={48} />
+                </div>
+                {member.name?.trim() && (
+                  <h3 className='text-base font-semibold text-gray-900 leading-tight'>
+                    {member.name}
+                  </h3>
+                )}
+              </div>
+            ) : (
               <div className='flex items-center gap-4 mb-5 pb-4 border-b border-gray-200'>
                 <div className='flex-shrink-0 w-12 h-12 rounded-2xl bg-white flex items-center justify-center group-hover:bg-[#30AD8F]/20 transition-colors border border-gray-100'>
                   <FaUser className='w-5 h-5 text-[#30AD8F]' />
                 </div>
-                <h3 className='text-base font-semibold text-gray-900 leading-tight'>
-                  {member.name}
-                </h3>
+                {member.name?.trim() && (
+                  <h3 className='text-base font-semibold text-gray-900 leading-tight'>
+                    {member.name}
+                  </h3>
+                )}
               </div>
             )}
 
