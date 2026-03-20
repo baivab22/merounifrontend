@@ -108,7 +108,7 @@ export default function CollegeForm() {
       const page = parseInt(searchParams.get('page')) || 1
       try {
         const statusParam = searchParams.get('status')
-        let url = `${process.env.baseUrl}/college?limit=10&page=${page}`
+        let url = `${process.env.baseUrl}/college/admin/list?limit=10&page=${page}`
         if (statusParam && statusParam !== 'all') {
           url += `&status=${statusParam}`
         }
@@ -232,7 +232,7 @@ export default function CollegeForm() {
       }
       router.push(`${pathname}?${params.toString()}`, { scroll: false })
 
-      let url = `${process.env.baseUrl}/college?limit=10&page=${page}`
+      let url = `${process.env.baseUrl}/college/admin/list?limit=10&page=${page}`
       if (status !== 'all') {
         url += `&status=${status}`
       }
@@ -263,7 +263,7 @@ export default function CollegeForm() {
 
   const handleSearch = async (query) => {
     try {
-      let url = `${process.env.baseUrl}/college?limit=10&page=1`
+      let url = `${process.env.baseUrl}/college/admin/list?limit=10&page=1`
       if (query) url += `&q=${query}`
       if (status !== 'all') url += `&status=${status}`
 
