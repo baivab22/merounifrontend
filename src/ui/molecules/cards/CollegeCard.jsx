@@ -40,8 +40,13 @@ const CollegeCard = ({
     universityNameProp
   const location =
     locationProp ??
-    (collegeProp?.address
-      ? [collegeProp.address.city, collegeProp.address.state, collegeProp.address.country]
+    (collegeProp?.collegeAddress || collegeProp?.address
+      ? [
+        collegeProp?.collegeAddress?.city || collegeProp?.address?.city,
+        collegeProp?.collegeAddress?.district || collegeProp?.address?.district,
+        collegeProp?.collegeAddress?.state || collegeProp?.address?.state,
+        collegeProp?.collegeAddress?.country || collegeProp?.address?.country
+      ]
         .filter(Boolean)
         .join(', ')
       : '')
@@ -188,14 +193,7 @@ const CollegeCard = ({
           })()}
         </div>
 
-        {location && (
-          <div className='absolute bottom-3 left-4 right-4 z-10'>
-            <div className='flex items-center gap-1 text-white/90 text-xs font-medium'>
-              <MapPin className='w-3 h-3 text-blue-400 flex-shrink-0' />
-              <span className='line-clamp-1'>{location}</span>
-            </div>
-          </div>
-        )}
+        {/* Removed redundant location overlay from image */}
       </div>
 
       <div className='p-6 flex flex-col flex-1'>
@@ -203,9 +201,16 @@ const CollegeCard = ({
           {name}
         </h3>
         {universityName && (
-          <p className='text-xs text-gray-500 line-clamp-1 mb-2'>
+          <p className='text-xs text-gray-500 line-clamp-1 mb-1'>
             {universityName}
           </p>
+        )}
+
+        {location && (
+          <div className='flex items-center gap-1.5 text-gray-500 text-[11px] mb-3'>
+            <MapPin className='w-3 h-3 text-gray-400 shrink-0' />
+            <span className='line-clamp-1'>{location}</span>
+          </div>
         )}
 
         {collegeProp?.programs?.length > 0 && (

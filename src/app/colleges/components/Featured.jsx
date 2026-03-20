@@ -43,7 +43,7 @@ const Featured = () => {
 
   const fetchFeaturedColleges = async () => {
     try {
-      const response = await 
+      const response = await  
       (true)
       setFeaturedColleges(response.items || [])
     } catch (error) {
