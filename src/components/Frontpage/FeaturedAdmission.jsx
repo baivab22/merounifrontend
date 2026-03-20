@@ -9,7 +9,10 @@ const FeaturedAdmission = async () => {
   try {
     const response = await getFeaturedCollege()
     data = response.items || []
+    console.log(data,"Data data");
+    
   } catch (error) {
+    console.log(error,"Thanks a lot on the top")
     console.error('Error fetching Top Picks colleges:', error)
   }
 

@@ -22,6 +22,7 @@ export default function ProgramForm() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const [selectedUniversity, setSelectedUniversity] = useState(null)
   const [selectedLevel, setSelectedLevel] = useState(null)
@@ -52,7 +53,7 @@ export default function ProgramForm() {
 
   useEffect(() => {
     fetchPrograms()
-  }, [selectedUniversity, selectedLevel])
+  }, [selectedUniversity, selectedLevel, statusFilter])
 
   useEffect(() => {
     return () => {
@@ -67,7 +68,7 @@ export default function ProgramForm() {
   const fetchPrograms = async (page = 1, query = searchQuery) => {
     setTableLoading(true)
     try {
-      let url = `${process.env.baseUrl}/program?page=${page}`
+      let url = `${process.env.baseUrl}/program/admin/list?page=${page}`
       if (query) {
         url += `&q=${encodeURIComponent(query)}`
       }
@@ -76,6 +77,9 @@ export default function ProgramForm() {
       }
       if (selectedLevel) {
         url += `&levelId=${selectedLevel.id}`
+      }
+      if (statusFilter && statusFilter !== 'all') {
+        url += `&status=${statusFilter}`
       }
       const response = await authFetch(url)
       const data = await response.json()
@@ -187,7 +191,7 @@ export default function ProgramForm() {
     try {
       const response = await authFetch(`${process.env.baseUrl}/level?q=${query}`)
       const data = await response.json()
-      return data?.items  || []
+      return data?.items || []
     } catch (error) {
       console.error('Failed to fetch levels', error)
       return []
@@ -221,6 +225,19 @@ export default function ProgramForm() {
       header: 'Level',
       accessorKey: 'programlevel.title',
       cell: ({ row }) => row.original.programlevel?.title || '—'
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: ({ row }) => {
+        const status = row.original.status || 'published'
+        return (
+          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${status === 'draft' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
+            }`}>
+            {status}
+          </span>
+        )
+      }
     },
     {
       header: 'Actions',
@@ -302,6 +319,19 @@ export default function ProgramForm() {
                 valueKey="id"
                 isMulti={false}
               />
+            </div>
+
+            {/* Status Filter */}
+            <div className="w-full sm:w-44">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white focus:outline-none focus:ring-2 focus:ring-[#387cae] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all font-medium text-gray-700"
+              >
+                <option value="all">All Status</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+              </select>
             </div>
           </div>
 

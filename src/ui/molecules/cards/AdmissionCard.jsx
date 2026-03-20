@@ -9,9 +9,7 @@ const AdmissionCard = ({ admis }) => {
   const collegeImage = college?.featured_img || '/images/logo.png'
 
   return (
-    <div
-      className='group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer flex flex-col h-full bg-gradient-to-br from-white to-gray-50/30'
-    >
+    <div className='group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer flex flex-col h-full bg-gradient-to-br from-white to-gray-50/30'>
       {/* Image Section */}
       <div className='relative aspect-[16/10] overflow-hidden bg-gray-100'>
         <img
@@ -28,45 +26,21 @@ const AdmissionCard = ({ admis }) => {
             Admission Open
           </span>
         </div>
-
-        {/* Bottom Info on Image */}
-        <div className='absolute bottom-3 left-4 right-4'>
-          <div className='flex items-center gap-1.5 text-white/90 text-[11px] font-semibold'>
-            <Building2 className='w-3.5 h-3.5 text-blue-400' />
-            <span className='line-clamp-1'>{college?.name}</span>
-          </div>
-        </div>
       </div>
 
-      {/* Content Section */}
-      <div className='p-6 flex flex-col flex-1'>
-        {/* Program Title */}
-        <Link href={`/admission/${admis.id}`}>
-          <h3 className='font-bold text-lg text-gray-900 mb-3 group-hover:text-[#0A70A7] transition-colors leading-tight line-clamp-2 min-h-[3.5rem] tracking-tight'>
+      <div className='p-5 flex flex-col flex-1 pb-4'>
+        {/* College Name as Heading */}
+        <h4 className='font-bold text-sm text-gray-800 mb-1 group-hover:text-[#0A70A7] transition-colors line-clamp-1 truncate'>
+          {college?.name}
+        </h4>
+
+        {/* Program Title as Sub-heading */}
+        <Link href={`/admission/${admis.id}`} className='mb-4 block transition-transform active:scale-95'>
+          <h3 className='font-bold text-xs text-gray-500 hover:text-[#0A70A7] transition-colors leading-tight line-clamp-1 flex items-center gap-1.5'>
+            <GraduationCap className='w-3.5 h-3.5 shrink-0' />
             {program?.title}
           </h3>
         </Link>
-
-        {/* Brief Details */}
-        <div className='space-y-3 mb-6'>
-          <div className='flex items-center gap-2.5 text-gray-600'>
-            <div className='p-1.5 bg-gray-100 rounded-md group-hover:bg-blue-50 transition-colors'>
-              <Wallet className='w-3.5 h-3.5 text-gray-500 group-hover:text-[#0A70A7]' />
-            </div>
-            <span className='text-xs font-semibold line-clamp-1'>
-              {admis.fee_details || 'Contact College'}
-            </span>
-          </div>
-
-          <div className='flex items-center gap-2.5 text-gray-600'>
-            <div className='p-1.5 bg-gray-100 rounded-md group-hover:bg-blue-50 transition-colors'>
-              <Info className='w-3.5 h-3.5 text-gray-500 group-hover:text-[#0A70A7]' />
-            </div>
-            <span className='text-xs font-semibold line-clamp-1'>
-              {admis.admission_process || 'Full Process Online'}
-            </span>
-          </div>
-        </div>
 
         {/* Action Buttons */}
         <div className='mt-auto pt-5 flex items-center gap-2 border-t border-gray-100'>
@@ -81,7 +55,7 @@ const AdmissionCard = ({ admis }) => {
           <Link
             href={`/colleges/${college?.slugs}`}
             className='p-2.5 bg-gray-50 text-gray-500 rounded-md hover:bg-gray-100 hover:text-[#0A70A7] transition-all border border-gray-100'
-            title="View College"
+            title='View College'
           >
             <Building2 className='w-4 h-4' />
           </Link>

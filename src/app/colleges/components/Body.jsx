@@ -42,7 +42,7 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
       colleges:
         data.items?.map((college) => ({
           name: college.name,
-          location: `${college.address?.city || ''}, ${college.address?.district || ''}`,
+          location: [college.collegeAddress?.city || college.address?.city, college.collegeAddress?.district || college.address?.district].filter(Boolean).join(', '),
           description: college.description,
           googleMapUrl: college.google_map_url,
           instituteType: college.institute_type,
@@ -92,7 +92,7 @@ const searchColleges = async (query) => {
       name: clz.name,
       slug: clz.slugs,
       collegeImage: clz.featured_img,
-      location: `${clz.address?.city || ''}, ${clz.address?.district || ''}`,
+      location: [clz.collegeAddress?.city || clz.address?.city, clz.collegeAddress?.district || clz.address?.district].filter(Boolean).join(', '),
       description: clz.description || 'No description available.',
       logo: clz.college_logo || 'default_logo.png',
       instituteType: clz.institute_type || 'Unknown'

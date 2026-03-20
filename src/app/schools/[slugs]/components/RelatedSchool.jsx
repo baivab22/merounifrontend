@@ -115,7 +115,7 @@ const RelatedSchools = ({ school }) => {
                   <div className='flex justify-center border-2 rounded-2xl sm:rounded-3xl items-center overflow-hidden mb-2 p-2 sm:p-4 bg-gray-50/50 aspect-square'>
                     {schoolItem.logo ? (
                       <img
-                        src={schoolItem.logo}
+                        src={schoolItem.logo || "/images/logo.png"}
                         alt={schoolItem.name}
                         className='w-full h-full object-contain'
                         onError={(e) => {

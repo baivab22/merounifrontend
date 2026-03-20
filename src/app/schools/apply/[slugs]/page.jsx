@@ -42,8 +42,8 @@ const ApplyPage = ({ params }) => {
     <main className='w-full'>
       <Header />
       <Navbar />
-      <ApplyImageSection college={college} loading={loading} />
-      <ApplyFormSection college={college} />
+      <ApplyImageSection college={school} loading={loading} />
+      <ApplyFormSection college={school} />
       <Footer />
     </main>
   )

@@ -1,12 +1,13 @@
+import React from 'react'
 import { useRouter } from 'next/navigation'
 import { FaArrowRight, FaGraduationCap } from 'react-icons/fa'
 
-const ApplyNow = ({ school }) => {
+const ApplyNow = ({ college }) => {
   const router = useRouter()
 
   const handleApplyClick = () => {
-    if (school?.slugs) {
-      router.push(`/schools/apply/${school.slugs}`)
+    if (college?.slugs) {
+      router.push(`/schools/apply/${college.slugs}`)
     }
   }
 
@@ -36,7 +37,7 @@ const ApplyNow = ({ school }) => {
 
           {/* Right side - Action buttons */}
           <div className='flex flex-col sm:flex-row gap-4 items-center'>
-            {school?.slugs && (
+            {college?.slugs && (
               <button
                 onClick={handleApplyClick}
                 className='group bg-white text-[#0870A8] px-6 md:px-8 py-3 md:py-4 rounded-md font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center'
@@ -46,9 +47,9 @@ const ApplyNow = ({ school }) => {
               </button>
             )}
 
-            {school?.website_url && (
+            {college?.website_url && (
               <a
-                href={school.website_url}
+                href={college.website_url}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='group bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white px-6 md:px-8 py-3 md:py-4 rounded-md font-medium text-sm hover:bg-white/20 hover:border-white/50 transition-all duration-300 flex items-center gap-2 min-w-[160px] justify-center'

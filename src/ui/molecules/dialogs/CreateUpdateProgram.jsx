@@ -70,6 +70,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             delivery_mode: 'On-campus',
             careers: '',
             exam_id: '',
+            status: 'published',
             syllabus: []
         }
     })
@@ -110,6 +111,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
         setSelectedDegree(null)
         setSelectedScholarship(null)
         setSelectedExam(null)
+        setValue('status', 'published')
         setCurrentYear(1)
         setCurrentSemester(1)
         setCurrentCourse({ id: '', title: '' })
@@ -199,6 +201,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     }))
                 )
             }
+            setValue('status', program.status || 'published')
         } catch (error) {
             console.error('Error in handleEdit:', error)
             toast({
@@ -319,23 +322,32 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
     const onSubmit = async (data) => {
         try {
             setSubmitting(true)
-            const cleanedData = {
-                ...data,
-                learning_outcomes: learningOutcomes,
-                eligibility_criteria: eligibilityCriteria,
-                level_id: data.level_id ? Number(data.level_id) : undefined,
-                degree_id: data.degree_id ? Number(data.degree_id) : undefined,
-                credits: data.credits || undefined,
-                universities: selectedUniversities.map((u) => u.id),
-                syllabus: data.syllabus.map((item) => ({
-                    year: item.year,
-                    semester: item.semester,
-                    course_id: item.course_id,
-                    is_elective: item.is_elective || false
-                }))
-            }
+            const cleanedData = Object.fromEntries(
+                Object.entries({
+                    ...data,
+                    learning_outcomes: learningOutcomes || undefined,
+                    eligibility_criteria: eligibilityCriteria || undefined,
+                    level_id: data.level_id ? Number(data.level_id) : undefined,
+                    degree_id: data.degree_id ? Number(data.degree_id) : undefined,
+                    scholarship_id: data.scholarship_id ? Number(data.scholarship_id) : undefined,
+                    exam_id: data.exam_id ? Number(data.exam_id) : undefined,
+                    credits: data.credits || undefined,
+                    universities: selectedUniversities.map((u) => u.id),
+                    syllabus: data.syllabus.map((item) => ({
+                        year: item.year,
+                        semester: item.semester,
+                        course_id: item.course_id,
+                        is_elective: item.is_elective || false
+                    }))
+                }).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+            )
 
-            const response = await authFetch(`${process.env.baseUrl}/program`, {
+            const isDraftSave = data.status === 'draft'
+            const endpoint = isDraftSave ? `${process.env.baseUrl}/program/save-as-draft` : `${process.env.baseUrl}/program`
+
+            isDraftSave ? cleanedData.status = 'draft' : cleanedData.status = 'published'
+
+            const response = await authFetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cleanedData)
@@ -794,19 +806,43 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     <Button type='button' variant='outline' onClick={onClose} disabled={submitting}>
                         Cancel
                     </Button>
-                    <Button
-                        type='submit'
-                        form="program-form"
-                        disabled={submitting || loading}
-                        className='bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[130px]'
-                    >
-                        {submitting ? (
-                            <span className='flex items-center gap-2'>
-                                <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
-                                Processing...
-                            </span>
-                        ) : slug ? 'Update Program' : 'Create Program'}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            type='button'
+                            variant='secondary'
+                            disabled={submitting || loading}
+                            onClick={async () => {
+                                const title = watch('title')
+                                if (!title) {
+                                    toast({
+                                        title: 'Required Field',
+                                        description: 'Please enter at least the program title to save as a draft',
+                                        variant: 'destructive'
+                                    })
+                                    return
+                                }
+                                setValue('status', 'draft')
+                                await handleSubmit(onSubmit)()
+                            }}
+                            className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        >
+                            Save as Draft
+                        </Button>
+                        <Button
+                            type='submit'
+                            form="program-form"
+                            disabled={submitting || loading}
+                            onClick={() => setValue('status', 'published')}
+                            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[120px]"
+                        >
+                            {submitting ? (
+                                <span className='flex items-center gap-2'>
+                                    <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
+                                    Saving...
+                                </span>
+                            ) : slug ? 'Update Program' : 'Publish Program'}
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
