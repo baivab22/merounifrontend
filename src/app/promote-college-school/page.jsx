@@ -8,7 +8,13 @@ import { CheckCircle } from 'lucide-react'
 
 export const metadata = {
     title: 'Promote Your College or School in Nepal – MeroUni Services',
-    description: 'Showcase your college or school on MeroUni. Explore promotional services designed to increase visibility, attract students, and grow your institution’s reach across Nepal.'
+    description: 'Showcase your college or school on MeroUni. Explore promotional services designed to increase visibility, attract students, and grow your institution’s reach across Nepal.',
+    openGraph: {
+        title: 'Promote Your College or School in Nepal – MeroUni Services',
+        description: 'Showcase your college or school on MeroUni. Increase visibility and attract students.',
+        url: 'https://merouni.com/promote-college-school',
+        type: 'website',
+    }
 }
 
 const PromoteCollegeSchool = () => {

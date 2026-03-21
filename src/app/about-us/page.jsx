@@ -1,11 +1,24 @@
-'use client'
-
 import React from 'react'
-import { THEME_BLUE } from '@/constants/constants'
+import Header from '@/components/Frontpage/Header'
+import Navbar from '@/components/Frontpage/Navbar'
+import Footer from '@/components/Frontpage/Footer'
+
+export const metadata = {
+    title: 'About Merouni – Nepal’s Leading Education Platform',
+    description: 'Learn about MeroUni’s mission to provide accurate and transparent information on colleges, courses, and educational opportunities across Nepal.',
+    openGraph: {
+        title: 'About Merouni – Nepal’s Leading Education Platform',
+        description: 'Your trusted companion in the journey of education in Nepal.',
+        url: 'https://merouni.com/about-us',
+        type: 'website',
+    }
+}
 
 const AboutUs = () => {
     return (
         <>
+            <Header />
+            <Navbar />
             <div className='min-h-screen bg-white'>
                 <div className='max-w-[850px] mx-auto px-6 py-16 lg:py-24'>
                     <div className="mb-12 border-b border-gray-100 pb-8">
@@ -41,6 +54,7 @@ const AboutUs = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </>
     )
 }
