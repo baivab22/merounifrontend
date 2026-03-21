@@ -6,8 +6,8 @@ import Body from './components/Body'
 import Featured from './components/Featured'
 
 export const metadata = {
-    title: 'All Programs - Merouni',
-    description: 'Explore all available programs across various universities and educational levels in Nepal.'
+    title: 'Explore Courses in Nepal – Search & Compare Programs | MeroUni',
+    description: 'Discover a wide range of course programs in Nepal with details on subjects, eligibility, fees, and college options. Find the right academic pathway for your future at MeroUni.'
 }
 
 const ProgramsPage = () => {

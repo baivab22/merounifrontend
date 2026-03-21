@@ -6,6 +6,11 @@ import Footer from '@/components/Frontpage/Footer'
 import { THEME_BLUE } from '@/constants/constants'
 import { CheckCircle } from 'lucide-react'
 
+export const metadata = {
+    title: 'Promote Your College or School in Nepal – MeroUni Services',
+    description: 'Showcase your college or school on MeroUni. Explore promotional services designed to increase visibility, attract students, and grow your institution’s reach across Nepal.'
+}
+
 const PromoteCollegeSchool = () => {
     return (
         <>

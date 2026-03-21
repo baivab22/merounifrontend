@@ -4,9 +4,6 @@ import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Building2, ClipboardCheck, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import Footer from '../../components/Frontpage/Footer'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
 import { useSearchParams } from 'next/navigation'
 import Pagination from '../blogs/components/Pagination'
 import {
@@ -166,9 +163,6 @@ export default function ExamsPage() {
 
   return (
     <>
-      <Header />
-      <Navbar />
-
       {!showSingle ? (
         <div className='min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6'>
           <div className='max-w-7xl mx-auto'>
@@ -455,8 +449,6 @@ export default function ExamsPage() {
       ) : (
         <SingleExam exam={singleExam} />
       )}
-
-      <Footer />
     </>
   )
 }

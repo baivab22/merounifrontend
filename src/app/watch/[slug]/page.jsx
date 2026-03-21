@@ -2,10 +2,55 @@ import { getVideoBySlug } from '../../(dashboard)/dashboard/videos/action'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { formatDate } from '@/utils/date.util'
+import { stripHtml } from '@/lib/string.utils'
+
+export async function generateMetadata({ params }) {
+    const { slug } = await params
+    try {
+        const video = await getVideoBySlug(slug)
+        if (!video) return { title: 'Video | MeroUni' }
+
+        const title = video.title
+        const description = stripHtml(video.description || '').substring(0, 160)
+        
+        // Extract video ID for thumbnail if possible, or use a default
+        let ogImage = null
+        if (video.yt_video_link) {
+            const videoId = video.yt_video_link.split('v=')[1]?.split('&')[0] || video.yt_video_link.split('/').pop()
+            if (videoId) ogImage = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        }
+
+        return {
+            title: `${title} | MeroUni`,
+            description: description,
+            openGraph: {
+                title: title,
+                description: description,
+                url: `https://merouni.com/watch/${slug}`,
+                images: ogImage ? [{ url: ogImage }] : [],
+                type: 'video.other',
+                siteName: 'MeroUni'
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: title,
+                description: description,
+                images: ogImage ? [ogImage] : [],
+            }
+        }
+    } catch (error) {
+        return { title: 'Video | MeroUni' }
+    }
+}
 
 export default async function VideoDetailPage({ params }) {
     const { slug } = await params
-    const video = await getVideoBySlug(slug)
+    let video = null
+    try {
+        video = await getVideoBySlug(slug)
+    } catch (error) {
+        console.error('Error fetching video:', error)
+    }
 
     if (!video) {
         return (

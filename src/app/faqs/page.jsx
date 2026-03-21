@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Header from '@/components/Frontpage/Header'
-import Navbar from '@/components/Frontpage/Navbar'
-import Footer from '@/components/Frontpage/Footer'
 import { THEME_BLUE } from '@/constants/constants'
 import { ChevronDown } from 'lucide-react'
 
@@ -35,8 +32,6 @@ const FAQs = () => {
 
     return (
         <>
-            <Header />
-            <Navbar />
             <div className='min-h-screen bg-white'>
                 <div className='max-w-[850px] mx-auto px-6 py-16 lg:py-24'>
                     <div className="mb-12 border-b border-gray-100 pb-8">
@@ -88,7 +83,6 @@ const FAQs = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </>
     )
 }

@@ -14,6 +14,32 @@ const FeaturedDegree = dynamic(() => import('@/components/Frontpage/FeaturedDegr
 const CollegeRankings = dynamic(() => import('@/components/Frontpage/CollegeRankings'))
 const Footer = dynamic(() => import('@/components/Frontpage/Footer'))
 
+export const metadata = {
+  title: 'Merouni: Search, Compare and Choose Your Best Education Path',
+  description: 'Explore Nepal’s colleges, courses, scholarships and education opportunities on Merouni. Compare options, track admissions & results, and get smart guidance to shape your academic and career journey.',
+  openGraph: {
+    title: 'Merouni: Search, Compare and Choose Your Best Education Path',
+    description: 'Explore Nepal’s colleges, courses, scholarships and education opportunities on Merouni. Compare options, track admissions & results, and get smart guidance to shape your academic and career journey.',
+    url: 'https://merouni.com',
+    type: 'website',
+    siteName: 'MeroUni',
+    images: [
+      {
+        url: 'https://merouni.com/images/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'MeroUni',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Merouni: Search, Compare and Choose Your Best Education Path',
+    description: 'Explore Nepal’s colleges, courses, scholarships and education opportunities on Merouni.',
+    images: ['https://merouni.com/images/logo.png'],
+  }
+}
+
 const Page = async () => {
   let banners = []
 

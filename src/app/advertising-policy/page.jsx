@@ -5,6 +5,11 @@ import Navbar from '@/components/Frontpage/Navbar'
 import Footer from '@/components/Frontpage/Footer'
 import { THEME_BLUE } from '@/constants/constants'
 
+export const metadata = {
+    title: 'Advertising Policy – Guidelines for Promoting on MeroUni',
+    description: 'Read MeroUni’s advertising policy and guidelines for colleges and schools. Learn the rules, terms, and standards for promoting your institution on our platform.'
+}
+
 const AdvertisingPolicy = () => {
     return (
         <>
