@@ -3,7 +3,6 @@ import Header from '@/components/Frontpage/Header'
 import Navbar from '@/components/Frontpage/Navbar'
 import Footer from '@/components/Frontpage/Footer'
 import Body from './components/Body'
-import Featured from './components/Featured'
 
 export const metadata = {
     title: 'Explore Courses in Nepal – Search & Compare Programs | MeroUni',
@@ -15,7 +14,6 @@ const ProgramsPage = () => {
         <>
             <Header />
             <Navbar />
-            <Featured />
             <Body />
             <Footer />
         </>

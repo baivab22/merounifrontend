@@ -37,7 +37,7 @@ const FilterSection = React.memo(function FilterSection({
     }, [defaultValue])
 
     return (
-        <div className='bg-white rounded-2xl p-6 border border-gray-100 shadow-sm'>
+        <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
             <div className='flex justify-between items-center mb-4'>
                 <h3 className='text-gray-900 font-bold text-xs uppercase tracking-widest'>
                     {title}
@@ -183,29 +183,32 @@ const Body = () => {
 
     return (
         <div className='max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 py-10 mb-20'>
-            {/* Search Header */}
-            <div className='flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-gray-100 pb-12 mb-10'>
-                <div className='flex-1 w-full space-y-6'>
-                    <div className='flex items-center gap-4'>
-                        <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Programs</h1>
-                        <span className='bg-[#0A70A7]/5 text-[#0A70A7] px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider'>
-                            {pagination.totalCount || '0'} Available
-                        </span>
-                    </div>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
+            <div className='flex-1 w-full space-y-6'>
+                <div className='flex items-center gap-4 mb-2'>
+                    <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Programs</h1>
+                    <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                        {pagination.totalCount || '0'} Available
+                    </span>
+                </div>
 
-                    <div className='relative w-full group'>
-                        <Search className='absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors shadow-sm' />
-                        <input
-                            type='text'
-                            value={searchInputValue}
-                            onChange={handleSearchChange}
-                            placeholder='Search programs, degrees or domains...'
-                            className='w-full pl-14 pr-16 py-4 bg-white border border-gray-200 rounded-2xl text-lg font-medium outline-none focus:ring-2 focus:ring-[#0A70A7]/20 focus:border-[#0A70A7] transition-all'
-                        />
+                <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+                    <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                    <input
+                        type='text'
+                        value={searchInputValue}
+                        onChange={handleSearchChange}
+                        placeholder='Search programs, degrees or domains...'
+                        className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                    />
+                    <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                        {loading && (
+                            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                        )}
                         {searchInputValue && (
                             <button
                                 onClick={() => { setSearchInputValue(''); updateURL({ q: '', page: 1 }) }}
-                                className='absolute right-5 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                                className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
                             >
                                 <X className='w-5 h-5' />
                             </button>
@@ -213,6 +216,7 @@ const Body = () => {
                     </div>
                 </div>
             </div>
+        </div>
 
             <div className='flex flex-col lg:flex-row gap-12'>
                 {/* Sidebar */}
