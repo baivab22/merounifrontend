@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
-import Footer from '../../components/Frontpage/Footer'
 import FeaturedBlogs from './components/FeaturedBlogs'
 import BlogFilters from './components/BlogFilters'
 import services from '@/app/apiService'
@@ -151,9 +148,6 @@ const Blogs = () => {
 
   return (
     <>
-      <Header />
-      <Navbar />
-
       <div className='min-h-screen bg-white pb-20'>
         {/* Filters Section */}
         <div className='max-w-[1600px] mx-auto px-4 sm:px-8 pt-8'>
@@ -175,8 +169,6 @@ const Blogs = () => {
           searchQuery={searchQuery}
         />
       </div>
-
-      <Footer />
     </>
   )
 }

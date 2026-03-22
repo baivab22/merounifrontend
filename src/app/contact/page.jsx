@@ -1,8 +1,5 @@
 'use client'
 
-import Footer from '../../components/Frontpage/Footer'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
 import ContactForm from './components/ContactForm'
 import ContactSidebar from './components/ContactSidebar'
 import ContactHeroSection from './components/HeroSection'
@@ -10,8 +7,6 @@ import ContactHeroSection from './components/HeroSection'
 export default function ContactPage() {
   return (
     <>
-      <Header />
-      <Navbar />
       <main className='w-full bg-[#fcfcfc]'>
         {/* Hero Section */}
         <ContactHeroSection />
@@ -33,7 +28,6 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   )
 }

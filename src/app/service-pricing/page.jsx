@@ -1,11 +1,20 @@
-'use client'
-
 import React from 'react'
 import Header from '@/components/Frontpage/Header'
 import Navbar from '@/components/Frontpage/Navbar'
 import Footer from '@/components/Frontpage/Footer'
 import { THEME_BLUE } from '@/constants/constants'
 import { Check } from 'lucide-react'
+
+export const metadata = {
+    title: 'Service Pricing – Promotional Solutions for Institutions | MeroUni',
+    description: 'Explore MeroUni’s promotional services for colleges and schools, including featured listings, banner ads, and news coverage across Nepal.',
+    openGraph: {
+        title: 'Service Pricing – Promotional Solutions | MeroUni',
+        description: 'Solutions designed to help institutions reach their target audience.',
+        url: 'https://merouni.com/service-pricing',
+        type: 'website',
+    }
+}
 
 const ServicePricing = () => {
     const services = [

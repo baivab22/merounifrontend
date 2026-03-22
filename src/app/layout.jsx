@@ -13,8 +13,36 @@ const poppins = Poppins({
 })
 
 export const metadata = {
-  title: 'Mero UNI ',
-  description: 'Mero Uni is a platform where you can find your dream education.'
+  title: {
+    default: 'MeroUni | Your Education Path',
+    template: '%s | MeroUni'
+  },
+  description: 'MeroUni is Nepal\'s leading education platform to search, compare, and choose colleges, courses, and scholarships.',
+  openGraph: {
+    title: 'MeroUni | Search, Compare and Choose Your Best Education Path',
+    description: 'Explore Nepal’s colleges, courses, scholarships and education opportunities on Merouni.',
+    url: 'https://merouni.com',
+    siteName: 'MeroUni',
+    images: [
+      {
+        url: 'https://merouni.com/images/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'MeroUni Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MeroUni | Your Education Path',
+    description: 'Explore Nepal’s colleges, courses, scholarships and education opportunities on Merouni.',
+    images: ['https://merouni.com/images/logo.png'],
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({ children }) {

@@ -1,10 +1,18 @@
-'use client'
-
 import React from 'react'
 import Header from '@/components/Frontpage/Header'
 import Navbar from '@/components/Frontpage/Navbar'
 import Footer from '@/components/Frontpage/Footer'
-import { THEME_BLUE } from '@/constants/constants'
+
+export const metadata = {
+    title: 'About Merouni – Nepal’s Leading Education Platform',
+    description: 'Learn about MeroUni’s mission to provide accurate and transparent information on colleges, courses, and educational opportunities across Nepal.',
+    openGraph: {
+        title: 'About Merouni – Nepal’s Leading Education Platform',
+        description: 'Your trusted companion in the journey of education in Nepal.',
+        url: 'https://merouni.com/about-us',
+        type: 'website',
+    }
+}
 
 const AboutUs = () => {
     return (

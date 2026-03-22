@@ -1,77 +1,54 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { FaArrowLeft } from 'react-icons/fa'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
-import Loading from '../../../ui/molecules/Loading'
 import { getUniversityBySlug } from '../actions'
-import RelatedUniversities from './components/RelatedUniversities'
-import ShareSection from '@/ui/organisms/common/ShareSection'
-import UpperSection from './components/upperSection'
+import UniversityContent from './Content'
+import { stripHtml } from '@/lib/string.utils'
+import { notFound } from 'next/navigation'
 
-const UniversityDetailPage = ({ params }) => {
-  // const { slugs } = params; // Use `slugs` directly from `params`
-  const [university, setUniversity] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    const fetchSlugAndCollegeDetails = async () => {
-      try {
-        const resolvedParams = await params
-        const slugs = resolvedParams.slugs
-        fetchUniversityDetails(slugs)
-      } catch (error) {
-        console.error('Error resolving params:', error)
-      }
-    }
-
-    fetchSlugAndCollegeDetails()
-  }, [])
-
-  const fetchUniversityDetails = async (slugs) => {
+export async function generateMetadata({ params }) {
+    const { slugs } = await params
     try {
-      const universityData = await getUniversityBySlug(slugs)
+        const universityData = await getUniversityBySlug(slugs)
 
-      if (universityData) {
-        setUniversity(universityData)
-      } else {
-        setError('No data found')
-      }
+        if (!universityData) return { title: 'University | MeroUni' }
+
+        const title = universityData.name
+        const description = stripHtml(universityData.description || '').substring(0, 160)
+        const ogImage = universityData.logo || universityData.image
+
+        return {
+            title: `${title} | MeroUni`,
+            description: description,
+            openGraph: {
+                title: title,
+                description: description,
+                url: `https://merouni.com/universities/${slugs}`,
+                images: ogImage ? [{ url: ogImage }] : [],
+                type: 'website',
+                siteName: 'MeroUni'
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: title,
+                description: description,
+                images: ogImage ? [ogImage] : [],
+            }
+        }
     } catch (error) {
-      console.error('Error fetching university details:', error)
-      setError(error.message)
-    } finally {
-      setLoading(false)
+        return { title: 'University | MeroUni' }
     }
-  }
-
-  if (loading) {
-    return <Loading />
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>
-  }
-
-  if (!university) {
-    return <div>No university data available.</div>
-  }
-
-  return (
-    <div className='bg-white min-h-screen'>
-      <Header />
-      <Navbar />
-
-      <UpperSection university={university} />
-      <RelatedUniversities university={university} />
-      <ShareSection title={university?.name} type='university' />
-      <Footer />
-    </div>
-  )
 }
 
-export default UniversityDetailPage
+export default async function UniversityPage({ params }) {
+    const { slugs } = await params
+    let university = null
+    try {
+        university = await getUniversityBySlug(slugs)
+    } catch (error) {
+        console.error('Error fetching university:', error)
+    }
+
+    if (!university) {
+        notFound()
+    }
+
+    return <UniversityContent university={university} />
+}

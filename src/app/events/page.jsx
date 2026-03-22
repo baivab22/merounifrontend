@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
-import Footer from '../../components/Frontpage/Footer'
 import EventFilters from './components/EventFilters'
 import FeaturedEvents from './components/FeaturedEvents'
 import Sponsors from './Sponsors'
@@ -136,9 +133,6 @@ const Events = () => {
 
     return (
         <>
-            <Header />
-            <Navbar />
-
             <div className='min-h-screen bg-white'>
                 {/* Filters Section */}
                 <div className='max-w-[1600px] mx-auto px-4 sm:px-8 pt-8'>
@@ -165,8 +159,6 @@ const Events = () => {
                     </div>
                 )}
             </div>
-
-            <Footer />
         </>
     )
 }

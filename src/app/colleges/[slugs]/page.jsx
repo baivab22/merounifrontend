@@ -1,105 +1,54 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
+import { getCollegeBySlug } from '../actions'
+import CollegeContent from './Content'
+import { stripHtml } from '@/lib/string.utils'
 import { notFound } from 'next/navigation'
-import Navbar from '../../../components/Frontpage/Navbar'
-import Header from '../../../components/Frontpage/Header'
-import Footer from '../../../components/Frontpage/Footer'
-import ImageSection from './components/upperSection'
-import CollegeOverview from './components/NewCollegeOverview'
-import ApplyNow from './components/applyNow'
-import RelatedColleges from './components/RelatedColleges'
-import Loading from '../../../ui/molecules/Loading'
 
-import ShareSection from '@/ui/organisms/common/ShareSection'
-
-const CollegeDetailPage = ({ params }) => {
-  const [college, setCollege] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    const fetchSlugAndCollegeDetails = async () => {
-      try {
-        const resolvedParams = await params
-        const slugs = resolvedParams.slugs
-        fetchCollegeDetails(slugs)
-      } catch (error) {
-        console.error('Error resolving params:', error)
-      }
-    }
-    fetchSlugAndCollegeDetails()
-  }, [])
-
-  const fetchCollegeDetails = async (slugs) => {
-    // Only run on client side
-    if (typeof window === 'undefined') return
-
+export async function generateMetadata({ params }) {
+    const { slugs } = await params
     try {
-      // Use direct fetch instead of server action to avoid SSR issues
-      const response = await fetch(
-        `${process.env.baseUrl}/college/${slugs}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          cache: 'no-store'
+        const college = await getCollegeBySlug(slugs)
+
+        if (!college) return { title: 'College | MeroUni' }
+
+        const title = college.name
+        const description = stripHtml(college.description || '').substring(0, 160)
+        const ogImage = college.featured_img
+
+        return {
+            title: `${title} | MeroUni`,
+            description: description,
+            openGraph: {
+                title: title,
+                description: description,
+                url: `https://merouni.com/colleges/${slugs}`,
+                images: ogImage ? [{ url: ogImage }] : [],
+                type: 'website',
+                siteName: 'MeroUni'
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: title,
+                description: description,
+                images: ogImage ? [ogImage] : [],
+            }
         }
-      )
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch college details: ${response.statusText}`
-        )
-      }
-
-      const data = await response.json()
-      const collegeData = data.item
-
-      if (collegeData) {
-        setCollege(collegeData)
-      } else {
-        setError('No data found')
-      }
     } catch (error) {
-      console.error('Error fetching college details:', error)
-      setError(error.message || 'Failed to load college details')
-    } finally {
-      setLoading(false)
+        return { title: 'College | MeroUni' }
     }
-  }
-
-  if (loading) {
-    return <Loading />
-  }
-
-  if (error) {
-    notFound()
-    return null
-  }
-
-  if (!college) {
-    notFound()
-    return null
-  }
-
-  return (
-    <div>
-      <Header />
-      <Navbar />
-      <ImageSection college={college} />
-      <div className='h-4 md:h-6' />
-      <CollegeOverview college={college} />
-      <ApplyNow college={college} />
-      <RelatedColleges college={college} />
-
-      {/* Share Section - Bottom Center */}
-      <ShareSection title={college?.name} type='college' />
-
-      <Footer />
-    </div>
-  )
 }
 
-export default CollegeDetailPage
+export default async function CollegePage({ params }) {
+    const { slugs } = await params
+    let college = null
+    try {
+        college = await getCollegeBySlug(slugs)
+    } catch (error) {
+        console.error('Error fetching college:', error)
+    }
+
+    if (!college) {
+        notFound()
+    }
+
+    return <CollegeContent college={college} />
+}

@@ -1,7 +1,4 @@
 'use client'
-import Footer from '@/components/Frontpage/Footer'
-import Header from '@/components/Frontpage/Header'
-import Navbar from '@/components/Frontpage/Navbar'
 import SkillCourseCard from '@/ui/molecules/cards/SkillCourseCard'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
@@ -55,9 +52,6 @@ const SkillCoursesPage = () => {
 
     return (
         <>
-            <Header />
-            <Navbar />
-
             <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
                 <div className='max-w-7xl mx-auto'>
                     {/* Header Section */}
@@ -184,10 +178,8 @@ const SkillCoursesPage = () => {
                     )}
                 </div>
             </div>
-
-            <Footer />
-        </>
-    )
+    </>
+  )
 }
 
 export default SkillCoursesPage

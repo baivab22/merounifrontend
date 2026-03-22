@@ -15,9 +15,6 @@ import {
   File
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
-import Footer from '../../components/Frontpage/Footer'
 import { getMaterialHierarchy, getMaterialsBySubject } from './action'
 
 // --- Components ---
@@ -291,8 +288,6 @@ const Materials = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      <Header />
-      <Navbar />
 
       <main className="max-w-4xl mx-auto px-6 pt-12 pb-24">
         {/* Page Header */}
@@ -351,8 +346,6 @@ const Materials = () => {
           </motion.div>
         )}
       </main>
-
-      <Footer />
     </div>
   )
 }

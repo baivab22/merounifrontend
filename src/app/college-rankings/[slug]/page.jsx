@@ -12,15 +12,34 @@ import { cn } from '@/app/lib/utils'
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
-  const rankingGroup = await getRankingsByDegreeSlug(decodedSlug)
+  try {
+    const rankingGroup = await getRankingsByDegreeSlug(decodedSlug)
 
-  if (!rankingGroup?.degree) {
-    return { title: 'Rankings Not Found' }
-  }
+    if (!rankingGroup?.degree) {
+      return { title: 'Rankings Not Found | MeroUni' }
+    }
 
-  return {
-    title: `Top ${rankingGroup.degree.title} Colleges in Nepal`,
-    description: rankingGroup.description || `Explore the best colleges offering ${rankingGroup.degree.title} in Nepal.`
+    const title = `Top ${rankingGroup.degree.title} Colleges in Nepal | MeroUni`
+    const description = rankingGroup.description || `Explore the best colleges offering ${rankingGroup.degree.title} in Nepal. Compare rankings, programs, and facilities.`
+
+    return {
+      title: title,
+      description: description,
+      openGraph: {
+        title: title,
+        description: description,
+        url: `https://merouni.com/college-rankings/${slug}`,
+        type: 'website',
+        siteName: 'MeroUni'
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: title,
+        description: description,
+      }
+    }
+  } catch (error) {
+    return { title: 'College Rankings | MeroUni' }
   }
 }
 

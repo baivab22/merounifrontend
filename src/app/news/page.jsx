@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import Header from '../../components/Frontpage/Header'
-import Navbar from '../../components/Frontpage/Navbar'
-import Footer from '../../components/Frontpage/Footer'
 import NewsFilters from './components/NewsFilters'
 import FeaturedNews from './components/FeaturedNews'
 import { getNews, getCategories } from '@/app/action'
@@ -102,9 +99,6 @@ const News = () => {
 
     return (
         <>
-            <Header />
-            <Navbar />
-
             <div className='min-h-screen bg-white pb-20'>
                 {/* Filters Section */}
                 <div className='max-w-[1600px] mx-auto px-4 sm:px-8 pt-8'>
@@ -125,9 +119,7 @@ const News = () => {
                     onPageChange={handlePageChange}
                 />
             </div>
-
-            <Footer />
-        </>
+    </>
     )
 }
 

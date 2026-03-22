@@ -1,15 +1,16 @@
 'use client'
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState } from 'react'
 import { getVacancy } from '../../actions'
 import VacancyContent from './VacancyContent'
 
-const ShowVacancyContent = ({ params }) => {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
+const ShowVacancyContent = ({ initialData, slugs }) => {
+  const [data, setData] = useState(initialData)
+  const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState(null)
-  const slugs = use(params).slugs
 
   useEffect(() => {
+    if (initialData) return
+
     const fetchdataDetails = async () => {
       try {
         setLoading(true)
@@ -23,7 +24,7 @@ const ShowVacancyContent = ({ params }) => {
     }
 
     fetchdataDetails()
-  }, [slugs])
+  }, [slugs, initialData])
 
   if (loading) {
     return (
