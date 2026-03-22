@@ -32,7 +32,7 @@ const BannerLayout = ({ banners = [] }) => {
                 alt={`Banner ${banner.title}`}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className='object-contain transition-transform duration-300 hover:scale-[1.03]'
+                className='object-cover'
                 priority={index === 0}
               />
             </a>

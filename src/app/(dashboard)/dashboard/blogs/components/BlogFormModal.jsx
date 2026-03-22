@@ -359,7 +359,7 @@ const BlogFormModal = ({
                                         </div>
 
                                         <div ref={descriptionRef}>
-                                            <Label required={true} htmlFor='description' className="text-gray-700 font-semibold mb-1.5 block text-sm">Short Description</Label>
+                                            <Label required={true} htmlFor='description' className="text-gray-700 font-semibold mb-1.5 block text-sm">Short SEO Description</Label>
                                             <Textarea
                                                 id='description'
                                                 placeholder='Enter a brief summary...'

@@ -49,7 +49,7 @@ const AdLayout = ({ banners = [], size = '', number = 1, loading = false }) => {
                   alt={`Banner ${banner.title}`}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className='object-contain transition-transform duration-300 hover:scale-[1.03]'
+                  className='object-cover'
                 />
               </a>
             ) : (

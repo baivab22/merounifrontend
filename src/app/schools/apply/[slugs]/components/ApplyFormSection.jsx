@@ -1,55 +1,77 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { THEME_BLUE } from '@/constants/constants'
+import ActionCard from '@/ui/molecules/ActionCard'
+import { Button } from '@/ui/shadcn/button'
+import { Input } from '@/ui/shadcn/input'
+import { Label } from '@/ui/shadcn/label'
+import { SearchableSelect } from '@/ui/shadcn/SearchableSelect'
+import { Textarea } from '@/ui/shadcn/textarea'
+import { authFetch } from '@/app/utils/authFetch'
+import { destr } from 'destr'
+import { CheckCircle2, GraduationCap } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
+import { FaSpinner as FaSpinnerIcon } from 'react-icons/fa'
+import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 
 const ApplyFormSection = ({ id, college }) => {
   const { toast } = useToast()
+  const user = useSelector((state) => state.user?.data)
+  const parsedRole =
+    typeof user?.role === 'string' ? destr(user.role) || {} : user?.role || {}
+  const isStudent = !!parsedRole.student
+  const isAgent = !!parsedRole.agent
+
+  // Check if user is logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('access_token')
+        : null
+    const hasUser = user !== null && user !== undefined
+    setIsLoggedIn(!!(token || hasUser))
+  }, [user])
+
   const [formData, setFormData] = useState({
     college_id: college?.id || 0,
     student_name: '',
     student_phone_no: '',
     student_email: '',
-    student_description: ''
+    student_description: '',
+    program_id: '',
   })
 
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      college_id: college?.id || 0
+      college_id: college?.id || 0,
+      ...(isLoggedIn &&
+        user && {
+        student_name:
+          `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
+        student_email: user?.email || '',
+        student_phone_no: user?.phoneNo || ''
+      })
     }))
-  }, [college?.id])
+  }, [college?.id, isLoggedIn, user])
 
   const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  // const [showDrop, setShowDrop] = useState(false)
-  // const [selectedCourse, setSelectedCourse] = useState('select course')
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const validateForm = () => {
     const newErrors = {}
-
-    if (!formData.student_name.trim()) {
-      newErrors.student_name = 'Student name is required'
-    }
-
-    if (
-      !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(
-        formData.student_email
-      )
-    ) {
-      newErrors.student_email = 'Invalid email format'
-    }
-
-    if (!/^\d{10}$/.test(formData.student_phone_no)) {
-      newErrors.student_phone_no = 'Phone number must be exactly 10 digits'
-    }
-
-    if (!formData.student_description.trim()) {
-      newErrors.student_description = 'Description is required'
-    }
-    if (!formData.course) {
-      newErrors.course = 'Please select a course'
-    }
+    if (!formData.student_name && !isLoggedIn)
+      newErrors.student_name = 'Name is required'
+    if (!formData.student_email && !isLoggedIn)
+      newErrors.student_email = 'Email is required'
+    if (!formData.student_phone_no && !isLoggedIn)
+      newErrors.student_phone_no = 'Phone number is required'
+    if (!formData.program_id) newErrors.program_id = 'Please select a program'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -57,16 +79,9 @@ const ApplyFormSection = ({ id, college }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }))
-
+    setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: ''
-      }))
+      setErrors((prev) => ({ ...prev, [name]: '' }))
     }
   }
 
@@ -74,122 +89,327 @@ const ApplyFormSection = ({ id, college }) => {
     e.preventDefault()
     if (!validateForm()) return
 
-    setLoading(true)
+    setIsSubmitting(true)
+
     try {
-      const response = await fetch(
+      const payload = isStudent
+        ? {
+          student_id: user?.id,
+          referral_type: 'self',
+          college_id: formData.college_id,
+          program_id: formData.program_id || null,
+          description: formData.student_description
+        }
+        : {
+          college_id: formData.college_id,
+          student_name: formData.student_name,
+          student_phone_no: formData.student_phone_no,
+          student_email: formData.student_email,
+          student_description: formData.student_description,
+          program_id: formData.program_id
+        }
+
+      const response = await authFetch(
         `${process.env.baseUrl}/referral/self-apply`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(payload)
         }
       )
 
       const data = await response.json()
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: data.message || 'School Applied Successfully'
-        })
-        setFormData({
-          college_id: '',
-          student_name: '',
-          student_phone_no: '',
-          student_email: '',
-          student_description: '',
-          course: ''
-        })
-      } else {
+
+      if (!response.ok) {
+        const errorMessage = data?.error || data?.message || 'Failed to submit application. Please try again.'
         toast({
           title: 'Error',
-          description: data?.message || 'Something went wrong. Please try again.',
+          description: errorMessage,
           variant: 'destructive'
         })
+        setIsSubmitting(false)
+        return
       }
+
+      if (data?.result?.hasApplied) {
+        toast({
+          title: 'Already Applied',
+          description: 'You have already applied for this school.',
+          variant: 'destructive'
+        })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Success
+      toast({
+        title: 'Success',
+        description: 'Application submitted successfully!'
+      })
+      setIsSubmitted(true)
+
+      // Reset form data
+      setFormData({
+        college_id: college?.id || 0,
+        student_name: isLoggedIn
+          ? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim()
+          : '',
+        student_phone_no: isLoggedIn ? user?.phoneNo || '' : '',
+        student_email: isLoggedIn ? user?.email || '' : '',
+        student_description: '',
+        program_id: ''
+      })
+      setIsSubmitting(false)
+
     } catch (error) {
+      console.error('Application submission error:', error)
       toast({
         title: 'Error',
-        description: 'Please upload all required files before submitting.',
+        description: error.message || 'Something went wrong. Please try again.',
         variant: 'destructive'
       })
-      return
-    } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
+  const courseOptions = useMemo(() => {
+    if (!college?.collegeCourses) return []
+    if (id) {
+      const option = college.collegeCourses.find(
+        (item) => String(item.id) === String(id)
+      )
+      if (option) {
+        setFormData((prev) => ({ ...prev, program_id: option?.id }))
+      }
+    }
+    return college.collegeCourses
+  }, [id, college?.collegeCourses])
 
+  if (isSubmitted) {
+    return (
+      <ActionCard
+        variant='centered'
+        icon={<CheckCircle2 className='w-full h-full' />}
+        title='Application Submitted!'
+        description={
+          <>
+            Thank you for applying. Your application has been successfully
+            submitted to{' '}
+            <span className='font-semibold text-gray-900'>
+              {college?.name || 'the school'}
+            </span>
+            . We will get back to you soon.
+          </>
+        }
+      >
+        <Link href='/'>
+          <Button
+            variant='outline'
+            className='min-w-[160px] h-12 text-base font-medium'
+          >
+            Go Home
+          </Button>
+        </Link>
+        <Link href='/dashboard'>
+          <Button
+            className='min-w-[160px] h-12 text-base font-medium text-white shadow-md transition-all hover:-translate-y-0.5'
+            style={{ backgroundColor: THEME_BLUE }}
+          >
+            Go to Dashboard
+          </Button>
+        </Link>
+      </ActionCard>
+    )
+  }
 
+  if (isLoggedIn && isAgent) {
+    return (
+      <ActionCard
+        icon={<GraduationCap className='w-full h-full' />}
+        title='Apply For School'
+        subtitle='Manage applications from your dashboard'
+        description='As an agent, please visit your dashboard to manage student applications and tracking.'
+      >
+        <Link href='/dashboard'>
+          <Button
+            className='min-w-[200px] h-12 text-lg font-semibold text-white transition-all'
+            style={{ backgroundColor: THEME_BLUE }}
+          >
+            Go to Dashboard
+          </Button>
+        </Link>
+      </ActionCard>
+    )
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <ActionCard
+        icon={<GraduationCap className='w-full h-full' />}
+        title='Apply For School'
+        subtitle='Login to begin your application'
+        description='Join our community to apply for top schools and track your progress in real-time.'
+      >
+        <Link href='/sign-in' className='w-full sm:w-auto'>
+          <Button
+            className='w-full min-w-[160px] h-12 text-lg font-semibold text-white transition-all'
+            style={{ backgroundColor: THEME_BLUE }}
+          >
+            Login Now
+          </Button>
+        </Link>
+        <Link href='/sign-in?mode=signup' className='w-full sm:w-auto'>
+          <Button
+            variant='outline'
+            className='w-full min-w-[160px] h-12 text-lg font-semibold border-2 transition-all hover:bg-opacity-10'
+            style={{ borderColor: THEME_BLUE, color: THEME_BLUE }}
+          >
+            Create Account
+          </Button>
+        </Link>
+      </ActionCard>
+    )
+  }
 
   return (
-    <div className='flex flex-col items-center bg-[#D9D9D9] bg-opacity-30 p-6'>
-      <h2 className='text-center text-2xl font-bold mb-6'>Apply For School</h2>
-      <div className='w-full max-w-3xl bg-white shadow-lg rounded-md p-6'>
-        <form className='space-y-4' onSubmit={handleSubmit}>
-          <div>
-            <input
-              type='text'
+    <div className='w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden'>
+      <div
+        className='p-8 text-white relative overflow-hidden'
+        style={{
+          background: `linear-gradient(to right, ${THEME_BLUE}, #2c7a9a)`
+        }}
+      >
+        <div className='relative z-10 text-left'>
+          <div className='flex items-center gap-4 mb-2'>
+            {college?.logo ? (
+              <div className='bg-white p-2 rounded-xl shadow-sm group-hover:shadow-md transition-shadow'>
+                <img
+                  src={college.logo}
+                  alt={college.name}
+                  className='w-12 h-12 object-contain'
+                />
+              </div>
+            ) : (
+              <GraduationCap className='w-10 h-10' />
+            )}
+            <div>
+              <h2 className='text-2xl md:text-3xl font-bold font-poppins tracking-tight'>
+                Apply to {college?.name || 'School'}
+              </h2>
+              <p className='text-white/80 text-sm md:text-base'>
+                Begin your academic journey today
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className='absolute -right-8 -bottom-8 opacity-10 pointer-events-none'>
+          <GraduationCap size={160} />
+        </div>
+      </div>
+
+      <div className='p-8 md:p-10'>
+        <form className='space-y-6' onSubmit={handleSubmit}>
+          <div className='space-y-2'>
+            <Label htmlFor='student_name'>Full Name</Label>
+            <Input
+              id='student_name'
               name='student_name'
               placeholder='Student Name'
               value={formData.student_name}
               onChange={handleChange}
-              className='w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+              disabled={isLoggedIn}
+              className={errors.student_name ? 'border-red-500' : ''}
             />
             {errors.student_name && (
-              <p className='text-red-500 text-sm'>{errors.student_name}</p>
+              <p className='text-red-500 text-xs'>{errors.student_name}</p>
             )}
           </div>
-          <div>
-            <input
-              type='email'
-              name='student_email'
-              placeholder='Student Email'
-              value={formData.student_email}
-              onChange={handleChange}
-              className='w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='space-y-2'>
+              <Label htmlFor='student_email'>Email Address</Label>
+              <Input
+                id='student_email'
+                type='email'
+                name='student_email'
+                placeholder='Email Address'
+                value={formData.student_email}
+                onChange={handleChange}
+                disabled={isLoggedIn}
+                className={errors.student_email ? 'border-red-500' : ''}
+              />
+              {errors.student_email && (
+                <p className='text-red-500 text-xs'>{errors.student_email}</p>
+              )}
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='student_phone_no'>Phone Number</Label>
+              <Input
+                id='student_phone_no'
+                type='tel'
+                name='student_phone_no'
+                placeholder='Phone Number'
+                value={formData.student_phone_no}
+                onChange={handleChange}
+                disabled={isLoggedIn}
+                className={errors.student_phone_no ? 'border-red-500' : ''}
+              />
+              {errors.student_phone_no && (
+                <p className='text-red-500 text-xs'>
+                  {errors.student_phone_no}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className='space-y-4'>
+            <SearchableSelect
+              id='course'
+              label='Select Program'
+              options={courseOptions}
+              displayKey={(opt) => opt?.program?.title || 'Unknown Program'}
+              value={formData.program_id}
+              onChange={(option) => {
+                setFormData((prev) => ({ ...prev, program_id: option?.id || '' }))
+                if (errors.program_id)
+                  setErrors((prev) => ({ ...prev, program_id: '' }))
+              }}
+              placeholder='Search and select a program'
+              error={errors.program_id}
+              required
             />
-            {errors.student_email && (
-              <p className='text-red-500 text-sm'>{errors.student_email}</p>
-            )}
           </div>
-          <div>
-            <input
-              type='tel'
-              name='student_phone_no'
-              placeholder='Student Phone Number'
-              value={formData.student_phone_no}
-              onChange={handleChange}
-              className='w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-            />
-            {errors.student_phone_no && (
-              <p className='text-red-500 text-sm'>{errors.student_phone_no}</p>
-            )}
-          </div>
-          <div>
-            <textarea
+
+          <div className='space-y-2'>
+            <Label htmlFor='student_description'>Description </Label>
+            <Textarea
+              id='student_description'
               name='student_description'
-              placeholder='Enter your description here..'
+              placeholder='Additional information...'
               value={formData.student_description}
               onChange={handleChange}
-              rows={3}
-              className='w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+              rows={4}
+              className='flex min-h-[80px] w-full rounded-md  resize-none'
             />
-            {errors.student_description && (
-              <p className='text-red-500 text-sm'>
-                {errors.student_description}
-              </p>
-            )}
           </div>
-          <button
+
+          <Button
             type='submit'
-            disabled={loading}
-            className={`w-full bg-[#011E3F] bg-opacity-80 text-white font-semibold py-2 rounded-md transition duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#011E3F]'
-              }`}
+            disabled={isSubmitting}
+            className='w-full py-6 text-lg font-semibold h-12 text-white transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed'
+            style={{ backgroundColor: THEME_BLUE }}
           >
-            {loading ? 'Submitting...' : 'Submit Application'}
-          </button>
+            {isSubmitting ? (
+              <div className='flex items-center gap-2'>
+                <FaSpinnerIcon className='animate-spin' />
+                <span>Submitting...</span>
+              </div>
+            ) : (
+              'Submit Application'
+            )}
+          </Button>
         </form>
       </div>
     </div>

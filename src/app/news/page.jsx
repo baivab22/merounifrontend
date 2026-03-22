@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import NewsFilters from './components/NewsFilters'
 import FeaturedNews from './components/FeaturedNews'
 import { getNews, getCategories } from '@/app/action'
+import SideBanner from '@/components/Frontpage/SideBanner'
 
 const News = () => {
     // State
     const [news, setNews] = useState([])
+    const [banners, setBanners] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -57,19 +59,26 @@ const News = () => {
         }
     }
 
-    const fetchCategories = async () => {
+    const fetchCategoriesAndBanners = async () => {
         try {
-            const response = await getCategories({ type: 'NEWS' })
-            if (response && response.items) {
-                setCategories([{ id: 'all', title: 'All' }, ...response.items])
+            const [categoriesResponse, bannerResponse] = await Promise.all([
+                getCategories({ type: 'NEWS' }).catch(() => null),
+                fetch(`${process.env.baseUrl}/banner?type=FRONT_PAGE&limit=10`).then(res => res.json()).catch(() => ({ items: [] }))
+            ])
+
+            if (categoriesResponse && categoriesResponse.items) {
+                setCategories([{ id: 'all', title: 'All' }, ...categoriesResponse.items])
+            }
+            if (bannerResponse && bannerResponse.items) {
+                setBanners(bannerResponse.items)
             }
         } catch (error) {
-            console.error('Error fetching categories:', error)
+            console.error('Error fetching categories and banners:', error)
         }
     }
 
     useEffect(() => {
-        fetchCategories()
+        fetchCategoriesAndBanners()
     }, [])
 
     // Effect: Debounced Search & Filter Change
@@ -112,14 +121,25 @@ const News = () => {
                 </div>
 
                 {/* News Grid Section */}
-                <FeaturedNews
-                    news={news}
-                    loading={loading}
-                    pagination={pagination}
-                    onPageChange={handlePageChange}
-                />
+                <div className='max-w-[1600px] mx-auto px-4 sm:px-8 mb-8'>
+                    <div className='flex flex-col gap-4 md:gap-6'>
+                        <div className='flex flex-col w-full -mx-4 sm:-mx-8 md:mx-0'>
+                            <FeaturedNews
+                                news={news}
+                                loading={loading}
+                                pagination={pagination}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
+
+                        {/* Mobile Side Banner */}
+                        <div className='w-full block md:hidden mt-4'>
+                            <SideBanner banners={banners} />
+                        </div>
+                    </div>
+                </div>
             </div>
-    </>
+        </>
     )
 }
 

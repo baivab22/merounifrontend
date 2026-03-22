@@ -77,3 +77,19 @@ export const fetchExamCategories = async () => {
     return []
   }
 }
+
+export const getExamBySlug = async (slugs) => {
+  try {
+    const response = await fetch(`${process.env.baseUrl}/exam/${slugs}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      next: { revalidate: 3600 }
+    })
+    if (!response.ok) throw new Error('Failed to fetch exam')
+    const data = await response.json()
+    return data.item || data
+  } catch (error) {
+    console.error('Error fetching exam by slug:', error)
+    return null
+  }
+}

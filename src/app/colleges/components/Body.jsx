@@ -400,7 +400,7 @@ const CollegeFinder = () => {
     [filterSearchInputs.instituteType])
 
   return (
-    <div className='max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 mb-20'>
+    <div className='max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 mb-5'>
       {/* Header & Search */}
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>

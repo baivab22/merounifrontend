@@ -25,16 +25,23 @@ const ProgramCard = ({ program }) => {
     )
   }
 
+  const universityName = program.university_programs?.[0]?.university?.fullname;
+
   return (
     <Link
       href={`/programs/${program.slugs}`}
       className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-xl transition-all duration-300 block'
     >
       <div className='flex flex-col h-full'>
-        <div className='flex items-start justify-between mb-4'>
-          <div className='p-2 rounded-xl bg-[#30AD8F]/5 text-[#30AD8F] group-hover:bg-[#30AD8F] group-hover:text-white transition-colors duration-300'>
+        <div className='flex items-center gap-3 mb-4'>
+          <div className='p-2 rounded-xl bg-[#30AD8F]/5 text-[#30AD8F] group-hover:bg-[#30AD8F] group-hover:text-white transition-colors duration-300 flex-shrink-0'>
             <GraduationCap className='w-5 h-5' />
           </div>
+          {universityName && (
+            <p className='text-[10px] font-bold text-[#30AD8F] uppercase tracking-wider line-clamp-1'>
+              {universityName}
+            </p>
+          )}
         </div>
         <h3 className='font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-[#30AD8F] transition-colors'>
           {program.title}
