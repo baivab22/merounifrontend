@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 const Fcollege = ({ name, description, image, slug }) => {
   return (
-    <Link href={`/colleges/${slug}`}>
+    <Link href={`/schools/${slug}`}>
       <div className='flex gap-1 flex-col min-h-28  border border-gray-300 rounded-md shadow-md w-[16em] md:w-80 lg:w-96 ml-10 overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8'>
         <div className='w-full h-28'>
           <img
@@ -20,7 +20,7 @@ const Fcollege = ({ name, description, image, slug }) => {
             {description.district}
           </div>
           <Link
-            href={`/colleges/apply/${slug}`}
+            href={`/schools/apply/${slug}`}
             className='mt-auto px-4 py-2 bg-[#387CAE] text-white rounded-md inline-block text-center transition duration-200 w-1/2'
           >
             Apply

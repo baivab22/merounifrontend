@@ -1,10 +1,25 @@
 import { formatDate } from '@/utils/date.util'
 import React from 'react'
+import { FaArrowLeft } from 'react-icons/fa'
+import Link from 'next/link'
 
 const Hero = ({ blog }) => {
   return (
-    <div className='relative px-6 md:px-16 pt-10 md:pt-24 max-w-[1600px] mx-auto'>
+    <div className='relative px-6 md:px-16 pt-10 md:pt-16 max-w-[1600px] mx-auto'>
       <div className='max-w-[900px] mx-auto'>
+        {/* Back to Blogs */}
+        <div className='mb-8'>
+          <Link
+            href='/blogs'
+            className='group inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-[#0A6FA7] transition-all'
+          >
+            <div className='p-1.5 rounded-full bg-gray-100 group-hover:bg-[#0A6FA7] group-hover:text-white transition-all'>
+              <FaArrowLeft className='w-3 h-3' />
+            </div>
+            <span>Back to Blogs</span>
+          </Link>
+        </div>
+
         {/* Category Badge & Date */}
         <div className='flex items-center gap-3 mb-6'>
           <span className='bg-blue-600 text-white text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold px-3 py-1 rounded-full'>

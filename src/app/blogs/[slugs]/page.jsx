@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
         if (!blog) return { title: 'Blog | MeroUni' }
 
         const title = blog.title
-        const description = stripHtml(blog.description || blog.content || '').substring(0, 160)
+        const description = blog.description || stripHtml(blog.content || '').substring(0, 160)
         const ogImage = blog.featured_image
 
         return {

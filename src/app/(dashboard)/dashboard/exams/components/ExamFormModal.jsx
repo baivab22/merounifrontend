@@ -229,6 +229,15 @@ const ExamFormModal = ({
                                             />
                                         </div>
 
+                                        <div>
+                                            <Label htmlFor='syllabus'>Syllabus (Optional)</Label>
+                                            <TipTapEditor
+                                                value={watch('syllabus')}
+                                                onChange={(val) => setValue('syllabus', val, { shouldValidate: true })}
+                                                placeholder='Detailed syllabus for the exam...'
+                                            />
+                                        </div>
+
                                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                                             <div>
                                                 <Label required={true}>Education Level</Label>

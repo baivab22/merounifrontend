@@ -6,20 +6,20 @@ export default function ContactInfoCard() {
     {
       icon: Phone,
       title: 'Phone',
-      value: '(+977) 9840747576',
-      description: 'Mon - Fri, 9am - 6pm'
+      value: '',
+      description: ''
     },
     {
       icon: Mail,
       title: 'Email',
-      value: 'info@merouni.com',
+      value: '',
       description: 'Online support 24/7'
     },
     {
       icon: MapPin,
       title: 'Office',
-      value: 'Putalisadak, Kathmandu',
-      description: 'Nepal - 44600'
+      value: '',
+      description: ''
     }
   ]
 

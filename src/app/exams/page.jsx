@@ -4,7 +4,7 @@ import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Building2, ClipboardCheck, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Pagination from '../blogs/components/Pagination'
 import {
   fetchFaculties,
@@ -14,7 +14,6 @@ import {
   fetchExamCategories
 } from './actions'
 import ExamShimmer from './components/ExamShimmer'
-import SingleExam from './components/SingleExam'
 import { formatDate } from '@/utils/date.util'
 
 const EXAM_TYPES = [
@@ -25,12 +24,11 @@ const EXAM_TYPES = [
 
 export default function ExamsPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   const [exams, setExams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showSingle, setShowSingle] = useState(false)
-  const [singleExam, setSingleExam] = useState([])
 
   // Search state
   const [search, setSearch] = useState('')
@@ -125,10 +123,8 @@ export default function ExamsPage() {
     setPagination((prev) => ({ ...prev, currentPage: 1 }))
   }, [debouncedSearch, selectedType, selectedLevel, selectedAffiliation, selectedFaculty, selectedCategory])
 
-  const handleClick = (id) => {
-    const single = exams.find((item) => item.id === id)
-    setSingleExam(single ? [single] : [])
-    setShowSingle(true)
+  const handleClick = (slugs) => {
+    router.push(`/exams/${slugs}`)
   }
 
   const handlePageChange = (page) => {
@@ -162,9 +158,7 @@ export default function ExamsPage() {
   }
 
   return (
-    <>
-      {!showSingle ? (
-        <div className='min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6'>
+    <div className='min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6'>
           <div className='max-w-7xl mx-auto'>
 
             {/* ── Page Header ── */}
@@ -426,7 +420,7 @@ export default function ExamsPage() {
                         )}
 
                         <button
-                          onClick={() => handleClick(exam?.id)}
+                          onClick={() => handleClick(exam?.slugs)}
                           className='w-full py-3 rounded-xl bg-[#0A6FA7] hover:bg-[#085e8a] text-white text-sm font-bold shadow-sm shadow-[#0A6FA7]/20 transition-all hover:scale-[1.01] active:scale-95'
                         >
                           View Exam Details
@@ -446,9 +440,5 @@ export default function ExamsPage() {
             )}
           </div>
         </div>
-      ) : (
-        <SingleExam exam={singleExam} />
-      )}
-    </>
   )
 }

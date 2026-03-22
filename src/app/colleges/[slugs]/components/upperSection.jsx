@@ -15,7 +15,7 @@ const ImageSection = ({ college }) => {
   const hasContacts =
     college?.collegeContacts && college.collegeContacts.length > 0
   const hasWebsite = !!college?.website_url
-  const hasUniversity = !!college?.university?.fullname
+  const hasUniversity = college?.universities && college.universities.length > 0
   let instituteLevels = []
   try {
     instituteLevels = JSON.parse(college?.institute_level || '[]')
@@ -110,7 +110,7 @@ const ImageSection = ({ college }) => {
                 Affiliation
               </p>
               <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
-                {college?.university?.fullname}
+                {college.universities.map(u => u.fullname).join(', ')}
               </p>
             </div>
           )}

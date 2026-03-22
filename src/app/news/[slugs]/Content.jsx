@@ -2,9 +2,6 @@
 import services from '@/app/apiService'
 import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import Banner from './components/Banner'
 import Description from './components/Description'
@@ -61,8 +58,6 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
 
     return (
         <div>
-            <Header />
-            <Navbar />
             {loading ? (
                 <Loading />
             ) : (
@@ -72,8 +67,8 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                         <Banner />
                     </div>
 
-                    <div className='px-6 md:px-16 max-w-[900px] mx-auto mt-12'>
-                        <div className='w-full'>
+                    <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
+                        <div className='flex-1 min-w-0'>
                             <Description news={news} />
 
                             {news?.pdf_file && (
@@ -104,9 +99,11 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                         </div>
 
                         {banners.length > 0 && (
-                            <div className='mt-16 pt-16 border-t border-gray-100'>
-                                <h3 className='text-sm font-semibold mb-6 text-gray-400 uppercase tracking-widest text-[10px] text-center'> Sponsored Content </h3>
-                                <SideBanner banners={banners} />
+                            <div className='lg:w-[320px] shrink-0'>
+                                <div className='sticky top-28'>
+                                    <h3 className='text-sm font-semibold mb-6'> Sponsored Content </h3>
+                                    <SideBanner banners={banners} />
+                                </div>
                             </div>
                         )}
                     </div>
@@ -122,7 +119,6 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                 </>
             )}
 
-            <Footer />
         </div>
     )
 }

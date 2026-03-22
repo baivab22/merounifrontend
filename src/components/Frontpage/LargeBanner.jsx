@@ -11,7 +11,7 @@ const LargeBanner = () => {
             alt='Advertisement'
             fill
             sizes="100vw"
-            className='object-contain transition-transform duration-500 hover:scale-[1.01]'
+            className='object-cover'
             priority
           />
         </div>

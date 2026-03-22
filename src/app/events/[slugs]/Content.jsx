@@ -1,8 +1,5 @@
 'use client'
 import Banner from '@/app/blogs/[slugs]/components/Banner'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import Cardlist from './components/Cardlist'
 import Description from './components/Description'
@@ -12,8 +9,6 @@ import ShareSection from '@/ui/organisms/common/ShareSection'
 const EventContent = ({ event, relatedEvents }) => {
   return (
     <div className='bg-white min-h-screen'>
-      <Header />
-      <Navbar />
       {!event ? (
         <div className='min-h-[60vh] flex items-center justify-center'>
           <Loading />
@@ -34,7 +29,6 @@ const EventContent = ({ event, relatedEvents }) => {
         </main>
       )}
 
-      <Footer />
     </div>
   )
 }

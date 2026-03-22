@@ -62,10 +62,7 @@ export default async function DegreePage({ params }) {
 
     return (
         <div>
-            <Header />
-            <Navbar />
             <DegreeContent degree={degree} error={error} slugs={slugs} />
-            <Footer />
         </div>
     )
 }

@@ -29,7 +29,7 @@ const SideBanner = ({ banners = [] }) => {
               alt={`Banner position ${banner.display_position}`}
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 20vw, 300px"
-              className='object-contain transition-transform duration-300 hover:scale-[1.05]'
+              className='object-cover'
             />
             <div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-300' />
           </a>

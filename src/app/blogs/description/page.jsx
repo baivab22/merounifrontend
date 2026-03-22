@@ -9,13 +9,9 @@ import Cardlist from './components/Cardlist'
 const page = () => {
   return (
     <div>
-      <Header />
-      <Navbar />
       <Hero />
       <Description />
       <Cardlist />
-
-      <Footer />
     </div>
   )
 }

@@ -143,13 +143,16 @@ export async function getUnexpiredEvents() {
   }
 }
 
-export const fetchEvents = async (page = 1, collegeId = '') => {
+export const fetchEvents = async (page = 1, collegeId = '', categoryId = '') => {
   try {
     const url = new URL(`${process.env.baseUrl}/event`)
     url.searchParams.append('page', page)
     url.searchParams.append('limit', 12)
     if (collegeId) {
       url.searchParams.append('college_id', collegeId)
+    }
+    if (categoryId) {
+      url.searchParams.append('category_id', categoryId)
     }
 
     const response = await fetch(url.toString(), {
@@ -170,12 +173,15 @@ export const fetchEvents = async (page = 1, collegeId = '') => {
   }
 }
 
-export const searchEvent = async (query, collegeId = '') => {
+export const searchEvent = async (query, collegeId = '', categoryId = '') => {
   try {
     const url = new URL(`${process.env.baseUrl}/event`)
     url.searchParams.append('q', query)
     if (collegeId) {
       url.searchParams.append('college_id', collegeId)
+    }
+    if (categoryId) {
+      url.searchParams.append('category_id', categoryId)
     }
 
     const response = await fetch(url.toString(), {
@@ -194,6 +200,20 @@ export const searchEvent = async (query, collegeId = '') => {
   } catch (error) {
     console.error('Error searching events:', error)
     throw error
+  }
+}
+
+export const fetchEventCategories = async () => {
+  try {
+    const response = await fetch(
+      `${process.env.baseUrl}/category?type=EVENT`
+    )
+    if (!response.ok) throw new Error('Failed to fetch event categories')
+    const data = await response.json()
+    return data.items || []
+  } catch (error) {
+    console.error('Error fetching event categories:', error)
+    return []
   }
 }
 

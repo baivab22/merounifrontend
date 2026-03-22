@@ -5,7 +5,7 @@ const ProgramSection = ({ college }) => {
   const route = useRouter()
 
   const handleApply = (id) => {
-    route.push(`/colleges/apply/${college.slugs}/${id}`)
+    route.push(`/schools/apply/${college.slugs}/${id}`)
   }
   const handleDegree = (degree) => {
     route.push(`/degree/${degree}`)

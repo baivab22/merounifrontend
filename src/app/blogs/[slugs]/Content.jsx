@@ -1,11 +1,8 @@
 'use client'
 import services from '@/app/apiService'
 import { useEffect, useState } from 'react'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
-import Banner from './components/Banner'
+import AdLayout from '../../../components/Frontpage/AdLayout'
 import Description from './components/Description'
 import Hero from './components/Hero'
 import SmallCardList from './components/SmallCardList'
@@ -51,15 +48,13 @@ const BlogContent = ({ initialBlog, slugs }) => {
 
   return (
     <div>
-      <Header />
-      <Navbar />
       {loading ? (
         <Loading />
       ) : (
         <>
           <Hero blog={blog} />
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
-            <Banner />
+            <AdLayout banners={banners} />
           </div>
 
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
@@ -112,7 +107,6 @@ const BlogContent = ({ initialBlog, slugs }) => {
         </>
       )}
 
-      <Footer />
     </div>
   )
 }
