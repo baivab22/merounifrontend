@@ -13,6 +13,7 @@ import { Calendar, ClipboardList, Coins, FileText, Info, Layers, Loader2, Settin
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { fetchCategory, fetchLevel, fetchUniversities } from '../actions'
+import MultiFileUpload from './MultiFileUpload'
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div className="flex items-center gap-3 mb-6">
@@ -69,7 +70,8 @@ const ExamFormModal = ({
             closing_date: '',
             category_id: '',
             meta_description: '',
-            status: 'published'
+            status: 'published',
+            conducted_by: ''
         }
     })
 
@@ -87,14 +89,18 @@ const ExamFormModal = ({
                         return ''
                     }
                 }
-
+ 
+                const universities = initialData.affiliation || initialData.universities || (initialData.university ? [initialData.university] : [])
+                
                 reset({
                     title: initialData.title || '',
                     description: initialData.description || '',
                     level_id: initialData.level_id || '',
-                    affiliation: initialData.affiliation || '',
-                    syllabus: initialData.syllabus || '',
-                    pastQuestion: initialData.pastQuestion || '',
+                    affiliation: Array.isArray(universities) 
+                        ? universities.map(u => typeof u === 'object' ? u.id : u).join(',') 
+                        : (universities ? universities.id : ''),
+                    syllabus: Array.isArray(initialData.syllabus) ? initialData.syllabus.join(',') : initialData.syllabus || '',
+                    pastQuestion: Array.isArray(initialData.pastQuestion) ? initialData.pastQuestion.join(',') : initialData.pastQuestion || '',
                     exam_type: initialData.exam_type || 'Written',
                     full_marks: initialData.full_marks || '',
                     pass_marks: initialData.pass_marks || '',
@@ -108,11 +114,12 @@ const ExamFormModal = ({
                     closing_date: formatInputDate(initialData.closing_date),
                     category_id: initialData.category_id || initialData.category?.id || '',
                     meta_description: initialData.meta_description || '',
-                    status: initialData.status || 'published'
+                    status: initialData.status || 'published',
+                    conducted_by: initialData.conducted_by || ''
                 })
 
                 setSelectedLevel(initialData.level || null)
-                setSelectedUniversity(initialData.university || null)
+                setSelectedUniversity(universities.length > 0 ? universities : null)
                 setSelectedCategory(initialData.category || null)
             } else {
                 reset({
@@ -135,7 +142,8 @@ const ExamFormModal = ({
                     closing_date: '',
                     category_id: '',
                     meta_description: '',
-                    status: 'published'
+                    status: 'published',
+                    conducted_by: ''
                 })
                 setSelectedLevel(null)
                 setSelectedUniversity(null)
@@ -166,6 +174,8 @@ const ExamFormModal = ({
         const formattedData = {
             ...data,
             author: author_id,
+            affiliation: data.affiliation ? data.affiliation.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) : [],
+            pastQuestion: data.pastQuestion ? data.pastQuestion.split(',').filter(Boolean) : [],
             full_marks: data.full_marks ? Number(data.full_marks) : undefined,
             pass_marks: data.pass_marks ? Number(data.pass_marks) : undefined,
             questions_count: data.questions_count ? Number(data.questions_count) : undefined,
@@ -230,11 +240,11 @@ const ExamFormModal = ({
                                         </div>
 
                                         <div>
-                                            <Label htmlFor='syllabus'>Syllabus (Optional)</Label>
-                                            <TipTapEditor
-                                                value={watch('syllabus')}
-                                                onChange={(val) => setValue('syllabus', val, { shouldValidate: true })}
-                                                placeholder='Detailed syllabus for the exam...'
+                                            <Label htmlFor='conducted_by'>Conducted By</Label>
+                                            <Input
+                                                id='conducted_by'
+                                                placeholder='e.g. Tribhuvan University, IOM...'
+                                                {...register('conducted_by')}
                                             />
                                         </div>
 
@@ -329,20 +339,25 @@ const ExamFormModal = ({
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Settings} title="Affiliation" subtitle="University or Board" />
                                     <div className='space-y-4'>
-                                        <Label>University / Board</Label>
+                                        <Label>University / Board (Multiple)</Label>
                                         <SearchSelectCreate
                                             onSearch={fetchUniversities}
                                             onSelect={(item) => {
-                                                setSelectedUniversity(item)
-                                                setValue('affiliation', item.id)
+                                                const current = Array.isArray(selectedUniversity) ? selectedUniversity : (selectedUniversity ? [selectedUniversity] : [])
+                                                if (current.some(i => i.id === item.id)) return
+                                                const updated = [...current, item]
+                                                setSelectedUniversity(updated)
+                                                setValue('affiliation', updated.map(i => i.id).join(','))
                                             }}
-                                            onRemove={() => {
-                                                setSelectedUniversity(null)
-                                                setValue('affiliation', '')
+                                            onRemove={(item) => {
+                                                const current = Array.isArray(selectedUniversity) ? selectedUniversity : []
+                                                const updated = current.filter(i => i.id !== item.id)
+                                                setSelectedUniversity(updated.length > 0 ? updated : null)
+                                                setValue('affiliation', updated.map(i => i.id).join(','))
                                             }}
                                             selectedItems={selectedUniversity}
-                                            placeholder="Select affiliation..."
-                                            isMulti={false}
+                                            placeholder="Select affiliations..."
+                                            isMulti={true}
                                             displayKey="fullname"
                                         />
                                         <input type="hidden" {...register('affiliation')} />
@@ -394,8 +409,14 @@ const ExamFormModal = ({
                                     <SectionHeader icon={FileText} title="SEO & Resources" subtitle="Links and meta information" />
                                     <div className='space-y-4'>
                                         <div>
-                                            <Label htmlFor='pastQuestion'>Past Question URL</Label>
-                                            <Input id='pastQuestion' {...register('pastQuestion')} placeholder='https://...' />
+                                            <MultiFileUpload
+                                                label="Past Question Documents"
+                                                initialFiles={watch('pastQuestion')}
+                                                onUploadComplete={(urls) => {
+                                                    setValue('pastQuestion', urls.join(','))
+                                                }}
+                                                authorId={author_id}
+                                            />
                                         </div>
                                         <div>
                                             <Label htmlFor='status'>Status</Label>
