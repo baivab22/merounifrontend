@@ -1,6 +1,5 @@
 'use client'
 
-import Pagination from '@/app/blogs/components/Pagination'
 import { authFetch } from '@/app/utils/authFetch'
 import SchoolCard from '@/ui/molecules/cards/SchoolCard'
 import EmptyState from '@/ui/shadcn/EmptyState'
