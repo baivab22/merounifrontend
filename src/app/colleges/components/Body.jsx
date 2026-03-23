@@ -18,11 +18,12 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
   try {
     const body = {
       page,
-      limit: 24,
+      limit: 1000,
       degree_ids: filters.degree_ids || [],
       districts: filters.districts || [],
       university_ids: filters.university_ids || [],
       types: (filters.types || []).map(t => t.toLowerCase()),
+      institute_level: ['college'],
       q: q || ''
     }
 
@@ -514,11 +515,6 @@ const CollegeFinder = () => {
             />
           )}
 
-          {colleges.length > 0 && pagination.totalPages > 1 && (
-            <div className='mt-16 flex justify-center'>
-              <Pagination pagination={pagination} onPageChange={(p) => updateURL({ page: p })} />
-            </div>
-          )}
         </div>
       </div>
     </div>

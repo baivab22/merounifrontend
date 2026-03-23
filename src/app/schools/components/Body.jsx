@@ -17,7 +17,8 @@ import { ShimmerCard } from './ShimmerCard'
 const buildSchoolQueryParams = (page, filters = {}, q = '') => {
   const params = new URLSearchParams()
   params.append('page', page.toString())
-  params.append('limit', '24')
+  params.append('limit', '1000')
+  params.append('institute_level', 'school')
 
   if (q) params.append('q', q)
 
@@ -426,15 +427,6 @@ const SchoolFinder = () => {
             />
           )}
 
-          {schools.length > 0 &&
-            pagination.totalPages > 1 && (
-              <div className='mt-16 flex justify-center'>
-                <Pagination
-                  pagination={pagination}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
         </div>
       </div>
 
