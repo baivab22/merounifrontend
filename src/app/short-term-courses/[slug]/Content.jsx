@@ -12,9 +12,6 @@ import {
     CheckCircle
 } from 'lucide-react'
 import Image from 'next/image'
-import Footer from '@/components/Frontpage/Footer'
-import Header from '@/components/Frontpage/Header'
-import Navbar from '@/components/Frontpage/Navbar'
 import { formatDate } from '@/utils/date.util'
 import { Button } from '@/ui/shadcn/button'
 import { THEME_BLUE } from '@/constants/constants'
@@ -25,8 +22,6 @@ const ShortTermCourseContent = ({ course, error }) => {
     if (error || !course) {
         return (
             <div className='bg-white min-h-screen'>
-                <Header />
-                <Navbar />
                 <div className='min-h-[60vh] flex items-center justify-center px-6 font-sans'>
                     <div className='text-center'>
                         <Award className='w-16 h-16 text-gray-200 mx-auto mb-4' />
@@ -40,7 +35,6 @@ const ShortTermCourseContent = ({ course, error }) => {
                         </Button>
                     </div>
                 </div>
-                <Footer />
             </div>
         )
     }
@@ -59,8 +53,6 @@ const ShortTermCourseContent = ({ course, error }) => {
 
     return (
         <div className='bg-white min-h-screen font-sans'>
-            <Header />
-            <Navbar />
 
             <main className='max-w-7xl mx-auto px-6 py-12'>
                 <div className='mb-8'>
@@ -134,15 +126,11 @@ const ShortTermCourseContent = ({ course, error }) => {
                                 {course.start_date && <DetailItem icon={<Calendar className='w-3 h-3' />} label="Starts From" value={formatDate(course.start_date)} />}
                                 {course.location && <DetailItem icon={<MapPin className='w-3 h-3' />} label="Location" value={course.location} />}
                                 {course.seats_available && <DetailItem icon={<Users className='w-3 h-3' />} label="Availability" value={`${course.seats_available} Seats Available`} />}
-                                <div className='pt-6'>
-                                    <Button className='w-full py-6 text-lg font-bold text-white shadow-md transition-all hover:-translate-y-0.5' style={{ backgroundColor: THEME_BLUE }} > Enroll Now </Button>
-                                </div>
                             </div>
                         </div>
                     </aside>
                 </div>
             </main>
-            <Footer />
         </div>
     )
 }

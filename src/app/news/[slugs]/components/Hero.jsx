@@ -5,16 +5,7 @@ const Hero = ({ news }) => {
     return (
         <div className='relative px-6 md:px-16 pt-10 md:pt-24 max-w-[1600px] mx-auto'>
             <div className='max-w-[900px] mx-auto'>
-                {/* Category Badge & Date */}
-                <div className='flex items-center gap-3 mb-6'>
-                    <span className='bg-[#387cae] text-white text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold px-3 py-1 rounded-full'>
-                        News
-                    </span>
-                    <span className='w-1.5 h-1.5 rounded-full bg-gray-300'></span>
-                    <span className='text-gray-500 text-xs md:text-sm font-medium'>
-                        {formatDate(news?.createdAt || news?.published_at)}
-                    </span>
-                </div>
+               
 
                 {/* Title */}
                 <h1 className='font-black text-3xl md:text-4xl lg:text-5xl text-gray-900 leading-[1.15] mb-8'>

@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, MapPin, Briefcase, Building2 } from 'lucide-react'
+import { Calendar, Clock, MapPin, Briefcase, Building2, ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
 
 const VacancyContent = ({ vacancy }) => {
   if (!vacancy) return null
@@ -42,6 +43,17 @@ const VacancyContent = ({ vacancy }) => {
 
   return (
     <div className='bg-white min-h-screen'>
+      {/* Back navigation */}
+      <div className='container mx-auto px-4 pt-4 md:pt-6'>
+        <Link
+          href='/vacancies'
+          className='inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-[#0A6FA7] transition-all group'
+        >
+          <ChevronLeft className='w-4 h-4 transition-transform group-hover:-translate-x-1' />
+          Back to Vacancies
+        </Link>
+      </div>
+
       {/* Hero Section */}
       <div className='relative w-full bg-gray-50 border-b border-gray-100 py-16 md:py-24 overflow-hidden'>
         <div className='container mx-auto px-4 relative z-10'>

@@ -2,27 +2,25 @@
 import services from '@/app/apiService'
 import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 import Loading from '../../../ui/molecules/Loading'
-import Banner from './components/Banner'
 import Description from './components/Description'
 import Hero from './components/Hero'
 import SmallCardList from './components/SmallCardList'
-import SideBanner from '../../../components/Frontpage/SideBanner'
 import ShareSection from '@/ui/organisms/common/ShareSection'
 
 const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
     const [news, setNews] = useState(initialNews)
     const [similarNews, setSimilarNews] = useState(initialSimilarNews || [])
-    const [banners, setBanners] = useState([])
     const [loading, setLoading] = useState(!initialNews)
     const [error, setError] = useState(null)
 
     useEffect(() => {
         const fetchAdditionalData = async () => {
             try {
-                const [newsData, bannerData] = await Promise.all([
-                    !initialNews ? services.news.getBySlug(slugs) : Promise.resolve(null),
-                    services.banner.getAll().catch(() => ({ items: [] }))
+                const [newsData] = await Promise.all([
+                    !initialNews ? services.news.getBySlug(slugs) : Promise.resolve(null)
                 ])
 
                 if (newsData) {
@@ -33,8 +31,6 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                      const fullData = await services.news.getBySlug(slugs)
                      setSimilarNews(fullData.similarNews || fullData.related || [])
                 }
-
-                setBanners(bannerData.items || [])
             } catch (err) {
                 if (err.message.includes('404')) {
                     setError('notfound')
@@ -62,10 +58,16 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                 <Loading />
             ) : (
                 <>
-                    <Hero news={news} />
-                    <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
-                        <Banner />
+                    <div className='max-w-[1600px] mx-auto px-6 md:px-16 pt-8'>
+                        <Link 
+                            href="/news" 
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-[#0A6FA7] transition-colors group"
+                        >
+                            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                            Back to News
+                        </Link>
                     </div>
+                    <Hero news={news} />
 
                     <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
                         <div className='flex-1 min-w-0'>
@@ -97,15 +99,6 @@ const NewsContent = ({ initialNews, initialSimilarNews, slugs }) => {
                                 </div>
                             )}
                         </div>
-
-                        {banners.length > 0 && (
-                            <div className='lg:w-[320px] shrink-0'>
-                                <div className='sticky top-28'>
-                                    <h3 className='text-sm font-semibold mb-6'> Sponsored Content </h3>
-                                    <SideBanner banners={banners} />
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <div className='max-w-[1600px] mx-auto px-6 md:px-16'>
