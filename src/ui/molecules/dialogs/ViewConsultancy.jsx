@@ -123,7 +123,7 @@ export default function ViewConsultancy({ isOpen, onClose, slug }) {
                                                 return (
                                                     <div className='space-y-1'>
                                                         {addr.street && <p>{addr.street}</p>}
-                                                        <p>{[addr.city, addr.state, addr.zip].filter(Boolean).join(', ')}</p>
+                                                        <p>{[addr.city, addr.district || addr.state, addr.zip].filter(Boolean).join(', ')}</p>
                                                     </div>
                                                 )
                                             })()}

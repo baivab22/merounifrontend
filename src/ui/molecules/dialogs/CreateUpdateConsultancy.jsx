@@ -13,6 +13,8 @@ import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
+import { DistrictLists } from '@/constants/district'
+import { CITIES } from '@/constants/City'
 
 export default function CreateUpdateConsultancy({
     isOpen,
@@ -40,7 +42,7 @@ export default function CreateUpdateConsultancy({
             address: {
                 street: '',
                 city: '',
-                state: '',
+                district: '',
                 zip: ''
             },
             description: '',
@@ -98,11 +100,17 @@ export default function CreateUpdateConsultancy({
             setValue('destination', destinationForForm.map(d => d.title))
 
             // Parse Address
-            let address = { street: '', city: '', state: '', zip: '' }
+            let address = { street: '', city: '', district: '', zip: '' }
             try {
-                address = typeof consultancy.address === 'string'
+                const parsedAddress = typeof consultancy.address === 'string'
                     ? JSON.parse(consultancy.address)
-                    : consultancy.address || address
+                    : consultancy.address || {}
+                
+                // Handle migration from state to district
+                if (parsedAddress.state && !parsedAddress.district) {
+                    parsedAddress.district = parsedAddress.state
+                }
+                address = { ...address, ...parsedAddress }
             } catch (e) { }
 
             // Parse Contact
@@ -356,11 +364,33 @@ export default function CreateUpdateConsultancy({
                                     <div className='grid grid-cols-2 gap-4'>
                                         <div className='space-y-2'>
                                             <Label>City</Label>
-                                            <Input {...register('address.city')} placeholder='City' />
+                                            <select
+                                                id='address.city'
+                                                {...register('address.city')}
+                                                className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
+                                            >
+                                                <option value=''>Select City</option>
+                                                {CITIES.map((city) => (
+                                                    <option key={city} value={city}>
+                                                        {city}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                         <div className='space-y-2'>
-                                            <Label>State</Label>
-                                            <Input {...register('address.state')} placeholder='State' />
+                                            <Label>District</Label>
+                                            <select
+                                                id='address.district'
+                                                {...register('address.district')}
+                                                className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
+                                            >
+                                                <option value=''>Select District</option>
+                                                {DistrictLists.map((district) => (
+                                                    <option key={district} value={district}>
+                                                        {district}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                     <div className='space-y-2'>

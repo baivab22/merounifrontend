@@ -13,6 +13,8 @@ import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 import { fetchCourses } from './actions'
+import { DistrictLists } from '@/constants/district'
+import { CITIES } from '@/constants/City'
 
 export default function EditConsultancyPage() {
   const { toast } = useToast()
@@ -40,7 +42,7 @@ export default function EditConsultancyPage() {
       address: {
         street: '',
         city: '',
-        state: '',
+        district: '',
         zip: ''
       },
       description: '',
@@ -120,9 +122,15 @@ export default function EditConsultancyPage() {
           typeof consultancy.address === 'string'
             ? JSON.parse(consultancy.address)
             : consultancy.address || {}
+        
+        // Handle migration from state to district
+        if (address.state && !address.district) {
+           address.district = address.state
+        }
+        
         setValue('address', address)
       } catch (e) {
-        setValue('address', { street: '', city: '', state: '', zip: '' })
+        setValue('address', { street: '', city: '', district: '', zip: '' })
       }
 
       // Parse Contact
@@ -381,19 +389,33 @@ export default function EditConsultancyPage() {
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='address.city'>City</Label>
-                <Input
+                <select
                   id='address.city'
                   {...register('address.city')}
-                  placeholder='City'
-                />
+                  className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
+                >
+                  <option value=''>Select City</option>
+                  {CITIES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='address.state'>State</Label>
-                <Input
-                  id='address.state'
-                  {...register('address.state')}
-                  placeholder='State'
-                />
+                <Label htmlFor='address.district'>District</Label>
+                <select
+                  id='address.district'
+                  {...register('address.district')}
+                  className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
+                >
+                  <option value=''>Select District</option>
+                  {DistrictLists.map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='address.zip'>ZIP</Label>
