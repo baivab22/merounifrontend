@@ -58,9 +58,9 @@ const ShareSection = ({ title, type = 'blog' }) => {
         <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className='fixed bottom-10 left-0 right-0 z-50 flex justify-center pointer-events-none'
+            className='md:fixed md:bottom-10 left-0 right-0 z-50 flex justify-center md:pointer-events-none mb-10 md:mb-0'
         >
-            <div className='pointer-events-auto bg-white/95 backdrop-blur-xl border border-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] py-3 px-8 rounded-full flex items-center gap-6'>
+            <div className='md:pointer-events-auto bg-white/95 backdrop-blur-xl border border-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] py-3 px-6 md:px-8 rounded-2xl md:rounded-full flex items-center gap-4 md:gap-6 mx-4 md:mx-0'>
                 <div className='flex items-center gap-2 border-r border-gray-100 pr-4 mr-2'>
                     <div className='p-1.5 bg-[#387cae]/10 text-[#387cae] rounded-lg'>
                         <Share2 className='w-4 h-4' />

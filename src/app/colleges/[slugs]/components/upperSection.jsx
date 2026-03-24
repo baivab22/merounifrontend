@@ -99,31 +99,29 @@ const ImageSection = ({ college }) => {
 
       {/* College details section */}
       <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full'>
-        <div className='flex flex-wrap justify-center gap-4 md:gap-5'>
+        <div className='grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-4 md:gap-5'>
           {/* Affiliation */}
           {hasUniversity && (
-            <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-              <div className='bg-blue-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
-                <FaUniversity className='w-5 h-5 sm:w-6 sm:h-6 text-[#0A6FA7]' />
+            <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+              <div className='bg-blue-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
+                <FaUniversity className='w-4 h-4 sm:w-6 sm:h-6 text-[#0A6FA7]' />
               </div>
-              <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+              <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
                 Affiliation
               </p>
-              <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
+              <p className='text-[11px] sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-bold sm:font-medium'>
                 {college.universities.map(u => u.fullname).join(', ')}
               </p>
             </div>
           )}
 
-
-
           {/* Contact */}
           {hasContacts && (
-            <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-              <div className='bg-orange-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-orange-100 transition-colors duration-300'>
-                <FaPhoneAlt className='w-4 h-4 sm:w-5 sm:h-5 text-orange-500' />
+            <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+              <div className='bg-orange-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-orange-100 transition-colors duration-300'>
+                <FaPhoneAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-orange-500' />
               </div>
-              <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+              <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
                 Contact
               </p>
               <div className='space-y-0.5 sm:space-y-1'>
@@ -131,7 +129,7 @@ const ImageSection = ({ college }) => {
                   <a
                     key={index}
                     href={`tel:${contact?.contact_number || ''}`}
-                    className='block text-xs sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors font-medium'
+                    className='block text-[11px] sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors font-bold sm:font-medium'
                   >
                     {contact?.contact_number}
                   </a>
@@ -142,18 +140,18 @@ const ImageSection = ({ college }) => {
 
           {/* Website */}
           {hasWebsite && (
-            <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-              <div className='bg-sky-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-sky-100 transition-colors duration-300'>
-                <BsGlobe2 className='w-4 h-4 sm:w-5 sm:h-5 text-sky-500' />
+            <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+              <div className='bg-sky-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-sky-100 transition-colors duration-300'>
+                <BsGlobe2 className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-sky-500' />
               </div>
-              <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+              <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
                 Website
               </p>
               <a
                 href={college.website_url}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='text-xs sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all font-medium'
+                className='text-[11px] sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all font-bold sm:font-medium'
               >
                 {college.website_url.replace(/^https?:\/\/(www\.)?/, '')}
               </a>
@@ -162,14 +160,14 @@ const ImageSection = ({ college }) => {
 
           {/* New Address Card */}
           {hasAddress && (
-            <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-              <div className='bg-emerald-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#30AD8F]/10 transition-colors duration-300'>
-                <FaMapMarkerAlt className='w-4 h-4 sm:w-5 sm:h-5 text-[#30AD8F]' />
+            <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+              <div className='bg-emerald-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#30AD8F]/10 transition-colors duration-300'>
+                <FaMapMarkerAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#30AD8F]' />
               </div>
-              <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+              <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
                 Address
               </p>
-              <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
+              <p className='text-[11px] sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-bold sm:font-medium'>
                 {[
                   college?.collegeAddress?.city,
                   college?.collegeAddress?.country

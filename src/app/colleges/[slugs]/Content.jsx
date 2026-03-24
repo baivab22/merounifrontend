@@ -8,12 +8,14 @@ import CollegeOverview from './components/NewCollegeOverview'
 import ApplyNow from './components/applyNow'
 import RelatedColleges from './components/RelatedColleges'
 import ShareSection from '@/ui/organisms/common/ShareSection'
+import MobileCategoryPills from './components/MobileCategoryPills'
 
 const CollegeContent = ({ college }) => {
   return (
     <div>
       <Header />
       <Navbar />
+      <MobileCategoryPills college={college} />
       <ImageSection college={college} />
       <div className='h-4 md:h-6' />
       <CollegeOverview college={college} />

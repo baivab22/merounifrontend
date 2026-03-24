@@ -164,7 +164,7 @@ const Navbar = () => {
         className={`
           w-full bg-white border-b border-gray-200/80
           transition-all duration-300
-          ${isScrolled ? 'fixed top-[80px] left-0 right-0 z-[60] shadow-sm' : 'sticky top-[80px] z-[60]'}
+          ${isScrolled ? 'fixed top-[72px] md:top-[80px] left-0 right-0 z-[60] shadow-sm' : 'sticky top-[72px] md:top-[80px] z-[60]'}
         `}
       >
         <div className='max-w-7xl mx-auto px-4 sm:px-6'>
@@ -205,7 +205,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile: full-width search bar only (menu icon is in header) */}
-          <div className='w-full md:hidden px-4 py-3'>
+          <div className='w-full md:hidden px-4 pb-3 pt-0'>
             <button
               type='button'
               onClick={openSearch}

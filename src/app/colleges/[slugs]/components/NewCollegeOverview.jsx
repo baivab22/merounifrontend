@@ -134,7 +134,7 @@ const CollegeOverview = ({ college }) => {
             <p className='text-sm font-medium text-gray-900'>Contents</p>
           </div>
 
-          <ul className='flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto no-scrollbar pb-4 md:pb-0 border-b md:border-b-0 border-gray-100'>
+          <ul className='hidden md:flex md:flex-col gap-2 md:overflow-y-auto no-scrollbar md:pb-0'>
             {visibleSections?.map((section, index) => (
               <li
                 key={index}
@@ -160,7 +160,7 @@ const CollegeOverview = ({ college }) => {
       {/* Main Content */}
       <div className='flex-1 w-full space-y-16 md:space-y-24'>
         {visibleSections?.map((section, index) => (
-          <div key={index} className='scroll-mt-32' ref={section.ref}>
+          <div key={index} id={section.name.toLowerCase()} className='scroll-mt-32' ref={section.ref}>
             {section.component}
           </div>
         ))}
