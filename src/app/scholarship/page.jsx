@@ -1,17 +1,16 @@
 'use client'
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, Award, X } from 'lucide-react'
-import { debounce } from 'lodash'
-import EmptyState from '@/ui/shadcn/EmptyState'
-import {
-  fetchScholarships,
-  fetchCategories
-} from './actions'
-import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import ScholarshipCard from '@/ui/molecules/cards/ScholarshipCard'
+import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
+import EmptyState from '@/ui/shadcn/EmptyState'
+import { debounce } from 'lodash'
+import { Award, Search, X } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import Pagination from '../blogs/components/Pagination'
+import {
+  fetchCategories,
+  fetchScholarships
+} from './actions'
 
 // Memoized FilterSection matching Degree/Admission Page
 const FilterSection = React.memo(function FilterSection({

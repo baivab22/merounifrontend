@@ -55,7 +55,7 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
   const address = typeof consultancy.address === 'string'
     ? JSON.parse(consultancy.address)
     : consultancy.address || {}
-  const location = [address.city, address.state].filter(Boolean).join(', ')
+  const location = [address.city, address.district || address.state].filter(Boolean).join(', ')
 
   let destinations = consultancy.destination
   if (typeof destinations === 'string') {
