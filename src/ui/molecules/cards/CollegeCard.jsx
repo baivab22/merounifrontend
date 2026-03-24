@@ -215,7 +215,7 @@ const CollegeCard = ({
         {collegeProp?.degrees?.length > 0 && (
           <div className='flex flex-wrap gap-1.5 mb-4'>
             {collegeProp.degrees.slice(0, 4).map((prog) => {
-              const abbreviation = prog.title.match(/\(([^)]+)\)/)?.[1] || prog.title
+              const abbreviation = prog.short_name || prog.shortName || (prog.title.match(/\(([^)]+)\)/)?.[1] || prog.title)
               return (
                 <Link
                   key={prog.id}
