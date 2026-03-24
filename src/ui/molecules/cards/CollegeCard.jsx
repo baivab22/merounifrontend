@@ -30,7 +30,7 @@ const CollegeCard = ({
   const name = collegeProp?.name ?? nameProp
   const slug = collegeProp?.slugs ?? collegeProp?.slug ?? slugProp
   const collegeId = collegeProp?.id ?? collegeIdProp
-  const collegeImage =
+  const collegeImage = 
     collegeProp?.featured_img ?? collegeProp?.featuredImg ?? collegeImageProp
   const instituteType =
     collegeProp?.institute_type ?? collegeProp?.instituteType ?? instituteTypeProp
@@ -212,22 +212,24 @@ const CollegeCard = ({
           </p>
         )}
 
-        {collegeProp?.programs?.length > 0 && (
+        {collegeProp?.degrees?.length > 0 && (
           <div className='flex flex-wrap gap-1.5 mb-4'>
-            {collegeProp.programs.slice(0, 4).map((prog) => {
+            {collegeProp.degrees.slice(0, 4).map((prog) => {
               const abbreviation = prog.title.match(/\(([^)]+)\)/)?.[1] || prog.title
               return (
-                <span
+                <Link
                   key={prog.id}
-                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap'
+                  href={`/degree/${prog.slugs || prog.slug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-all duration-200'
                 >
                   {abbreviation}
-                </span>
+                </Link>
               )
             })}
-            {collegeProp.programs.length > 4 && (
+            {collegeProp.degrees.length > 4 && (
               <span className='text-[10px] text-gray-400 font-medium self-center ml-0.5'>
-                +{collegeProp.programs.length - 4} more
+                +{collegeProp.degrees.length - 4} more
               </span>
             )}
           </div>

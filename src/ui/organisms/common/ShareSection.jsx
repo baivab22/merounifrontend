@@ -8,35 +8,38 @@ import { useToast } from '@/hooks/use-toast'
 const ShareSection = ({ title, type = 'blog' }) => {
     const { toast } = useToast()
     const [copied, setCopied] = useState(false)
-    const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
     const shareTitle = `Check out ${title || 'this ' + type} on our platform`
-
+ 
     const handleFacebookShare = () => {
+        const url = window.location.href
         window.open(
-            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(shareTitle)}`,
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(shareTitle)}`,
             'facebook-share-dialog',
             'width=626,height=436'
         )
     }
-
+ 
     const handleTwitterShare = () => {
+        const url = window.location.href
         window.open(
-            `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareTitle)}`,
+            `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareTitle)}`,
             'twitter-share-dialog',
             'width=550,height=420'
         )
     }
-
+ 
     const handleLinkedInShare = () => {
+        const url = window.location.href
         window.open(
-            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`,
+            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
             'linkedin-share-dialog',
             'width=550,height=420'
         )
     }
-
+ 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(`${shareTitle}\n${currentUrl}`)
+        const url = window.location.href
+        navigator.clipboard.writeText(`${shareTitle}\n${url}`)
         setCopied(true)
         toast({
             title: 'Copied',

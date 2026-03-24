@@ -260,16 +260,23 @@ export default function ExamManager() {
     },
     {
       header: 'Affiliation',
-      accessorKey: 'university.fullname',
+      accessorKey: 'affiliation',
       cell: ({ row }) => {
-        const title = row.original.university?.fullname || row.original.affiliation
-        return title ? (
-          <span className='px-2 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-medium'>
-            {title}
-          </span>
-        ) : (
-          <span className="text-gray-400">N/A</span>
-        )
+        const universities = row.original.affiliation || row.original.universities || (row.original.university ? [row.original.university] : [])
+        
+        if (Array.isArray(universities) && universities.length > 0) {
+            return (
+                <div className="flex flex-wrap gap-1">
+                    {universities.map((uni, idx) => (
+                        <span key={idx} className='px-2 py-1 bg-slate-100 text-slate-800 rounded-full text-[10px] font-medium'>
+                            {typeof uni === 'object' ? (uni.fullname || uni.name || `ID: ${uni.id}`) : uni}
+                        </span>
+                    ))}
+                </div>
+            )
+        }
+        
+        return <span className="text-gray-400 font-medium text-[10px]">N/A</span>
       }
     },
     {

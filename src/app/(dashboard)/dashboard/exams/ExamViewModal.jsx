@@ -30,12 +30,26 @@ const ExamViewModal = ({ isOpen, onClose, exam }) => {
                             <p className="text-base text-gray-900">{exam.level?.title || 'N/A'}</p>
                         </div>
                         <div>
-                            <h4 className="text-sm font-medium text-gray-500">Affiliation</h4>
-                            <p className="text-base text-gray-900">{exam.university?.fullname || 'N/A'}</p>
+                            <h4 className="text-sm font-medium text-gray-500">Affiliation(s)</h4>
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                                {(exam.affiliation || exam.universities)?.length > 0 ? (
+                                    (exam.affiliation || exam.universities).map((uni, idx) => (
+                                        <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md text-xs font-medium">
+                                            {typeof uni === 'object' ? (uni.fullname || uni.name) : uni}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-base text-gray-900">{exam.university?.fullname || 'N/A'}</span>
+                                )}
+                            </div>
                         </div>
                         <div>
                             <h4 className="text-sm font-medium text-gray-500">Category</h4>
                             <p className="text-base text-gray-900">{exam.category?.title || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-500">Conducted By</h4>
+                            <p className="text-base text-gray-900">{exam.conducted_by || 'N/A'}</p>
                         </div>
                         <div>
                             <h4 className="text-sm font-medium text-gray-500">Created At</h4>
@@ -63,16 +77,25 @@ const ExamViewModal = ({ isOpen, onClose, exam }) => {
                         <div>
                             <h4 className="text-sm font-medium text-gray-500 mb-1">Past Questions</h4>
                             {exam.pastQuestion ? (
-                                <a
-                                    href={exam.pastQuestion}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline break-all"
-                                >
-                                    {exam.pastQuestion}
-                                </a>
+                                <div className="space-y-2">
+                                    {(Array.isArray(exam.pastQuestion) ? exam.pastQuestion : (typeof exam.pastQuestion === 'string' ? exam.pastQuestion.split(',') : [])).filter(Boolean).map((link, idx) => (
+                                        <div key={idx} className='group flex items-center justify-between p-2 bg-blue-50/50 border border-blue-100/50 rounded-lg hover:bg-blue-50 transition-all'>
+                                            <a
+                                                href={link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs font-bold text-[#387cae] uppercase tracking-wider hover:underline flex items-center gap-2"
+                                            >
+                                                <div className='w-6 h-6 rounded bg-white flex items-center justify-center shadow-sm'>
+                                                    {link?.includes('.pdf') ? 'PDF' : 'DOC'}
+                                                </div>
+                                                Question Document {idx + 1}
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <p className="text-gray-500 text-sm">No past question URL provided.</p>
+                                <p className="text-gray-500 text-sm">No past question documents provided.</p>
                             )}
                         </div>
                     </div>

@@ -1,6 +1,5 @@
 'use client'
 
-import Pagination from '@/app/blogs/components/Pagination'
 import { authFetch } from '@/app/utils/authFetch'
 import SchoolCard from '@/ui/molecules/cards/SchoolCard'
 import EmptyState from '@/ui/shadcn/EmptyState'
@@ -17,7 +16,8 @@ import { ShimmerCard } from './ShimmerCard'
 const buildSchoolQueryParams = (page, filters = {}, q = '') => {
   const params = new URLSearchParams()
   params.append('page', page.toString())
-  params.append('limit', '24')
+  params.append('limit', '1000')
+  params.append('institute_level', 'school')
 
   if (q) params.append('q', q)
 
@@ -426,15 +426,6 @@ const SchoolFinder = () => {
             />
           )}
 
-          {schools.length > 0 &&
-            pagination.totalPages > 1 && (
-              <div className='mt-16 flex justify-center'>
-                <Pagination
-                  pagination={pagination}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
         </div>
       </div>
 

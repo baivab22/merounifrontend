@@ -2,9 +2,7 @@
 
 import ActionCard from '@/ui/molecules/ActionCard'
 import { useRouter } from 'next/navigation'
-import { use, useEffect, useRef, useState } from 'react'
-import Header from '../../../../components/Frontpage/Header'
-import Navbar from '../../../../components/Frontpage/Navbar'
+import { use, useEffect, useState } from 'react'
 import { checkIfScholarshipApplied, getScholarshipBySlug } from '../../actions'
 import FormSection from './components/formSection'
 
@@ -17,7 +15,6 @@ import { useSelector } from 'react-redux'
 const ApplyPage = ({ params }) => {
     const router = useRouter()
     const user = useSelector((state) => state.user?.data)
-    const headerRef = useRef(null)
     const [scholarship, setScholarship] = useState(null)
     const [loading, setLoading] = useState(true)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -188,37 +185,27 @@ const ApplyPage = ({ params }) => {
     }
 
     return (
-        <>
-            <main className='w-full min-h-screen bg-gray-50 flex flex-col'>
-                <div
-                    ref={headerRef}
-                    className='sticky top-0 z-50 bg-white border-b border-gray-100'
-                >
-                    <Header />
-                    <Navbar />
-                </div>
+        <main className='w-full min-h-screen bg-gray-50 flex flex-col'>
+            <div className='flex-1 py-12 px-4 sm:px-6 lg:px-8'>
+                <div className='max-w-7xl mx-auto'>
+                    {/* Back Button */}
+                    <div className='mb-8 max-w-2xl mx-auto'>
+                        <button
+                            onClick={() => router.back()}
+                            className='inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium'
+                        >
+                            <ArrowLeft className='w-4 h-4' />
+                            <span>Back</span>
+                        </button>
+                    </div>
 
-                <div className='flex-1 py-12 px-4 sm:px-6 lg:px-8'>
-                    <div className='max-w-7xl mx-auto'>
-                        {/* Back Button */}
-                        <div className='mb-8 max-w-2xl mx-auto'>
-                            <button
-                                onClick={() => router.back()}
-                                className='inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium'
-                            >
-                                <ArrowLeft className='w-4 h-4' />
-                                <span>Back</span>
-                            </button>
-                        </div>
-
-                        {/* Content Section - Centered */}
-                        <div className='flex justify-center'>
-                            {renderContent()}
-                        </div>
+                    {/* Content Section - Centered */}
+                    <div className='flex justify-center'>
+                        {renderContent()}
                     </div>
                 </div>
-            </main>
-        </>
+            </div>
+        </main>
     )
 }
 
