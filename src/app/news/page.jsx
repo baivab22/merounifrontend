@@ -5,7 +5,6 @@ import { Search, Globe, X } from 'lucide-react'
 import { debounce } from 'lodash'
 import FeaturedNews from './components/FeaturedNews'
 import { getNews, getCategories } from '@/app/action'
-import SideBanner from '@/components/Frontpage/SideBanner'
 
 // Memoized FilterSection matching platform standard
 const FilterSection = React.memo(function FilterSection({
@@ -92,7 +91,6 @@ const News = () => {
 
     // State
     const [news, setNews] = useState([])
-    const [banners, setBanners] = useState([])
     const [loading, setLoading] = useState(true)
     const [categories, setCategories] = useState([])
     const [allCategories, setAllCategories] = useState([])
@@ -157,17 +155,13 @@ const News = () => {
     const fetchCategoriesAndBanners = async () => {
         setIsCategoriesLoading(true)
         try {
-            const [categoriesResponse, bannerResponse] = await Promise.all([
-                getCategories({ type: 'NEWS' }).catch(() => null),
-                fetch(`${process.env.baseUrl}/banner?type=FRONT_PAGE&limit=10`).then(res => res.json()).catch(() => ({ items: [] }))
+            const [categoriesResponse] = await Promise.all([
+                getCategories({ type: 'NEWS' }).catch(() => null)
             ])
 
             if (categoriesResponse && categoriesResponse.items) {
                 setCategories(categoriesResponse.items)
                 setAllCategories(categoriesResponse.items)
-            }
-            if (bannerResponse && bannerResponse.items) {
-                setBanners(bannerResponse.items)
             }
         } catch (error) {
             console.error('Error fetching categories and banners:', error)
@@ -308,10 +302,6 @@ const News = () => {
                             onSearchChange={(field, val) => handleCategorySearch(val)}
                             isLoading={isCategoriesLoading}
                         />
-                        {/* Sidebar Banner */}
-                        <div className='mt-8'>
-                             <SideBanner banners={banners} />
-                        </div>
                     </div>
 
                     {/* Main Content */}
