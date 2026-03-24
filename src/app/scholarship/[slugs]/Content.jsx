@@ -3,9 +3,6 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { FaArrowLeft, FaAward, FaCalendar, FaUser, FaFile } from 'react-icons/fa'
 import Link from 'next/link'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import Loading from '../../../ui/molecules/Loading'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { formatDate } from '@/utils/date.util'
@@ -18,8 +15,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
   if (error || !scholarship) {
     return (
       <div className='bg-white min-h-screen'>
-        <Header />
-        <Navbar />
         <div className='min-h-[60vh] flex items-center justify-center px-6'>
           <EmptyState
             icon={FaAward}
@@ -31,7 +26,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
             }}
           />
         </div>
-        <Footer />
       </div>
     )
   }
@@ -55,8 +49,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
 
   return (
     <div className='bg-white min-h-screen'>
-      <Header />
-      <Navbar />
 
       <main className='max-w-7xl mx-auto px-6 py-12'>
         <div className='mb-8'>
@@ -175,7 +167,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }
