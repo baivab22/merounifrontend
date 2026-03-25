@@ -1,5 +1,5 @@
 'use server'
-
+import { cookies } from 'next/headers'
 
 export async function getMaterials(
   page = 1,
@@ -71,11 +71,17 @@ export async function getMaterialCategories() {
 // Fetches classes and subjects
 export async function getMaterialHierarchy() {
   try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
     const response = await fetch(
       `${process.env.baseUrl}/materials?type=MATERIAL&depth=2`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
         cache: 'no-store'
       }
     )
@@ -91,19 +97,58 @@ export async function getMaterialHierarchy() {
 // Fetches materials for a specific subject (topic)
 export async function getMaterialsBySubject(subjectId) {
   try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
     const response = await fetch(
       `${process.env.baseUrl}/materials/topic/${subjectId}`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
         cache: 'no-store'
       }
     )
     if (!response.ok) throw new Error('Failed to fetch materials')
     const result = await response.json()
-    return result.materials || result.items || result.data || []
+    return result.data || result.materials || result.items || []
   } catch (error) {
     console.error('Error fetching materials by subject:', error)
     return []
+  }
+}
+
+export async function toggleMaterialHeart(materialId) {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
+    if (!token) {
+      throw new Error('Please login to heart materials')
+    }
+
+    const response = await fetch(
+      `${process.env.baseUrl}/materials/${materialId}/heart`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to toggle heart')
+    }
+
+    const result = await response.json()
+    return result
+  } catch (error) {
+    console.error('Server Action Error:', error)
+    throw error
   }
 }

@@ -49,63 +49,63 @@ const UpperSection = ({ university }) => {
 
       {/* Key Facts Section - 4 Cards Layout */}
       <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full mt-12 mb-12'>
-        <div className='flex flex-wrap justify-center gap-4 md:gap-5'>
+        <div className='grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-4 md:gap-5'>
           {/* Established */}
-          <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-            <div className='bg-blue-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
-              <MdDateRange className='w-5 h-5 sm:w-6 sm:h-6 text-[#0A6FA7]' />
+          <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+            <div className='bg-blue-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
+              <MdDateRange className='w-4 h-4 sm:w-6 sm:h-6 text-[#0A6FA7]' />
             </div>
-            <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+            <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
               Established
             </p>
-            <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
+            <p className='text-[11px] sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-bold sm:font-medium'>
               {university?.date_of_establish || 'N/A'}
             </p>
           </div>
 
           {/* Contact */}
-          <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-            <div className='bg-orange-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-orange-100 transition-colors duration-300'>
-              <FaPhoneAlt className='w-4 h-4 sm:w-5 sm:h-5 text-orange-500' />
+          <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+            <div className='bg-orange-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-orange-100 transition-colors duration-300'>
+              <FaPhoneAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-orange-500' />
             </div>
-            <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+            <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
               Contact
             </p>
             <a
               href={`tel:${university?.contact?.phone_number || ''}`}
-              className='block text-xs sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors font-medium'
+              className='block text-[11px] sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors font-bold sm:font-medium'
             >
               {university?.contact?.phone_number || 'N/A'}
             </a>
           </div>
 
           {/* Website */}
-          <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-            <div className='bg-sky-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-sky-100 transition-colors duration-300'>
-              <BsGlobe2 className='w-4 h-4 sm:w-5 sm:h-5 text-sky-500' />
+          <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+            <div className='bg-sky-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-sky-100 transition-colors duration-300'>
+              <BsGlobe2 className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-sky-500' />
             </div>
-            <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+            <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
               Website
             </p>
             <a
               href={university?.contact?.website_url || '#'}
               target='_blank'
               rel='noopener noreferrer'
-              className='text-xs sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all font-medium'
+              className='text-[11px] sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all font-bold sm:font-medium'
             >
               {university?.contact?.website_url ? university.contact.website_url.replace(/^https?:\/\/(www\.)?/, '') : 'N/A'}
             </a>
           </div>
 
           {/* Address */}
-          <div className='bg-white rounded-md sm:rounded-2xl shadow-[0_2px_15_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full xs:w-[160px] sm:w-[200px] md:w-[220px]'>
-            <div className='bg-emerald-50 p-2 sm:p-3 rounded-md sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#30AD8F]/10 transition-colors duration-300'>
-              <FaMapMarkerAlt className='w-4 h-4 sm:w-5 sm:h-5 text-[#30AD8F]' />
+          <div className='bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-3 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#30AD8F]/20 group w-full sm:w-[200px] md:w-[220px]'>
+            <div className='bg-emerald-50 p-2 sm:p-3 rounded-lg sm:rounded-2xl mb-2 sm:mb-4 group-hover:bg-[#30AD8F]/10 transition-colors duration-300'>
+              <FaMapMarkerAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#30AD8F]' />
             </div>
-            <p className='text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 font-medium mb-1'>
+            <p className='text-[9px] sm:text-xs uppercase tracking-wider text-gray-400 sm:text-gray-500 font-bold sm:font-medium mb-1'>
               Address
             </p>
-            <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-medium'>
+            <p className='text-[11px] sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-bold sm:font-medium'>
               {[university?.city, university?.country].filter(Boolean).join(', ') || 'N/A'}
             </p>
           </div>

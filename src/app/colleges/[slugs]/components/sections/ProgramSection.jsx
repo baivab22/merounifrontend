@@ -11,7 +11,7 @@ const ProgramSection = ({ college }) => {
     route.push(`/programs/${slug}`)
   }
 
-  if (!college?.collegeCourses || college.collegeCourses.length === 0) {
+  if (!college?.collegePrograms || college.collegePrograms.length === 0) {
     return null
   }
 
@@ -23,7 +23,7 @@ const ProgramSection = ({ college }) => {
       </div>
 
       <div className='flex overflow-x-auto md:grid md:grid-cols-2 gap-4 md:gap-6 no-scrollbar pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
-        {college.collegeCourses.map((course, index) => (
+        {college.collegePrograms.map((course, index) => (
           <div
             key={index}
             className='flex-shrink-0 w-[85vw] md:w-auto group bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-xl transition-all duration-500 hover:border-[#0A6FA7]/30 flex flex-col justify-between h-auto min-h-[160px]'

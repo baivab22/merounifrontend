@@ -49,7 +49,7 @@ const CollegeOverview = ({ college }) => {
     },
     {
       name: 'Programs',
-      visible: college?.collegeCourses?.length > 0,
+      visible: college?.collegePrograms?.length > 0,
       ref: programsRef,
       component: <ProgramSection college={college} />
     },
