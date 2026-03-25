@@ -91,7 +91,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                     </div>
 
                     <ul className='space-y-1.5'>
-                      {degreeGroup.rankings.map((ranking) => {
+                      {degreeGroup.rankings.slice(0, 5).map((ranking) => {
                         const college = ranking.college
                         if (!college) return null
 

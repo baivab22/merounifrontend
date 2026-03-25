@@ -1,6 +1,5 @@
-'use client'
-
 import Link from 'next/link'
+import { Calendar, Award, ArrowRight, Clock, Banknote } from 'lucide-react'
 
 const formatAmount = (amount) => {
   if (!amount) return null
@@ -17,48 +16,92 @@ const formatDeadline = (dateString) => {
   })
 }
 
-const ScholarshipCard = ({ scholarship, onApply, isApplying }) => {
+const getTimeLeft = (deadline) => {
+  if (!deadline) return null
+  const now = new Date()
+  const end = new Date(deadline)
+  const diff = end - now
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+  if (days < 0) return 'Expired'
+  if (days === 0) return 'Ends Today'
+  if (days === 1) return 'Ends Tomorrow'
+  if (days <= 7) return `Only ${days} days left`
+  return null
+}
+
+const ScholarshipCard = ({ scholarship }) => {
   const amountDisplay = formatAmount(scholarship.amount)
   const deadlineDisplay = formatDeadline(scholarship.applicationDeadline)
+  const timeLeft = getTimeLeft(scholarship.applicationDeadline)
 
   const isExpired = scholarship.applicationDeadline
     ? new Date(scholarship.applicationDeadline) < new Date()
     : false
 
   return (
-    <article className='bg-white rounded-md border border-gray-100 p-5 flex flex-col hover:border-gray-200 hover:shadow-sm transition-all duration-200'>
-      <div className='flex justify-between items-start mb-2'>
-        <h2 className='text-base font-semibold text-gray-900 line-clamp-2'>
-          {scholarship.name}
-        </h2>
-        {isExpired && (
-          <span className='px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 uppercase tracking-wider'>
-            Expired
-          </span>
+    <article className='group bg-white rounded-3xl border border-gray-100 p-6 flex flex-col hover:border-sky-200 hover:shadow-lg transition-all duration-300 h-full'>
+      <div className='flex justify-between items-start mb-6'>
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-[#0A6FA7]'>
+            <Award className='w-5 h-5' />
+          </div>
+          <div className='flex flex-col'>
+            <span className='text-[10px] uppercase tracking-widest text-[#0A6FA7] font-bold'>Scholarship</span>
+            <div className='flex items-center gap-2'>
+              {isExpired ? (
+                <span className='text-[10px] font-bold text-red-500 uppercase tracking-wider'>Expired</span>
+              ) : timeLeft ? (
+                <span className='text-[10px] font-bold text-amber-500 uppercase tracking-wider'>{timeLeft}</span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 className='text-lg font-bold text-gray-900 line-clamp-2 mb-6 min-h-[56px] leading-tight'>
+        {scholarship.name}
+      </h2>
+
+      <div className='grid grid-cols-1 gap-4 mb-8'>
+        {amountDisplay && (
+          <div className='flex items-center gap-3'>
+            <Banknote className='w-4 h-4 text-gray-400' />
+            <div className='flex flex-col'>
+              <span className='text-[10px] uppercase text-gray-400 font-bold tracking-tight'>Value</span>
+              <span className='text-sm font-semibold text-gray-700'>{amountDisplay}</span>
+            </div>
+          </div>
+        )}
+
+        {deadlineDisplay && (
+          <div className='flex items-center gap-3'>
+            <Calendar className='w-4 h-4 text-gray-400' />
+            <div className='flex flex-col'>
+              <span className='text-[10px] uppercase text-gray-400 font-bold tracking-tight'>Deadline</span>
+              <span className={`text-sm font-semibold ${isExpired ? 'text-red-400' : 'text-gray-700'}`}>
+                {deadlineDisplay}
+              </span>
+            </div>
+          </div>
         )}
       </div>
-      {amountDisplay && (
-        <p className='text-sm text-gray-600 mb-3'>{amountDisplay}</p>
-      )}
-      {deadlineDisplay && (
-        <p className={`text-xs mb-4 ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
-          Deadline: {deadlineDisplay}
-        </p>
-      )}
-      <div className='mt-auto flex gap-2 pt-3 border-t border-gray-50'>
+
+      <div className='mt-auto pt-6 border-t border-gray-50 flex items-center justify-between'>
         <Link
           href={`/scholarship/${scholarship.slugs || scholarship.id}`}
-          className='flex-1 py-2 rounded-md text-center text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors'
+          className='text-sm font-bold text-gray-400 hover:text-[#0A6FA7] transition-colors flex items-center gap-1.5'
         >
-          View
+          View Details
+          <ArrowRight className='w-4 h-4' />
         </Link>
-        <Link
-          href={`/scholarship/apply/${scholarship.slugs || scholarship.id}`}
-          className={`flex-1 py-2 rounded-md text-center text-sm font-medium text-white transition-colors ${isExpired ? 'bg-gray-300 pointer-events-none' : 'bg-[#0A6FA7] hover:bg-[#085a86]'
-            }`}
-        >
-          {isExpired ? 'Expired' : 'Apply'}
-        </Link>
+        {!isExpired && (
+          <Link
+            href={`/scholarship/apply/${scholarship.slugs || scholarship.id}`}
+            className='px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-[#0A6FA7] hover:bg-[#085a86] transition-all duration-300 shadow-md hover:shadow-lg shadow-[#0A6FA7]/10'
+          >
+            Apply Now
+          </Link>
+        )}
       </div>
     </article>
   )

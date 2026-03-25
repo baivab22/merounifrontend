@@ -229,13 +229,13 @@ export const menuItems = [
         icon: <MdBackHand />,
         label: 'Refer Students',
         href: '/dashboard/referStudent',
-        visible: ['agent'],
+        visible: ['agent','consultancy'],
         submenus: [
           {
             icon: <MdBackHand />,
             label: 'Colleges',
             href: '/dashboard/referStudent',
-            visible: ['agent']
+            visible: ['agent','consultancy']
           },
           {
             icon: <HiOutlineUsers />,
@@ -249,13 +249,13 @@ export const menuItems = [
         icon: <MdBackHand />,
         label: 'Refered Students',
         href: '/dashboard/referedStudent',
-        visible: ['agent'],
+        visible: ['agent','consultancy'],
         submenus: [
           {
             icon: <MdBackHand />,
             label: 'Colleges',
             href: '/dashboard/college-referrals',
-            visible: ['agent']
+            visible: ['agent','consultancy']
           },
           {
             icon: <HiOutlineUsers />,

@@ -35,7 +35,7 @@ const ReferStudentPage = () => {
   const fetchColleges = async () => {
     try {
       setFetchingColleges(true)
-      const response = await authFetch(`${process.env.baseUrl}/college?limit=1000`)
+      const response = await authFetch(`${process.env.baseUrl}/college?limit=1000&is_referable=true`)
       const data = await response.json()
       console.log(data, "datadatadata")
       setAllColleges(data.items || [])

@@ -15,7 +15,10 @@ import {
   File
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getMaterialHierarchy, getMaterialsBySubject } from './action'
+import { useSelector } from 'react-redux'
+import { Heart } from 'lucide-react'
+import { getMaterialHierarchy, getMaterialsBySubject, toggleMaterialHeart } from './action'
+import { useToast } from '@/hooks/use-toast'
 
 // --- Components ---
 
@@ -50,34 +53,118 @@ const FiltersSection = ({ searchTerm, onSearchChange, onClear }) => (
   </div>
 )
 
-const MaterialRow = ({ material }) => {  
+const MaterialRow = ({ material }) => {
+  const { toast } = useToast()
+  const user = useSelector((state) => state.user?.data)
+  
+  const role = useMemo(() => {
+    const r = user?.role || user?.roles
+    if (!r) return {}
+    if (typeof r === 'object') return r
+    try {
+      return JSON.parse(r)
+    } catch {
+      return {}
+    }
+  }, [user])
+
+  const isStudent = role?.student === true
+
+  const [isHearted, setIsHearted] = useState(material.is_hearted)
+  const [heartsCount, setHeartsCount] = useState(material.hearts_count || 0)
+  const [isToggling, setIsToggling] = useState(false)
+
+  const handleToggleHeart = async (e) => {
+    e.stopPropagation()
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to heart materials."
+      })
+      return
+    }
+
+    if (!isStudent) {
+      toast({
+        title: "Permission Denied",
+        description: "Only students can heart materials."
+      })
+      return
+    }
+
+    setIsToggling(true)
+    // Optimistic update
+    const prevIsHearted = isHearted
+    const prevCount = heartsCount
+    setIsHearted(!prevIsHearted)
+    setHeartsCount(prevIsHearted ? prevCount - 1 : prevCount + 1)
+
+    try {
+      const result = await toggleMaterialHeart(material.id)
+      if (result && result.data) {
+        setIsHearted(result.data.is_hearted)
+        setHeartsCount(result.data.hearts_count)
+      }
+    } catch (error) {
+      // Rollback on error
+      setIsHearted(prevIsHearted)
+      setHeartsCount(prevCount)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || 'Failed to toggle heart'
+      })
+    } finally {
+      setIsToggling(false)
+    }
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-3 mb-2 bg-white rounded-lg border border-gray-100 hover:border-[#0A70A7]/30 hover:shadow-sm transition-all group"
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100 group relative"
     >
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center text-[#0A70A7] transition-colors group-hover:bg-[#0A70A7] group-hover:text-white">
-          <Book size={14} />
+        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+          <File className="w-4 h-4" />
         </div>
         <div>
-          <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#0A70A7] transition-colors">{material.title}</h4>
+          <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#0A70A7] transition-colors">
+            {material.title}
+          </h4>
           {material.description && (
             <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{material.description}</p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        {(material.file_url || material.file) && (
-          <>
-            <button
-              onClick={() => window.open(material.file_url || material.file, '_blank')}
-              className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors flex items-center gap-1"
-            >
-              <BookOpen size={12} />
-              <span>Detail</span>
-            </button>
+
+      <div className="flex items-center gap-4 relative z-50">
+        <div className="flex flex-col items-center gap-0.5">
+          <div
+            role="button"
+            aria-label="Heart material"
+            onClick={handleToggleHeart}
+            className={`p-1.5 rounded-full transition-all duration-300 ${
+              isHearted 
+                ? 'bg-rose-50 text-rose-500 scale-110' 
+                : 'text-gray-300 hover:text-rose-400 hover:bg-rose-50/30'
+            } ${isToggling ? 'opacity-50 animate-pulse' : ''} ${!isStudent ? 'cursor-default' : 'cursor-pointer'}`}
+          >
+            <Heart 
+              size={18}
+              fill={isHearted ? 'currentColor' : 'none'}
+              className={isHearted ? 'animate-heart-beat' : ''}
+            />
+          </div>
+          <span className={`text-[10px] font-bold ${isHearted ? 'text-rose-500' : 'text-gray-500'}`}>
+            {heartsCount}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {(material.file_url || material.file) && (
             <button
               onClick={() => window.open(material.file_url || material.file, '_blank')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A70A7] hover:bg-[#085a85] text-white text-[10px] font-bold rounded-lg shadow-sm active:scale-95 transition-all"
@@ -85,8 +172,8 @@ const MaterialRow = ({ material }) => {
               <ExternalLink size={12} />
               <span>Open</span>
             </button>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </motion.div>
   )
@@ -130,8 +217,10 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive }) => {
             </p>
           </div>
         </div>
-        <div className="px-2 py-0.5 rounded-md bg-blue-50 text-[#0A70A7] text-[10px] font-bold">
-          {subject.materials_count || 0}
+        <div className="flex items-center gap-2">
+          <div className="px-2 py-0.5 rounded-md bg-blue-50 text-[#0A70A7] text-[10px] font-bold border border-blue-100/50">
+            {subject.materials_count || 0}
+          </div>
         </div>
       </button>
 

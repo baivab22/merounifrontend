@@ -346,12 +346,33 @@ export default function CollegeForm() {
     setViewModalOpen(false)
     setViewCollegeData(null)
   }
+  const handleReferable = async (id, value) => {
+    // Optimistically update UI
+    setColleges(prev =>
+      prev.map(c => c.id === id ? { ...c, is_referable: value } : c)
+    )
+    try {
+      await authFetch(`${process.env.baseUrl}/college/${id}/referable`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_referable: value })
+      })
+    } catch (err) {
+      // Revert on failure
+      setColleges(prev =>
+        prev.map(c => c.id === id ? { ...c, is_referable: !value } : c)
+      )
+      toast({ title: 'Error', description: 'Failed to update referability', variant: 'destructive' })
+    }
+  }
+
   const columns = createColumns({
     handleView,
     handleEdit,
     handleOpenCredentialsModal,
     handleDeleteClick,
-    handleImageClick
+    handleImageClick,
+    handleReferable
   })
 
   return (
