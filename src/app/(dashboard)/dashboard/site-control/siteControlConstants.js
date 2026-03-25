@@ -15,4 +15,9 @@ export const CONFIG_TYPES = [
     { value: 'legal_disclaimer', label: 'Site Disclaimer', section: 'Legal', inputType: 'richtext' },
     { value: 'legal_privacy_policy', label: 'Privacy Policy', section: 'Legal', inputType: 'richtext' },
     { value: 'legal_terms_conditions', label: 'Terms & Conditions', section: 'Legal', inputType: 'richtext' },
+    { value: 'legal_about_us', label: 'About Us', section: 'Legal', inputType: 'richtext' },
+    { value: 'legal_service_pricing', label: 'Service Pricing', section: 'Legal', inputType: 'richtext' },
+    { value: 'legal_membership_pricing', label: 'Membership Pricing', section: 'Legal', inputType: 'richtext' },
+    { value: 'legal_promote_college_school', label: 'Promote College & School', section: 'Legal', inputType: 'richtext' },
+    { value: 'legal_advertising_policy', label: 'Advertising Policy', section: 'Legal', inputType: 'richtext' },
 ]
