@@ -49,7 +49,7 @@ const Page = async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      next: { revalidate: 3600 } // Revalidate every hour
+      cache: 'no-store'
     })
 
     if (response.ok) {
