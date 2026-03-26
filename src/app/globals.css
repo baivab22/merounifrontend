@@ -251,17 +251,3 @@ body {
   animation: heart-beat 0.6s ease-in-out;
 }
 
-@keyframes banner-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-banner-fade-in {
-  animation: banner-fade-in 0.5s ease-out forwards;
-}

@@ -125,6 +125,13 @@ export async function toggleMaterialHeart(materialId) {
     const cookieStore = await cookies()
     const token = cookieStore.get('token')?.value
 
+    console.log('--- Material Heart Debug ---')
+    console.log('Action: toggleMaterialHeart')
+    console.log('MaterialId:', materialId)
+    console.log('Token Present:', !!token)
+    if (token) console.log('Token Preview:', token.substring(0, 10) + '...')
+    console.log('---------------------------')
+
     if (!token) {
       throw new Error('Please login to heart materials')
     }
@@ -141,8 +148,14 @@ export async function toggleMaterialHeart(materialId) {
     )
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to toggle heart')
+      let errorMessage = 'Failed to toggle heart'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        // Fallback if response is not JSON
+      }
+      return { success: false, message: errorMessage }
     }
 
     const result = await response.json()

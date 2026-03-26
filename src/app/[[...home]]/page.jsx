@@ -73,12 +73,12 @@ const Page = async () => {
 
           <div className='flex gap-4 md:gap-6'>
             {/* Featured Admission Section */}
-            <div className='flex flex-col md:w-4/5 w-full sm:w-full'>
+            <div className='flex flex-col md:w-3/4 w-full sm:w-full'>
               <FeaturedAdmission />
             </div>
 
             {/* Desktop Side Banner */}
-            <div className='w-full md:w-1/5 hidden md:block mt-4 md:mt-6'>
+            <div className='w-full md:w-1/4 hidden md:block mt-4 md:mt-6'>
               <SideBanner banners={banners} />
             </div>
           </div>
@@ -86,7 +86,7 @@ const Page = async () => {
       </div>
 
       {/* Mobile Side Banner */}
-      <div className='w-full md:w-1/5 block md:hidden mt-4 px-4'>
+      <div className='w-full md:w-1/4 block md:hidden mt-4 px-4'>
         <SideBanner banners={banners} />
       </div>
 

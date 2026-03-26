@@ -16,14 +16,6 @@ const SignInPage = ({ defaultMode = 'login' }) => {
   const dispatch = useDispatch()
   const router = useRouter()
 
-  const getDeviceId = () => {
-    let deviceId = typeof window !== 'undefined' ? localStorage.getItem('deviceId') : null
-    if (!deviceId && typeof window !== 'undefined') {
-      deviceId = uuidv4()
-      localStorage.setItem('deviceId', deviceId)
-    }
-    return deviceId
-  }
 
   const [isLogin, setIsLogin] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -108,8 +100,8 @@ const SignInPage = ({ defaultMode = 'login' }) => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'device-id': getDeviceId()
-          }
+          },
+          withCredentials: true
         }
       )
 
@@ -119,6 +111,9 @@ const SignInPage = ({ defaultMode = 'login' }) => {
         }
         localStorage.setItem('access_token', response.data.accessToken)
         localStorage.setItem('refreshToken', response.data.refreshToken)
+        
+        // Manually set session cookie for Server Actions
+        document.cookie = `token=${response.data.accessToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`
       }
 
       return response.data
