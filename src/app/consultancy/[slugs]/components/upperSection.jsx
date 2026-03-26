@@ -101,7 +101,7 @@ const ImageSection = ({ consultancy }) => {
 
       {/* Info cards grid (like college) */}
       <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'>
+        <div className='grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'>
           {hasAddress && (
             <div className='bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-5 flex flex-col items-center justify-center text-center border border-gray-100 hover:border-[#0A6FA7]/20 group'>
               <div className='bg-blue-50 p-3 rounded-2xl mb-4 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>

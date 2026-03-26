@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import Footer from '../../../components/Frontpage/Footer'
 import ImageSection from './components/upperSection'
 import ConsultancyOverview from './components/ConsultancyOverview'
 import RelatedConsultancies from './components/RelatedConsultancies'
@@ -88,7 +87,6 @@ const ConsultancyContent = ({ consultancy }) => {
       <ApplyNow consultancy={consultancy} />
       <RelatedConsultancies consultancy={consultancy} />
       <ShareSection consultancy={consultancy} />
-      <Footer />
     </div>
   )
 }
