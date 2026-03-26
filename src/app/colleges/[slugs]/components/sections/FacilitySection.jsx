@@ -34,7 +34,7 @@ const FacilitySection = ({ college }) => {
         <h2 className='text-2xl font-bold text-gray-900'>Campus Facilities</h2>
       </div>
 
-      <div className='flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 no-scrollbar pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
+      <div className='grid grid-cols-2 gap-4 sm:gap-6 pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
         {college.facilities.map((item, index) => (
           <FacilityCard key={index} item={item} />
         ))}
@@ -45,7 +45,7 @@ const FacilitySection = ({ college }) => {
 
 const FacilityCard = ({ item }) => {
   return (
-    <div className='flex-shrink-0 w-[85vw] md:w-auto min-h-full'>
+    <div className='w-full min-h-full'>
       <motion.div
         initial="initial"
         whileHover="hover"
