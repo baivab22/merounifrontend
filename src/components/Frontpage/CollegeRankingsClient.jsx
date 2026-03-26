@@ -81,16 +81,16 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                   className='flex-shrink-0 w-[300px] sm:w-[320px] md:w-[360px] rounded-md border border-gray-200/80 bg-white overflow-hidden hover:border-gray-300 hover:shadow-md transition-all'
                 >
                   <div className='px-5 pt-5 pb-3'>
-                    <div className='flex items-center gap-2 mb-4'>
-                      <div className='p-1.5 rounded-md bg-[#0A6FA7]/10'>
+                    <div className='flex items-start gap-2 mb-4'>
+                      <div className='p-1.5 rounded-md bg-[#0A6FA7]/10 mt-0.5'>
                         <GraduationCap className='w-4 h-4 text-[#0A6FA7]' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 line-clamp-2'>
+                      <h3 className='text-base font-semibold text-gray-900 line-clamp-2 h-12 flex items-center'>
                         {degreeGroup.degree.title || 'Degree'}
                       </h3>
                     </div>
 
-                    <ul className='space-y-1.5'>
+                    <ul className='space-y-1.5 min-h-[355px]'>
                       {degreeGroup.rankings.slice(0, 5).map((ranking) => {
                         const college = ranking.college
                         if (!college) return null
