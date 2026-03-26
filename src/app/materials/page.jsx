@@ -102,6 +102,9 @@ const MaterialRow = ({ material }) => {
 
     try {
       const result = await toggleMaterialHeart(material.id)
+      if (result && result.success === false) {
+        throw new Error(result.message)
+      }
       if (result && result.data) {
         setIsHearted(result.data.is_hearted)
         setHeartsCount(result.data.hearts_count)

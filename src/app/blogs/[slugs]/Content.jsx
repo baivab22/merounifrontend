@@ -54,7 +54,7 @@ const BlogContent = ({ initialBlog, slugs }) => {
         <>
           <Hero blog={blog} />
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
-            <AdLayout banners={banners} />
+            <AdLayout banners={banners} positions={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} />
           </div>
 
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
@@ -88,12 +88,7 @@ const BlogContent = ({ initialBlog, slugs }) => {
               )}
             </div>
 
-            <div className='lg:w-[320px] shrink-0'>
-              <div className='sticky top-28'>
-                <h3 className='text-sm font-semibold mb-6'> Sponsored Content </h3>
-                <SideBanner banners={banners} />
-              </div>
-            </div>
+
           </div>
 
           <div className='max-w-[1600px] mx-auto px-6 md:px-16'>

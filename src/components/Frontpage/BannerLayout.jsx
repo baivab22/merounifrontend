@@ -10,7 +10,7 @@ const BannerLayout = ({ banners = [] }) => {
   const displayBanners = [1, 2, 3].map((position) => {
     const banner = banners.find((b) => b.display_position === position)
     return (!banner || isExpired(banner)) ? null : banner
-  })
+  }).filter(Boolean)
 
   return (
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4'>
