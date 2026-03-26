@@ -29,7 +29,8 @@ const SideBanner = ({ banners = [] }) => {
             src={banner.banner_image || '/images/meroUniLarge.gif'}
             alt={`Banner position ${banner.display_position}`}
             fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 20vw, 300px"
+            unoptimized
+            sizes="(max-width: 768px) 100vw, 384px"
             className='object-cover'
           />
           <div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-300' />

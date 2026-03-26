@@ -67,12 +67,15 @@ export default async function sitemap() {
         consultancies,
         scholarships,
         events,
+        news,
         vacancies,
         programs,
         disciplines,
+        courses,
         degrees,
         careers,
         shortTermCourses,
+        materialCategories,
     ] = await Promise.all([
         getDynamicRoutes('blogs', 'blogs', 'slug'),
         getDynamicRoutes('university', 'universities', 'slug'),
@@ -81,12 +84,15 @@ export default async function sitemap() {
         getDynamicRoutes('consultancy', 'consultancy', 'slug'),
         getDynamicRoutes('scholarship', 'scholarship', 'slug'),
         getDynamicRoutes('event', 'events', 'slug'),
+        getDynamicRoutes('news', 'news', 'slug'),
         getDynamicRoutes('vacancy', 'vacancies', 'slug'),
-        getDynamicRoutes('program', 'program', 'slug'),
+        getDynamicRoutes('program', 'programs', 'slug'),
         getDynamicRoutes('discipline', 'disciplines', 'slug'),
+        getDynamicRoutes('course', 'degree/single-subject', 'slug'),
         getDynamicRoutes('degree', 'degree', 'slug'),
         getDynamicRoutes('career', 'career', 'slug'),
         getDynamicRoutes('skills-based-courses', 'short-term-courses', 'slug'),
+        getDynamicRoutes('category', 'materials/category', 'id'),
     ])
 
     return [
@@ -98,11 +104,14 @@ export default async function sitemap() {
         ...consultancies,
         ...scholarships,
         ...events,
+        ...news,
         ...vacancies,
         ...programs,
         ...disciplines,
+        ...courses,
         ...degrees,
         ...careers,
         ...shortTermCourses,
+        ...materialCategories,
     ]
 }
