@@ -46,6 +46,7 @@ const AdLayout = ({ banners = [], size = '', number = 1, loading = false, positi
                 src={banner.banner_image || '/images/meroUniLarge.gif'}
                 alt={`Banner ${banner.title}`}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className='object-cover'
               />

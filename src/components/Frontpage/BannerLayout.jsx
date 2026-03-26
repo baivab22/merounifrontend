@@ -31,6 +31,7 @@ const BannerLayout = ({ banners = [] }) => {
                 src={banner.banner_image || '/images/meroUniLarge.gif'}
                 alt={`Banner ${banner.title}`}
                 fill
+                unoptimized
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className='object-cover'
                 priority={index === 0}
