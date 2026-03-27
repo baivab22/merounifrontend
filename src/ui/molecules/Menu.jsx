@@ -8,6 +8,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { menuItems } from '@/constants/menuList'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { authFetch } from '@/app/utils/authFetch'
 
 // --- Helper Components ---
 
@@ -59,7 +60,8 @@ const SubMenu = ({
   isActive,
   onToggle,
   pathname,
-  role
+  role,
+  unreadCount
 }) => {
   const router = useRouter()
 
@@ -132,6 +134,11 @@ const SubMenu = ({
             <span className='text-sm flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis'>
               {item.label}
             </span>
+            {item.label === 'MeroUni' && unreadCount > 0 && (
+              <span className='mr-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-in zoom-in'>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
             {isExpanded ? (
               <ChevronDown className='w-4 h-4 opacity-70' />
             ) : (
@@ -165,6 +172,11 @@ const SubMenu = ({
                 {/* <span className={`w-1.5 h-1.5 rounded-full mr-2 ${isSubActive ? 'bg-[#0A6FA7]' : 'bg-gray-300'}`} /> */}
 
                 <span className='truncate'>{submenu.label}</span>
+                {submenu.label === 'Messages' && unreadCount > 0 && (
+                  <span className='ml-auto inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded-full animate-in zoom-in'>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -181,6 +193,7 @@ const Menu = ({ isCollapsed = false }) => {
   const dispatch = useDispatch()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState({})
+  const [unreadCount, setUnreadCount] = useState(0)
 
   // Section Collapse State
   const [collapsedSections, setCollapsedSections] = useState({})
@@ -219,6 +232,32 @@ const Menu = ({ isCollapsed = false }) => {
       return acc
     }, {})
   }, [rawRole])
+
+  // Fetch unread messages
+  useEffect(() => {
+    if (role?.admin) {
+      const fetchUnread = async () => {
+        try {
+          const token = localStorage.getItem('access_token')
+          if (!token) return
+          const url = `${process.env.baseUrl}/contact-us?status=new&limit=1`
+          const res = await authFetch(url, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data.pagination) {
+              setUnreadCount(data.pagination.totalCount || data.pagination.totalItems || 0)
+            }
+          }
+        } catch (err) {}
+      }
+      fetchUnread()
+      // Optional: Polling could be added here
+      const interval = setInterval(fetchUnread, 60000)
+      return () => clearInterval(interval)
+    }
+  }, [role])
 
   // Filter Items Logic (Access)
   const filteredMenuItems = useMemo(() => {
@@ -348,6 +387,7 @@ const Menu = ({ isCollapsed = false }) => {
                         isExpanded={isExpanded}
                         isActive={isActive}
                         onToggle={toggleMenu}
+                        unreadCount={unreadCount}
                       />
                     )
                   }

@@ -5,7 +5,7 @@ import { formatDate } from '@/utils/date.util'
 
 const Hero = ({ event }) => {
   return (
-    <div className='max-w-[1000px] mx-auto px-6 pt-10 lg:pt-14'>
+    <div className='relative px-6 md:px-16 pt-10 md:pt-16 max-w-[1600px] mx-auto'>
       {/* Navigation */}
       <div className='mb-8'>
         <Link
@@ -20,40 +20,32 @@ const Hero = ({ event }) => {
       </div>
 
       <div className='flex flex-col gap-6'>
-        {/* Title & Meta */}
-        <div className='space-y-6'>
-          <h1 className='text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight'>
-            {event?.title}
-          </h1>
-
-          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-gray-100 pb-8'>
-            <div className='flex flex-wrap items-center gap-6 text-sm'>
-              <div className='flex items-center gap-2 text-gray-600'>
-                <FaCalendarAlt className='text-[#0A6FA7]' />
-                <span className='font-medium'>{formatDate(event?.createdAt)}</span>
-              </div>
-              <div className='w-1 h-1 rounded-full bg-gray-300 hidden sm:block' />
-              <div className='flex items-center gap-2 text-gray-600'>
-                <FaHashtag className='text-[#0A6FA7]' />
-                <span className='font-medium tracking-wide'>
-                  ID: {event?.id ? String(event.id).slice(-6).toUpperCase() : 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* Category Badge & Date */}
+        <div className='flex items-center gap-3 mb-6'>
+          <span className='bg-[#0A6FA7] text-white text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold px-3 py-1 rounded-full text-center'>
+            Event
+          </span>
+          <span className='w-1.5 h-1.5 rounded-full bg-gray-300'></span>
+          <span className='text-gray-500 text-xs md:text-sm font-medium'>
+            {event?.createdAt ? formatDate(event.createdAt) : ''}
+          </span>
         </div>
 
+        {/* Title */}
+        <h1 className='text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 leading-[1.15] mb-4'>
+          {event?.title}
+        </h1>
+
         {/* Image */}
-        {event?.image && (
-          <div className='w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg border border-gray-100 relative group'>
+        <div className='w-full mb-12 group'>
+          <div className='overflow-hidden rounded-2xl md:rounded-[2.5rem] shadow-2xl shadow-blue-100/50 transition-transform duration-700 hover:scale-[1.01]'>
             <img
-              src={event?.image}
-              alt={event?.title}
-              className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]'
+              src={event?.image || '/images/events.webp'}
+              alt={event?.title || 'Event image'}
+              className='w-full h-auto max-h-[600px] object-cover'
             />
-            <div className='absolute inset-0 ring-1 ring-inset ring-black/5 rounded-2xl'></div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

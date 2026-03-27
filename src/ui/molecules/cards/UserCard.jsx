@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { IoIosMore } from 'react-icons/io'
 import { HiOutlineUsers } from 'react-icons/hi'
 import { IoSchoolSharp } from 'react-icons/io5'
-import { FaUserTie, FaFileAlt, FaUniversity, FaBuilding } from 'react-icons/fa'
+import { FaUserTie, FaFileAlt, FaUniversity, FaBuilding, FaBook } from 'react-icons/fa'
 import { BsCalendarEvent, BsNewspaper } from 'react-icons/bs'
 import { VscReferences } from 'react-icons/vsc'
+import { LuSchool } from 'react-icons/lu'
 
 const UserCard = ({ type, value, loading }) => {
   const displayValue =
@@ -29,6 +30,10 @@ const UserCard = ({ type, value, loading }) => {
         return '/dashboard/referrals'
       case 'blogs':
         return '/dashboard/blogs'
+      case 'schools':
+        return '/dashboard/school-orderings'
+      case 'materials':
+        return '/dashboard/materials'
       case 'applications':
         return '/dashboard/applications'
       case 'wishlist':
@@ -123,6 +128,20 @@ const UserCard = ({ type, value, loading }) => {
           bgColor: 'bg-amber-50',
           iconColor: 'text-amber-600',
           borderColor: 'border-amber-100'
+        }
+      case 'schools':
+        return {
+          icon: <LuSchool className='w-5 h-5' />,
+          bgColor: 'bg-rose-50',
+          iconColor: 'text-rose-600',
+          borderColor: 'border-rose-100'
+        }
+      case 'materials':
+        return {
+          icon: <FaBook className='w-5 h-5' />,
+          bgColor: 'bg-violet-50',
+          iconColor: 'text-violet-600',
+          borderColor: 'border-violet-100'
         }
       default:
         return {

@@ -3,78 +3,15 @@ import GoogleMap from '@/app/colleges/[slugs]/components/GoogleMap'
 import { FaMapMarkerAlt, FaCalendarCheck, FaClock, FaUserTie } from 'react-icons/fa'
 
 const Description = ({ event }) => {
-  const hostData = event?.event_host ? (typeof event.event_host === 'string' ? JSON.parse(event.event_host) : event.event_host) : {}
-
-  const MetaItem = ({ icon: Icon, label, value }) => (
-    <div className='flex items-start gap-4 py-4 border-b border-gray-50 last:border-0'>
-      <div className='p-2 rounded-md bg-blue-50 text-[#0A6FA7]'>
-        {Icon && <Icon size={16} />}
-      </div>
-      <div className='flex flex-col'>
-        <span className='text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5'>{label}</span>
-        <span className='text-sm font-semibold text-gray-800 leading-snug'>{value || 'N/A'}</span>
-      </div>
-    </div>
-  )
-
-  const formatTime = (time) => {
-    if (!time) return 'N/A'
-    try {
-      return new Date(`1970-01-01T${time}:00`).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      })
-    } catch (e) {
-      return time
-    }
-  }
-
   return (
-    <div className='max-w-[1000px] mx-auto px-6 py-12 lg:py-20'>
-      <div className='flex flex-col lg:flex-row gap-12 lg:gap-20'>
-        {/* Main Content */}
-        <div className='flex-1 min-w-0 overflow-hidden break-words'>
-          <div className='space-y-12'>
-            <section>
-              <h2 className='text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3'>
-                <span className='w-1.5 h-8 bg-[#0A6FA7] rounded-full'></span>
-                About This Event
-              </h2>
-              <HTMLRenderer html={event?.content} />
-            </section>
-          </div>
-        </div>
-
-        {/* Sticky Sidebar */}
-        <div className='lg:w-80 shrink-0 space-y-8'>
-          <div className='bg-white rounded-2xl shadow-xl shadow-gray-100/50 border border-gray-100 p-6 lg:p-8 sticky top-28'>
-            <h3 className='text-lg font-bold text-gray-900 mb-6 flex items-center gap-2'>
-              Event Details
-            </h3>
-
-            <div className='flex flex-col'>
-              <MetaItem icon={FaUserTie} label='Host' value={hostData?.host} />
-              {hostData?.event_organizer && <MetaItem icon={FaUserTie} label='Organizer' value={hostData?.event_organizer} />}
-              <MetaItem icon={FaCalendarCheck} label='Run Time' value={`${hostData?.start_date || 'N/A'} - ${hostData?.end_date || 'N/A'}`} />
-              <MetaItem icon={FaClock} label='Time' value={formatTime(hostData?.time)} />
-              {hostData?.location && <MetaItem icon={FaMapMarkerAlt} label='Address' value={hostData?.location} />}
-            </div>
-
-            {hostData?.map_url && (
-              <div className='mt-8 pt-8 border-t border-gray-100'>
-                <h3 className='text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2'>
-                  <FaMapMarkerAlt className='text-[#0A6FA7]' />
-                  Location
-                </h3>
-                <div className='w-full h-48 rounded-md overflow-hidden border border-gray-100 shadow-sm'>
-                  <GoogleMap mapUrl={hostData.map_url} />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className='w-full'>
+      <section>
+        <h2 className='text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3'>
+          <span className='w-1.5 h-8 bg-[#0A6FA7] rounded-full'></span>
+          About This Event
+        </h2>
+        <HTMLRenderer html={event?.content} />
+      </section>
     </div>
   )
 }

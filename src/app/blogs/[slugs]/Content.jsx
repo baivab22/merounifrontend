@@ -2,11 +2,11 @@
 import services from '@/app/apiService'
 import { useEffect, useState } from 'react'
 import Loading from '../../../ui/molecules/Loading'
-import AdLayout from '../../../components/Frontpage/AdLayout'
+import BannerLayout from '../../../components/Frontpage/BannerLayout'
+import SideBanner from '../../../components/Frontpage/SideBanner'
 import Description from './components/Description'
 import Hero from './components/Hero'
 import SmallCardList from './components/SmallCardList'
-import SideBanner from '../../../components/Frontpage/SideBanner'
 import ShareSection from '@/ui/organisms/common/ShareSection'
 
 const BlogContent = ({ initialBlog, slugs }) => {
@@ -21,7 +21,7 @@ const BlogContent = ({ initialBlog, slugs }) => {
       try {
         const [newsData, bannerData] = await Promise.all([
           !initialBlog ? services.blogs.getBySlug(slugs) : Promise.resolve(null),
-          services.banner.getAll().catch(() => ({ items: [] }))
+          services.banner.getAll({ type: 'FRONT_PAGE' }).catch(() => ({ items: [] }))
         ])
 
         if (newsData) {
@@ -54,11 +54,11 @@ const BlogContent = ({ initialBlog, slugs }) => {
         <>
           <Hero blog={blog} />
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto'>
-            <AdLayout banners={banners} positions={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} />
+            <BannerLayout banners={banners} />
           </div>
 
           <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
-            <div className='flex-1 min-w-0'>
+            <div className='flex-1 md:w-3/4 min-w-0'>
               <Description blog={blog} />
 
               {blog?.pdf_file && (
@@ -88,7 +88,10 @@ const BlogContent = ({ initialBlog, slugs }) => {
               )}
             </div>
 
-
+            {/* Sidebar with ads */}
+            <div className='w-full md:w-1/4 hidden md:block'>
+                <SideBanner banners={banners} />
+            </div>
           </div>
 
           <div className='max-w-[1600px] mx-auto px-6 md:px-16'>

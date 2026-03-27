@@ -1,6 +1,49 @@
 import { Edit2, Trash2, Eye } from 'lucide-react'
 import { Button } from '@/ui/shadcn/button'
 import { formatRelativeWithTitle } from '@/utils/date.util'
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
+
+const UserAvatar = ({ user }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const imageUrl = user.profileImageUrl || user.profile_image_url || user.image;
+
+  if (!imageUrl) {
+    const initial = (user.firstName || user.first_name || 'U').charAt(0).toUpperCase();
+    return (
+      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0 shadow-sm border border-indigo-200">
+        {initial}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <img
+        src={imageUrl}
+        alt="Profile"
+        onClick={() => setIsOpen(true)}
+        className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition shrink-0 shadow-sm border border-gray-200 bg-white"
+        title="View Photo"
+      />
+      <Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <DialogContent className="max-w-lg p-0 bg-transparent border-none shadow-none flex justify-center items-center relative">
+          <div className="relative">
+            <img src={imageUrl} alt="Profile Full" className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain bg-white" />
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              onClick={() => setIsOpen(false)} 
+              className="absolute -top-3 -right-3 rounded-full shadow-lg"
+            >
+               x
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 export const createColumns = ({ handleEdit, handleDelete, handleView }) => [
   {
@@ -24,20 +67,23 @@ export const createColumns = ({ handleEdit, handleDelete, handleView }) => [
         .map(([role]) => role)
 
       return (
-        <div className='flex flex-col gap-1'>
-          <span className='font-medium text-gray-900'>{fullName}</span>
-          {activeRoles.length > 0 && (
-            <div className='flex gap-1 flex-wrap'>
-              {activeRoles.map((role) => (
-                <span
-                  key={role}
-                  className='px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800'
-                >
-                  {role}
-                </span>
-              ))}
-            </div>
-          )}
+        <div className='flex items-center gap-3'>
+          <UserAvatar user={row.original} />
+          <div className='flex flex-col gap-1'>
+            <span className='font-medium text-gray-900'>{fullName}</span>
+            {activeRoles.length > 0 && (
+              <div className='flex gap-1 flex-wrap'>
+                {activeRoles.map((role) => (
+                  <span
+                    key={role}
+                    className='px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800'
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )
     }
@@ -57,7 +103,7 @@ export const createColumns = ({ handleEdit, handleDelete, handleView }) => [
     )
   },
   {
-    header: 'Created At',
+    header: 'Joined Date',
     accessorKey: 'createdAt',
     cell: ({ getValue }) => {
       const { label, title } = formatRelativeWithTitle(getValue())

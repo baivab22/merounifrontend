@@ -1,5 +1,5 @@
 import React from 'react'
-import EventCard from '@/components/Frontpage/EventCard'
+import EventCard from '@/ui/molecules/cards/EventCard'
 import Link from 'next/link'
 import { FaArrowRight } from 'react-icons/fa'
 

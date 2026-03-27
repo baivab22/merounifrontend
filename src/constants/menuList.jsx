@@ -23,7 +23,8 @@ import {
   MdOutlineDescription,
   MdPermContactCalendar,
   MdQuiz,
-  MdSchool
+  MdSchool,
+  MdHistory
 } from 'react-icons/md'
 import { BookOpen } from 'lucide-react'
 import { VscReferences } from 'react-icons/vsc'
@@ -355,11 +356,22 @@ export const menuItems = [
         label: 'Site Control',
         href: '/dashboard/site-control',
         visible: ['admin']
-      },
+      }
+    ]
+  },
+  {
+    title: 'OTHERS',
+    items: [
       {
         icon: <MdOutlineDescription className='text-xl' />,
         label: 'Database Export',
         href: '/dashboard/database-export',
+        visible: ['admin']
+      },
+      {
+        icon: <MdHistory className='text-xl' />,
+        label: 'Activities',
+        href: '/dashboard/activities',
         visible: ['admin']
       }
     ]

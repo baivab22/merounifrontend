@@ -7,7 +7,6 @@ import AgentsListModal from '@/ui/organisms/admin-dashboard/home/AgentsListModal
 import AnalyticsCards from '@/ui/organisms/admin-dashboard/home/AnalyticsCards'
 import DashboardCharts from '@/ui/organisms/admin-dashboard/home/DashboardCharts'
 import QuickActions from '@/ui/organisms/admin-dashboard/home/QuickActions'
-import TopAgentsTable from '@/ui/organisms/admin-dashboard/home/TopAgentsTable'
 import { destr } from 'destr'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -17,6 +16,8 @@ const AdminDashboard = () => {
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedYears, setSelectedYears] = useState([])
+  const [enrollmentData, setEnrollmentData] = useState(null)
+  const [enrollmentLoading, setEnrollmentLoading] = useState(true)
   const [topAgents, setTopAgents] = useState([])
   const [topAgentsLoading, setTopAgentsLoading] = useState(true)
   const [isAgentsModalOpen, setAgentsModalOpen] = useState(false)
@@ -26,20 +27,14 @@ const AdminDashboard = () => {
     return () => setHeading(null)
   }, [setHeading])
 
-  // Load analytics data (Initial and when selectedYears change)
+  // Load analytics summary cards (only once)
   useEffect(() => {
     let isMounted = true
 
     const loadAnalytics = async () => {
       try {
         setLoading(true)
-        // Build query string with years parameter if selectedYears exist
-        const yearsParam =
-          selectedYears.length > 0
-            ? '?' + selectedYears.map((y) => `years=${y}`).join('&')
-            : ''
-        const url = `${process.env.baseUrl}/analytics/admin-overview${yearsParam}`
-
+        const url = `${process.env.baseUrl}/analytics/admin-overview`
         const res = await authFetch(url, { cache: 'no-store' })
 
         if (!res.ok) {
@@ -48,14 +43,7 @@ const AdminDashboard = () => {
 
         const json = await res.json()
         if (!isMounted) return
-
-        const data = json?.data || null
-        setAnalytics(data)
-
-        // Initialize selected years from API response if not already set
-        if (selectedYears.length === 0 && data?.selectedYears) {
-          setSelectedYears(data.selectedYears)
-        }
+        setAnalytics(json?.data || null)
       } catch (error) {
         console.error('Error loading analytics:', error)
       } finally {
@@ -66,6 +54,50 @@ const AdminDashboard = () => {
     }
 
     loadAnalytics()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Load enrollment growth data (when selectedYears change)
+  useEffect(() => {
+    let isMounted = true
+
+    const loadEnrollmentGrowth = async () => {
+      try {
+        setEnrollmentLoading(true)
+        const yearsParam =
+          selectedYears.length > 0
+            ? '?' + selectedYears.map((y) => `years=${y}`).join('&')
+            : ''
+        const url = `${process.env.baseUrl}/analytics/enrollment-growth${yearsParam}`
+        const res = await authFetch(url, { cache: 'no-store' })
+
+        if (!res.ok) {
+          throw new Error('Failed to load enrollment growth')
+        }
+
+        const json = await res.json()
+        if (!isMounted) return
+
+        const data = json?.data || null
+        setEnrollmentData(data)
+
+        // Initialize selected years from API response if not already set
+        if (selectedYears.length === 0 && data?.selectedYears) {
+          setSelectedYears(data.selectedYears)
+        }
+      } catch (error) {
+        console.error('Error loading enrollment growth:', error)
+      } finally {
+        if (isMounted) {
+          setEnrollmentLoading(false)
+        }
+      }
+    }
+
+    loadEnrollmentGrowth()
 
     return () => {
       isMounted = false
@@ -123,15 +155,11 @@ const AdminDashboard = () => {
 
         {/* DASHBOARD CHARTS */}
         <DashboardCharts
-          analytics={analytics}
+          enrollmentData={enrollmentData}
           selectedYears={selectedYears}
           onYearsChange={handleYearsChange}
-        />
-
-        {/* TOP AGENTS TABLE */}
-        <TopAgentsTable
           topAgents={topAgents}
-          loading={topAgentsLoading}
+          topAgentsLoading={topAgentsLoading}
           onViewAll={() => setAgentsModalOpen(true)}
         />
 

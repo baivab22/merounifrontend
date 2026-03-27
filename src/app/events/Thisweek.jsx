@@ -1,6 +1,6 @@
 'use client'
 import React, { useRef } from 'react'
-import EventCard from '../../components/Frontpage/EventCard'
+import EventCard from '@/ui/molecules/cards/EventCard'
 import Link from 'next/link'
 
 const ThisWeek = ({ thisWeekEvents, title, subtitle }) => {
