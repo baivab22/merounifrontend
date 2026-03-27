@@ -1,10 +1,11 @@
 'use client'
-import Banner from '@/app/blogs/[slugs]/components/Banner'
 import Loading from '../../../ui/molecules/Loading'
 import Cardlist from './components/Cardlist'
 import Description from './components/Description'
 import Hero from './components/Hero'
 import ShareSection from '@/ui/organisms/common/ShareSection'
+
+import EventDetails from './components/EventDetails'
 
 const EventContent = ({ event, relatedEvents }) => {
   return (
@@ -17,13 +18,24 @@ const EventContent = ({ event, relatedEvents }) => {
         <main className='animate-in fade-in duration-700'>
           <Hero event={event} />
 
-          <div className='max-w-[1200px] mx-auto px-6 py-10'>
-            <Banner />
+          <div className='px-6 md:px-16 max-w-[1600px] mx-auto mt-12 flex flex-col lg:flex-row gap-12'>
+            <div className='flex-1 md:w-3/4 min-w-0'>
+              <Description event={event} />
+            </div>
+
+            {/* Sidebar with event details */}
+            <div className='w-full md:w-1/4'>
+              <EventDetails event={event} />
+            </div>
           </div>
 
-          <Description event={event} />
+          <div className='max-w-[1600px] mx-auto px-6 md:px-16'>
+            <div className='h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-16'></div>
+          </div>
 
-          <Cardlist events={relatedEvents} />
+          <div className='px-6 md:px-16 my-14 max-w-[1600px] mx-auto'>
+            <Cardlist events={relatedEvents} />
+          </div>
 
           <ShareSection title={event?.title} type='event' />
         </main>

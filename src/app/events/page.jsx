@@ -4,7 +4,6 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Search, Calendar, X } from 'lucide-react'
 import { debounce } from 'lodash'
 import FeaturedEvents from './components/FeaturedEvents'
-import Sponsors from './Sponsors'
 import { fetchEvents, searchEvent, fetchThisWeekEvents, fetchEventCategories } from './action'
 
 // Memoized FilterSection matching platform standard
@@ -325,12 +324,6 @@ const Events = () => {
                             searchQuery={searchQuery || selectedCategory}
                         />
 
-                        {/* Sponsors Section */}
-                        {!loading && events.length > 0 && (
-                            <div className='mt-20'>
-                                <Sponsors />
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+import TopAgentsTable from './TopAgentsTable'
 
 // Dynamically import charts with SSR disabled to fix ResponsiveContainer issues
 const StudentEnrollmentGrowthChart = dynamic(
@@ -9,15 +10,13 @@ const StudentEnrollmentGrowthChart = dynamic(
   { ssr: false }
 )
 
-const Piechart = dynamic(
-  () => import('@/ui/molecules/Piechart'),
-  { ssr: false }
-)
-
 const DashboardCharts = ({
-  analytics,
+  enrollmentData,
   selectedYears = [],
-  onYearsChange
+  onYearsChange,
+  topAgents = [],
+  topAgentsLoading = false,
+  onViewAll
 }) => {
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -29,16 +28,20 @@ const DashboardCharts = ({
       {mounted && (
         <div className='flex flex-col lg:flex-row gap-8'>
           <div className='w-full lg:w-1/2' style={{ minHeight: '450px', height: '450px' }}>
-            <Piechart data={analytics?.educationalInstitutions} />
+             <TopAgentsTable
+              topAgents={topAgents}
+              loading={topAgentsLoading}
+              onViewAll={onViewAll}
+            />
           </div>
           <div className='w-full lg:w-1/2' style={{ minHeight: '450px', height: '450px' }}>
             <StudentEnrollmentGrowthChart
-              data={analytics?.studentEnrollmentGrowth}
-              availableYears={analytics?.availableYears || []}
+              data={enrollmentData?.enrollmentGrowth}
+              availableYears={enrollmentData?.availableYears || []}
               selectedYears={
                 selectedYears.length > 0
                   ? selectedYears
-                  : analytics?.selectedYears || []
+                  : enrollmentData?.selectedYears || []
               }
               onYearsChange={onYearsChange}
             />

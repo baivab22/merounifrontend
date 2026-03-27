@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import EventCard from '@/components/Frontpage/EventCard'
+import EventCard from '@/ui/molecules/cards/EventCard'
 import Pagination from '../../blogs/components/Pagination'
 import { GridSkeleton } from '@/ui/shadcn/GridSkeleton'
 import EventCardSkeleton from '@/ui/shadcn/EventCardSkeleton'

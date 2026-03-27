@@ -3,48 +3,58 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Cell
 } from 'recharts'
 
-const COLORS = [
-  'rgb(99 102 241)',   // indigo-500
-  'rgb(20 184 166)',   // teal-500
-  'rgb(245 158 11)',   // amber-500
-  'rgb(236 72 153)',   // pink-500
-  'rgb(139 92 246)',   // violet-500
-  'rgb(34 197 94)',    // green-500
-  'rgb(251 146 60)',   // orange-500
-  'rgb(59 130 246)'    // blue-500
-]
+const ROLE_COLORS = {
+  student: '#6366f1',      // indigo-500
+  institution: '#14b8a6',  // teal-500
+  agent: '#f59e0b',        // amber-500
+  consultancy: '#ec4899',  // pink-500
+}
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
 
+  // Group payload by year
+  const years = [...new Set(payload.map(p => p.dataKey.split('_')[1]))]
+
   return (
-    <div className='bg-white/95 backdrop-blur rounded-md shadow-lg border border-gray-100 px-4 py-3 min-w-[160px] z-[9999] relative'>
-      <p className='text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2'>
+    <div className='bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-100 p-4 min-w-[220px] z-[9999]'>
+      <p className='text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-3 border-b border-gray-50 pb-2'>
         {label}
       </p>
-      <div className='space-y-1.5'>
-        {payload.map((entry, index) => (
-          <div key={index} className='flex items-center justify-between gap-3'>
-            <div className='flex items-center gap-2'>
-              <span
-                className='w-2.5 h-2.5 rounded-full'
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className='text-sm text-gray-600'>{entry.name}</span>
-            </div>
-            <span className='text-sm font-semibold text-gray-900 tabular-nums'>
-              {entry.value}
-            </span>
+      <div className='space-y-4'>
+        {years.map(year => (
+          <div key={year} className='space-y-1.5'>
+            <p className='text-[10px] font-black text-gray-900 mb-1 flex items-center gap-2'>
+              <span className='w-1 h-3 bg-indigo-500 rounded-full' />
+              YEAR {year}
+            </p>
+            {payload
+              .filter(p => p.dataKey.endsWith(`_${year}`))
+              .map((entry, index) => (
+                <div key={index} className='flex items-center justify-between gap-4 pl-3'>
+                  <div className='flex items-center gap-2.5'>
+                    <div 
+                      className='w-1.5 h-1.5 rounded-full shadow-sm'
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className='text-[11px] font-medium text-gray-500 capitalize'>{entry.name}</span>
+                  </div>
+                  <span className='text-xs font-bold text-gray-900 tabular-nums'>
+                    {entry.value}
+                  </span>
+                </div>
+              ))}
           </div>
         ))}
       </div>
@@ -52,19 +62,19 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-const CustomLegend = ({ payload }) => {
+const CustomLegend = () => {
   return (
-    <div className='flex flex-wrap items-center gap-4 px-1 pb-2'>
-      {payload?.map((entry, index) => (
+    <div className='flex flex-wrap items-center justify-center gap-6 mt-6 border-t border-gray-50 pt-6'>
+      {Object.entries(ROLE_COLORS).map(([role, color]) => (
         <div
-          key={index}
-          className='flex items-center gap-2 text-sm'
+          key={role}
+          className='flex items-center gap-2.5 group cursor-default'
         >
-          <span
-            className='w-3 h-3 rounded-full'
-            style={{ backgroundColor: entry.color }}
+          <div
+            className='w-3 h-3 rounded-md shadow-sm transition-transform group-hover:scale-110'
+            style={{ backgroundColor: color }}
           />
-          <span className='text-gray-600 font-medium'>{entry.value}</span>
+          <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>{role}</span>
         </div>
       ))}
     </div>
@@ -108,63 +118,75 @@ const StudentEnrollmentGrowthChart = ({
     }
   }
 
-  // Generate Line components for each selected year
-  const renderLines = () => {
+  // Generate Bar components for each selected year and each role
+  const renderBars = () => {
     if (!selectedYears || selectedYears.length === 0) return null
 
-    return selectedYears.map((year, index) => (
-      <Line
-        key={year}
-        type='monotone'
-        dataKey={`enrolled_${year}`}
-        name={year.toString()}
-        stroke={COLORS[index % COLORS.length]}
-        strokeWidth={2.5}
-        dot={{ fill: COLORS[index % COLORS.length], r: 4, strokeWidth: 2, stroke: '#fff' }}
-        activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
-        legendType='circle'
-        isAnimationActive
-        animationDuration={400}
-        animationEasing='ease-out'
-      />
-    ))
+    const bars = []
+    selectedYears.forEach((year) => {
+      Object.entries(ROLE_COLORS).forEach(([role, color]) => {
+        bars.push(
+          <Bar
+            key={`${role}_${year}`}
+            dataKey={`${role}_${year}`}
+            name={role}
+            stackId={year.toString()}
+            fill={color}
+            isAnimationActive={true}
+            animationDuration={800}
+            animationEasing='ease-out'
+          />
+        )
+      })
+    })
+    return bars
   }
 
   return (
-    <div className='bg-white rounded-2xl w-full h-full p-6 shadow-sm border border-gray-100/80'>
-      <div className='flex justify-between items-center mb-4'>
-        <h2 className='text-base font-semibold text-gray-800 tracking-tight'>
-          Student Enrollment Growth
-        </h2>
+    <div className='bg-white rounded-3xl w-full h-full p-8 shadow-sm border border-gray-100/80 transition-all hover:shadow-md'>
+      <div className='flex justify-between items-center mb-10'>
+        <div className='space-y-1'>
+          <h2 className='text-lg font-black text-gray-900 tracking-tight'>
+            Enrollment Growth
+          </h2>
+          <p className='text-xs font-medium text-gray-500 uppercase tracking-widest'>
+            Monthly User Registration
+          </p>
+        </div>
         <div className='relative' ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className='flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-all'
+            className='flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-gray-600 bg-gray-50/50 border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all uppercase tracking-widest'
           >
-            <span>Years</span>
+            <span>Filters</span>
             <ChevronDown
-              size={16}
-              className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
+              size={14}
+              className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''
                 }`}
             />
           </button>
           {isDropdownOpen && availableYears.length > 0 && (
-            <div className='absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-64 overflow-y-auto'>
-              <div className='p-2'>
+            <div className='absolute right-0 mt-3 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl z-[9999] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 shadow-indigo-100'>
+              <div className='p-2 bg-gray-50/50 border-b border-gray-100 px-4 py-3'>
+                <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Select Years</span>
+              </div>
+              <div className='p-2 max-h-64 overflow-y-auto'>
                 {availableYears.map((year) => {
                   const isSelected = selectedYears.includes(year)
                   return (
                     <label
                       key={year}
-                      className='flex items-center gap-3 p-2.5 hover:bg-gray-50 cursor-pointer rounded-md transition-colors'
+                      className={`flex items-center justify-between p-3 cursor-pointer rounded-xl transition-all ${
+                        isSelected ? 'bg-indigo-50/50 text-indigo-700' : 'hover:bg-gray-50 text-gray-600'
+                      }`}
                     >
+                      <span className='text-sm font-bold'>{year}</span>
                       <input
                         type='checkbox'
                         checked={isSelected}
                         onChange={() => handleYearToggle(year)}
-                        className='w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer'
+                        className='w-4.5 h-4.5 text-indigo-600 rounded-lg border-gray-300 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer'
                       />
-                      <span className='text-sm font-medium text-gray-700'>{year}</span>
                     </label>
                   )
                 })}
@@ -173,35 +195,38 @@ const StudentEnrollmentGrowthChart = ({
           )}
         </div>
       </div>
-      <div className='h-[calc(100%-3.5rem)] relative z-10'>
+      <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer width='100%' height='100%'>
-          <LineChart
+          <BarChart
             data={enrollmentData}
-            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            barGap={4}
           >
             <CartesianGrid
-              strokeDasharray='3 3'
+              strokeDasharray='4 4'
               vertical={false}
-              stroke='#e5e7eb'
-              strokeOpacity={0.6}
+              stroke='#f1f5f9'
             />
             <XAxis
               dataKey='name'
               axisLine={false}
               tickLine={false}
-              tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }}
-              padding={{ left: 8, right: 8 }}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+              dy={12}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }}
-              width={50}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+              width={80}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1, strokeDasharray: '3 3' }} />
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={{ fill: '#f8fafc', radius: [8, 8, 0, 0] }} 
+            />
             <Legend content={<CustomLegend />} />
-            {renderLines()}
-          </LineChart>
+            {renderBars()}
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>
