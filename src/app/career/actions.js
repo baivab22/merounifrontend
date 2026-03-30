@@ -1,6 +1,6 @@
 import { authFetch } from "../utils/authFetch"
 
-export async function getCareers(page = 1, searchQuery = '', collegeId = '') {
+export async function getCareers(page = 1, searchQuery = '', category_id = '', collegeId = '') {
   try {
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -8,6 +8,9 @@ export async function getCareers(page = 1, searchQuery = '', collegeId = '') {
       limit: '15'
     })
 
+    if (category_id) {
+      queryParams.append('category_id', category_id)
+    }
     if (collegeId) {
       queryParams.append('college_id', collegeId)
     }

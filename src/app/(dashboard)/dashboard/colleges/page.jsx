@@ -97,6 +97,12 @@ export default function CollegeForm() {
     if (searchParams.get('add') === 'true') {
       setIsOpen(true)
       setEditSlug('')
+    } else {
+      const editSlugParam = searchParams.get('edit')
+      if (editSlugParam) {
+        setEditSlug(editSlugParam)
+        setIsOpen(true)
+      }
     }
   }, [])
 

@@ -4,13 +4,16 @@
 
 let url = `${process.env.baseUrl}/video`
 
-export async function fetchVideos(page = 1, limit = 1000, search = '') {
+export async function fetchVideos(page = 1, limit = 1000, search = '', category_id = '') {
   try {
     const urlWithParams = new URL(url)
     urlWithParams.searchParams.append('page', page)
     urlWithParams.searchParams.append('limit', limit)
     if (search) {
       urlWithParams.searchParams.append('q', search)
+    }
+    if (category_id) {
+      urlWithParams.searchParams.append('category_id', category_id)
     }
 
     const response = await fetch(urlWithParams.toString(), {

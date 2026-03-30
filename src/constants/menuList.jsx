@@ -172,6 +172,12 @@ export const menuItems = [
             href: '/dashboard/college-orderings',
             visible: ['admin', 'editor']
           },
+          {
+            icon: <VscReferences className='text-lg' />,
+            label: 'Referable Colleges',
+            href: '/dashboard/referable-colleges',
+            visible: ['admin', 'editor']
+          },
            {
             icon: <SortAsc className='text-lg' />,
             label: 'School Orderings',

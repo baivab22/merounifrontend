@@ -7,9 +7,6 @@ import { Briefcase, Calendar, CheckCircle2, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-import Footer from '../../../components/Frontpage/Footer'
-import Header from '../../../components/Frontpage/Header'
-import Navbar from '../../../components/Frontpage/Navbar'
 import ApplyCareerModal from '../components/ApplyCareerModal'
 
 const CareerContent = ({ data }) => {
@@ -25,9 +22,7 @@ const CareerContent = ({ data }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <Navbar />
+    <div className="min-h-screen bg-gray-50 flex flex-col pt-12">
 
       <main className="flex-1 pb-20">
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -140,7 +135,6 @@ const CareerContent = ({ data }) => {
         careerId={data.id}
         careerTitle={data.title}
       />
-      <Footer />
     </div>
   )
 }

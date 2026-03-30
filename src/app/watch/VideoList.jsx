@@ -1,154 +1,417 @@
 'use client'
 
-import { PlayCircle, Search, X } from 'lucide-react'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { fetchVideos } from '../(dashboard)/dashboard/videos/action'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { formatDate } from '@/utils/date.util'
+import { debounce } from 'lodash'
+import { PlayCircle, Search, X } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { fetchCategories } from '../(dashboard)/dashboard/category/action'
+import { fetchVideos } from '../(dashboard)/dashboard/videos/action'
+
+// Memoized FilterSection matching Admission/DegreePage
+const FilterSection = React.memo(function FilterSection({
+  title,
+  inputField,
+  options,
+  selectedValues,
+  onCheckboxChange,
+  defaultValue,
+  onSearchChange,
+  isLoading
+}) {
+  const [localSearch, setLocalSearch] = useState(defaultValue || '')
+
+  const debouncedSearch = useMemo(
+    () => debounce((val) => onSearchChange(inputField, val), 300),
+    [onSearchChange, inputField]
+  )
+
+  const handleInputChange = (e) => {
+    const val = e.target.value
+    setLocalSearch(val)
+    debouncedSearch(val)
+  }
+
+  useEffect(() => {
+    setLocalSearch(defaultValue || '')
+  }, [defaultValue])
+
+  return (
+    <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+      <div className='flex justify-between items-center mb-4'>
+        <h3 className='text-gray-800 font-bold text-xs md:text-sm uppercase tracking-wider'>
+          {title}
+        </h3>
+      </div>
+      <div className='relative flex items-center mb-4'>
+        <Search className='absolute left-3 w-4 h-4 text-gray-400' />
+        <input
+          type='text'
+          value={localSearch}
+          onChange={handleInputChange}
+          placeholder={`Search ${title.toLowerCase()}...`}
+          className='w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-[#0A70A7] focus:border-[#0A70A7] transition-all'
+        />
+        {isLoading && (
+          <div className='absolute right-3'>
+            <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        )}
+      </div>
+      <div className='mt-2 space-y-2.5 overflow-y-auto h-48 pr-2 custom-scrollbar'>
+        {options.length === 0 ? (
+          <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
+            No matches found
+          </div>
+        ) : (
+          options.map((opt, idx) => (
+            <label
+              key={idx}
+              className='flex items-center gap-3 group cursor-pointer'
+            >
+              <input
+                type='checkbox'
+                checked={selectedValues.includes(opt.id?.toString())}
+                onChange={() => onCheckboxChange(opt.id?.toString())}
+                className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
+              />
+              <span className='text-gray-600 group-hover:text-gray-900 text-sm font-medium transition-colors'>
+                {opt.title}
+              </span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  )
+})
 
 export default function VideoList({ initialData }) {
-    const [videos, setVideos] = useState(initialData?.items || [])
-    const [pagination, setPagination] = useState(initialData?.pagination || {})
-    const [loading, setLoading] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [debouncedSearch, setDebouncedSearch] = useState('')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
 
-    // Debounce search
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSearch(searchTerm)
-        }, 500)
-        return () => clearTimeout(handler)
-    }, [searchTerm])
+  const initialSearch = searchParams.get('q') || ''
+  const initialCategory = searchParams.get('category') || ''
+  const initialPage = parseInt(searchParams.get('page')) || 1
 
-    // Load Data Effect
-    useEffect(() => {
-        if (debouncedSearch !== '') {
-            fetchVideosAPI(1, debouncedSearch, true)
-        } else if (videos.length === 0 && initialData?.items?.length) {
-            fetchVideosAPI(1, '', true)
+  const [videos, setVideos] = useState(initialData?.items || [])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
+
+  const [pagination, setPagination] = useState({
+    currentPage: initialPage,
+    totalPages: 1,
+    totalCount: 0
+  })
+
+  const [categories, setCategories] = useState([])
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [filterInput, setFilterInput] = useState('')
+
+  // URL Sync Helper
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
         }
-    }, [debouncedSearch])
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
+  // Sync state with URL
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    const cat = searchParams.get('category') || ''
+    const pg = parseInt(searchParams.get('page')) || 1
 
-    const fetchVideosAPI = async (page, search, reset = false) => {
-        setLoading(true)
-        try {
-            const response = await fetchVideos(page, 20, search)
-            if (reset) {
-                setVideos(response.items || [])
-            } else {
-                setVideos(prev => [...prev, ...response.items])
-            }
-            setPagination(response.pagination || {})
-        } catch (error) {
-            console.error('Failed to load videos', error)
-        } finally {
-            setLoading(false)
-        }
+    setSearchTerm(q)
+    setDebouncedSearch(q)
+    setSelectedCategory(cat)
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
+  }, [searchParams])
+
+  // Debounce main search
+  useEffect(() => {
+    setIsSearching(true)
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setIsSearching(false)
+      if (searchTerm !== initialSearch) {
+        updateURL({ q: searchTerm, page: 1 })
+      }
+    }, 500)
+    return () => clearTimeout(handler)
+  }, [searchTerm, initialSearch, updateURL])
+
+  // Fetch Categories for Sidebar
+  const fetchCategoryList = useCallback(async (q = '') => {
+    setIsCategoriesLoading(true)
+    try {
+      const data = await fetchCategories(1, 1000, 'VIDEO', '', q)
+      setCategories(data?.items || [])
+    } catch (error) {
+      console.error('Failed to load categories', error)
+    } finally {
+      setIsCategoriesLoading(false)
     }
+  }, [])
 
-    const loadMore = () => {
-        if (loading || (pagination.currentPage >= pagination.totalPages)) return
-        fetchVideosAPI(pagination.currentPage + 1, debouncedSearch, false)
+  useEffect(() => {
+    fetchCategoryList('')
+  }, [fetchCategoryList])
+
+  // Fetch Video Data
+  const fetchVideosData = useCallback(
+    async (page = 1, search = '', category = '') => {
+      setLoading(true)
+      try {
+        const response = await fetchVideos(page, 12, search, category)
+        setVideos(response.items || [])
+        setPagination((prev) => ({
+          ...prev,
+          totalPages: response.pagination?.totalPages ?? 1,
+          totalCount: response.pagination?.totalCount ?? 0
+        }))
+      } catch (error) {
+        console.error('Error fetching videos:', error)
+        setVideos([])
+      } finally {
+        setLoading(false)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    const cat = searchParams.get('category') || ''
+    const pg = parseInt(searchParams.get('page')) || 1
+    fetchVideosData(pg, q, cat)
+  }, [searchParams, fetchVideosData])
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      updateURL({ page })
     }
+  }
 
-    const clearSearch = () => setSearchTerm('')
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSelectedCategory('')
+    setFilterInput('')
+    updateURL({ q: '', category: '', page: 1 })
+  }
 
-    return (
-        <div className='flex flex-col-reverse lg:flex-row gap-8'>
-            {/* Main Content Grid */}
-            <main className='flex-1'>
-                {loading && videos.length === 0 ? (
-                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
-                        {Array(6).fill('').map((_, i) => <CardSkeleton key={i} />)}
-                    </div>
-                ) : videos.length === 0 ? (
-                    <div className='bg-white rounded-2xl border border-gray-100 border-dashed py-16'>
-                        <EmptyState
-                            title='No Videos found'
-                            description={searchTerm ? `No results for "${searchTerm}"` : 'We are adding more content soon!'}
-                        />
-                    </div>
-                ) : (
-                    <>
-                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
-                            {videos.map((video) => (
-                                <Link href={`/watch/${video.slug}`} key={video.id} className='group block bg-white rounded-md shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1'>
-                                    <div className='relative h-48 bg-gray-100 overflow-hidden'>
-                                        {video.featured_image ? (
-                                            <img
-                                                src={video.featured_image}
-                                                alt={video.title}
-                                                className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
-                                            />
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full w-full bg-slate-50 text-slate-400">
-                                                <PlayCircle className="w-12 h-12 opacity-30" />
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                            <div className='bg-white/20 backdrop-blur-sm p-3 rounded-full border border-white/30 transform scale-75 group-hover:scale-100 transition-all duration-300'>
-                                                <PlayCircle className="w-10 h-10 text-white fill-current" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='p-5'>
-                                        <h2 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#387cae] transition-colors'>
-                                            {video.title}
-                                        </h2>
-                                        <p className='text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed'>
-                                            {video.description}
-                                        </p>
-                                        <div className='flex items-center justify-between text-xs text-gray-400 font-medium pt-3 border-t border-gray-50'>
-                                            <span className='bg-gray-100 px-2 py-1 rounded-md text-gray-600'>Video</span>
-                                            <span>{formatDate(video.createdAt)}</span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
+  const handleCategoryToggle = (catId) => {
+    const newVal = selectedCategory === catId ? '' : catId
+    setSelectedCategory(newVal)
+    updateURL({ category: newVal, page: 1 })
+  }
 
-                        {pagination.currentPage < pagination.totalPages && (
-                            <div className='mt-10 text-center'>
-                                <button
-                                    onClick={loadMore}
-                                    disabled={loading}
-                                    className='px-8 py-3 bg-[#387cae] text-white rounded-md font-semibold hover:bg-[#2c6590] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-95'
-                                >
-                                    {loading ? 'Loading...' : 'Load More Videos'}
-                                </button>
-                            </div>
-                        )}
-                    </>
+  return (
+    <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
+      <div className='max-w-7xl mx-auto'>
+        {/* Header Section with Search */}
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
+          <div className='flex-1 space-y-6 w-full'>
+            <div className='flex items-center gap-4 mb-2'>
+              <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+                Watch Videos
+              </h1>
+              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                {pagination.totalCount || '0'} Results
+              </span>
+            </div>
+
+            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A6FA7] focus-within:border-[#0A6FA7] transition-all px-5 py-2.5 relative w-full group'>
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+              <input
+                type='text'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder='Search by title...'
+                className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+              />
+              <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                {isSearching && (
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A6FA7]'></div>
                 )}
-            </main>
-
-            {/* Sidebar / Filters */}
-            <aside className='w-full lg:w-1/4 space-y-6'>
-                <div className='sticky top-24'>
-                    <div className='relative group'>
-                        <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#387cae] transition-colors' />
-                        <input
-                            type='text'
-                            placeholder='Search videos...'
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className='w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 bg-white shadow-sm focus:shadow-md outline-none focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] transition-all text-sm font-medium'
-                        />
-                        {searchTerm && (
-                            <button
-                                onClick={clearSearch}
-                                className='absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors'
-                            >
-                                <X className='h-4 w-4' />
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </aside>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                  >
+                    <X className='w-5 h-5' />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-    )
+
+        {/* Sidebar & Content Section */}
+        <div className='flex flex-col lg:flex-row gap-12'>
+          {/* Sidebar (Left Side) */}
+          <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
+            <div className='flex justify-between items-center mb-[-16px] px-1'>
+              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                Filters
+              </span>
+              {(searchTerm || selectedCategory) && (
+                <button
+                  className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
+                  onClick={clearFilters}
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+            <FilterSection
+              title='Category'
+              inputField='category'
+              options={categories}
+              selectedValues={selectedCategory ? [selectedCategory] : []}
+              onCheckboxChange={handleCategoryToggle}
+              defaultValue={filterInput}
+              onSearchChange={(field, val) => {
+                setFilterInput(val)
+                fetchCategoryList(val)
+              }}
+              isLoading={isCategoriesLoading}
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className='flex-1'>
+            {!loading && (
+              <div className='mb-8 px-2'>
+                <p className='text-sm text-gray-500 font-semibold'>
+                  Showing <span className='text-gray-900'>{videos.length}</span>{' '}
+                  of{' '}
+                  <span className='text-gray-900'>{pagination.totalCount}</span>{' '}
+                  results
+                </p>
+              </div>
+            )}
+
+            {/* Videos Grid */}
+            {loading ? (
+              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
+                {Array(6)
+                  .fill('')
+                  .map((_, index) => (
+                    <CardSkeleton key={index} />
+                  ))}
+              </div>
+            ) : videos.length === 0 ? (
+              <div className='bg-white rounded-[32px] border border-gray-100 border-dashed py-20'>
+                <EmptyState
+                  icon={PlayCircle}
+                  title='No Videos Found'
+                  description={
+                    searchTerm || selectedCategory
+                      ? 'No videos match your selected filters. Try clearing them to see more.'
+                      : 'We are adding more content soon!'
+                  }
+                  action={
+                    searchTerm || selectedCategory
+                      ? { label: 'Clear All Filters', onClick: clearFilters }
+                      : null
+                  }
+                />
+              </div>
+            ) : (
+              <>
+                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
+                  {videos.map((video) => (
+                    <Link
+                      href={`/watch/${video.slug}`}
+                      key={video.id}
+                      className='group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 select-none'
+                    >
+                      <div className='relative h-52 bg-gray-100 overflow-hidden'>
+                        {video.featured_image ? (
+                          <img
+                            src={video.featured_image}
+                            alt={video.title}
+                            className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700'
+                          />
+                        ) : (
+                          <div className='flex items-center justify-center h-full w-full bg-slate-50 text-slate-400'>
+                            <PlayCircle className='w-16 h-16 opacity-20' />
+                          </div>
+                        )}
+                        <div className='absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100'>
+                          <div className='bg-white/20 backdrop-blur-md p-4 rounded-full border border-white/30 transform scale-75 group-hover:scale-100 transition-all duration-500'>
+                            <PlayCircle className='w-12 h-12 text-white fill-current' />
+                          </div>
+                        </div>
+                        <div className='absolute bottom-4 left-4'>
+                          <span className='bg-[#0A6FA7] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-opacity-80'>
+                            {video.category?.title || 'Video'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className='p-6'>
+                        <h2 className='text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#0A6FA7] transition-all leading-tight'>
+                          {video.title}
+                        </h2>
+                        <p className='text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed font-medium'>
+                          {video.description}
+                        </p>
+                        <div className='flex items-center justify-between text-[11px] text-gray-400 font-bold pt-4 border-t border-gray-50 uppercase tracking-widest'>
+                          <div className='flex items-center gap-2'>
+                            <div className='w-1.5 h-1.5 rounded-full bg-green-500'></div>
+                            Watch Now
+                          </div>
+                          <span>{formatDate(video.createdAt)}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Load More replaced by Pagination style if desired, or keep Load More but style it premium */}
+                {pagination.totalPages > 1 && (
+                  <div className='mt-20 flex justify-center'>
+                    <div className='flex gap-2'>
+                      {Array.from(
+                        { length: pagination.totalPages },
+                        (_, i) => i + 1
+                      ).map((pg) => (
+                        <button
+                          key={pg}
+                          onClick={() => handlePageChange(pg)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
+                            pagination.currentPage === pg
+                              ? 'bg-[#0A6FA7] text-white shadow-lg shadow-blue-200'
+                              : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
+                          }`}
+                        >
+                          {pg}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
