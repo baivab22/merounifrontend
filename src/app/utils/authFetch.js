@@ -1,47 +1,33 @@
 export const authFetch = async (url, options = {}) => {
+  const isServer = typeof window === 'undefined'
+  
   try {
-    // Get the stored refresh token
-    const refreshToken = localStorage.getItem('refreshToken')
+    // Get the stored refresh token if in browser
+    let refreshToken = !isServer ? localStorage.getItem('refreshToken') : null
 
-    // If no refresh token, likely logged out - don't make the request
-    if (!refreshToken) {
-      // Silently fail - don't throw error or redirect if already on sign-\in page
-      // let window.location.href = '/sign-in' if you want it to be automatic
-      // but it causes loops in some cases where session is partial.
-      // Return a response-like object that won't break calling code
-      return {
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        json: async () => ({ error: 'Not authenticated' }),
-        text: async () => 'Not authenticated'
+    // Attempt to first fetch - if we have a token, include it
+    const fetchOptions = {
+      ...options,
+      credentials: 'include',
+      headers: {
+        ...options.headers,
       }
     }
 
-    // First attempt with current token
-    let response = await fetch(url, {
-      ...options,
-      credentials: 'include', // Important for cookies
-      headers: {
-        ...options.headers,
-        'x-refresh-token': refreshToken
-      }
-    })
+    if (refreshToken) {
+      fetchOptions.headers['x-refresh-token'] = refreshToken
+    }
 
-    // Handle authentication errors (400, 401, 403) - might indicate invalid session
-    if ([400, 401, 403].includes(response.status)) {
-      // Check if refresh token still exists (might have been cleared during logout)
+    // First attempt
+    let response = await fetch(url, fetchOptions)
+
+    // Handle authentication errors (401, 403) - might indicate invalid session
+    if ([401, 403].includes(response.status) && !isServer) {
       const currentRefreshToken = localStorage.getItem('refreshToken')
-      if (!currentRefreshToken) {
-        // Session was cleared, likely during logout - handle gracefully
-        // Don't throw error, just return the response
-        return response
-      }
-
-      // If we still have a token, try one more time to let middleware refresh
-      if (response.status === 401 || response.status === 403) {
-
-        const newResponse = await fetch(url, {
+      
+      // If we still have a token, try to let backend handle refresh (backend might set new cookies)
+      if (currentRefreshToken) {
+        const retryResponse = await fetch(url, {
           ...options,
           credentials: 'include',
           headers: {
@@ -50,51 +36,33 @@ export const authFetch = async (url, options = {}) => {
           }
         })
 
-        if (!newResponse.ok) {
-          if (newResponse.status === 401 || newResponse.status === 403) {
-            // Clear all storage and redirect to logout
-            localStorage.clear()
-            if (
-              typeof window !== 'undefined' &&
-              !window.location.pathname.includes('/sign-in')
-            ) {
-              // window.location.href = '/sign-in'
-              console.warn('Session expired - redirection handled by guard or manual login');
-            }
-            return newResponse // Return without throwing
-          }
+        if (retryResponse.ok) return retryResponse
 
-          throw new Error(`Request failed with status ${newResponse.status}`)
+        if ([401, 403].includes(retryResponse.status)) {
+          // Session expired, clear storage
+          localStorage.clear()
+          console.warn('Session expired - redirection handled by guard or manual login');
+          return retryResponse
         }
-        return newResponse
-      }
-
-      // For 400 status during logout, return response without throwing
-      // Check if we're in a logout scenario (no refresh token)
-      if (response.status === 400 && !localStorage.getItem('refreshToken')) {
-        return response
       }
     }
 
+    // Check for general errors, but let calling code handle them if needed
+    // especially if they want to distinguish between 404 and 500
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(
-        error?.error || error?.message || `Request failed with status ${response.status}`
-      )
+        // Optional: you can add generic logging here but getCareer expects to parse JSON
+        return response
     }
+
     return response
   } catch (error) {
-    // Only log errors that aren't related to session invalidation, logout, or aborted requests
-    const isLogoutScenario = !localStorage.getItem('refreshToken')
-    const isAbortError = error?.name === 'AbortError' || error?.message === 'superseded'
-
-    if (
-      !isLogoutScenario &&
-      !isAbortError &&
-      !error?.message?.includes('401') &&
-      !error?.message?.includes('403')
-    ) {
-      console.log('Auth Fetch Error:', error)
+    if (!isServer) {
+        const isAbortError = error?.name === 'AbortError' || error?.message === 'superseded'
+        if (!isAbortError && !error?.message?.includes('401') && !error?.message?.includes('403')) {
+          console.log('Auth Fetch Error:', error)
+        }
+    } else {
+        console.error('Server-side Fetch Error:', error.message)
     }
     throw error
   }
