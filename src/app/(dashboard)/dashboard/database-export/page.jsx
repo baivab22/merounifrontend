@@ -32,6 +32,10 @@ export default function DatabaseExportPage() {
     const [dbStatus, setDbStatus] = useState(null)
     const [isStatusLoading, setIsStatusLoading] = useState(true)
 
+    // Backup Configuration State
+    const [backupInterval, setBackupInterval] = useState('Weekly')
+    const [isSavingConfig, setIsSavingConfig] = useState(false)
+
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -42,8 +46,55 @@ export default function DatabaseExportPage() {
         setHeading('Database Export')
         fetchDownloadHistory()
         fetchDbStatus()
+        fetchBackupConfig()
         return () => setHeading(null)
     }, [setHeading])
+
+    const fetchBackupConfig = async () => {
+        try {
+            const response = await authFetch(`${process.env.baseUrl}/config/database_backup_interval`)
+            if (response.ok) {
+                const data = await response.json()
+                if (data.config?.value) {
+                    setBackupInterval(data.config.value)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching backup config:', error)
+        }
+    }
+
+    const handleSaveConfig = async (newInterval) => {
+        setBackupInterval(newInterval)
+        setIsSavingConfig(true)
+        try {
+            const response = await authFetch(`${process.env.baseUrl}/config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'database_backup_interval',
+                    value: newInterval
+                })
+            })
+
+            if (response.ok) {
+                toast({
+                    title: 'Success',
+                    description: `Backup interval updated to ${newInterval}`
+                })
+            } else {
+                throw new Error('Failed to update configuration')
+            }
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: error.message,
+                variant: 'destructive'
+            })
+        } finally {
+            setIsSavingConfig(false)
+        }
+    }
 
     const fetchDbStatus = async () => {
         setIsStatusLoading(true)
@@ -190,8 +241,38 @@ export default function DatabaseExportPage() {
                         ) : (
                             <Download className="w-4 h-4" />
                         )}
-                        {isExporting ? 'Generating...' : 'Export Database'}
+                        {isExporting ? 'Generating...' : 'Download Backup Now'}
                     </Button>
+                </div>
+            </div>
+
+            {/* Backup Configuration Card */}
+            <div className="bg-white p-6 rounded-md border shadow-sm space-y-4">
+                <div className="flex items-center gap-2 text-[#387cae]">
+                    <Clock size={20} />
+                    <h3 className="text-base font-bold text-slate-800 tracking-tight">Automated Backup Settings</h3>
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex-1">
+                        <p className="text-sm text-slate-600 font-medium">
+                            Configure how often the database should be automatically backed up, zipped, and emailed to the administrator.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3 min-w-[240px]">
+                        <select
+                            value={backupInterval}
+                            onChange={(e) => handleSaveConfig(e.target.value)}
+                            disabled={isSavingConfig}
+                            className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm font-medium focus:ring-2 focus:ring-[#387cae] focus:border-[#387cae] outline-none transition-all disabled:opacity-50"
+                        >
+                            <option value="Daily">Daily (at midnight)</option>
+                            <option value="Weekly">Weekly (every Sunday)</option>
+                            <option value="Monthly">Monthly (1st of month)</option>
+                        </select>
+                        {isSavingConfig && (
+                            <RefreshCw className="w-4 h-4 animate-spin text-[#387cae]" />
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -245,4 +326,3 @@ export default function DatabaseExportPage() {
         </div>
     )
 }
-
