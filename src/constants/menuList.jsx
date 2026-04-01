@@ -128,25 +128,7 @@ export const menuItems = [
         href: '/dashboard/applied-consultancies',
         visible: ['student']
       },
-      {
-        icon: <MdQuiz className='text-xl' />,
-        label: 'Exams',
-        href: '/dashboard/exams',
-        visible: ['admin', 'editor']
-      },
-      {
-        icon: <BsLayers className='text-xl' />,
-        label: 'Admission',
-        href: '/dashboard/admission',
-        visible: ['admin', 'editor']
-      },
-      {
-        icon: <MdSchool className='text-xl' />,
-        label: 'Scholarship',
-        href: '/dashboard/scholarship',
-        visible: ['admin', 'editor']
-      },
-
+  
 
       {
         icon: <IoSchoolSharp className='text-xl' />,
@@ -178,7 +160,13 @@ export const menuItems = [
             href: '/dashboard/referable-colleges',
             visible: ['admin', 'editor']
           },
-           {
+          {
+            icon: <IoSchoolSharp className='text-lg' />,
+            label: 'Manage Schools',
+            href: '/dashboard/schools',
+            visible: ['admin', 'editor']
+          },
+          {
             icon: <SortAsc className='text-lg' />,
             label: 'School Orderings',
             href: '/dashboard/school-orderings',
@@ -199,6 +187,25 @@ export const menuItems = [
         href: '/dashboard/consultancy',
         visible: ['admin', 'editor']
       },
+          {
+        icon: <MdQuiz className='text-xl' />,
+        label: 'Exams',
+        href: '/dashboard/exams',
+        visible: ['admin', 'editor']
+      },
+      {
+        icon: <BsLayers className='text-xl' />,
+        label: 'Admission',
+        href: '/dashboard/admission',
+        visible: ['admin', 'editor']
+      },
+      {
+        icon: <MdSchool className='text-xl' />,
+        label: 'Scholarship',
+        href: '/dashboard/scholarship',
+        visible: ['admin', 'editor']
+      },
+
       {
         icon: <BsCalendarEvent className='text-xl' />,
         label: 'Events',

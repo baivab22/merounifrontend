@@ -221,7 +221,7 @@ const CollegeCard = ({
                   key={prog.id}
                   href={`/degree/${prog.slugs || prog.slug}`}
                   onClick={(e) => e.stopPropagation()}
-                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-all duration-200'
+                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap'
                 >
                   {abbreviation}
                 </Link>

@@ -30,6 +30,9 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
     const [eligibilityCriteria, setEligibilityCriteria] = useState('')
     const [eligibilityCriteriaError, setEligibilityCriteriaError] = useState(false)
 
+    const [curriculum, setCurriculum] = useState('')
+    const [curriculumError, setCurriculumError] = useState(false)
+
     // Local state for syllabus management UI
     const [currentYear, setCurrentYear] = useState(1)
     const [currentSemester, setCurrentSemester] = useState(1)
@@ -106,6 +109,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
         setLearningOutcomesError(false)
         setEligibilityCriteria('')
         setEligibilityCriteriaError(false)
+        setCurriculum('')
+        setCurriculumError(false)
         setSelectedUniversities([])
         setSelectedLevel(null)
         setSelectedDegree(null)
@@ -151,6 +156,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             // Set rich text
             setLearningOutcomes(program.learning_outcomes || '')
             setEligibilityCriteria(program.eligibility_criteria || '')
+            setCurriculum(program.curriculum || '')
 
             // Syllabus
             const enrichedSyllabus = (program.syllabus || []).map((item) => ({
@@ -327,6 +333,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     ...data,
                     learning_outcomes: learningOutcomes || undefined,
                     eligibility_criteria: eligibilityCriteria || undefined,
+                    curriculum: curriculum || undefined,
                     level_id: data.level_id ? Number(data.level_id) : undefined,
                     degree_id: data.degree_id ? Number(data.degree_id) : undefined,
                     scholarship_id: data.scholarship_id ? Number(data.scholarship_id) : undefined,
@@ -556,11 +563,18 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
 
                                 <div className="space-y-1.5">
                                     <Label>Curriculum Overview</Label>
-                                    <Textarea
-                                        {...register('curriculum')}
-                                        rows={3}
-                                        placeholder='Brief overview of the curriculum structure...'
-                                    />
+                                    <div className={curriculumError ? 'ring-2 ring-red-400 rounded-md' : ''}>
+                                        <TipTapEditor
+                                            value={curriculum}
+                                            onChange={(html) => {
+                                                setCurriculum(html)
+                                                // const hasText = html && html.replace(/<[^>]*>/g, '').trim().length > 0
+                                                // if (hasText) setCurriculumError(false)
+                                            }}
+                                            placeholder='Describe the curriculum structure and key learning areas...'
+                                            height='250px'
+                                        />
+                                    </div>
                                 </div>
                             </section>
 

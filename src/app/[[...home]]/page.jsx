@@ -9,7 +9,7 @@ import ScrollToTop from '@/ui/molecules/common/ScrollToTop'
 
 // Dynamically import below-the-fold components
 const DisciplineList = dynamic(() => import('@/components/Frontpage/DisciplineList'))
-const Event = dynamic(() => import('@/components/Frontpage/Event'))
+
 const FeaturedDegree = dynamic(() => import('@/components/Frontpage/FeaturedDegree'))
 const CollegeRankings = dynamic(() => import('@/components/Frontpage/CollegeRankings'))
 const Footer = dynamic(() => import('@/components/Frontpage/Footer'))
@@ -96,9 +96,7 @@ const Page = async () => {
           <CollegeRankings />
         </Suspense>
 
-        <Suspense fallback={<div className="h-64 bg-gray-50 animate-pulse rounded-md my-8" />}>
-          <Event />
-        </Suspense>
+
 
         <Suspense fallback={<div className="h-64 bg-gray-50 animate-pulse rounded-md my-8" />}>
           <FeaturedDegree />

@@ -87,6 +87,9 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                       </div>
                       <h3 className='text-base font-semibold text-gray-900 line-clamp-2 h-12 flex items-center'>
                         {degreeGroup.degree.title || 'Degree'}
+                        {degreeGroup.degree.short_name && (
+                          <span className='ml-1.5 text-gray-500 font-normal'>({degreeGroup.degree.short_name})</span>
+                        )}
                       </h3>
                     </div>
 

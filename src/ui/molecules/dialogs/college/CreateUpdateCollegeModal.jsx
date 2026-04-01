@@ -104,7 +104,7 @@ const CreateUpdateCollegeModal = ({
             author_id: author_id,
             university_id: [],
             institute_type: 'Private',
-            institute_level: [],
+            institute_level: ['College'],
             programs: [],
             degrees: [],
             description: '',
@@ -542,7 +542,7 @@ const CreateUpdateCollegeModal = ({
             <DialogHeader className="bg-white border-b border-gray-100 p-6">
                 <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                     <Layers className="text-[#387cae]" size={24} />
-                    {editSlug ? 'Edit College/School' : 'Add New College/School'}
+                    {editSlug ? 'Edit College' : 'Add New College'}
                 </DialogTitle>
                 <DialogClose onClick={handleCloseAttempt} />
             </DialogHeader>
@@ -612,39 +612,6 @@ const CreateUpdateCollegeModal = ({
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <Label required={true} className="mb-3">Institute Level</Label>
-                                            <div className='grid grid-cols-2 gap-4'>
-                                                {['School', 'College'].map((level) => (
-                                                    <label
-                                                        key={level}
-                                                        className={cn(
-                                                            'flex items-center justify-center gap-3 p-4 rounded-md border-2 transition-all cursor-pointer group',
-                                                            watch('institute_level')?.includes(level)
-                                                                ? 'bg-[#387cae]/5 border-[#387cae] text-[#387cae] shadow-md'
-                                                                : 'bg-white border-gray-200 text-gray-400 hover:border-gray-200 hover:bg-gray-50'
-                                                        )}
-                                                    >
-                                                        <input
-                                                            type='checkbox'
-                                                            value={level}
-                                                            {...register('institute_level', { required: 'At least one level is required' })}
-                                                            className='hidden'
-                                                        />
-                                                        <div className={cn(
-                                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                                                            watch('institute_level')?.includes(level) ? "border-[#387cae] bg-[#387cae]" : "border-gray-200"
-                                                        )}>
-                                                            {watch('institute_level')?.includes(level) && <Check size={12} className="text-white" />}
-                                                        </div>
-                                                        <span className='text-sm font-bold'>{level}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                            {errors.institute_level && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.institute_level.message}</p>
-                                            )}
-                                        </div>
                                     </div>
                                 </div>
 
@@ -1262,45 +1229,35 @@ const CreateUpdateCollegeModal = ({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className='shrink-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-20 sticky bottom-0'>
-                        <Button
-                            type='button'
-                            onClick={handleCloseAttempt}
-                            variant='outline'
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type='button'
-                            onClick={onSaveDraft}
-                            variant='secondary'
-                            disabled={submitting || submittingDraft || loadingData}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-4"
-                        >
-                            {submittingDraft ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Saving Draft...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <FileText className="w-4 h-4" />
-                                    <span>Save as Draft</span>
-                                </>
-                            )}
-                        </Button>
-                        <Button
-                            type='submit'
-                            disabled={submitting || submittingDraft || loadingData}
-                            className="px-4"
-                        >
-                            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                            <span>
-                                {submitting
-                                    ? (editSlug ? 'Updating...' : 'Creating...')
-                                    : (editSlug ? 'Update College' : 'Create College')}
-                            </span>
-                        </Button>
+                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-40 rounded-b-3xl'>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest mr-2">Status:</span>
+                            <select
+                                {...register('status')}
+                                className="bg-gray-100 border-none rounded-full px-4 py-1.5 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#387cae]/20 transition-all cursor-pointer"
+                            >
+                                <option value="published">Published</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+                        <div className='flex gap-4 w-full sm:w-auto'>
+                            <Button
+                                type='button'
+                                variant='outline'
+                                onClick={onSaveDraft}
+                                disabled={submittingDraft || submitting}
+                                className='flex-1 sm:flex-none h-11 px-8 rounded-md font-bold'
+                            >
+                                {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : 'Save as Draft'}
+                            </Button>
+                            <Button
+                                type='submit'
+                                disabled={submitting || submittingDraft}
+                                className='flex-1 sm:flex-none h-11 px-10 rounded-md bg-[#387cae] hover:bg-[#387cae]/90 text-white font-bold shadow-lg shadow-[#387cae]/20 transition-all'
+                            >
+                                {submitting ? <Loader2 className="animate-spin mr-2" size={18} /> : (editSlug ? 'Update College' : 'Create College')}
+                            </Button>
+                        </div>
                     </div>
                 </form>
             </DialogContent>
@@ -1312,10 +1269,8 @@ const CreateUpdateCollegeModal = ({
                     setShowCloseConfirm(false)
                     onSystemClose()
                 }}
-                title="Unsaved Changes"
-                message="You have unsaved changes. Are you sure you want to close? Your progress will be lost."
-                confirmText="Discard & Close"
-                cancelText="Keep Editing"
+                title="Discard Changes?"
+                message="You have unsaved changes. Are you sure you want to discard them? This action cannot be undone."
             />
         </Dialog>
     )

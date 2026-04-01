@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
@@ -13,7 +14,8 @@ import {
   ListOrdered,
   ChevronLeft,
   ArrowRight,
-  Info
+  Info,
+  Briefcase
 } from 'lucide-react'
 
 import Footer from '../../../components/Frontpage/Footer'
@@ -24,6 +26,7 @@ import HTMLRenderer from '@/ui/HTMLRenderer'
 import ShareSection from '@/ui/organisms/common/ShareSection'
 
 const ProgramContent = ({ program, error }) => {
+  const router = useRouter()
   if (error || !program) {
     return (
       <>
@@ -70,10 +73,10 @@ const ProgramContent = ({ program, error }) => {
           <div className='container mx-auto px-4 py-16 md:py-24 relative z-10'>
             <div className='max-w-4xl'>
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className='flex items-center gap-2 mb-8' >
-                <Link href='/programs' className='group flex items-center gap-2 text-sm font-bold text-[#0A6FA7] hover:text-[#085e8a] transition-all bg-white px-4 py-2 rounded-full shadow-sm border border-[#0A6FA7]/10' >
+                <button onClick={() => router.back()} className='group flex items-center gap-2 text-sm font-bold text-[#0A6FA7] hover:text-[#085e8a] transition-all bg-white px-4 py-2 rounded-full shadow-sm border border-[#0A6FA7]/10' >
                   <ChevronLeft className='w-4 h-4 group-hover:-translate-x-1 transition-transform' />
-                  Back to Programs
-                </Link>
+                  Go Back
+                </button>
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} >
@@ -119,8 +122,9 @@ const ProgramContent = ({ program, error }) => {
                 { id: 'outcomes', icon: Target, title: 'Learning outcomes', content: program.learning_outcomes },
                 { id: 'eligibility', icon: Info, title: 'Eligibility criteria', content: program.eligibility_criteria },
                 { id: 'curriculum', icon: ListOrdered, title: 'Curriculum overview', content: program.curriculum },
+                { id: 'careers', icon: Briefcase, title: 'Career Opportunities', content: program.careers },
                 { id: 'fee', icon: DollarSign, title: 'Fee structure', content: program.fee }
-              ].map((section) => section.content && (
+              ].map((section) => section.content && String(section.content).trim() !== '' && (
                 <motion.section key={section.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className='bg-white' >
                   <div className='flex items-center gap-3 mb-6'>
                     <div className='w-12 h-12 rounded-2xl bg-[#0A6FA7]/5 flex items-center justify-center text-[#0A6FA7]'>
