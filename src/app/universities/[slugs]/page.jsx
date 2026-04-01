@@ -10,12 +10,12 @@ export async function generateMetadata({ params }) {
 
         if (!universityData) return { title: 'University | MeroUni' }
 
-        const title = universityData.name
+        const title = universityData.fullname || universityData.name
         const description = stripHtml(universityData.description || '').substring(0, 160)
         const ogImage = universityData.logo || universityData.image
 
         return {
-            title: `${title} | MeroUni`,
+            title: `${title}`,
             description: description,
             openGraph: {
                 title: title,
