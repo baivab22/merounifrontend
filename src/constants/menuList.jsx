@@ -352,6 +352,12 @@ export const menuItems = [
         visible: ['admin', 'editor']
       },
       {
+        icon: <MdCategory className='text-xl' />,
+        label: 'Board',
+        href: '/dashboard/board',
+        visible: ['admin', 'editor']
+      },
+      {
         icon: <MdSchool className='text-xl' />,
         label: 'Degree',
         href: '/dashboard/degrees',

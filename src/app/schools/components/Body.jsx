@@ -11,22 +11,28 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import FilterSection from './FilterSection'
 import { ShimmerCard } from './ShimmerCard'
+import Pagination from '@/ui/molecules/common/Pagination'
+
 
 // Helper to construct School filter params
 const buildSchoolQueryParams = (page, filters = {}, q = '') => {
   const params = new URLSearchParams()
   params.append('page', page.toString())
-  params.append('limit', '1000')
+  params.append('page', page.toString())
+  params.append('limit', q ? '1000' : '24')
+
   params.append('institute_level', 'school')
 
   if (q) params.append('q', q)
 
-  if (filters.affiliation && filters.affiliation.length > 0) {
-    const affiliationValue = Array.isArray(filters.affiliation)
-      ? filters.affiliation.join(',')
-      : filters.affiliation
-    params.append('affiliation', affiliationValue)
+  if (filters.board_ids && filters.board_ids.length > 0) {
+    params.append('board_ids', filters.board_ids.join(','))
   }
+
+  if (filters.stream_ids && filters.stream_ids.length > 0) {
+    params.append('stream_ids', filters.stream_ids.join(','))
+  }
+
 
   if (filters.type && filters.type.length > 0) {
     const typeValue = Array.isArray(filters.type)
@@ -89,11 +95,11 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
 
 
 
-const fetchSchoolAffiliationsFromAPI = async (searchQuery = '') => {
+const fetchSchoolBoardsFromAPI = async (searchQuery = '') => {
   try {
     const queryParams = new URLSearchParams()
     if (searchQuery) queryParams.append('q', searchQuery)
-    const url = `${process.env.baseUrl}/school/affiliations?${queryParams.toString()}`
+    const url = `${process.env.baseUrl}/school/boards?${queryParams.toString()}`
 
     const response = await fetch(url, {
       method: 'GET',
@@ -106,10 +112,33 @@ const fetchSchoolAffiliationsFromAPI = async (searchQuery = '') => {
     const data = await response.json()
     return data.items || []
   } catch (error) {
-    console.error('Failed to fetch school affiliations:', error)
+    console.error('Failed to fetch school boards:', error)
     return []
   }
 }
+
+const fetchSchoolStreamsFromAPI = async (searchQuery = '') => {
+  try {
+    const queryParams = new URLSearchParams()
+    if (searchQuery) queryParams.append('q', searchQuery)
+    const url = `${process.env.baseUrl}/school/streams?${queryParams.toString()}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    })
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+    const data = await response.json()
+    return data.items || []
+  } catch (error) {
+    console.error('Failed to fetch school streams:', error)
+    return []
+  }
+}
+
 
 const SchoolFinder = () => {
   const router = useRouter()
@@ -119,8 +148,10 @@ const SchoolFinder = () => {
   // Initial values from URL
   const initialSearch = searchParams.get('q') || ''
   const initialPage = parseInt(searchParams.get('page')) || 1
-  const initialAffiliation = searchParams.get('affiliation')?.split(',').filter(Boolean) || []
+  const initialBoardIds = searchParams.get('board_ids')?.split(',').filter(Boolean) || []
+  const initialStreamIds = searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
   const initialType = searchParams.get('type')?.split(',').filter(Boolean) || []
+
 
   const [schools, setSchools] = useState([])
   const [pagination, setPagination] = useState({
@@ -135,31 +166,41 @@ const SchoolFinder = () => {
   // Filter Input States (for search within filters)
   const [filterInputs, setFilterInputs] = useState({
     type: '',
-    affiliation: ''
+    board: '',
+    stream: ''
   })
 
-  const [affiliations, setAffiliations] = useState([])
-  const [isAffiliationsLoading, setIsAffiliationsLoading] = useState(false)
+  const [boards, setBoards] = useState([])
+  const [streams, setStreams] = useState([])
+  const [isBoardsLoading, setIsBoardsLoading] = useState(false)
+  const [isStreamsLoading, setIsStreamsLoading] = useState(false)
 
   // Selected Filter Values
   const [selectedFilters, setSelectedFilters] = useState({
-    affiliation: initialAffiliation,
+    board_ids: initialBoardIds,
+    stream_ids: initialStreamIds,
     type: initialType
   })
+
 
   const user = useSelector((state) => state.user.data)
   const [wishlistCollegeIds, setWishlistCollegeIds] = useState(new Set())
 
-  // Initial Fetch for Affiliations
+  // Initial Fetch for Boards and Streams
   useEffect(() => {
-    const initAffiliations = async () => {
-      setIsAffiliationsLoading(true)
-      const data = await fetchSchoolAffiliationsFromAPI()
-      setAffiliations(data.map(a => ({ id: String(a.id), name: a.fullname })))
-      setIsAffiliationsLoading(false)
+    const initFilters = async () => {
+      setIsBoardsLoading(true)
+      setIsStreamsLoading(true)
+      const boardsData = await fetchSchoolBoardsFromAPI()
+      const streamsData = await fetchSchoolStreamsFromAPI()
+      setBoards(boardsData.map(b => ({ id: String(b.id), name: b.name })))
+      setStreams(streamsData.map(s => ({ id: String(s.id), name: s.name })))
+      setIsBoardsLoading(false)
+      setIsStreamsLoading(false)
     }
-    initAffiliations()
+    initFilters()
   }, [])
+
 
   // Static Filter Options
   const staticOptions = useMemo(() => ({
@@ -209,13 +250,15 @@ const SchoolFinder = () => {
   useEffect(() => {
     const q = searchParams.get('q') || ''
     const pg = parseInt(searchParams.get('page')) || 1
-    const aff = searchParams.get('affiliation')?.split(',').filter(Boolean) || []
+    const bids = searchParams.get('board_ids')?.split(',').filter(Boolean) || []
+    const sids = searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
     const t = searchParams.get('type')?.split(',').filter(Boolean) || []
 
     setSearchQuery(q)
     setPagination(prev => ({ ...prev, currentPage: pg }))
-    setSelectedFilters({ affiliation: aff, type: t })
+    setSelectedFilters({ board_ids: bids, stream_ids: sids, type: t })
   }, [searchParams])
+
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
@@ -241,14 +284,17 @@ const SchoolFinder = () => {
     const fetchData = async () => {
       const q = searchParams.get('q') || ''
       const pg = parseInt(searchParams.get('page')) || 1
-      const aff = searchParams.get('affiliation')?.split(',').filter(Boolean) || []
-      const t = searchParams.get('type')?.split(',').filter(Boolean) || []
+      const filters = {
+        board_ids: searchParams.get('board_ids')?.split(',').filter(Boolean) || [],
+        stream_ids: searchParams.get('stream_ids')?.split(',').filter(Boolean) || [],
+        type: searchParams.get('type')?.split(',').filter(Boolean) || []
+      }
 
       setIsLoading(true)
       if (q) setIsSearching(true)
 
       try {
-        const data = await fetchSchoolsFromAPI(pg, { affiliation: aff, type: t }, q)
+        const data = await fetchSchoolsFromAPI(pg, filters, q)
         setSchools(data.schools)
         setPagination(data.pagination)
       } catch (err) {
@@ -264,13 +310,21 @@ const SchoolFinder = () => {
   const handleFilterSearchChange = async (field, value) => {
     setFilterInputs((prev) => ({ ...prev, [field]: value }))
 
-    if (field === 'affiliation') {
-      setIsAffiliationsLoading(true)
-      const data = await fetchSchoolAffiliationsFromAPI(value)
-      setAffiliations(data.map(a => ({ id: String(a.id), name: a.fullname })))
-      setIsAffiliationsLoading(false)
+    if (field === 'board') {
+      setIsBoardsLoading(true)
+      const data = await fetchSchoolBoardsFromAPI(value)
+      setBoards(data.map(b => ({ id: String(b.id), name: b.name })))
+      setIsBoardsLoading(false)
+    }
+
+    if (field === 'stream') {
+      setIsStreamsLoading(true)
+      const data = await fetchSchoolStreamsFromAPI(value)
+      setStreams(data.map(s => ({ id: String(s.id), name: s.name })))
+      setIsStreamsLoading(false)
     }
   }
+
 
   const handleFilterChange = (filterType, value) => {
     setSelectedFilters((prev) => {
@@ -292,10 +346,8 @@ const SchoolFinder = () => {
     })
   }
 
-  const filteredAffiliations = useMemo(
-    () => affiliations,
-    [affiliations]
-  )
+  const filteredBoards = useMemo(() => boards, [boards])
+  const filteredStreams = useMemo(() => streams, [streams])
 
   const filteredInstituteTypes = useMemo(
     () =>
@@ -304,6 +356,7 @@ const SchoolFinder = () => {
       ),
     [filterInputs.type, staticOptions.type]
   )
+
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= pagination.totalPages) {
@@ -359,23 +412,35 @@ const SchoolFinder = () => {
               className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
               onClick={() => {
                 setSearchQuery('')
-                setFilterInputs({ type: '', affiliation: '' })
+                setFilterInputs({ type: '', board: '', stream: '' })
                 router.push(pathname, { scroll: false })
               }}
             >
               Clear All
             </button>
+
           </div>
           <FilterSection
-            title='Affiliation'
-            inputField='affiliation'
-            options={filteredAffiliations}
-            selectedValues={selectedFilters.affiliation}
-            onCheckboxChange={(val) => handleFilterChange('affiliation', val)}
-            defaultValue={filterInputs.affiliation}
+            title='Board'
+            inputField='board'
+            options={filteredBoards}
+            selectedValues={selectedFilters.board_ids}
+            onCheckboxChange={(val) => handleFilterChange('board_ids', val)}
+            defaultValue={filterInputs.board}
             onSearchChange={handleFilterSearchChange}
-            isLoading={isAffiliationsLoading}
+            isLoading={isBoardsLoading}
           />
+          <FilterSection
+            title='Stream'
+            inputField='stream'
+            options={filteredStreams}
+            selectedValues={selectedFilters.stream_ids}
+            onCheckboxChange={(val) => handleFilterChange('stream_ids', val)}
+            defaultValue={filterInputs.stream}
+            onSearchChange={handleFilterSearchChange}
+            isLoading={isStreamsLoading}
+          />
+
           <FilterSection
             title='Institute type'
             inputField='type'
@@ -419,17 +484,25 @@ const SchoolFinder = () => {
                 label: 'Clear All Filters',
                 onClick: () => {
                   setSearchQuery('')
-                  setFilterInputs({ type: '', affiliation: '' })
+                  setFilterInputs({ type: '', board: '', stream: '' })
                   router.push(pathname, { scroll: false })
                 }
               }}
             />
+
           )}
 
+          {!searchQuery && pagination.totalPages > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          )}
         </div>
       </div>
 
     </div>
+
   )
 }
 

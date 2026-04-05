@@ -88,3 +88,54 @@ export const fetchAllDegrees = async () => {
     throw error
   }
 }
+
+export const fetchBoards = async (searchQuery = '') => {
+  try {
+    const response = await authFetch(
+      `${process.env.baseUrl}/board${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch boards')
+    }
+    const data = await response.json()
+    return data.items
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export const getStreamsByBoards = async (boardIds) => {
+  if (!boardIds || boardIds.length === 0) return []
+  try {
+    const response = await authFetch(
+      `${process.env.baseUrl}/stream?board_ids=${boardIds.join(',')}&limit=1000`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch streams')
+    }
+    const data = await response.json()
+    return data.items
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export const getProgramsByStreams = async (streamIds) => {
+  if (!streamIds || streamIds.length === 0) return []
+  try {
+    const response = await authFetch(
+      `${process.env.baseUrl}/program?stream_ids=${streamIds.join(',')}&limit=1000`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch programs')
+    }
+    const data = await response.json()
+    return data.items
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+

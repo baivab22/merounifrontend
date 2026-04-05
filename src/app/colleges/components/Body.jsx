@@ -1,6 +1,7 @@
 'use client'
 
-import Pagination from '@/app/blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
+
 import { authFetch } from '@/app/utils/authFetch'
 import { DistrictLists } from '@/constants/district'
 import CollegeCard from '@/ui/molecules/cards/CollegeCard'
@@ -18,7 +19,8 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
   try {
     const body = {
       page,
-      limit: 1000,
+      limit: q ? 1000 : 24,
+
       degree_ids: filters.degree_ids || [],
       districts: filters.districts || [],
       university_ids: filters.university_ids || [],
@@ -515,9 +517,16 @@ const CollegeFinder = () => {
             />
           )}
 
+          {!q && pagination.totalPages > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
+          )}
         </div>
       </div>
     </div>
+
   )
 }
 

@@ -23,6 +23,8 @@ export default function ProgramForm() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchTimeout, setSearchTimeout] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [preselectedStreamId, setPreselectedStreamId] = useState(null)
+
 
   const [selectedUniversity, setSelectedUniversity] = useState(null)
   const [selectedLevel, setSelectedLevel] = useState(null)
@@ -48,7 +50,10 @@ export default function ProgramForm() {
     if (searchParams.get('add') === 'true') {
       setShowCreateModal(true)
       setSelectedSlug(null)
+      const sid = searchParams.get('stream_id')
+      if (sid) setPreselectedStreamId(sid)
     }
+
   }, [])
 
   useEffect(() => {
@@ -357,10 +362,12 @@ export default function ProgramForm() {
 
       <CreateUpdateProgram
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => { setShowCreateModal(false); setPreselectedStreamId(null) }}
         slug={selectedSlug}
+        preselectedStreamId={preselectedStreamId}
         onSuccess={() => fetchPrograms(pagination.currentPage, searchQuery)}
       />
+
 
       <ViewProgram
         isOpen={showViewModal}
