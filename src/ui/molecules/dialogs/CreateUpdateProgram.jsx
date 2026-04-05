@@ -17,7 +17,8 @@ import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 
-const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
+const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStreamId }) => {
+
     const { toast } = useToast()
     const author_id = useSelector((state) => state.user.data?.id)
     const [loading, setLoading] = useState(false)
@@ -46,6 +47,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
     const [selectedDegree, setSelectedDegree] = useState(null)
     const [selectedScholarship, setSelectedScholarship] = useState(null)
     const [selectedExam, setSelectedExam] = useState(null)
+    const [selectedStream, setSelectedStream] = useState(null)
+
 
     const {
         register,
@@ -73,8 +76,10 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             delivery_mode: 'On-campus',
             careers: '',
             exam_id: '',
+            stream_id: '',
             status: 'published',
             syllabus: []
+
         }
     })
 
@@ -102,7 +107,9 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             delivery_mode: 'On-campus',
             careers: '',
             exam_id: '',
+            stream_id: '',
             syllabus: [],
+
             colleges: []
         })
         setLearningOutcomes('')
@@ -116,7 +123,9 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
         setSelectedDegree(null)
         setSelectedScholarship(null)
         setSelectedExam(null)
+        setSelectedStream(null)
         setValue('status', 'published')
+
         setCurrentYear(1)
         setCurrentSemester(1)
         setCurrentCourse({ id: '', title: '' })
@@ -129,9 +138,27 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                 handleEdit(slug)
             } else {
                 resetForm()
+                if (preselectedStreamId) {
+                    handlePreselectStream(preselectedStreamId)
+                }
             }
         }
-    }, [isOpen, slug])
+    }, [isOpen, slug, preselectedStreamId])
+
+    const handlePreselectStream = async (id) => {
+        try {
+            const res = await authFetch(`${process.env.baseUrl}/stream?id=${id}`)
+            const data = await res.json()
+            const st = data.item || data.data || data
+            if (st) {
+                setSelectedStream({ id: st.id, name: st.name })
+                setValue('stream_id', st.id)
+            }
+        } catch (err) {
+            console.error('Failed to preselect stream', err)
+        }
+    }
+
 
     const handleEdit = async (slug) => {
         setLoading(true)
@@ -152,6 +179,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             setValue('delivery_mode', program.delivery_mode || 'On-campus')
             setValue('careers', program.careers || '')
             setValue('code', program.code || '')
+            setValue('stream_id', program.stream_id || '')
+
 
             // Set rich text
             setLearningOutcomes(program.learning_outcomes || '')
@@ -173,6 +202,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
             setValue('exam_id', program.exam_id ?? program.programexam?.id ?? '')
             setValue('level_id', program.level_id ?? program.programlevel?.id ?? '')
             setValue('degree_id', program.degree_id ?? program.programdegree?.id ?? '')
+            setValue('stream_id', program.stream_id ?? program.stream?.id ?? '')
+
 
             // Level
             if (program.level_id || program.programlevel) {
@@ -194,6 +225,12 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                 const ex = program.programexam
                 if (ex) setSelectedExam({ id: ex.id, title: ex.title })
             }
+            // Stream
+            if (program.stream_id || program.stream) {
+                const st = program.stream
+                if (st) setSelectedStream({ id: st.id, name: st.name })
+            }
+
 
             // Universities
             if (program.universities?.length) {
@@ -281,6 +318,15 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
         } catch { return [] }
     }
 
+    const onSearchStreams = async (q) => {
+        try {
+            const res = await authFetch(`${process.env.baseUrl}/stream?${q ? `q=${encodeURIComponent(q)}&` : ''}limit=50`)
+            const data = await res.json()
+            return (data.items || []).map((s) => ({ id: s.id, name: s.name }))
+        } catch { return [] }
+    }
+
+
     const onSearchCourses = async (q) => {
         try {
             const res = await authFetch(`${process.env.baseUrl}/course?${q ? `q=${encodeURIComponent(q)}&` : ''}limit=50`)
@@ -336,7 +382,9 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                     curriculum: curriculum || undefined,
                     level_id: data.level_id ? Number(data.level_id) : undefined,
                     degree_id: data.degree_id ? Number(data.degree_id) : undefined,
+                    stream_id: data.stream_id ? Number(data.stream_id) : undefined,
                     scholarship_id: data.scholarship_id ? Number(data.scholarship_id) : undefined,
+
                     exam_id: data.exam_id ? Number(data.exam_id) : undefined,
                     credits: data.credits || undefined,
                     universities: selectedUniversities.map((u) => u.id),
@@ -498,6 +546,23 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess }) => {
                                             inputSize="sm"
                                         />
                                     </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label>Stream</Label>
+                                        <SearchSelectCreate
+                                            onSearch={onSearchStreams}
+                                            onSelect={(item) => { setSelectedStream(item); setValue('stream_id', item.id) }}
+                                            onRemove={() => { setSelectedStream(null); setValue('stream_id', '') }}
+                                            selectedItems={selectedStream ? [selectedStream] : []}
+                                            placeholder='Search stream…'
+                                            displayKey='name'
+                                            valueKey='id'
+                                            isMulti={false}
+                                            allowCreate={false}
+                                            inputSize="sm"
+                                        />
+                                    </div>
+
 
                                     <div className="space-y-1.5">
                                         <Label>Language of Instruction</Label>

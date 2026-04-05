@@ -37,10 +37,12 @@ import { useToast } from '@/hooks/use-toast'
 
 import {
     createOrUpdateSchool,
-    fetchUniversities,
-    getProgramsByUniversity,
+    fetchBoards,
+    getStreamsByBoards,
+    getProgramsByStreams,
     saveDraft
 } from '@/app/(dashboard)/dashboard/schools/actions'
+
 import { cn } from '@/app/lib/utils'
 import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
@@ -74,7 +76,9 @@ const CreateUpdateSchoolModal = ({
     const [submittingDraft, setSubmittingDraft] = useState(false)
     const [loadingData, setLoadingData] = useState(false)
     const [showCloseConfirm, setShowCloseConfirm] = useState(false)
-    const [universityPrograms, setUniversityPrograms] = useState([])
+    const [boardStreams, setBoardStreams] = useState([])
+    const [loadingStreams, setLoadingStreams] = useState(false)
+    const [streamPrograms, setStreamPrograms] = useState([])
     const [loadingPrograms, setLoadingPrograms] = useState(false)
     const [filesDirty, setFilesDirty] = useState(false)
     const [uploadedFiles, setUploadedFiles] = useState({
@@ -83,7 +87,9 @@ const CreateUpdateSchoolModal = ({
         images: [],
         videos: []
     })
-    const [selectedUniversities, setSelectedUniversities] = useState([])
+    const [selectedBoards, setSelectedBoards] = useState([])
+    const [selectedStreams, setSelectedStreams] = useState([])
+
     const [openEmojiPickerIndex, setOpenEmojiPickerIndex] = useState(null)
 
     const author_id = useSelector((state) => state.user.data?.id)
@@ -102,11 +108,12 @@ const CreateUpdateSchoolModal = ({
         defaultValues: {
             name: '',
             author_id: author_id,
-            university_id: [],
+            board_ids: [],
+            stream_ids: [],
             institute_type: 'Private',
             institute_level: ['School'],
             programs: [],
-            degrees: [],
+
             description: '',
             content: '',
             website_url: '',
@@ -172,10 +179,13 @@ const CreateUpdateSchoolModal = ({
                 videos: []
             })
             setFilesDirty(false)
-            setUniversityPrograms([])
-            setSelectedUniversities([])
+            setBoardStreams([])
+            setStreamPrograms([])
+            setSelectedBoards([])
+            setSelectedStreams([])
             setOpenEmojiPickerIndex(null)
         }
+
     }, [isOpen, reset])
 
     useEffect(() => {
@@ -207,20 +217,19 @@ const CreateUpdateSchoolModal = ({
                     setValue('website_url', schoolData.website_url)
                     setValue('status', schoolData.status || 'published')
 
-                    const uniList = schoolData.universities || (schoolData.university ? [schoolData.university] : [])
-                    setSelectedUniversities(uniList)
+                    const boardList = schoolData.boards || []
+                    setSelectedBoards(boardList)
+                    const boardIds = boardList.map(b => b.id)
+                    setValue('board_ids', boardIds)
 
-                    const uniIds = (schoolData.university_id
-                        ? (Array.isArray(schoolData.university_id) ? schoolData.university_id : [schoolData.university_id])
-                        : uniList.map(u => u.id)
-                    ).map(Number).filter(id => !isNaN(id))
+                    const streamList = schoolData.streams || []
+                    setSelectedStreams(streamList)
+                    const streamIds = streamList.map(s => s.id)
+                    setValue('stream_ids', streamIds)
 
-                    setValue('university_id', uniIds)
 
-                    if (schoolData.degrees && Array.isArray(schoolData.degrees)) {
-                        const degreeIds = schoolData.degrees.map((degree) => String(degree.id))
-                        setValue('degrees', degreeIds)
-                    }
+                    setValue('programs', [...new Set(programIds)])
+
 
                     const schoolPrograms = schoolData.schoolPrograms || schoolData.collegePrograms || []
                     const programIds = schoolPrograms
@@ -229,16 +238,6 @@ const CreateUpdateSchoolModal = ({
 
                     setValue('programs', [...new Set(programIds)])
 
-                    const initialPrograms = schoolPrograms
-                        .map(cc => ({
-                            id: cc.program_id || cc.program?.id,
-                            title: cc.program?.title || 'Unknown'
-                        }))
-                        .filter(p => p.id)
-
-                    if (initialPrograms.length > 0) {
-                        setUniversityPrograms(initialPrograms)
-                    }
 
                     if (schoolData.collegeAddress || schoolData.schoolAddress) {
                         const address = schoolData.collegeAddress || schoolData.schoolAddress
@@ -335,32 +334,84 @@ const CreateUpdateSchoolModal = ({
         }
     }, [isOpen, editSlug, setValue])
 
-    const selectedUniIds = watch('university_id') || []
+    const selectedBoardIds = watch('board_ids') || []
+    const selectedStreamIds = watch('stream_ids') || []
+
+    useEffect(() => {
+        const fetchStreams = async () => {
+            if (!selectedBoardIds || selectedBoardIds.length === 0) {
+                setBoardStreams([])
+                return
+            }
+            try {
+                setLoadingStreams(true)
+                const streamsData = await getStreamsByBoards(selectedBoardIds)
+                setBoardStreams(streamsData || [])
+            } catch (error) {
+                console.error('Error fetching board streams:', error)
+            } finally {
+                setLoadingStreams(false)
+            }
+        }
+        fetchStreams()
+    }, [JSON.stringify(selectedBoardIds)])
 
     useEffect(() => {
         const fetchPrograms = async () => {
-            if (!selectedUniIds || selectedUniIds.length === 0) {
-                setUniversityPrograms([])
+            if (!selectedStreamIds || selectedStreamIds.length === 0) {
+                setStreamPrograms([])
                 return
             }
             try {
                 setLoadingPrograms(true)
-                const universityData = await getProgramsByUniversity(selectedUniIds)
-                setUniversityPrograms(universityData || [])
+                const programsData = await getProgramsByStreams(selectedStreamIds)
+                setStreamPrograms(programsData || [])
             } catch (error) {
-                console.error('Error fetching university programs:', error)
+                console.error('Error fetching stream programs:', error)
             } finally {
                 setLoadingPrograms(false)
             }
         }
         fetchPrograms()
-    }, [JSON.stringify(selectedUniIds)])
+    }, [JSON.stringify(selectedStreamIds)])
+
+
+    const onSearchStreams = async (query) => {
+        if (!boardStreams) return []
+        const filtered = query
+            ? boardStreams.filter(s => s.name?.toLowerCase().includes(query.toLowerCase()))
+            : boardStreams
+
+        return filtered.map(s => ({
+            id: s.id,
+            name: s.name || 'Unknown'
+        }))
+    }
+
+    const handleSelectStream = (stream) => {
+        const currentStreams = getValues('stream_ids') || []
+        const streamId = stream.id || stream
+        if (!currentStreams.includes(streamId)) {
+            setValue('stream_ids', [...currentStreams, streamId], { shouldDirty: true })
+            const currentSelected = selectedStreams || []
+            if (!currentSelected.find(s => s.id === streamId)) {
+                setSelectedStreams([...currentSelected, stream])
+            }
+        }
+    }
+
+    const handleRemoveStream = (stream) => {
+        const targetId = stream.id || stream
+        const currentStreams = getValues('stream_ids') || []
+        setValue('stream_ids', currentStreams.filter(id => id !== targetId), { shouldDirty: true })
+        setSelectedStreams(selectedStreams.filter(s => s.id !== targetId))
+    }
 
     const onSearchPrograms = async (query) => {
-        if (!universityPrograms) return []
+        if (!streamPrograms) return []
         const filtered = query
-            ? universityPrograms.filter(p => p.title?.toLowerCase().includes(query.toLowerCase()))
-            : universityPrograms
+            ? streamPrograms.filter(p => p.title?.toLowerCase().includes(query.toLowerCase()))
+            : streamPrograms
 
         return filtered.map(p => ({
             id: p.id,
@@ -383,39 +434,14 @@ const CreateUpdateSchoolModal = ({
     }
 
     const selectedProgramIds = watch('programs') || []
-    const selectedPrograms = Array.isArray(universityPrograms)
-        ? universityPrograms
+    const selectedPrograms = Array.isArray(streamPrograms)
+        ? streamPrograms
             .filter(p => selectedProgramIds.map(String).includes(String(p.id)))
             .map(p => ({ id: p.id, title: p.title }))
         : []
 
-    const onSearchDegrees = async (query) => {
-        if (!allDegrees) return []
-        return query
-            ? allDegrees.filter(d => d.title?.toLowerCase().includes(query.toLowerCase()))
-            : allDegrees
-    }
 
-    const handleSelectDegree = (degree) => {
-        const currentDegrees = getValues('degrees') || []
-        const degreeId = String(degree.id || degree)
-        if (!currentDegrees.includes(degreeId)) {
-            setValue('degrees', [...currentDegrees, degreeId], { shouldDirty: true })
-        }
-    }
 
-    const handleRemoveDegree = (degree) => {
-        const currentDegrees = getValues('degrees') || []
-        const degreeId = String(degree.id || degree)
-        setValue('degrees', currentDegrees.filter(id => id !== degreeId), { shouldDirty: true })
-    }
-
-    const selectedDegreeIds = watch('degrees') || []
-    const selectedDegrees = allDegrees
-        ? allDegrees
-            .filter(d => selectedDegreeIds.includes(String(d.id)))
-            .map(d => ({ id: d.id, title: d.title }))
-        : []
 
     const onMediaUpload = async (file) => {
         const formData = new FormData()
@@ -463,15 +489,19 @@ const CreateUpdateSchoolModal = ({
             })).filter(m => m.name || m.role || m.description || m.contact_number || m.image_url)
             if (data.members.length === 0) delete data.members
 
-            const uniIds = (data.university_id || []).map(id => parseInt(id)).filter(id => !isNaN(id))
-            if (uniIds.length > 0) data.university_id = uniIds
-            else delete data.university_id
+            const boardIds = (data.board_ids || []).map(id => parseInt(id)).filter(id => !isNaN(id))
+            if (boardIds.length > 0) data.board_ids = boardIds
+            else delete data.board_ids
 
-            data.degrees = (data.degrees || []).map(id => parseInt(id)).filter(id => !isNaN(id))
+            const streamIds = (data.stream_ids || []).map(id => parseInt(id)).filter(id => !isNaN(id))
+            if (streamIds.length > 0) data.stream_ids = streamIds
+            else delete data.stream_ids
 
             const programsArray = (data.programs || []).map(c => parseInt(c)).filter(c => !isNaN(c) && c > 0)
+
             if (programsArray.length > 0) data.programs = programsArray
             else delete data.programs
+
 
             data.school_logo = uploadedFiles.college_logo
             data.featured_img = uploadedFiles.featured_img
@@ -647,94 +677,61 @@ const CreateUpdateSchoolModal = ({
                                     <SectionHeader icon={GraduationCap} title="Academic Details" subtitle="Affiliation and programs" />
                                     <div className='space-y-6'>
                                         <div>
-                                            <Label required={true}>Affiliated Universities</Label>
+                                            <Label required={true}>Affiliated Boards</Label>
                                             <SearchSelectCreate
-                                                onSearch={fetchUniversities}
-                                                onSelect={(uni) => {
-                                                    const current = getValues('university_id') || []
-                                                    const newIds = [...new Set([...current, uni.id])]
-                                                    setValue('university_id', newIds, { shouldDirty: true, shouldValidate: true })
+                                                onSearch={fetchBoards}
+                                                onSelect={(board) => {
+                                                    const current = getValues('board_ids') || []
+                                                    const newIds = [...new Set([...current, board.id])]
+                                                    setValue('board_ids', newIds, { shouldDirty: true, shouldValidate: true })
 
-                                                    const currentUnis = selectedUniversities || []
-                                                    if (!currentUnis.find(u => u.id === uni.id)) {
-                                                        const updatedUnis = [...currentUnis, uni]
-                                                        setSelectedUniversities(updatedUnis)
+                                                    const currentBoards = selectedBoards || []
+                                                    if (!currentBoards.find(b => b.id === board.id)) {
+                                                        setSelectedBoards([...currentBoards, board])
                                                     }
                                                 }}
-                                                onRemove={(uni) => {
-                                                    const targetId = uni.id || uni
-                                                    const current = getValues('university_id') || []
+                                                onRemove={(board) => {
+                                                    const targetId = board.id || board
+                                                    const current = getValues('board_ids') || []
                                                     const newIds = current.filter(id => id !== targetId)
-                                                    setValue('university_id', newIds, { shouldDirty: true, shouldValidate: true })
-
-                                                    const updatedUnis = selectedUniversities.filter(u => u.id !== targetId)
-                                                    setSelectedUniversities(updatedUnis)
+                                                    setValue('board_ids', newIds, { shouldDirty: true, shouldValidate: true })
+                                                    setSelectedBoards(selectedBoards.filter(b => b.id !== targetId))
                                                 }}
-                                                selectedItems={selectedUniversities}
-                                                placeholder="Search or select universities..."
-                                                displayKey="fullname"
+                                                selectedItems={selectedBoards}
+                                                placeholder="Search or select boards..."
+                                                displayKey="name"
                                                 valueKey="id"
                                                 isMulti={true}
                                                 className="w-full"
-                                                renderItem={(item) => (
-                                                    <div className="flex items-center gap-3">
-                                                        {item.logo ? (
-                                                            <img
-                                                                src={item.logo}
-                                                                alt={item.fullname}
-                                                                className="w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0">
-                                                                <span className="text-xs font-bold text-[#387cae]">
-                                                                    {item.fullname?.charAt(0)?.toUpperCase() || 'C'}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        <span className="text-sm font-medium text-gray-800">{item.fullname}</span>
-                                                    </div>
-                                                )}
-                                                renderSelected={(item) => (
-                                                    <div className="flex items-center gap-3">
-                                                        {item.logo ? (
-                                                            <img
-                                                                src={item.logo}
-                                                                alt={item.fullname}
-                                                                className="w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0">
-                                                                <span className="text-xs font-bold text-[#387cae]">
-                                                                    {item.fullname?.charAt(0)?.toUpperCase() || 'C'}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        <span className="text-sm font-semibold text-gray-900 truncate">{item.fullname}</span>
-                                                    </div>
-                                                )}
                                                 inputSize='sm'
                                             />
-                                            {errors.university_id && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.university_id.message}</p>
+                                            {errors.board_ids && (
+                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.board_ids.message}</p>
                                             )}
-                                            <input type="hidden" {...register('university_id', { required: 'Please select at least one university' })} />
+                                            <input type="hidden" {...register('board_ids', { required: 'Please select at least one board' })} />
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                             <div>
-                                                <Label className="mb-3 block">Degrees Offered</Label>
+                                                <Label className="mb-3 block">Available Streams</Label>
                                                 <SearchSelectCreate
-                                                    onSearch={onSearchDegrees}
-                                                    onSelect={handleSelectDegree}
-                                                    onRemove={handleRemoveDegree}
-                                                    selectedItems={selectedDegrees}
-                                                    placeholder="Search or select degrees..."
-                                                    displayKey="title"
+                                                    onSearch={onSearchStreams}
+                                                    onSelect={handleSelectStream}
+                                                    onRemove={handleRemoveStream}
+                                                    selectedItems={selectedStreams}
+                                                    placeholder="Search or select streams..."
+                                                    displayKey="name"
                                                     valueKey="id"
                                                     isMulti={true}
                                                     className="w-full"
+                                                    isLoading={loadingStreams}
                                                     inputSize='sm'
                                                 />
+                                                {selectedBoardIds.length === 0 && (
+                                                    <p className='text-[10px] text-gray-400 mt-2 font-medium bg-gray-50 p-2 rounded-md border border-dashed border-gray-200'>
+                                                        Please select a board first to view available streams.
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div>
@@ -752,13 +749,15 @@ const CreateUpdateSchoolModal = ({
                                                     isLoading={loadingPrograms}
                                                     inputSize='sm'
                                                 />
-                                                {selectedUniIds.length === 0 && (
+                                                {selectedStreamIds.length === 0 && (
                                                     <p className='text-[10px] text-gray-400 mt-2 font-medium bg-gray-50 p-2 rounded-md border border-dashed border-gray-200'>
-                                                        Please select a university first to view available programs.
+                                                        Please select a stream first to view available programs.
                                                     </p>
                                                 )}
                                             </div>
                                         </div>
+
+
                                     </div>
                                 </div>
 
