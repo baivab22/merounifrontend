@@ -1,15 +1,13 @@
 import React from 'react'
-import Image from 'next/image'
+import { motion } from 'framer-motion'
 
 const FacilityIcon = ({ icon, title }) => {
   if (!icon) return null;
-
-  // Check if icon is a URL string
   const isUrl = typeof icon === 'string' && (icon.startsWith('http') || icon.startsWith('/'));
 
   if (isUrl) {
     return (
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full flex items-center justify-center">
         <img
           src={icon}
           alt={title || 'Facility'}
@@ -21,8 +19,6 @@ const FacilityIcon = ({ icon, title }) => {
       </div>
     );
   }
-
-  // If it's a React component/element
   return <div className="text-[#30AD8F]">{icon}</div>;
 };
 
@@ -38,29 +34,74 @@ const FacilitySection = ({ college }) => {
         <h2 className='text-2xl font-bold text-gray-900'>School Facilities</h2>
       </div>
 
-      <div className='flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 no-scrollbar pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
+      <div className='grid grid-cols-2 gap-4 sm:gap-6 pb-4 -mx-2 px-2 md:mx-0 md:px-0'>
         {college.facilities.map((item, index) => (
-          <div
-            key={index}
-            className='flex-shrink-0 w-[85vw] md:w-auto group flex flex-col p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-xl transition-all duration-500 hover:border-[#30AD8F]/30 h-full'
-          >
-            <div className='flex items-center gap-4 mb-4 min-w-0'>
-              <div className='w-14 h-14 rounded-2xl overflow-hidden bg-white flex-shrink-0 p-3 border border-gray-100 group-hover:bg-[#30AD8F]/5 transition-colors shadow-sm flex items-center justify-center'>
-                <FacilityIcon icon={item?.icon} title={item?.title} />
-              </div>
-
-              <h3 className='text-lg font-bold text-gray-800 group-hover:text-[#30AD8F] transition-colors leading-tight break-words overflow-hidden'>
-                {item?.title}
-              </h3>
-            </div>
-            <div className='flex-1 overflow-hidden'>
-              <p className='text-gray-500 leading-relaxed text-sm line-clamp-6 md:line-clamp-none break-words'>
-                {item?.description}
-              </p>
-            </div>
-          </div>
+          <FacilityCard key={index} item={item} />
         ))}
       </div>
+    </div>
+  )
+}
+
+const FacilityCard = ({ item }) => {
+  return (
+    <div className='w-full min-h-full'>
+      <motion.div
+        initial="initial"
+        whileHover="hover"
+        className='group relative bg-gray-50 border border-gray-100 rounded-2xl p-6 h-full overflow-hidden transition-all duration-500 hover:border-[#30AD8F]/30 hover:shadow-xl'
+      >
+        {/* Mobile Layout (Static) */}
+        <div className='lg:hidden flex flex-col gap-3'>
+          <div className='w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center p-2.5 shadow-sm flex-shrink-0'>
+            <FacilityIcon icon={item?.icon} title={item?.title} />
+          </div>
+          <h3 className='text-base font-bold text-gray-900 leading-tight break-words overflow-hidden'>
+            {item?.title}
+          </h3>
+          <p className='text-[13px] text-gray-500 leading-relaxed break-words line-clamp-4 mt-1'>
+            {item?.description}
+          </p>
+        </div>
+
+        {/* Desktop Layout (Animated Overlay) */}
+        <div className='hidden lg:block h-full'>
+          <motion.div
+            className='flex flex-col items-center justify-center h-full gap-5 text-center px-2'
+            variants={{
+              initial: { y: 0, opacity: 1 },
+              hover: { y: -20, opacity: 0 }
+            }}
+            transition={{ duration: 0.4, ease: "backOut" }}
+          >
+            <div className='w-16 h-16 rounded-2xl bg-white border border-gray-100 flex items-center justify-center p-4 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0'>
+              <FacilityIcon icon={item?.icon} title={item?.title} />
+            </div>
+            <h3 className='text-lg font-bold text-gray-800 group-hover:text-[#30AD8F] transition-colors leading-tight break-words'>
+              {item?.title}
+            </h3>
+          </motion.div>
+
+          <motion.div
+            className='absolute inset-0 p-8 flex flex-col bg-white/95 backdrop-blur-[4px]'
+            variants={{
+              initial: { y: '100%', opacity: 0 },
+              hover: { y: 0, opacity: 1 }
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <div className='flex items-center gap-3 mb-4 flex-shrink-0 min-w-0'>
+              <div className='w-1.5 h-4 bg-[#30AD8F] rounded-full flex-shrink-0' />
+              <span className='text-xs uppercase tracking-[0.2em] font-black text-[#30AD8F] break-words overflow-hidden'>
+                {item?.title}
+              </span>
+            </div>
+            <p className='text-sm text-gray-600 leading-relaxed text-left overflow-y-auto pr-2 no-scrollbar break-words'>
+              {item?.description}
+            </p>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   )
 }
