@@ -10,9 +10,11 @@ import RelatedColleges from './components/RelatedColleges'
 import ShareSection from '@/ui/organisms/common/ShareSection'
 import MobileCategoryPills from './components/MobileCategoryPills'
 
+import StickyCTA from './components/StickyCTA'
+
 const CollegeContent = ({ college }) => {
   return (
-    <div>
+    <div className='relative min-h-screen bg-[#F8FAFC]'>
       <Header />
       <Navbar />
       <MobileCategoryPills college={college} />
@@ -24,6 +26,9 @@ const CollegeContent = ({ college }) => {
 
       {/* Share Section - Bottom Center */}
       <ShareSection title={college?.name} type='college' />
+
+      {/* Sticky CTA - Visible on scroll */}
+      <StickyCTA college={college} />
 
       <Footer />
     </div>
