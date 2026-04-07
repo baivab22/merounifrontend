@@ -139,7 +139,7 @@ const ImageSection = ({ college }) => {
       <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full mt-4 md:mt-6'>
         <motion.div 
           variants={containerVariants}
-          className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'
+          className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5'
         >
           {/* Affiliation */}
           {hasUniversity && (
