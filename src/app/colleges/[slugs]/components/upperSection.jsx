@@ -44,114 +44,117 @@ const ImageSection = ({ college }) => {
       className='flex flex-col items-center relative gap-4 md:gap-6 lg:gap-8'
     >
       {/* Hero Section */}
-      <div className='w-full px-0 sm:px-4 md:px-8 lg:px-12'>
-        <motion.div 
-          variants={itemVariants}
-          className='w-full relative group overflow-hidden sm:rounded-3xl shadow-2xl'
-        >
-          {/* Back Button */}
-          <div className='absolute top-6 left-6 z-20'>
+      <div className='w-full'>
+        <div className='w-full relative'>
+          <div className='absolute top-6 left-6 md:left-24 z-20'>
             <Link
               href='/colleges'
-              className='inline-flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/40 backdrop-blur-xl text-white rounded-full text-sm font-semibold transition-all border border-white/20 shadow-lg group/back'
+              className='inline-flex items-center gap-2 px-4 py-2 bg-black/30 hover:bg-black/50 backdrop-blur-md text-white rounded-full text-sm font-medium transition-all shadow-lg border border-white/20 group/back'
             >
               <FaArrowLeft className='w-3 h-3 group-hover/back:-translate-x-1 transition-transform' />
               <span>Back to Colleges</span>
             </Link>
           </div>
+          <motion.img
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+            src={college?.featured_img || '/images/degreeHero.webp'}
+            alt='College Photo'
+            className='w-full h-auto max-h-[456px] max-xl:max-h-[380px] max-sm:max-h-[300px] object-contain rounded-md block'
+          />
+          <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-md pointer-events-none' />
+        </div>
 
-          {/* Featured Image */}
-          <div className='relative aspect-[21/9] w-full overflow-hidden'>
-            <motion.img
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 1.5, ease: 'easeOut' }}
-              src={college?.featured_img || '/images/degreeHero.webp'}
-              alt='College Photo'
-              className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105'
-            />
-            <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent' />
-          </div>
-
-          {/* Logo & Basic Info Overlay */}
-          <div className='absolute bottom-0 left-0 right-0 p-6 md:p-10 flex flex-col md:flex-row items-end md:items-center gap-6'>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className='flex items-center justify-center rounded-3xl bg-white p-1 overflow-hidden w-24 h-24 md:w-32 md:h-32 flex-shrink-0 shadow-2xl border-4 border-white/20 backdrop-blur-md'
-            >
+        {/* Info Bar with Popping Logo */}
+        <motion.div 
+          variants={itemVariants}
+          className='flex flex-row min-h-[80px] md:h-[100px] bg-white items-center p-4 px-4 sm:px-8 md:px-14 lg:px-24 gap-4 sm:gap-6 shadow-sm relative z-10'
+        >
+          {/* Popping Logo */}
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className='flex items-center justify-center rounded-2xl bg-white -translate-y-10 sm:-translate-y-12 md:-translate-y-16 overflow-hidden w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 shadow-xl border-4 border-white transition-transform duration-300'
+          >
+            {college?.college_logo ? (
               <img
-                src={
-                  college?.college_logo ||
-                  `https://avatar.iran.liara.run/username?username=${college?.name}`
-                }
+                src={college.college_logo}
                 alt='College Logo'
-                className='object-contain w-full h-full rounded-2xl'
+                className='object-cover w-full h-full rounded-md aspect-square'
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
               />
-            </motion.div>
-            
-            <div className='flex-1 text-white pb-2'>
-              <motion.h1 
-                variants={itemVariants}
-                className='font-bold text-2xl md:text-4xl lg:text-5xl drop-shadow-lg mb-2'
-              >
-                {college?.name}
-              </motion.h1>
-              {hasAddress && (
-                <motion.div 
-                  variants={itemVariants}
-                  className='flex items-center gap-2 text-white/90 font-medium'
-                >
-                  <FaMapMarkerAlt className='w-4 h-4 text-[#30AD8F]' />
-                  <span className='text-sm md:text-lg'>
-                    {college?.collegeAddress?.street}, {college?.collegeAddress?.city}
-                  </span>
-                </motion.div>
-              )}
+            ) : null}
+            <div
+              className={`${college?.college_logo ? 'hidden' : 'flex'} w-full h-full items-center justify-center text-4xl sm:text-5xl md:text-6xl font-bold bg-[#387cae]/10 text-[#387cae]`}
+            >
+              {college?.name?.charAt(0) || '?'}
             </div>
+          </motion.div>
 
-            {college?.college_broucher && (
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='flex-shrink-0'
-              >
-                <a
-                  href={college.college_broucher}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='bg-white text-[#0A6FA7] px-6 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-xl font-bold text-sm hover:bg-[#F8FAFC]'
-                >
-                  <Eye className='w-4 h-4' />
-                  <span>View Brochure</span>
-                </a>
-              </motion.div>
+          {/* Name & Basic Info */}
+          <div className='flex-1 min-w-0 -mt-2'>
+            <h1 className='font-bold text-xl md:text-3xl text-gray-900 truncate leading-tight'>
+              {college?.name}
+            </h1>
+            {hasAddress && (
+              <div className='flex flex-row items-center gap-1.5 mt-1 text-gray-600'>
+                <span className='flex-shrink-0'>
+                  <IoIosGlobe className='w-4 h-4 sm:w-5 sm:h-5 text-[#30AD8F]' />
+                </span>
+                <p className='text-sm md:text-base text-gray-600 truncate font-medium'>
+                  {college?.collegeAddress?.street}
+                  {college?.collegeAddress?.street && college?.collegeAddress?.city ? ', ' : ''}
+                  {college?.collegeAddress?.city}
+                </p>
+              </div>
             )}
           </div>
+
+          {/* View Brochure Button */}
+          {college?.college_broucher && (
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className='flex-shrink-0'
+            >
+              <a
+                href={college.college_broucher}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md hover:shadow-lg text-sm font-bold active:scale-95'
+              >
+                <Eye className='w-4 h-4' />
+                <span className='hidden sm:inline'>View Brochure</span>
+                <span className='sm:hidden'>Brochure</span>
+              </a>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
       {/* Info Cards Section */}
-      <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full -mt-4 relative z-10'>
+      <div className='px-4 sm:px-8 md:px-12 lg:px-24 w-full mt-4 md:mt-6'>
         <motion.div 
           variants={containerVariants}
-          className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'
+          className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'
         >
           {/* Affiliation */}
           {hasUniversity && (
             <motion.div 
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className='bg-white/70 backdrop-blur-md rounded-3xl p-5 border border-white shadow-xl shadow-gray-200/50 flex items-center gap-4 group'
+              className='bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-4 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-50 hover:border-[#30AD8F]/20 group'
             >
-              <div className='bg-blue-50 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:bg-[#0A6FA7]/10 transition-colors'>
-                <FaUniversity className='w-6 h-6 text-[#0A6FA7]' />
+              <div className='bg-blue-50 p-2 sm:p-3 rounded-xl mb-3 group-hover:bg-[#0A6FA7]/10 transition-colors duration-300'>
+                <FaUniversity className='w-4 h-4 sm:w-6 sm:h-6 text-[#0A6FA7]' />
               </div>
-              <div>
-                <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold'>Affiliation</p>
-                <p className='text-sm text-gray-900 font-bold line-clamp-1'>
-                  {college.universities.map(u => u.fullname).join(', ')}
-                </p>
-              </div>
+              <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1'>Affiliation</p>
+              <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 font-bold'>
+                {college.universities.map(u => u.fullname).join(', ')}
+              </p>
             </motion.div>
           )}
 
@@ -160,20 +163,18 @@ const ImageSection = ({ college }) => {
             <motion.div 
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className='bg-white/70 backdrop-blur-md rounded-3xl p-5 border border-white shadow-xl shadow-gray-200/50 flex items-center gap-4 group'
+              className='bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-4 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-50 hover:border-[#30AD8F]/20 group'
             >
-              <div className='bg-orange-50 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:bg-orange-100 transition-colors'>
-                <FaPhoneAlt className='w-5 h-5 text-orange-500' />
+              <div className='bg-orange-50 p-2 sm:p-3 rounded-xl mb-3 group-hover:bg-orange-100 transition-colors duration-300'>
+                <FaPhoneAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-orange-500' />
               </div>
-              <div>
-                <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold'>Contact</p>
-                <a
-                  href={`tel:${college.collegeContacts[0]?.contact_number}`}
-                  className='text-sm text-gray-900 font-bold hover:text-[#0A6FA7] transition-colors'
-                >
-                  {college.collegeContacts[0]?.contact_number}
-                </a>
-              </div>
+              <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1'>Contact</p>
+              <a
+                href={`tel:${college.collegeContacts[0]?.contact_number}`}
+                className='text-xs sm:text-sm text-gray-700 font-bold hover:text-[#0A6FA7] transition-colors'
+              >
+                {college.collegeContacts[0]?.contact_number}
+              </a>
             </motion.div>
           )}
 
@@ -182,22 +183,20 @@ const ImageSection = ({ college }) => {
             <motion.div 
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className='bg-white/70 backdrop-blur-md rounded-3xl p-5 border border-white shadow-xl shadow-gray-200/50 flex items-center gap-4 group'
+              className='bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 p-4 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-50 hover:border-[#30AD8F]/20 group'
             >
-              <div className='bg-sky-50 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:bg-sky-100 transition-colors'>
-                <BsGlobe2 className='w-5 h-5 text-sky-500' />
+              <div className='bg-sky-50 p-2 sm:p-3 rounded-xl mb-3 group-hover:bg-sky-100 transition-colors duration-300'>
+                <BsGlobe2 className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-sky-500' />
               </div>
-              <div>
-                <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold'>Website</p>
-                <a
-                  href={college.website_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-sm text-gray-900 font-bold hover:text-[#0A6FA7] transition-colors truncate block max-w-[120px]'
-                >
-                  {college.website_url.replace(/^https?:\/\/(www\.)?/, '')}
-                </a>
-              </div>
+              <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1'>Website</p>
+              <a
+                href={college.website_url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-xs sm:text-sm text-gray-700 font-bold hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all'
+              >
+                {college.website_url.replace(/^https?:\/\/(www\.)?/, '')}
+              </a>
             </motion.div>
           )}
 
@@ -206,17 +205,15 @@ const ImageSection = ({ college }) => {
             <motion.div 
               variants={itemVariants}
               whileHover={{ y: -5 }}
-              className='bg-white/70 backdrop-blur-md rounded-3xl p-5 border border-white shadow-xl shadow-gray-200/50 flex items-center gap-4 group'
+              className='bg-white rounded-2xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30_rgba(0,0,0,0.06)] transition-all duration-300 p-4 sm:p-5 flex flex-col items-center justify-center text-center border border-gray-50 hover:border-[#30AD8F]/20 group'
             >
-              <div className='bg-emerald-50 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors'>
-                <FaMapMarkerAlt className='w-5 h-5 text-[#30AD8F]' />
+              <div className='bg-emerald-50 p-2 sm:p-3 rounded-xl mb-3 group-hover:bg-[#30AD8F]/10 transition-colors duration-300'>
+                <FaMapMarkerAlt className='w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#30AD8F]' />
               </div>
-              <div>
-                <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold'>Location</p>
-                <p className='text-sm text-gray-900 font-bold line-clamp-1'>
-                  {college?.collegeAddress?.city}, {college?.collegeAddress?.country}
-                </p>
-              </div>
+              <p className='text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1'>Location</p>
+              <p className='text-xs sm:text-sm text-gray-700 line-clamp-1 font-bold'>
+                {college?.collegeAddress?.city}, {college?.collegeAddress?.country}
+              </p>
             </motion.div>
           )}
         </motion.div>
