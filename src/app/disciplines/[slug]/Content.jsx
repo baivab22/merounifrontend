@@ -22,6 +22,7 @@ const DisciplineContent = ({ discipline, degrees, error }) => {
     )
   }
 
+  return (
     <main className='bg-gray-50/30 min-h-screen'>
       <div className='bg-white border-b border-gray-100'>
         <div className='container mx-auto px-4 py-12 md:py-16'>
@@ -74,6 +75,7 @@ const DisciplineContent = ({ discipline, degrees, error }) => {
         )}
       </div>
     </main>
+  )
 }
 
 export default DisciplineContent
