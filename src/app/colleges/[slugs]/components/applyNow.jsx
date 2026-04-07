@@ -46,16 +46,7 @@ const ApplyNow = ({ college }) => {
             <p className='text-base md:text-lg text-white/90 mb-4 max-w-xl'>
               Take the next step toward your future career. Join thousands of students who have chosen excellence at {college?.name}.
             </p>
-            <div className='flex items-center justify-center md:justify-start gap-6 mt-4'>
-               <div className='flex -space-x-3'>
-                 {[1,2,3,4].map(i => (
-                    <div key={i} className='w-10 h-10 rounded-full border-2 border-white bg-gray-200' />
-                 ))}
-               </div>
-               <p className='text-sm text-white/80 font-medium'>
-                 Join 2,000+ applicants this month
-               </p>
-            </div>
+            
           </div>
 
           {/* Right side - Action buttons */}
