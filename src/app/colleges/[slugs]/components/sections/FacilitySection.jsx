@@ -52,16 +52,14 @@ const FacilityCard = ({ item }) => {
         className='group relative bg-gray-50 border border-gray-100 rounded-2xl p-6 h-full overflow-hidden transition-all duration-500 hover:border-[#30AD8F]/30 hover:shadow-xl'
       >
         {/* Mobile Layout (Static) */}
-        <div className='lg:hidden flex flex-col gap-4'>
-          <div className='flex items-center gap-4 min-w-0'>
-            <div className='w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center p-3 shadow-sm flex-shrink-0'>
-              <FacilityIcon icon={item?.icon} title={item?.title} />
-            </div>
-            <h3 className='text-lg font-bold text-gray-900 leading-tight break-words overflow-hidden'>
-              {item?.title}
-            </h3>
+        <div className='lg:hidden flex flex-col gap-3'>
+          <div className='w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center p-2.5 shadow-sm flex-shrink-0'>
+            <FacilityIcon icon={item?.icon} title={item?.title} />
           </div>
-          <p className='text-sm text-gray-500 leading-relaxed break-words line-clamp-6'>
+          <h3 className='text-base font-bold text-gray-900 leading-tight break-words overflow-hidden'>
+            {item?.title}
+          </h3>
+          <p className='text-[13px] text-gray-500 leading-relaxed break-words line-clamp-4 mt-1'>
             {item?.description}
           </p>
         </div>
