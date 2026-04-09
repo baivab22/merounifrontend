@@ -228,9 +228,6 @@ const CreateUpdateSchoolModal = ({
                     setValue('stream_ids', streamIds)
 
 
-                    setValue('programs', [...new Set(programIds)])
-
-
                     const schoolPrograms = schoolData.schoolPrograms || schoolData.collegePrograms || []
                     const programIds = schoolPrograms
                         .map((program) => program.program_id || program.program?.id)
