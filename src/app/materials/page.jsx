@@ -354,7 +354,6 @@ const Materials = () => {
       const data = await getMaterialHierarchy()
       setHierarchy(data)
       setLoading(false)
-      if (data.length > 0) setExpandedClass(data[0].id)
     }
     fetchData()
   }, [])
