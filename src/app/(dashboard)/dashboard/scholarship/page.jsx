@@ -1,41 +1,26 @@
 'use client'
-import React, { useEffect, useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { authFetch } from '@/app/utils/authFetch'
+import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useToast } from '@/hooks/use-toast'
-import { Search, Edit2, Trash2, Eye, Users, Plus } from 'lucide-react'
-
+import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
+import SearchInput from '@/ui/molecules/SearchInput'
+import { Button } from '@/ui/shadcn/button'
+import Table from '@/ui/shadcn/DataTable'
+import { formatDate } from '@/utils/date.util'
+import { Edit2, Eye, Plus, Trash2, Users } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
 import {
   createScholarship,
   deleteScholarship,
   getAllScholarships,
-  updateScholarship,
   getScholarshipApplications,
-  fetchCategories
+  updateScholarship
 } from './actions'
-import CircularLoader from '@/ui/molecules/CircularLoader'
-import Table from '@/ui/shadcn/DataTable'
-import { Button } from '@/ui/shadcn/button'
-import { Input } from '@/ui/shadcn/input'
-import { Label } from '@/ui/shadcn/label'
-import { Textarea } from '@/ui/shadcn/textarea'
-import {
-  Dialog,
-  DialogHeader,
-  DialogTitle,
-  DialogContent,
-  DialogClose,
-  DialogFooter
-} from '@/ui/shadcn/dialog'
-import { usePageHeading } from '@/contexts/PageHeadingContext'
-import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
-import { formatDate } from '@/utils/date.util'
-import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import ScholarshipFormModal from './components/ScholarshipFormModal'
 import ScholarshipViewModal from './ScholarshipViewModal'
-import { authFetch } from '@/app/utils/authFetch'
+import CircularLoader from '@/ui/molecules/CircularLoader'
 
 export default function ScholarshipManager() {
   const { toast } = useToast()
@@ -56,30 +41,11 @@ export default function ScholarshipManager() {
   const [applicationsData, setApplicationsData] = useState([])
   const [applicationsLoading, setApplicationsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0
-  })
-
-  const [selectedCategory, setSelectedCategory] = useState(null)
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      name: '',
-      description: '',
-      amount: '',
-      applicationDeadline: '',
-      contactInfo: '',
-      categoryId: ''
-    }
   })
 
   useEffect(() => {
@@ -96,16 +62,15 @@ export default function ScholarshipManager() {
     }
   }, [searchParams, router])
 
-  const loadScholarships = async (page = 1, query = searchQuery) => {
+  const loadScholarships = async (page = 1, query = searchQuery, status = statusFilter) => {
     setTableLoading(true)
     try {
-      let response
-      if (query) {
-        const res = await authFetch(`${process.env.baseUrl}/scholarship?q=${query}&page=${page}`)
-        response = await res.json()
-      } else {
-        response = await getAllScholarships(page)
-      }
+      let url = `${process.env.baseUrl}/scholarship?page=${page}`
+      if (query) url += `&q=${encodeURIComponent(query)}`
+      if (status && status !== 'all') url += `&status=${status}`
+
+      const res = await authFetch(url)
+      const response = await res.json()
 
       const items = response.scholarships || response.items || []
       setScholarships(items.map(s => ({
@@ -133,69 +98,38 @@ export default function ScholarshipManager() {
 
   const handleSearchInput = (value) => {
     setSearchQuery(value)
-    loadScholarships(1, value)
+    loadScholarships(1, value, statusFilter)
+  }
+
+  const handleStatusChange = (status) => {
+    setStatusFilter(status)
+    loadScholarships(1, searchQuery, status)
   }
 
   const handleAdd = () => {
     setEditingId(null)
-    setSelectedCategory(null)
-    reset({
-      name: '',
-      description: '',
-      amount: '',
-      applicationDeadline: '',
-      contactInfo: '',
-      categoryId: ''
-    })
     setIsOpen(true)
   }
 
   const handleEdit = (scholarship) => {
     setEditingId(scholarship.id)
-    setSelectedCategory(scholarship.scholarshipCategory ? {
-      id: scholarship.scholarshipCategory.id,
-      title: scholarship.scholarshipCategory.title
-    } : null)
-
-    reset({
-      name: scholarship.name || '',
-      description: scholarship.description || '',
-      amount: scholarship.amount != null ? String(scholarship.amount) : '',
-      applicationDeadline: scholarship.applicationDeadline ? new Date(scholarship.applicationDeadline).toISOString().split('T')[0] : '',
-      contactInfo: scholarship.contactInfo || '',
-      categoryId: scholarship.scholarshipCategory?.id || ''
-    })
     setIsOpen(true)
   }
 
   const handleModalClose = () => {
     setIsOpen(false)
     setEditingId(null)
-    setSelectedCategory(null)
-    reset()
   }
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (payload) => {
     try {
       setTableLoading(true)
-      const payload = {
-        ...data,
-        author: author_id,
-        amount: data.amount,
-      }
-
       if (editingId) {
         await updateScholarship(editingId, payload)
-        toast({
-          title: 'Success',
-          description: 'Scholarship updated successfully'
-        })
+        toast({ title: 'Success', description: 'Scholarship updated successfully' })
       } else {
         await createScholarship(payload)
-        toast({
-          title: 'Success',
-          description: 'Scholarship created successfully'
-        })
+        toast({ title: 'Success', description: 'Scholarship created successfully' })
       }
       handleModalClose()
       loadScholarships(pagination.currentPage)
@@ -219,17 +153,10 @@ export default function ScholarshipManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteScholarship(deleteId)
-      toast({
-        title: 'Success',
-        description: 'Scholarship deleted successfully'
-      })
+      toast({ title: 'Success', description: 'Scholarship deleted successfully' })
       loadScholarships(pagination.currentPage)
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete scholarship',
-        variant: 'destructive'
-      })
+      toast({ title: 'Error', description: 'Failed to delete scholarship', variant: 'destructive' })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -240,16 +167,11 @@ export default function ScholarshipManager() {
     setIsApplicationsOpen(true)
     setApplicationsLoading(true)
     setApplicationsData([])
-
     try {
       const data = await getScholarshipApplications(scholarshipId)
       setApplicationsData(data.applications || [])
     } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load applications',
-        variant: 'destructive'
-      })
+      toast({ title: 'Error', description: 'Failed to load applications', variant: 'destructive' })
     } finally {
       setApplicationsLoading(false)
     }
@@ -257,19 +179,38 @@ export default function ScholarshipManager() {
 
   const columns = useMemo(() => [
     {
-      header: 'Name',
+      header: 'Scholarship',
       accessorKey: 'name',
-      cell: ({ row }) => <div className="font-medium text-gray-900">{row.original.name}</div>
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-1.5 py-1">
+          <div className="font-semibold text-gray-900 leading-none">{row.original.name}</div>
+          {row.original.scholarshipCategory?.title && (
+            <span className='w-fit px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-tight border border-purple-100/50'>
+              {row.original.scholarshipCategory.title}
+            </span>
+          )}
+        </div>
+      )
     },
     {
-      header: 'Category',
-      accessorKey: 'scholarshipCategory.title',
-      cell: ({ row }) => row.original.scholarshipCategory?.title || 'N/A'
+      header: 'Status',
+      accessorKey: 'status',
+      cell: ({ row }) => {
+        const isPublished = row.original.status === 'published'
+        return (
+          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isPublished
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+            : 'bg-amber-50 text-amber-700 border border-amber-100'
+            }`}>
+            {row.original.status || 'published'}
+          </span>
+        )
+      }
     },
     {
       header: 'Amount',
       accessorKey: 'amount',
-      cell: ({ row }) => <div className="text-gray-600 font-medium">Rs. {row.original.amount?.toLocaleString()}</div>
+      cell: ({ row }) => <div className="text-gray-600 font-medium">{row.original.amount || 'N/A'}</div>
     },
     {
       header: 'Deadline',
@@ -321,18 +262,29 @@ export default function ScholarshipManager() {
     }
   ], [])
 
-
   return (
     <div className='w-full'>
-
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-        <SearchInput
-          value={searchQuery}
-          onChange={(e) => handleSearchInput(e.target.value)}
-          placeholder='Search scholarships...'
-          className='max-w-md w-full'
-        />
-        <Button onClick={handleAdd} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2">
+        <div className='flex flex-col sm:flex-row gap-4 w-full max-w-2xl'>
+          <SearchInput
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            placeholder='Search scholarships...'
+            className='flex-1'
+          />
+          <div className='w-full sm:w-48'>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#387cae] transition-all font-medium text-gray-700'
+            >
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+        </div>
+        <Button onClick={handleAdd} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-sm shrink-0 w-full sm:w-auto transition-all active:scale-95">
           <Plus className="w-4 h-4" />
           Add Scholarship
         </Button>
@@ -344,120 +296,20 @@ export default function ScholarshipManager() {
           data={scholarships}
           columns={columns}
           pagination={pagination}
-          onPageChange={(page) => loadScholarships(page)}
+          onPageChange={(page) => loadScholarships(page, searchQuery, statusFilter)}
           showSearch={false}
         />
       </div>
 
-      <Dialog
+      <ScholarshipFormModal
         isOpen={isOpen}
         onClose={handleModalClose}
-        closeOnOutsideClick={false}
-        className='max-w-5xl'
-      >
-        <DialogContent className='max-w-5xl max-h-[90vh] flex flex-col p-0'>
-          <DialogHeader className='px-6 py-4 border-b'>
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              {editingId ? 'Edit Scholarship' : 'Add New Scholarship'}
-            </DialogTitle>
-            <DialogClose onClick={handleModalClose} />
-          </DialogHeader>
-
-          <div className='flex-1 overflow-y-auto p-6'>
-            <form id="scholarship-form" onSubmit={handleSubmit(onSubmit)} className='space-y-8'>
-              <section className="space-y-4">
-                <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Basic Information</h3>
-                <div className='grid grid-cols-1 gap-6'>
-                  <div className="space-y-2">
-                    <Label required>Scholarship Name</Label>
-                    <Input
-                      {...register('name', { required: 'Name is required' })}
-                      placeholder='e.g. Merit-based Scholarship 2024'
-                    />
-                    {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label required>Category</Label>
-                    <SearchSelectCreate
-                      onSearch={fetchCategories}
-                      onSelect={(item) => {
-                        setSelectedCategory(item)
-                        setValue('categoryId', item.id, { shouldValidate: true })
-                      }}
-                      onRemove={() => {
-                        setSelectedCategory(null)
-                        setValue('categoryId', '', { shouldValidate: true })
-                      }}
-                      selectedItems={selectedCategory}
-                      placeholder="Select category..."
-                      isMulti={false}
-                      displayKey="title"
-                    />
-                    <input type="hidden" {...register('categoryId', { required: 'Category is required' })} />
-                    {errors.categoryId && <p className="text-xs text-red-500">{errors.categoryId.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <TipTapEditor
-                      value={watch('description')}
-                      onChange={(val) => setValue('description', val)}
-                      placeholder='Write a detailed description...'
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className="space-y-4">
-                <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Requirements & Details</h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <div className="space-y-2">
-                    <Label>Amount</Label>
-                    <Input
-                      {...register('amount')}
-                      placeholder='e.g. 50,000 or Full tuition'
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label required>Application Deadline</Label>
-                    <Input
-                      type="date"
-                      {...register('applicationDeadline', { required: 'Deadline is required' })}
-                    />
-                    {errors.applicationDeadline && <p className="text-xs text-red-500">{errors.applicationDeadline.message}</p>}
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label required>Contact Information</Label>
-                    <Input
-                      {...register('contactInfo', { required: 'Contact info is required' })}
-                      placeholder='Phone, email, or office location...'
-                    />
-                    {errors.contactInfo && <p className="text-xs text-red-500">{errors.contactInfo.message}</p>}
-                  </div>
-                </div>
-              </section>
-            </form>
-          </div>
-
-          <div className='sticky bottom-0 bg-white border-t p-4 px-6 flex justify-end gap-3'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={handleModalClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              type='submit'
-              form="scholarship-form"
-              disabled={tableLoading}
-            >
-              {tableLoading ? 'Saving...' : editingId ? 'Update Scholarship' : 'Create Scholarship'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        editingId={editingId}
+        initialData={scholarships.find(s => s.id === editingId)}
+        onSave={onSubmit}
+        submitting={tableLoading}
+        author_id={author_id}
+      />
 
       <ScholarshipViewModal
         isOpen={isViewOpen}
@@ -465,80 +317,45 @@ export default function ScholarshipManager() {
         scholarship={viewData}
       />
 
-      <Dialog
-        isOpen={isApplicationsOpen}
+      {/* Applications Modal */}
+      <ConfirmationDialog
+        open={isApplicationsOpen}
         onClose={() => setIsApplicationsOpen(false)}
-        className='max-w-4xl'
-      >
-        <DialogContent className='max-w-4xl max-h-[85vh] flex flex-col p-0'>
-          <DialogHeader className='px-6 py-4 border-b'>
-            <DialogTitle className="text-lg font-semibold text-gray-900">Scholarship Applications</DialogTitle>
-            <DialogClose onClick={() => setIsApplicationsOpen(false)} />
-          </DialogHeader>
-
-          <div className='flex-1 overflow-y-auto p-6'>
+        hideCancel={true}
+        title="Scholarship Applications"
+        message={
+          <div className='max-h-[60vh] overflow-y-auto mt-4'>
             {applicationsLoading ? (
-              <div className='flex items-center justify-center py-12'>
-                <CircularLoader size='w-8 h-8' />
-              </div>
+              <div className='flex justify-center p-8'><CircularLoader size='w-8 h-8' /></div>
             ) : applicationsData.length === 0 ? (
-              <div className='py-12 text-center text-gray-500 h-full flex flex-col justify-center items-center'>
-                <Users className='w-12 h-12 mb-4 text-gray-400 opacity-20' />
-                <p>No applications found for this scholarship</p>
-              </div>
+              <p className='text-center py-8 text-gray-400'>No applications found</p>
             ) : (
               <div className='space-y-4'>
-                {applicationsData.map((application) => (
-                  <div
-                    key={application.id}
-                    className='border border-gray-100 rounded-md p-5 bg-gray-50/50 hover:bg-gray-50 transition-colors'
-                  >
-                    <div className='flex items-start justify-between'>
-                      <div className='flex items-center gap-4'>
-                        <div className='w-12 h-12 rounded-full bg-[#387cae]/10 flex items-center justify-center text-[#387cae] font-bold text-lg'>
-                          {application.student?.firstName?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className='font-bold text-gray-900'>
-                            {application.student?.firstName} {application.student?.lastName}
-                          </h3>
-                          <p className='text-sm text-gray-500'>{application.student?.email}</p>
-                          {application.student?.phoneNo && (
-                            <p className='text-sm text-gray-500'>{application.student.phoneNo}</p>
-                          )}
-                        </div>
+                {applicationsData.map(app => (
+                  <div key={app.id} className='bg-gray-50 p-4 rounded-lg border text-left'>
+                    <div className='flex justify-between items-start'>
+                      <div>
+                        <p className='font-bold text-gray-900'>{app.student?.firstName} {app.student?.lastName}</p>
+                        <p className='text-xs text-gray-500'>{app.student?.email}</p>
                       </div>
-                      <div className='flex flex-col items-end gap-2'>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${application.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                          application.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
-                          {application.status}
-                        </span>
-                        <span className='text-xs text-gray-400'>
-                          Applied {formatDate(application.createdAt)}
-                        </span>
-                      </div>
+                      <span className='text-[10px] font-bold uppercase px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full'>{app.status}</span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          <div className='p-4 border-t flex justify-end'>
-            <Button variant='outline' onClick={() => setIsApplicationsOpen(false)}>Close</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        }
+      />
 
       <ConfirmationDialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
         title='Confirm Deletion'
-        message='Are you sure you want to delete this scholarship? This action cannot be undone and will remove all student applications.'
+        message='Are you sure you want to delete this scholarship? This action cannot be undone.'
       />
     </div>
   )
 }
+

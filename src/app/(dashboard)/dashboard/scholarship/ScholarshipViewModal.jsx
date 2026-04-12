@@ -39,8 +39,18 @@ const ScholarshipViewModal = ({ isOpen, onClose, scholarship }) => {
 
 
                         <div className="bg-gray-50 p-4 rounded-md border flex justify-between items-center">
-                            <h4 className="text-sm font-medium text-gray-500">Financial Details (Amount)</h4>
-                            <span className="font-bold text-lg text-gray-900">Rs. {scholarship.amount ? scholarship.amount.toLocaleString() : '0'}</span>
+                            <h4 className="text-sm font-medium text-gray-500">Status</h4>
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${scholarship.status === 'published'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                {scholarship.status || 'published'}
+                            </span>
+                        </div>
+
+                        <div className="bg-gray-50 p-4 rounded-md border flex justify-between items-center">
+                            <h4 className="text-sm font-medium text-gray-500">Financial Details</h4>
+                            <span className="font-bold text-lg text-gray-900">{scholarship.amount || 'N/A'}</span>
                         </div>
 
                         <div className="bg-gray-50 p-4 rounded-md border flex justify-between items-center">
@@ -56,6 +66,15 @@ const ScholarshipViewModal = ({ isOpen, onClose, scholarship }) => {
                                 {scholarship.contactInfo || 'N/A'}
                             </p>
                         </div>
+
+                        {scholarship.meta_description && (
+                            <div className="space-y-1 col-span-2">
+                                <h4 className="text-sm font-medium text-gray-500">Meta Description (SEO)</h4>
+                                <p className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded border">
+                                    {scholarship.meta_description}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-end pt-4 border-t mt-6">
