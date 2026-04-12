@@ -9,7 +9,7 @@ import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import { Calendar, ClipboardList, Coins, FileText, Info, Layers, Loader2, Settings } from 'lucide-react'
+import { Calendar, ClipboardList, Coins, FileText, Info, Layers, Loader2, Settings, Check, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { fetchCategory, fetchLevel, fetchUniversities } from '../actions'
@@ -331,6 +331,21 @@ const ExamFormModal = ({
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Past Question Documents */}
+                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={FileText} title="Past Question Documents" subtitle="Upload past exam papers" />
+                                    <div>
+                                        <MultiFileUpload
+                                            label="Upload Documents"
+                                            initialFiles={watch('pastQuestion')}
+                                            onUploadComplete={(urls) => {
+                                                setValue('pastQuestion', urls.join(','))
+                                            }}
+                                            authorId={author_id}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Right Column - Dates, Fees & Meta (4/12) */}
@@ -408,22 +423,9 @@ const ExamFormModal = ({
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={FileText} title="SEO & Resources" subtitle="Links and meta information" />
                                     <div className='space-y-4'>
-                                        <div>
-                                            <MultiFileUpload
-                                                label="Past Question Documents"
-                                                initialFiles={watch('pastQuestion')}
-                                                onUploadComplete={(urls) => {
-                                                    setValue('pastQuestion', urls.join(','))
-                                                }}
-                                                authorId={author_id}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor='status'>Status</Label>
-                                            <Select id='status' {...register('status')}>
-                                                <option value="published">Published</option>
-                                                <option value="draft">Draft</option>
-                                            </Select>
+                                        <div className='hidden'>
+                                            {/* Status mapping is handled via action buttons now */}
+                                            <input type="hidden" {...register('status')} />
                                         </div>
                                         <div>
                                             <Label htmlFor='meta_description'>Meta Description</Label>
@@ -440,7 +442,6 @@ const ExamFormModal = ({
                         </div>
                     </div>
 
-                    {/* Action Bar - Fixed at bottom */}
                     <div className='shrink-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-20'>
                         <Button
                             type='button'
@@ -450,18 +451,39 @@ const ExamFormModal = ({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            type='submit'
+                        <Button 
+                            type='button' 
+                            variant='secondary'
+                            disabled={submitting} 
+                            onClick={() => {
+                                // Since we unmounted the select, setValue manages it directly
+                                setValue('status', 'draft', { shouldDirty: true });
+                                handleSubmit((data) => onSubmit(data))();
+                            }}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+                        >
+                            <FileText className='w-4 h-4 mr-2' />
+                            <span>Save as Draft</span>
+                        </Button>
+                        <Button 
+                            type='button' 
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true });
+                                handleSubmit((data) => onSubmit(data))();
+                            }}
                             disabled={submitting}
-                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-10 shadow-md transition-all active:scale-95'
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
                         >
                             {submitting ? (
-                                <div className='flex items-center gap-2'>
-                                    <Loader2 className='h-4 w-4 animate-spin' />
+                                <>
+                                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                                     <span>Syncing...</span>
-                                </div>
+                                </>
                             ) : (
-                                <span>{editingId ? 'Update Exam' : 'Create Exam'}</span>
+                                <>
+                                    {editingId ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{editingId ? 'Update Exam' : 'Create Exam'}</span>
+                                </>
                             )}
                         </Button>
                     </div>

@@ -6,7 +6,7 @@ import { Label } from '@/ui/shadcn/label'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import axios from 'axios'
-import { Image as ImageIcon, Info, Layers, Loader2, Settings } from 'lucide-react'
+import { Image as ImageIcon, Info, Layers, Loader2, Settings, FileText, Check, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
@@ -432,17 +432,9 @@ const BlogFormModal = ({
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Settings} title="Publishing" subtitle="Visibility settings" />
                                     <div className='space-y-6'>
-                                        <div>
-                                            <Label htmlFor='status' className="text-gray-700 font-semibold mb-1.5 block text-sm">Post Status</Label>
-                                            <Select
-                                                id='status'
-                                                {...register('status')}
-                                                className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                                            >
-                                                <option value='draft'>Draft</option>
-                                                <option value='published'>Published</option>
-                                                <option value='archived'>Archived</option>
-                                            </Select>
+                                        <div className='hidden'>
+                                            {/* Status is managed via action buttons */}
+                                            <input type="hidden" {...register('status')} />
                                         </div>
 
                                         <div className="flex items-center justify-between p-4 bg-[#387cae]/5 rounded-md border border-[#387cae]/10">
@@ -472,16 +464,39 @@ const BlogFormModal = ({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            type='submit'
-                            disabled={submitting}
+                        <Button 
+                            type='button' 
+                            variant='secondary'
+                            disabled={submitting} 
+                            onClick={() => {
+                                setValue('status', 'draft', { shouldDirty: true });
+                                handleSubmit(onSubmitForm)();
+                            }}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
                         >
-                            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                            <span>
-                                {submitting
-                                    ? (isEditing ? 'Syncing...' : 'Submitting...')
-                                    : (isEditing ? 'Update Post' : 'Create Post')}
-                            </span>
+                            <FileText className='w-4 h-4 mr-2' />
+                            <span>Save as Draft</span>
+                        </Button>
+                        <Button 
+                            type='button' 
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true });
+                                handleSubmit(onSubmitForm)();
+                            }}
+                            disabled={submitting}
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                                    <span>Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    {isEditing ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{isEditing ? 'Update Post' : 'Publish Post'}</span>
+                                </>
+                            )}
                         </Button>
                     </div>
                 </form>

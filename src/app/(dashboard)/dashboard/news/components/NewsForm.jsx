@@ -11,7 +11,7 @@ import FileUpload from '../../colleges/FileUpload'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { authFetch } from '@/app/utils/authFetch'
-import { Image as ImageIcon, Info, Layers, Loader2, Settings } from 'lucide-react'
+import { Image as ImageIcon, Info, Layers, Loader2, Settings, FileText, Check, Plus } from 'lucide-react'
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -304,16 +304,9 @@ export default function NewsForm({
                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                   <SectionHeader icon={Settings} title="Publishing" subtitle="Visibility settings" />
                   <div className='space-y-5'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='status'>Status</Label>
-                      <select
-                        id='status'
-                        {...register('status')}
-                        className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#387cae] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                      >
-                        <option value='draft'>Draft</option>
-                        <option value='published'>Published</option>
-                      </select>
+                    <div className='space-y-2 hidden'>
+                      {/* Status is managed via action buttons */}
+                      <input type="hidden" {...register('status')} />
                     </div>
 
                     <div className='space-y-2'>
@@ -333,7 +326,6 @@ export default function NewsForm({
             </div>
           </div>
 
-          {/* Submit Button - Sticky Footer */}
           <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
             <Button
               type='button'
@@ -342,16 +334,39 @@ export default function NewsForm({
             >
               Cancel
             </Button>
-            <Button
-              type='submit'
-              disabled={submitting}
+            <Button 
+              type='button' 
+              variant='secondary'
+              disabled={submitting} 
+              onClick={() => {
+                setValue('status', 'draft', { shouldDirty: true });
+                handleSubmit(handleFormSubmit)();
+              }}
+              className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
             >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span>
-                {submitting
-                  ? (editing ? 'Syncing...' : 'Submitting...')
-                  : (editing ? 'Update News' : 'Create News')}
-              </span>
+              <FileText className='w-4 h-4 mr-2' />
+              <span>Save as Draft</span>
+            </Button>
+            <Button 
+              type='button' 
+              onClick={() => {
+                setValue('status', 'published', { shouldDirty: true });
+                handleSubmit(handleFormSubmit)();
+              }}
+              disabled={submitting}
+              className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  {editing ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                  <span>{editing ? 'Update News' : 'Publish News'}</span>
+                </>
+              )}
             </Button>
           </div>
         </form>

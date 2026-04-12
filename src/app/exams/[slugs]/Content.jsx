@@ -85,23 +85,7 @@ export default function ExamDetailContent({ exam: initialExam }) {
               <ClipboardCheck className='w-6 h-6 text-[#0A6FA7]' />
             </div>
             <div className='flex-1 min-w-0'>
-              <div className='flex flex-wrap gap-2 mb-2'>
-                {exam.level?.title && (
-                  <span className='px-2.5 py-1 bg-gray-100 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider'>
-                    {exam.level.title}
-                  </span>
-                )}
-                {exam.exam_type && (
-                  <span className='px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider'>
-                    {exam.exam_type}
-                  </span>
-                )}
-                {exam.category?.title && (
-                  <span className='px-2.5 py-1 bg-blue-50 rounded-full text-[10px] font-bold text-[#0A6FA7] uppercase tracking-wider'>
-                    {exam.category.title}
-                  </span>
-                )}
-              </div>
+              
               <h1 className='text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight'>
                 {exam.title}
               </h1>

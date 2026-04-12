@@ -6,7 +6,7 @@ import { Label } from '@/ui/shadcn/label'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import axios from 'axios'
-import { Calendar, Image as ImageIcon, Info, Layers, Loader2, MapPin, Settings } from 'lucide-react'
+import { Calendar, Image as ImageIcon, Info, Layers, Loader2, MapPin, Settings, Check, Plus, FileText } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
@@ -66,7 +66,8 @@ const EventFormModal = ({
                 event_organizer: ''
             },
             is_featured: false,
-            meta_description: ''
+            meta_description: '',
+            status: 'Published'
         }
     })
 
@@ -137,7 +138,8 @@ const EventFormModal = ({
                         event_organizer: eventHost?.event_organizer || ''
                     },
                     is_featured: initialData.is_featured === 1 || initialData.is_featured === true || initialData.is_featured === '1',
-                    meta_description: initialData.meta_description || ''
+                    meta_description: initialData.meta_description || '',
+                    status: initialData.status || 'Published'
                 })
                 setUploadedImage(initialData.image || '')
 
@@ -180,7 +182,8 @@ const EventFormModal = ({
                         event_organizer: ''
                     },
                     is_featured: false,
-                    meta_description: ''
+                    meta_description: '',
+                    status: 'Published'
                 })
                 setUploadedImage('')
                 setSelectedCategory(null)
@@ -484,20 +487,6 @@ const EventFormModal = ({
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Settings} title="Settings" subtitle="Additional options" />
                                     <div className='space-y-6'>
-                                        <div className="flex items-center justify-between p-4 bg-[#387cae]/5 rounded-md border border-[#387cae]/10">
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    id="is_featured"
-                                                    {...register('is_featured')}
-                                                    className="w-5 h-5 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]"
-                                                />
-                                                <Label htmlFor="is_featured" className="text-sm font-bold text-[#387cae] cursor-pointer">
-                                                    Mark as Featured
-                                                </Label>
-                                            </div>
-                                        </div>
-
                                         <div>
                                             <Label htmlFor='meta_description'>SEO Meta Description</Label>
                                             <Textarea
@@ -521,17 +510,39 @@ const EventFormModal = ({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            type='submit'
-                            disabled={submitting}
-                            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[120px]"
+                        <Button 
+                            type='button' 
+                            variant='secondary'
+                            disabled={submitting} 
+                            onClick={() => {
+                                setValue('status', 'draft', { shouldDirty: true });
+                                handleSubmit(onSubmitForm)();
+                            }}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
                         >
-                            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                            <span>
-                                {submitting
-                                    ? (isEditing ? 'Syncing...' : 'Submitting...')
-                                    : (isEditing ? 'Update Event' : 'Create Event')}
-                            </span>
+                            <FileText className='w-4 h-4 mr-2' />
+                            <span>Save as Draft</span>
+                        </Button>
+                        <Button 
+                            type='button' 
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true });
+                                handleSubmit(onSubmitForm)();
+                            }}
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+                            disabled={submitting}
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                                    <span>Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    {isEditing ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{isEditing ? 'Update Event' : 'Create Event'}</span>
+                                </>
+                            )}
                         </Button>
                     </div>
                 </form>

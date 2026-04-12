@@ -12,9 +12,9 @@ import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
-import { fetchCourses } from './actions'
-import { DistrictLists } from '@/constants/district'
+import { fetchCourses, fetchCountries, fetchDistricts } from './actions'
 import { CITIES } from '@/constants/City'
+import { Loader2, Check, FileText } from 'lucide-react'
 
 export default function EditConsultancyPage() {
   const { toast } = useToast()
@@ -26,6 +26,7 @@ export default function EditConsultancyPage() {
   })
   const [selectedColleges, setSelectedColleges] = useState([])
   const [selectedDestinations, setSelectedDestinations] = useState([])
+  const [districtsList, setDistrictsList] = useState([])
   const author_id = useSelector((state) => state.user.data?.id)
 
   const {
@@ -54,11 +55,13 @@ export default function EditConsultancyPage() {
       logo: '',
       pinned: 0,
       courses: [],
-      meta_description: ''
+      meta_description: '',
+      status: 'published'
     }
   })
 
   useEffect(() => {
+    fetchDistricts().then(res => setDistrictsList(res || []));
     loadConsultancyData()
   }, [])
 
@@ -171,6 +174,7 @@ export default function EditConsultancyPage() {
       setValue('featured_image', consultancy.featured_image || '')
       setValue('logo', consultancy.logo || '')
       setValue('meta_description', consultancy.meta_description || '')
+      setValue('status', consultancy.status || 'published')
       setValue('id', consultancy.id) // Store ID for update
 
     } catch (error) {
@@ -350,7 +354,12 @@ export default function EditConsultancyPage() {
             <div className='space-y-3'>
               <SearchSelectCreate
                 allowCreate={true}
-                onSearch={() => []}
+                onSearch={async (query) => {
+                  const all = await fetchCountries();
+                  if (!query) return all.map(c => ({ id: c, title: c }));
+                  const lower = query.toLowerCase();
+                  return all.filter(c => c.toLowerCase().includes(lower)).map(c => ({ id: c, title: c }));
+                }}
                 onCreate={(query) => ({ id: query, title: query })}
                 onSelect={(item) => {
                   const current = selectedDestinations || []
@@ -410,7 +419,7 @@ export default function EditConsultancyPage() {
                   className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
                 >
                   <option value=''>Select District</option>
-                  {DistrictLists.map((district) => (
+                  {districtsList.map((district) => (
                     <option key={district} value={district}>
                       {district}
                     </option>
@@ -569,9 +578,40 @@ export default function EditConsultancyPage() {
           </div>
         </div>
 
-        <div className='bg-background border-t pt-4 pb-2 mt-4 flex justify-end gap-2'>
-          <Button type='submit' disabled={submitting}>
-            {submitting ? 'Saving...' : 'Save Changes'}
+        <div className='bg-background border-t pt-4 pb-2 mt-4 flex justify-end gap-3'>
+          <Button 
+              type='button' 
+              variant='secondary'
+              disabled={submitting} 
+              onClick={() => {
+                  setValue('status', 'draft', { shouldDirty: true });
+                  handleSubmit(onSubmit)();
+              }}
+              className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+          >
+              <FileText className='w-4 h-4 mr-2' />
+              <span>Save as Draft</span>
+          </Button>
+          <Button 
+              type='button' 
+              onClick={() => {
+                  setValue('status', 'published', { shouldDirty: true });
+                  handleSubmit(onSubmit)();
+              }}
+              className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+              disabled={submitting}
+          >
+            {submitting ? (
+                <>
+                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                    <span>Saving...</span>
+                </>
+            ) : (
+                <>
+                    <Check className='w-4 h-4 mr-2' />
+                    <span>Save Changes</span>
+                </>
+            )}
           </Button>
         </div>
       </form>

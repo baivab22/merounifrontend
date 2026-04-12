@@ -11,13 +11,24 @@ import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import { Award, Edit2, Eye, Plus, Trash2 } from 'lucide-react'
+import { Award, Edit2, Eye, Plus, Trash2, Info, FileText, Settings, BookOpen, Layers, Check, Loader2, Calendar, MapPin, Clock } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 import FileUpload from '../colleges/FileUpload'
 import { fetchSkillsCourses } from './action'
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+    <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20">
+            <Icon size={20} />
+        </div>
+        <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">{title}</h3>
+            {subtitle && <p className="text-xs text-gray-400 mt-0.5 font-medium">{subtitle}</p>}
+        </div>
+    </div>
+)
 
 export default function SkillsCoursesManager() {
     const { toast } = useToast()
@@ -48,7 +59,8 @@ export default function SkillsCoursesManager() {
             class_time: '',
             start_date: '',
             class_days: '',
-            seats_available: ''
+            seats_available: '',
+            status: 'published'
         }
     })
 
@@ -180,6 +192,7 @@ export default function SkillsCoursesManager() {
         setValue('start_date', course.start_date || '')
         setValue('class_days', course.class_days || '')
         setValue('seats_available', course.seats_available || '')
+        setValue('status', course.status || 'published')
         setUploadedFiles({ thumbnail_image: course.thumbnail_image || '' })
     }
 
@@ -282,6 +295,23 @@ export default function SkillsCoursesManager() {
             )
         },
         {
+            header: 'Status',
+            accessorKey: 'status',
+            cell: ({ getValue }) => {
+                const status = getValue() || 'published';
+                return (
+                    <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border ${status === 'draft'
+                        ? 'bg-gray-100 text-gray-600 border-gray-200'
+                        : status === 'published'
+                            ? 'bg-green-50 text-green-600 border-green-100'
+                            : 'bg-amber-50 text-amber-600 border-amber-100'
+                        }`}>
+                        {status}
+                    </span>
+                );
+            }
+        },
+        {
             header: 'Actions',
             id: 'actions',
             cell: ({ row }) => (
@@ -331,101 +361,218 @@ export default function SkillsCoursesManager() {
                 />
             </div>
 
-            {/* Modal for Create/Edit */}
-            <Dialog isOpen={isOpen} onClose={handleCloseModal} className='max-w-5xl'>
-                <DialogContent className='p-0'>
-                    <DialogHeader className='px-6 py-4 border-b bg-white sticky top-0 z-10'>
-                        <DialogTitle className="text-lg font-bold text-gray-900">
-                            {editing ? 'Update Course' : 'Create New Course'}
-                        </DialogTitle>
-                        <DialogClose onClick={handleCloseModal} />
-                    </DialogHeader>
+            {/* Form Modal */}
+            <Dialog isOpen={isOpen} onClose={handleCloseModal} className='max-w-6xl'>
+                <DialogHeader className="bg-white border-b border-gray-100 p-6">
+                    <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <Layers className="text-[#387cae]" size={24} />
+                        {editing ? 'Update Course' : 'Create New Short Term Course'}
+                    </DialogTitle>
+                    <DialogClose onClick={handleCloseModal} />
+                </DialogHeader>
+                <DialogContent className="p-0 bg-gray-50/50">
+                    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col max-h-[calc(100vh-120px)]'>
+                        <div className='flex-1 p-8 overflow-y-auto custom-scrollbar sidebar-scrollbar'>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6">
+                                {/* Left Column (8/12) */}
+                                <div className="lg:col-span-8 space-y-8">
+                                    {/* Basic Information */}
+                                    <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                        <SectionHeader icon={Info} title="Course Information" subtitle="Primary details of the short term course" />
+                                        <div className='space-y-6'>
+                                            <div>
+                                                <Label htmlFor='title' required>Course Title</Label>
+                                                <Input
+                                                    id='title'
+                                                    placeholder='Enter course title...'
+                                                    {...register('title', { required: 'Title is required' })}
+                                                    className={errors.title ? 'border-destructive focus-visible:ring-destructive' : ''}
+                                                />
+                                                {errors.title && <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.title.message}</p>}
+                                            </div>
 
-                    <div className='p-6 bg-white'>
-                        <form id="course-form" onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
-                            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                                <div className='space-y-2'>
-                                    <Label required htmlFor="title">Title</Label>
-                                    <Input id="title" {...register('title', { required: true })} placeholder="Course Name" />
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div>
+                                                    <Label htmlFor='institution_name'>Institution Name</Label>
+                                                    <Input
+                                                        id='institution_name'
+                                                        placeholder='e.g., Global Academy'
+                                                        {...register('institution_name')}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor='price' required>Price (Rs.)</Label>
+                                                    <div className='relative'>
+                                                        <span className='absolute left-3 top-2.5 text-gray-400 text-sm'>Rs.</span>
+                                                        <Input
+                                                            id='price'
+                                                            type='number'
+                                                            placeholder='0 for Free'
+                                                            {...register('price')}
+                                                            className='pl-10'
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div>
+                                                    <Label htmlFor='duration' required>Duration</Label>
+                                                    <Input
+                                                        id='duration'
+                                                        placeholder='e.g., 3 Months'
+                                                        {...register('duration', { required: 'Duration is required' })}
+                                                        className={errors.duration ? 'border-destructive focus-visible:ring-destructive' : ''}
+                                                    />
+                                                    {errors.duration && <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.duration.message}</p>}
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor='course_type'>Class Mode</Label>
+                                                    <select
+                                                        id="course_type"
+                                                        {...register('course_type')}
+                                                        className='w-full h-10 px-3 rounded-md border border-gray-200 text-sm focus:ring-2 focus:ring-[#387cae] focus:outline-none bg-white'
+                                                    >
+                                                        <option value="online">Online</option>
+                                                        <option value="offline">Offline</option>
+                                                        <option value="both">Both</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Detailed Content */}
+                                    <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                        <SectionHeader icon={BookOpen} title="Detailed Content" subtitle="In-depth information about the course curriculum" />
+                                        <div className='pt-2'>
+                                            <Label className="text-gray-700 font-semibold mb-2.5 block text-sm">Course Body Content</Label>
+                                            <Controller
+                                                name='content'
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <TipTapEditor
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                        placeholder='Write detailed course information...'
+                                                        height='300px'
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="institution_name">Institution</Label>
-                                    <Input id="institution_name" {...register('institution_name')} placeholder="Institution Name" />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label required htmlFor="price">Price (Rs.)</Label>
-                                    <Input id="price" type="number" {...register('price')} placeholder="0 for Free" />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label required htmlFor="duration">Duration</Label>
-                                    <Input id="duration" {...register('duration')} placeholder="e.g. 1 Month" />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="course_type">Mode</Label>
-                                    <select id="course_type" {...register('course_type')} className='w-full h-10 px-3 rounded-md border border-gray-200 text-sm'>
-                                        <option value="online">Online</option>
-                                        <option value="offline">Offline</option>
-                                        <option value="both">Both</option>
-                                    </select>
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="location">Location</Label>
-                                    <Input id="location" {...register('location')} placeholder="e.g. Kathmandu" />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="class_time">Class Time</Label>
-                                    <Input id="class_time" {...register('class_time')} placeholder="e.g. 7 AM - 9 AM" />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="start_date">Start Date</Label>
-                                    <Input id="start_date" type="date" {...register('start_date')} />
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label htmlFor="seats_available">Seats</Label>
-                                    <Input id="seats_available" type="number" {...register('seats_available')} />
-                                </div>
-                                <div className='flex items-center gap-4 pt-8'>
-                                    <Label className="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" {...register('is_featured')} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-                                        <span className="text-sm font-medium">Featured Course</span>
-                                    </Label>
+
+                                {/* Right Column (4/12) */}
+                                <div className="lg:col-span-4 space-y-8">
+                                    {/* Logistics & Dates */}
+                                    <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                        <SectionHeader icon={Calendar} title="Schedule & Logistics" subtitle="Timing and availability" />
+                                        <div className='space-y-4'>
+                                            <div>
+                                                <Label htmlFor='start_date' className='flex items-center gap-2'><Calendar size={14} /> Start Date</Label>
+                                                <Input id='start_date' type='date' {...register('start_date')} className='mt-1' />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor='class_time' className='flex items-center gap-2'><Clock size={14} /> Class Time</Label>
+                                                <Input id='class_time' placeholder='e.g., 7:00 AM - 9:00 AM' {...register('class_time')} className='mt-1' />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor='location' className='flex items-center gap-2'><MapPin size={14} /> Location</Label>
+                                                <Input id='location' placeholder='e.g., Bagbazar, Kathmandu' {...register('location')} className='mt-1' />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor='seats_available'>Seats Available</Label>
+                                                <Input id='seats_available' type='number' placeholder='e.g., 25' {...register('seats_available')} className='mt-1' />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Thumbnail */}
+                                    <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                        <SectionHeader icon={Layers} title="Media" subtitle="Course thumbnail" />
+                                        <div className='space-y-4'>
+                                            <Label>Thumbnail Image</Label>
+                                            <FileUpload
+                                                label=''
+                                                defaultPreview={uploadedFiles.thumbnail_image}
+                                                onUploadComplete={(url) => {
+                                                    setUploadedFiles((prev) => ({ ...prev, thumbnail_image: url }))
+                                                    setValue('thumbnail_image', url)
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Settings */}
+                                    <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                        <SectionHeader icon={Settings} title="Settings" subtitle="Additional options" />
+                                        <div className='space-y-4'>
+                                            <div className='flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100'>
+                                                <input
+                                                    type="checkbox"
+                                                    id="is_featured"
+                                                    {...register('is_featured')}
+                                                    className="w-4 h-4 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]"
+                                                />
+                                                <Label htmlFor="is_featured" className="cursor-pointer text-amber-900 font-medium">Feature this course</Label>
+                                            </div>
+                                            <div className='hidden'>
+                                                <input type="hidden" {...register('status')} />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className='space-y-2'>
-                                <Label required htmlFor="description">Short Description</Label>
-                                <Textarea id="description" {...register('description', { required: true })} placeholder="One-line summary" className="min-h-[80px]" />
-                            </div>
-
-                            <div className='space-y-2'>
-                                <Label required>Detailed Content</Label>
-                                <Controller
-                                    name='content'
-                                    control={control}
-                                    render={({ field }) => <TipTapEditor value={field.value} onChange={field.onChange} />}
-                                />
-                            </div>
-
-                            <div className='space-y-2'>
-                                <Label>Thumbnail Image</Label>
-                                <FileUpload
-                                    label=''
-                                    defaultPreview={uploadedFiles.thumbnail_image}
-                                    onUploadComplete={(url) => {
-                                        setUploadedFiles((prev) => ({ ...prev, thumbnail_image: url }))
-                                        setValue('thumbnail_image', url)
-                                    }}
-                                />
-                            </div>
-                        </form>
-                    </div>
-
-                    <div className='p-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10'>
-                        <Button variant="ghost" onClick={handleCloseModal} disabled={isSubmitting}>Cancel</Button>
-                        <Button type="submit" form="course-form" disabled={isSubmitting} className="bg-[#387cae] text-white">
-                            {isSubmitting ? 'Saving...' : editing ? 'Update' : 'Create'}
-                        </Button>
-                    </div>
+                        {/* Action Bar */}
+                        <div className='shrink-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-20'>
+                            <Button
+                                type='button'
+                                variant='outline'
+                                onClick={handleCloseModal}
+                                className='px-8 border-gray-200 text-gray-600 hover:bg-gray-50'
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type='button'
+                                variant='secondary'
+                                disabled={isSubmitting}
+                                onClick={() => {
+                                    setValue('status', 'draft', { shouldDirty: true });
+                                    handleSubmit(onSubmit)();
+                                }}
+                                className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+                            >
+                                <FileText className='w-4 h-4 mr-2' />
+                                <span>Save as Draft</span>
+                            </Button>
+                            <Button
+                                type='submit'
+                                onClick={() => {
+                                    setValue('status', 'published', { shouldDirty: true });
+                                }}
+                                disabled={isSubmitting}
+                                className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {editing ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                        <span>{editing ? 'Update Course' : 'Create Course'}</span>
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </form>
                 </DialogContent>
             </Dialog>
 
@@ -444,6 +591,8 @@ export default function SkillsCoursesManager() {
                                 <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Price</p><p className='font-bold text-green-600'>{viewingCourse.price ? `Rs. ${viewingCourse.price}` : 'Free'}</p></div>
                                 <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Duration</p><p>{viewingCourse.duration}</p></div>
                                 <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Mode</p><p className='capitalize'>{viewingCourse.course_type}</p></div>
+                                <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Status</p><p className='capitalize'>{viewingCourse.status || 'published'}</p></div>
+                                <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Featured</p><p>{viewingCourse.is_featured ? 'Yes' : 'No'}</p></div>
                             </div>
                             <div><p className='font-bold text-gray-400 uppercase text-[10px]'>Description</p><p>{viewingCourse.description}</p></div>
                         </div>

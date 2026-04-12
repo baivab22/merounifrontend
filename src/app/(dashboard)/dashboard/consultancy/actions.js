@@ -50,3 +50,27 @@ export async function deleteConsultancy(id) {
         throw error
     }
 }
+
+export async function fetchCountries() {
+    try {
+        const response = await authFetch(`${process.env.baseUrl}/misc/getCountryList`)
+        if (!response.ok) throw new Error('Failed to fetch countries')
+        const data = await response.json()
+        return data.data || []
+    } catch (error) {
+        console.error('Error fetching countries:', error)
+        return []
+    }
+}
+
+export async function fetchDistricts() {
+    try {
+        const response = await authFetch(`${process.env.baseUrl}/misc/getNepalDistrictList`)
+        if (!response.ok) throw new Error('Failed to fetch districts')
+        const data = await response.json()
+        return data.data || []
+    } catch (error) {
+        console.error('Error fetching districts:', error)
+        return []
+    }
+}
