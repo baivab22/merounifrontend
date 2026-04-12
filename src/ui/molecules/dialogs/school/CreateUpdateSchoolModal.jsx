@@ -30,7 +30,7 @@ import {
     Users,
     Video
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
@@ -92,6 +92,16 @@ const CreateUpdateSchoolModal = ({
 
     const [openEmojiPickerIndex, setOpenEmojiPickerIndex] = useState(null)
 
+    // Section Refs for scroll-to-error
+    const basicInfoRef = useRef(null)
+    const aboutRef = useRef(null)
+    const academicRef = useRef(null)
+    const locationRef = useRef(null)
+    const infrastructureRef = useRef(null)
+    const teamRef = useRef(null)
+    const faqRef = useRef(null)
+    const mediaRef = useRef(null)
+
     const author_id = useSelector((state) => state.user.data?.id)
 
 
@@ -103,7 +113,7 @@ const CreateUpdateSchoolModal = ({
         reset,
         watch,
         getValues,
-        formState: { errors, isDirty }
+        formState: { errors, isDirty, submitCount }
     } = useForm({
         defaultValues: {
             name: '',
@@ -160,6 +170,35 @@ const CreateUpdateSchoolModal = ({
         setUploadedFiles(updater)
         if (!loadingData) setFilesDirty(true)
     }
+
+    // Scroll to first error on submit
+    useEffect(() => {
+        if (submitCount > 0 && Object.keys(errors).length > 0) {
+            const fieldOrder = [
+                { keys: ['name', 'institute_type'], ref: basicInfoRef },
+                { keys: ['description', 'content'], ref: aboutRef },
+                { keys: ['board_ids', 'stream_ids', 'programs'], ref: academicRef },
+                { keys: ['address', 'google_map_url'], ref: locationRef },
+                { keys: ['facilities'], ref: infrastructureRef },
+                { keys: ['members'], ref: teamRef },
+                { keys: ['faqs'], ref: faqRef },
+                { keys: ['college_logo', 'featured_img'], ref: mediaRef }
+            ]
+
+            const firstErrorField = Object.keys(errors)[0]
+            const section = fieldOrder.find(item => item.keys.some(key => firstErrorField.startsWith(key)))
+
+            if (section?.ref.current) {
+                section.ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                
+                // Focus the first invalid element if possible
+                setTimeout(() => {
+                    const firstInvalid = section.ref.current.querySelector('[aria-invalid="true"], input.border-red-500, select.border-red-500, textarea.border-red-500')
+                    if (firstInvalid) firstInvalid.focus()
+                }, 500)
+            }
+        }
+    }, [submitCount, errors])
 
     const handleCloseAttempt = () => {
         if (isDirty || filesDirty) {
@@ -591,12 +630,12 @@ const CreateUpdateSchoolModal = ({
                             </div>
                         </div>
                     )}
-                    <div className='flex-1 p-8 overflow-y-auto'>
+                    <div className='flex-1 p-6 overflow-y-auto'>
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8">
                             {/* Left Column - Main Content (8/12) */}
                             <div className="lg:col-span-8 space-y-8">
                                 {/* Basic Information */}
-                                <div className='bg-white p-8 rounded-2xl border border-gray-100'>
+                                <div ref={basicInfoRef} className='bg-white p-8 rounded-2xl border border-gray-100'>
                                     <SectionHeader icon={Info} title="Basic Information" subtitle="General identity of the school" />
                                     <div className='space-y-6'>
                                         <div>
@@ -640,7 +679,7 @@ const CreateUpdateSchoolModal = ({
                                 </div>
 
                                 {/* About School */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={aboutRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={FileText} title="About School" subtitle="Detailed description and content" />
                                     <div className='space-y-6'>
                                         <div>
@@ -670,7 +709,7 @@ const CreateUpdateSchoolModal = ({
                                 </div>
 
                                 {/* Academic Details */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={academicRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={GraduationCap} title="Academic Details" subtitle="Affiliation and programs" />
                                     <div className='space-y-6'>
                                         <div>
@@ -753,66 +792,69 @@ const CreateUpdateSchoolModal = ({
                                                 )}
                                             </div>
                                         </div>
-
-
                                     </div>
                                 </div>
 
-                                {/* Media & Gallery */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={ImageIcon} title="Media & Gallery" subtitle="Visual content for the school" />
-                                    <div className='space-y-10'>
-                                        <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
-                                            <FileUploadWithPreview
-                                                label='School Logo'
-                                                onUploadComplete={(url) => {
-                                                    handleSetFiles(prev => ({ ...prev, college_logo: url }))
-                                                    setValue('college_logo', url, { shouldValidate: true })
-                                                }}
-                                                defaultPreview={uploadedFiles.college_logo}
-                                                onClear={() => {
-                                                    handleSetFiles(prev => ({ ...prev, college_logo: '' }))
-                                                    setValue('college_logo', '', { shouldValidate: true })
-                                                }}
-                                            />
-                                            <FileUploadWithPreview
-                                                label='Featured Image'
-                                                onUploadComplete={(url) => {
-                                                    handleSetFiles(prev => ({ ...prev, featured_img: url }))
-                                                    setValue('featured_img', url, { shouldValidate: true })
-                                                }}
-                                                defaultPreview={uploadedFiles.featured_img}
-                                                onClear={() => {
-                                                    handleSetFiles(prev => ({ ...prev, featured_img: '' }))
-                                                    setValue('featured_img', '', { shouldValidate: true })
-                                                }}
-                                            />
+                                {/* Location & Access */}
+                                <div ref={locationRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={MapPin} title="Location & Access" subtitle="How to find the school" />
+                                    <div className='space-y-6'>
+                                        <div>
+                                            <Label>District</Label>
+                                            <select
+                                                {...register('address.district')}
+                                                className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                                            >
+                                                <option value="">Select District</option>
+                                                {DistrictLists.map(d => (
+                                                    <option key={d} value={d}>{d}</option>
+                                                ))}
+                                            </select>
                                         </div>
 
-                                        <div className="pt-4 border-t border-gray-50">
-                                            <GallerySection
-                                                control={control}
-                                                setValue={setValue}
-                                                uploadedFiles={uploadedFiles}
-                                                setUploadedFiles={handleSetFiles}
-                                                getValues={getValues}
-                                            />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>City</Label>
+                                                <Input {...register('address.city')} placeholder='City' className="h-10" />
+                                            </div>
+                                            <div>
+                                                <Label>Street</Label>
+                                                <Input {...register('address.street')} placeholder='Street' className="h-10" />
+                                            </div>
                                         </div>
 
-                                        <div className="pt-4 border-t border-gray-50">
-                                            <VideoSection
-                                                control={control}
-                                                setValue={setValue}
-                                                uploadedFiles={uploadedFiles}
-                                                setUploadedFiles={handleSetFiles}
-                                                getValues={getValues}
-                                            />
+                                        <div>
+                                            <Label>Google Maps URL</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    {...register('google_map_url')}
+                                                    placeholder='Paste map link...'
+                                                    className="h-10 pl-10"
+                                                />
+                                                <Map className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                            </div>
+                                        </div>
+
+                                        <div className='pt-4 border-t border-gray-50'>
+                                            <Label className="mb-3 block">Contact Numbers</Label>
+                                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                                {[0, 1].map((idx) => (
+                                                    <div key={idx} className="relative group">
+                                                        <Activity className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-[#387cae] transition-colors" />
+                                                        <Input
+                                                            {...register(`contacts.${idx}`)}
+                                                            placeholder={`Phone Number ${idx + 1}`}
+                                                            className="h-11 pl-10 rounded-md border-gray-200 transition-all focus:ring-4 focus:ring-[#387cae]/5"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Infrastructure & Features */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={infrastructureRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Activity} title="Facilities & Infrastructure" subtitle="What the school offers students" />
                                     <div className='space-y-6'>
                                         <div className='space-y-4'>
@@ -896,144 +938,193 @@ const CreateUpdateSchoolModal = ({
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Right Column - Sidebar (4/12) */}
-                            <div className="lg:col-span-4 space-y-8">
-                                {/* Contact and Map */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={MapPin} title="Location & Access" subtitle="How to find the school" />
-                                    <div className='space-y-6'>
-                                        <div>
-                                            <Label>District</Label>
-                                            <select
-                                                {...register('address.district')}
-                                                className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                                            >
-                                                <option value="">Select District</option>
-                                                {DistrictLists.map(d => (
-                                                    <option key={d} value={d}>{d}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>City</Label>
-                                                <Input {...register('address.city')} placeholder='City' className="h-10" />
-                                            </div>
-                                            <div>
-                                                <Label>Street</Label>
-                                                <Input {...register('address.street')} placeholder='Street' className="h-10" />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <Label>Google Maps URL</Label>
-                                            <div className="relative">
-                                                <Input
-                                                    {...register('google_map_url')}
-                                                    placeholder='Paste map link...'
-                                                    className="h-10 pl-10"
-                                                />
-                                                <Map className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                            </div>
-                                        </div>
-
-                                        <div className='pt-4 border-t border-gray-50'>
-                                            <Label className="mb-3 block">Contact Numbers</Label>
-                                            <div className='space-y-3'>
-                                                {[0, 1].map((idx) => (
-                                                    <div key={idx} className="relative">
-                                                        <Input
-                                                            {...register(`contacts.${idx}`)}
-                                                            placeholder={`Phone #${idx + 1}`}
-                                                            className="h-10 pl-10"
-                                                        />
-                                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Team Members */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={Users} title="Leadership Team" subtitle="Key staff and administrators" />
-                                    <div className='space-y-4'>
-                                        {memberFields.map((field, index) => (
-                                            <div key={field.id} className='relative p-5 rounded-xl border border-gray-100 bg-gray-50/50 group'>
-                                                <Button
-                                                    type='button'
-                                                    variant='ghost'
-                                                    size='sm'
-                                                    onClick={() => removeMember(index)}
-                                                    className='absolute top-3 right-3 h-7 w-7 p-0 text-red-00 hover:text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
-                                                >
-                                                    <Trash2 size={13} />
-                                                </Button>
-                                                <div className="flex gap-4 items-start">
-                                                    <div className="w-16 h-16 rounded-lg bg-gray-200 border-2 border-white shadow-sm overflow-hidden shrink-0">
-                                                        {watch(`members.${index}.image_url`) ? (
-                                                            <img src={watch(`members.${index}.image_url`)} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                                                                <Users size={20} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 space-y-3">
-                                                        <Input {...register(`members.${index}.name`)} placeholder='Full Name' className='h-9 text-xs' />
-                                                        <Input {...register(`members.${index}.role`)} placeholder='Position' className='h-9 text-xs' />
-                                                    </div>
-                                                </div>
-                                                <div className="mt-3">
-                                                    <FileUploadWithPreview
-                                                        label=''
-                                                        onUploadComplete={(url) => setValue(`members.${index}.image_url`, url, { shouldDirty: true })}
-                                                        defaultPreview={watch(`members.${index}.image_url`)}
-                                                        onClear={() => setValue(`members.${index}.image_url`, '', { shouldDirty: true })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
+                                {/* Leadership Team */}
+                                <div ref={teamRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                    <div className='flex justify-between items-center mb-6'>
+                                        <SectionHeader icon={Users} title="Leadership Team" subtitle="Key staff and administrators" />
                                         <Button
                                             type='button'
                                             variant='outline'
+                                            size='sm'
+                                            className='rounded-md border-[#387cae]/20 text-[#387cae] hover:bg-[#387cae]/5'
                                             onClick={() => appendMember({ name: '', role: '', image_url: '', description: '', contact_number: '' })}
-                                            className='w-full border-dashed hover:bg-white hover:border-[#387cae] hover:text-[#387cae] transition-all text-xs font-bold gap-2'
                                         >
-                                            <Plus size={12} /> Add Team Member
+                                            <Plus className='w-4 h-4 mr-2' />
+                                            Add Member
                                         </Button>
+                                    </div>
+                                    <div className='grid grid-cols-1 gap-6'>
+                                        {memberFields.map((field, index) => (
+                                            <div key={field.id} className='group relative p-6 bg-white border border-gray-100 rounded-3xl transition-all hover:shadow-xl hover:shadow-[#387cae]/5 hover:border-[#387cae]/20'>
+                                                <div className='flex flex-col md:flex-row gap-6 pr-10'>
+                                                    <div className='w-24 shrink-0'>
+                                                        <Label className='text-[10px] font-bold text-gray-400 uppercase mb-3 block text-center'>Photo</Label>
+                                                        <FileUploadWithPreview
+                                                            onUploadComplete={(url) => setValue(`members.${index}.image_url`, url, { shouldDirty: true })}
+                                                            onClear={() => setValue(`members.${index}.image_url`, '', { shouldDirty: true })}
+                                                            defaultPreview={watch(`members.${index}.image_url`)}
+                                                        />
+                                                        <input type="hidden" {...register(`members.${index}.image_url`)} />
+                                                    </div>
+                                                    <div className='flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                                        <div>
+                                                            <Label className='text-[10px] font-bold text-gray-400 uppercase mb-1 block'>Full Name</Label>
+                                                            <Input
+                                                                {...register(`members.${index}.name`, { required: 'Name is required' })}
+                                                                placeholder='Dr. John Doe'
+                                                                className='h-10 rounded-md'
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <Label className='text-[10px] font-bold text-slate-500 uppercase mb-1 block'>Role</Label>
+                                                            <Input
+                                                                {...register(`members.${index}.role`, { required: 'Role is required' })}
+                                                                placeholder='Principal / Professor'
+                                                                className='h-10 rounded-md'
+                                                            />
+                                                        </div>
+                                                        <div className='sm:col-span-2'>
+                                                            <Label className='text-[10px] font-bold text-slate-500 uppercase mb-1 block'>Professional description</Label>
+                                                            <Input
+                                                                {...register(`members.${index}.description`)}
+                                                                placeholder='Achievement and specialization...'
+                                                                className='h-10 rounded-md'
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    type='button'
+                                                    variant='outline'
+                                                    size='icon'
+                                                    className='absolute top-6 right-6 h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 border-gray-100 rounded-md'
+                                                    onClick={() => removeMember(index)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
                                 {/* FAQs */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={HelpCircle} title="Frequently Asked" subtitle="Common queries about the school" />
-                                    <div className='space-y-4'>
-                                        {faqFields.map((field, index) => (
-                                            <div key={field.id} className='p-5 rounded-xl border border-gray-100 bg-gray-50/50 space-y-3'>
-                                                <div className="flex justify-between items-center">
-                                                    <span className='text-[10px] font-bold text-[#387cae] uppercase tracking-wider'>Question #{index + 1}</span>
-                                                    <Button type='button' variant='ghost' size='sm' onClick={() => removeFaq(index)} className='h-6 w-6 p-0 text-red-400 hover:text-red-500'>
-                                                        <Trash2 size={12} />
-                                                    </Button>
-                                                </div>
-                                                <Input {...register(`faqs.${index}.question`)} placeholder='The question...' className='h-9 text-xs' />
-                                                <Textarea {...register(`faqs.${index}.answer`)} placeholder='The answer...' className='min-h-[80px] text-xs' />
-                                            </div>
-                                        ))}
+                                <div ref={faqRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                    <div className='flex justify-between items-center mb-6'>
+                                        <SectionHeader icon={HelpCircle} title="Frequently Asked Questions" subtitle="Common queries about the school" />
                                         <Button
                                             type='button'
                                             variant='outline'
+                                            size='sm'
+                                            className='rounded-md border-[#387cae]/20 text-[#387cae] hover:bg-[#387cae]/5'
                                             onClick={() => appendFaq({ question: '', answer: '' })}
-                                            className='w-full border-dashed text-xs font-bold gap-2'
                                         >
-                                            <Plus size={12} /> Add New FAQ
+                                            <Plus className='w-4 h-4 mr-2' />
+                                            Add FAQ
                                         </Button>
                                     </div>
+                                    <div className='space-y-4'>
+                                        {faqFields.map((field, index) => (
+                                            <div key={field.id} className='group relative p-6 bg-white border border-gray-100 rounded-2xl transition-all hover:shadow-lg hover:shadow-[#387cae]/5 hover:border-[#387cae]/20'>
+                                                <div className='space-y-4 pr-10'>
+                                                    <div>
+                                                        <Label required className='text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block'>Question</Label>
+                                                        <Input {...register(`faqs.${index}.question`)} placeholder='The question...' className='h-11 rounded-md text-gray-800' />
+                                                    </div>
+                                                    <div>
+                                                        <Label required className='text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block'>Answer</Label>
+                                                        <Textarea {...register(`faqs.${index}.answer`)} placeholder='The answer...' className='rounded-md resize-none min-h-[80px]' />
+                                                    </div>
+                                                </div>
+                                                <Button type='button' variant='ghost' size='icon' className='absolute top-6 right-4 h-8 w-8 text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors rounded-md' onClick={() => removeFaq(index)}>
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column - Media & Settings (4/12) */}
+                            <div className="lg:col-span-4 space-y-8">
+                                {/* Media & Branding */}
+                                <div ref={mediaRef} className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={ImageIcon} title="Logo & Cover" subtitle="Identity visuals" />
+                                    <div className="space-y-6">
+                                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
+                                            <Label required={true} className="text-[11px] font-black tracking-[0.1em] mb-4 block group-hover:text-[#387cae]">School Logo</Label>
+                                            <FileUploadWithPreview
+                                                label=''
+                                                onUploadComplete={(url) => {
+                                                    handleSetFiles(prev => ({ ...prev, college_logo: url }))
+                                                    setValue('college_logo', url, { shouldValidate: true })
+                                                }}
+                                                defaultPreview={uploadedFiles.college_logo}
+                                                onClear={() => {
+                                                    handleSetFiles(prev => ({ ...prev, college_logo: '' }))
+                                                    setValue('college_logo', '', { shouldValidate: true })
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
+                                            <Label required={true} className="text-[11px] font-black mb-3 block group-hover:text-[#387cae]">Cover Image</Label>
+                                            <FileUploadWithPreview
+                                                label=''
+                                                widthClass="w-full"
+                                                heightClass="h-40"
+                                                onUploadComplete={(url) => {
+                                                    handleSetFiles(prev => ({ ...prev, featured_img: url }))
+                                                    setValue('featured_img', url, { shouldValidate: true })
+                                                }}
+                                                defaultPreview={uploadedFiles.featured_img}
+                                                onClear={() => {
+                                                    handleSetFiles(prev => ({ ...prev, featured_img: '' }))
+                                                    setValue('featured_img', '', { shouldValidate: true })
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Attachments */}
+                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={FileText} title="Brochure" subtitle="PDF documents" />
+                                    <div className="space-y-4">
+                                        <div>
+                                            <Label htmlFor='college_broucher' className='text-xs font-bold text-gray-400 mb-1.5 block'>Brochure File (PDF)</Label>
+                                            <FileUploadWithPreview
+                                                onUploadComplete={(url) => setValue('college_broucher', url, { shouldDirty: true })}
+                                                onClear={() => setValue('college_broucher', '', { shouldDirty: true })}
+                                                defaultPreview={watch('college_broucher')}
+                                                accept=".pdf"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Gallery Section */}
+                                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={ImageIcon} title="Image Gallery" subtitle="Visual showcase" />
+                                    <GallerySection
+                                        control={control}
+                                        setValue={setValue}
+                                        uploadedFiles={uploadedFiles}
+                                        setUploadedFiles={handleSetFiles}
+                                        getValues={getValues}
+                                    />
+                                </div>
+
+                                {/* Video Section */}
+                                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={Video} title="Video Gallery" subtitle="Virtual tours & promos" />
+                                    <VideoSection
+                                        control={control}
+                                        setValue={setValue}
+                                        uploadedFiles={uploadedFiles}
+                                        setUploadedFiles={handleSetFiles}
+                                        getValues={getValues}
+                                    />
                                 </div>
                             </div>
                         </div>

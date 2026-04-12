@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-import { X, ImagePlus } from "lucide-react"
+import { X, ImagePlus, FileText } from "lucide-react"
 
 const FileUploadWithPreview = ({
   onUploadComplete,
@@ -7,12 +7,19 @@ const FileUploadWithPreview = ({
   defaultPreview = null,
   accept = "image/*",
   onClear,
+  widthClass = "w-20",
+  heightClass = "h-20",
 }) => {
   const fileInputRef = useRef(null)
 
   const [preview, setPreview] = useState(defaultPreview)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  const isImageFile = (url) => {
+    if (!url) return false
+    return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(url) || url.startsWith('data:image/')
+  }
 
   useEffect(() => {
     setPreview(defaultPreview)
@@ -99,19 +106,26 @@ const FileUploadWithPreview = ({
 
       <div className="flex items-center gap-4">
         {preview ? (
-          <div className="relative w-20 h-20 rounded-md border overflow-hidden group">
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
+          <div className={`relative ${widthClass} ${heightClass} rounded-md border overflow-hidden group bg-gray-50 flex items-center justify-center`}>
+            {isImageFile(preview) ? (
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-[#387cae]">
+                <FileText size={24} />
+                <span className="text-[8px] font-bold mt-1 uppercase">Doc</span>
+              </div>
+            )}
 
             <button
               type="button"
               onClick={handleClear}
               disabled={loading}
               className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
-              aria-label="Remove image"
+              aria-label="Remove item"
             >
               <X className="w-5 h-5 text-white" />
             </button>
@@ -121,7 +135,7 @@ const FileUploadWithPreview = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
-            className="w-20 h-20 rounded-md border-2 border-dashed flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${widthClass} ${heightClass} rounded-md border-2 border-dashed flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <ImagePlus className="w-6 h-6" />
             <span className="text-[10px] mt-1">

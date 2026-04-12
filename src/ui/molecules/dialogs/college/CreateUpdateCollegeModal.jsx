@@ -30,7 +30,7 @@ import {
     Users,
     Video
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
@@ -39,6 +39,7 @@ import {
     createOrUpdateCollege,
     fetchUniversities,
     getProgramsByUniversity,
+    getDegreesByUniversity,
     saveDraft
 } from '@/app/(dashboard)/dashboard/colleges/actions'
 import { cn } from '@/app/lib/utils'
@@ -75,7 +76,9 @@ const CreateUpdateCollegeModal = ({
     const [loadingData, setLoadingData] = useState(false)
     const [showCloseConfirm, setShowCloseConfirm] = useState(false)
     const [universityPrograms, setUniversityPrograms] = useState([])
+    const [universityDegrees, setUniversityDegrees] = useState([])
     const [loadingPrograms, setLoadingPrograms] = useState(false)
+    const [loadingDegrees, setLoadingDegrees] = useState(false)
     const [filesDirty, setFilesDirty] = useState(false)
     const [uploadedFiles, setUploadedFiles] = useState({
         college_logo: '',
@@ -85,6 +88,17 @@ const CreateUpdateCollegeModal = ({
     })
     const [selectedUniversities, setSelectedUniversities] = useState([])
     const [openEmojiPickerIndex, setOpenEmojiPickerIndex] = useState(null)
+
+    // Section Refs for scroll-to-error
+    const firstErrorRef = useRef(null)
+    const basicInfoRef = useRef(null)
+    const aboutRef = useRef(null)
+    const academicRef = useRef(null)
+    const locationRef = useRef(null)
+    const infrastructureRef = useRef(null)
+    const teamRef = useRef(null)
+    const faqRef = useRef(null)
+    const mediaRef = useRef(null)
 
     const author_id = useSelector((state) => state.user.data?.id)
 
@@ -97,7 +111,7 @@ const CreateUpdateCollegeModal = ({
         reset,
         watch,
         getValues,
-        formState: { errors, isDirty }
+        formState: { errors, isDirty, submitCount }
     } = useForm({
         defaultValues: {
             name: '',
@@ -149,6 +163,35 @@ const CreateUpdateCollegeModal = ({
         remove: removeFacility
     } = useFieldArray({ control, name: 'facilities' })
 
+    // Scroll to first error on submit
+    useEffect(() => {
+        if (submitCount > 0 && Object.keys(errors).length > 0) {
+            const fieldOrder = [
+                { keys: ['name', 'university_id'], ref: basicInfoRef },
+                { keys: ['description', 'content'], ref: aboutRef },
+                { keys: ['degrees', 'programs'], ref: academicRef },
+                { keys: ['address', 'google_map_url'], ref: locationRef },
+                { keys: ['facilities'], ref: infrastructureRef },
+                { keys: ['members'], ref: teamRef },
+                { keys: ['faqs'], ref: faqRef },
+                { keys: ['college_logo', 'featured_img'], ref: mediaRef }
+            ]
+
+            const firstErrorField = Object.keys(errors)[0]
+            const section = fieldOrder.find(item => item.keys.some(key => firstErrorField.startsWith(key)))
+
+            if (section?.ref.current) {
+                section.ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                
+                // Focus the first invalid element if possible
+                setTimeout(() => {
+                    const firstInvalid = section.ref.current.querySelector('[aria-invalid="true"], input.border-red-500, select.border-red-500, textarea.border-red-500')
+                    if (firstInvalid) firstInvalid.focus()
+                }, 500)
+            }
+        }
+    }, [submitCount, errors])
+
     const handleSetFiles = (updater) => {
         setUploadedFiles(updater)
         if (!loadingData) setFilesDirty(true)
@@ -173,6 +216,7 @@ const CreateUpdateCollegeModal = ({
             })
             setFilesDirty(false)
             setUniversityPrograms([])
+            setUniversityDegrees([])
             setSelectedUniversities([])
             setOpenEmojiPickerIndex(null)
         }
@@ -336,16 +380,47 @@ const CreateUpdateCollegeModal = ({
     }, [isOpen, editSlug, setValue])
 
     const selectedUniIds = watch('university_id') || []
+    const selectedDegreeIdsArray = watch('degrees') || []
 
+    // Effect to fetch degrees when universities change
+    useEffect(() => {
+        const fetchDegrees = async () => {
+            if (!selectedUniIds || selectedUniIds.length === 0) {
+                setUniversityDegrees([])
+                return
+            }
+            try {
+                setLoadingDegrees(true)
+                const degreeData = await getDegreesByUniversity(selectedUniIds)
+                setUniversityDegrees(degreeData || [])
+            } catch (error) {
+                console.error('Error fetching university degrees:', error)
+            } finally {
+                setLoadingDegrees(false)
+            }
+        }
+        fetchDegrees()
+
+        // Reset degrees and programs when university selection changes
+        // This ensures the dependency chain remains consistent
+        if (!loadingData) {
+            const currentDegrees = getValues('degrees') || []
+            const currentPrograms = getValues('programs') || []
+            if (currentDegrees.length > 0) setValue('degrees', [], { shouldDirty: true })
+            if (currentPrograms.length > 0) setValue('programs', [], { shouldDirty: true })
+        }
+    }, [JSON.stringify(selectedUniIds)])
+
+    // Effect to fetch programs when degrees change
     useEffect(() => {
         const fetchPrograms = async () => {
-            if (!selectedUniIds || selectedUniIds.length === 0) {
+            if (!selectedUniIds || selectedUniIds.length === 0 || !selectedDegreeIdsArray || selectedDegreeIdsArray.length === 0) {
                 setUniversityPrograms([])
                 return
             }
             try {
                 setLoadingPrograms(true)
-                const universityData = await getProgramsByUniversity(selectedUniIds)
+                const universityData = await getProgramsByUniversity(selectedUniIds, selectedDegreeIdsArray)
                 setUniversityPrograms(universityData || [])
             } catch (error) {
                 console.error('Error fetching university programs:', error)
@@ -354,7 +429,7 @@ const CreateUpdateCollegeModal = ({
             }
         }
         fetchPrograms()
-    }, [JSON.stringify(selectedUniIds)])
+    }, [JSON.stringify(selectedUniIds), JSON.stringify(selectedDegreeIdsArray)])
 
     const onSearchPrograms = async (query) => {
         if (!universityPrograms) return []
@@ -390,10 +465,10 @@ const CreateUpdateCollegeModal = ({
         : []
 
     const onSearchDegrees = async (query) => {
-        if (!allDegrees) return []
+        const degreesToFilter = universityDegrees.length > 0 ? universityDegrees : (allDegrees || [])
         return query
-            ? allDegrees.filter(d => d.title?.toLowerCase().includes(query.toLowerCase()))
-            : allDegrees
+            ? degreesToFilter.filter(d => d.title?.toLowerCase().includes(query.toLowerCase()))
+            : degreesToFilter
     }
 
     const handleSelectDegree = (degree) => {
@@ -411,11 +486,9 @@ const CreateUpdateCollegeModal = ({
     }
 
     const selectedDegreeIds = watch('degrees') || []
-    const selectedDegrees = allDegrees
-        ? allDegrees
-            .filter(d => selectedDegreeIds.includes(String(d.id)))
-            .map(d => ({ id: d.id, title: d.title }))
-        : []
+    const selectedDegrees = (universityDegrees.length > 0 ? universityDegrees : (allDegrees || []))
+        .filter(d => selectedDegreeIds.includes(String(d.id)))
+        .map(d => ({ id: d.id, title: d.title }))
 
     const onMediaUpload = async (file) => {
         const formData = new FormData()
@@ -567,12 +640,12 @@ const CreateUpdateCollegeModal = ({
                             </div>
                         </div>
                     )}
-                    <div className='flex-1'>
+                    <div className='flex-1 p-6 overflow-y-auto'>
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8">
                             {/* Left Column - Main Content (8/12) */}
                             <div className="lg:col-span-8 space-y-8">
                                 {/* Basic Information */}
-                                <div className='bg-white p-8 rounded-2xl border border-gray-100'>
+                                <div ref={basicInfoRef} className='bg-white p-8 rounded-2xl border border-gray-100'>
                                     <SectionHeader icon={Info} title="Basic Information" subtitle="General identity of the college" />
                                     <div className='space-y-6'>
                                         <div>
@@ -616,7 +689,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* About College */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={aboutRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={FileText} title="About College" subtitle="Detailed description and content" />
                                     <div className='space-y-6'>
                                         <div>
@@ -646,7 +719,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Academic Details */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={academicRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={GraduationCap} title="Academic Details" subtitle="Affiliation and programs" />
                                     <div className='space-y-6'>
                                         <div>
@@ -731,15 +804,17 @@ const CreateUpdateCollegeModal = ({
                                                     onSelect={handleSelectDegree}
                                                     onRemove={handleRemoveDegree}
                                                     selectedItems={selectedDegrees}
-                                                    placeholder="Search or select degrees..."
+                                                    placeholder={selectedUniIds.length === 0 ? "Select university first..." : "Search or select degrees..."}
                                                     displayKey="title"
                                                     valueKey="id"
                                                     isMulti={true}
                                                     className="w-full"
                                                     inputSize='sm'
+                                                    isLoading={loadingDegrees}
+                                                    isDisabled={selectedUniIds.length === 0}
                                                 />
                                             </div>
-
+ 
                                             <div>
                                                 <Label className="mb-3 block">Available Programs</Label>
                                                 <SearchSelectCreate
@@ -747,17 +822,22 @@ const CreateUpdateCollegeModal = ({
                                                     onSelect={handleSelectProgram}
                                                     onRemove={handleRemoveProgram}
                                                     selectedItems={selectedPrograms}
-                                                    placeholder="Search or select programs..."
+                                                    placeholder={selectedDegreeIds.length === 0 ? "Select degree first..." : "Search or select programs..."}
                                                     displayKey="title"
                                                     valueKey="id"
                                                     isMulti={true}
                                                     className="w-full"
                                                     isLoading={loadingPrograms}
                                                     inputSize='sm'
+                                                    isDisabled={selectedDegreeIds.length === 0}
                                                 />
-                                                {selectedUniIds.length === 0 && (
+                                                {selectedUniIds.length === 0 ? (
                                                     <p className='text-[10px] text-gray-400 mt-2 font-medium bg-gray-50 p-2 rounded-md border border-dashed border-gray-200'>
-                                                        Please select a university first to view available programs.
+                                                        Please select a university first to view available degrees.
+                                                    </p>
+                                                ) : selectedDegreeIds.length === 0 && (
+                                                    <p className='text-[10px] text-gray-400 mt-2 font-medium bg-gray-50 p-2 rounded-md border border-dashed border-gray-200'>
+                                                        Please select at least one degree to view available programs.
                                                     </p>
                                                 )}
                                             </div>
@@ -766,7 +846,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Location & Contact */}
-                                <div className='bg-white p-8 rounded-md shadow-sm border border-gray-100'>
+                                <div ref={locationRef} className='bg-white p-8 rounded-md shadow-sm border border-gray-100'>
                                     <SectionHeader icon={MapPin} title="Location & Contact" subtitle="Where to find the college" />
                                     <div className='space-y-6'>
                                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
@@ -884,7 +964,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Facilities */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={infrastructureRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <div className='flex justify-between items-center mb-6'>
                                         <SectionHeader icon={Activity} title="Facilities" subtitle="Amenities and services" />
                                         <Button
@@ -979,7 +1059,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Team Members */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={teamRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <div className='flex justify-between items-center mb-6'>
                                         <SectionHeader icon={Users} title="Team Members" subtitle="Faculty and staff directory" />
                                         <Button
@@ -1070,7 +1150,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* FAQs */}
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={faqRef} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                                     <div className='flex justify-between items-center mb-6'>
                                         <SectionHeader icon={HelpCircle} title="Frequently Asked Questions" subtitle="Common queries about the college" />
                                         <Button
@@ -1138,10 +1218,10 @@ const CreateUpdateCollegeModal = ({
                             {/* Right Column - Media & Settings (4/12) */}
                             <div className="lg:col-span-4 space-y-8">
                                 {/* Media & Branding */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                <div ref={mediaRef} className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={ImageIcon} title="Logo & Cover" subtitle="Identity visuals" />
                                     <div className="space-y-6">
-                                        <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
+                                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
                                             <Label required={true} className="text-[11px] font-black tracking-[0.1em] mb-4 block  group-hover:text-[#387cae]">College Logo</Label>
                                             <FileUploadWithPreview
                                                 label=''
@@ -1162,11 +1242,13 @@ const CreateUpdateCollegeModal = ({
                                             <input type="hidden" {...register('college_logo', { required: 'College logo is required' })} />
                                         </div>
 
-                                        <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
-                                            <Label required={true} className="text-[11px] font-black mb-4 block group-hover:text-[#387cae]">Cover Image</Label>
+                                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed hover:bg-white hover:border-[#387cae]/30 transition-all group">
+                                            <Label required={true} className="text-[11px] font-black mb-3 block group-hover:text-[#387cae]">Cover Image</Label>
                                             <FileUploadWithPreview
                                                 label=''
                                                 required={true}
+                                                widthClass="w-full"
+                                                heightClass="h-40"
                                                 onUploadComplete={(url) => {
                                                     handleSetFiles(prev => ({ ...prev, featured_img: url }))
                                                     setValue('featured_img', url, { shouldValidate: true })
@@ -1186,23 +1268,23 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Attachments */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={FileText} title="Brochure" subtitle="PDF documents" />
                                     <div className="space-y-4">
                                         <div>
-                                            <Label htmlFor='college_broucher' className='text-xs font-bold text-gray-400 mb-1.5 block'>Brochure URL</Label>
-                                            <Input
-                                                id='college_broucher'
-                                                {...register('college_broucher')}
-                                                placeholder='URL to PDF brochure'
-                                                className="h-10 rounded-md border-gray-200"
+                                            <Label htmlFor='college_broucher' className='text-xs font-bold text-gray-400 mb-1.5 block'>Brochure File (PDF)</Label>
+                                            <FileUploadWithPreview
+                                                onUploadComplete={(url) => setValue('college_broucher', url, { shouldDirty: true })}
+                                                onClear={() => setValue('college_broucher', '', { shouldDirty: true })}
+                                                defaultPreview={watch('college_broucher')}
+                                                accept=".pdf"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Gallery Section */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={ImageIcon} title="Image Gallery" subtitle="Visual showcase" />
                                     <GallerySection
                                         control={control}
@@ -1214,7 +1296,7 @@ const CreateUpdateCollegeModal = ({
                                 </div>
 
                                 {/* Video Section */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Video} title="Video Gallery" subtitle="Virtual tours & promos" />
                                     <VideoSection
                                         control={control}
@@ -1229,35 +1311,46 @@ const CreateUpdateCollegeModal = ({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-40 rounded-b-3xl'>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest mr-2">Status:</span>
-                            <select
-                                {...register('status')}
-                                className="bg-gray-100 border-none rounded-full px-4 py-1.5 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#387cae]/20 transition-all cursor-pointer"
-                            >
-                                <option value="published">Published</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                        </div>
-                        <div className='flex gap-4 w-full sm:w-auto'>
-                            <Button
-                                type='button'
-                                variant='outline'
-                                onClick={onSaveDraft}
-                                disabled={submittingDraft || submitting}
-                                className='flex-1 sm:flex-none h-11 px-8 rounded-md font-bold'
-                            >
-                                {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : 'Save as Draft'}
-                            </Button>
-                            <Button
-                                type='submit'
-                                disabled={submitting || submittingDraft}
-                                className='flex-1 sm:flex-none h-11 px-10 rounded-md bg-[#387cae] hover:bg-[#387cae]/90 text-white font-bold shadow-lg shadow-[#387cae]/20 transition-all'
-                            >
-                                {submitting ? <Loader2 className="animate-spin mr-2" size={18} /> : (editSlug ? 'Update College' : 'Create College')}
-                            </Button>
-                        </div>
+                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex justify-end gap-3 z-40 rounded-b-3xl'>
+                        <Button
+                            type='button'
+                            variant='outline'
+                            onClick={handleCloseAttempt}
+                            className='px-8 border-gray-200 text-gray-600 hover:bg-gray-50'
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type='button'
+                            variant='secondary'
+                            disabled={submittingDraft || submitting}
+                            onClick={onSaveDraft}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+                        >
+                            {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : <FileText className='w-4 h-4 mr-2' />}
+                            <span>Save as Draft</span>
+                        </Button>
+                        <Button
+                            type='button'
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true });
+                                handleSubmit((data) => onSubmit(data))();
+                            }}
+                            disabled={submitting || submittingDraft}
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                                    <span>Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    {editSlug ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{editSlug ? 'Update College' : 'Create College'}</span>
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </form>
             </DialogContent>

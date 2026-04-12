@@ -109,16 +109,41 @@ export const fetchAllUniversity = async () => {
   }
 }
 
-export const getProgramsByUniversity = async (universityIds) => {
+export const getProgramsByUniversity = async (universityIds, degreeIds = []) => {
   try {
-    const response = await authFetch(
-      `${process.env.baseUrl}/program?universityIds=${universityIds.join(',')}`
-    )
+    let url = `${process.env.baseUrl}/program?universityIds=${universityIds.join(',')}&limit=1000`
+    if (degreeIds && degreeIds.length > 0) {
+      url += `&degreeIds=${degreeIds.join(',')}`
+    }
+    const response = await authFetch(url)
     if (!response.ok) {
       throw new Error('Failed to fetch programs')
     }
     const data = await response.json()
     return data.items
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export const getDegreesByUniversity = async (universityIds) => {
+  try {
+    const response = await authFetch(
+      `${process.env.baseUrl}/program?universityIds=${universityIds.join(',')}&limit=1000`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch degrees')
+    }
+    const data = await response.json()
+    // Extract unique degrees from programs
+    const degreesMap = new Map()
+    data.items.forEach(program => {
+      if (program.programdegree) {
+        degreesMap.set(program.programdegree.id, program.programdegree)
+      }
+    })
+    return Array.from(degreesMap.values())
   } catch (error) {
     console.error(error)
     throw error
