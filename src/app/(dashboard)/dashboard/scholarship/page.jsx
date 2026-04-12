@@ -75,10 +75,8 @@ export default function ScholarshipManager() {
     defaultValues: {
       name: '',
       description: '',
-      eligibilityCriteria: '',
       amount: '',
       applicationDeadline: '',
-      renewalCriteria: '',
       contactInfo: '',
       categoryId: ''
     }
@@ -144,10 +142,8 @@ export default function ScholarshipManager() {
     reset({
       name: '',
       description: '',
-      eligibilityCriteria: '',
       amount: '',
       applicationDeadline: '',
-      renewalCriteria: '',
       contactInfo: '',
       categoryId: ''
     })
@@ -164,10 +160,8 @@ export default function ScholarshipManager() {
     reset({
       name: scholarship.name || '',
       description: scholarship.description || '',
-      eligibilityCriteria: scholarship.eligibilityCriteria || '',
       amount: scholarship.amount != null ? String(scholarship.amount) : '',
       applicationDeadline: scholarship.applicationDeadline ? new Date(scholarship.applicationDeadline).toISOString().split('T')[0] : '',
-      renewalCriteria: scholarship.renewalCriteria || '',
       contactInfo: scholarship.contactInfo || '',
       categoryId: scholarship.scholarshipCategory?.id || ''
     })
@@ -419,30 +413,11 @@ export default function ScholarshipManager() {
                 <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Requirements & Details</h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className="space-y-2">
-                    <Label required>Eligibility Criteria</Label>
-                    <Textarea
-                      {...register('eligibilityCriteria', { required: 'Eligibility criteria is required' })}
-                      placeholder='Who can apply?'
-                      className="min-h-[100px]"
-                    />
-                    {errors.eligibilityCriteria && <p className="text-xs text-red-500">{errors.eligibilityCriteria.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label required>Renewal Criteria</Label>
-                    <Textarea
-                      {...register('renewalCriteria', { required: 'Renewal criteria is required' })}
-                      placeholder='Conditions for renewal...'
-                      className="min-h-[100px]"
-                    />
-                    {errors.renewalCriteria && <p className="text-xs text-red-500">{errors.renewalCriteria.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label required>Amount</Label>
+                    <Label>Amount</Label>
                     <Input
-                      {...register('amount', { required: 'Amount is required' })}
+                      {...register('amount')}
                       placeholder='e.g. 50,000 or Full tuition'
                     />
-                    {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label required>Application Deadline</Label>

@@ -1,11 +1,6 @@
 import Link from 'next/link'
-import { Calendar, Award, ArrowRight, Clock, Banknote } from 'lucide-react'
+import { Calendar, Award, ArrowRight, Clock } from 'lucide-react'
 
-const formatAmount = (amount) => {
-  if (!amount) return null
-  const num = parseFloat(amount)
-  return Number.isNaN(num) ? amount : `Rs. ${num.toLocaleString()}`
-}
 
 const formatDeadline = (dateString) => {
   if (!dateString) return ''
@@ -30,7 +25,6 @@ const getTimeLeft = (deadline) => {
 }
 
 const ScholarshipCard = ({ scholarship }) => {
-  const amountDisplay = formatAmount(scholarship.amount)
   const deadlineDisplay = formatDeadline(scholarship.applicationDeadline)
   const timeLeft = getTimeLeft(scholarship.applicationDeadline)
 
@@ -46,7 +40,7 @@ const ScholarshipCard = ({ scholarship }) => {
             <Award className='w-5 h-5' />
           </div>
           <div className='flex flex-col'>
-            <span className='text-[10px] uppercase tracking-widest text-[#0A6FA7] font-bold'>Scholarship</span>
+            
             <div className='flex items-center gap-2'>
               {isExpired ? (
                 <span className='text-[10px] font-bold text-red-500 uppercase tracking-wider'>Expired</span>
@@ -58,20 +52,11 @@ const ScholarshipCard = ({ scholarship }) => {
         </div>
       </div>
 
-      <h2 className='text-lg font-bold text-gray-900 line-clamp-2 mb-6 min-h-[56px] leading-tight'>
+      <h2 className='text-lg font-bold text-gray-900 line-clamp-2 mb-6 min-h-[64px] leading-tight'>
         {scholarship.name}
       </h2>
 
       <div className='grid grid-cols-1 gap-4 mb-8'>
-        {amountDisplay && (
-          <div className='flex items-center gap-3'>
-            <Banknote className='w-4 h-4 text-gray-400' />
-            <div className='flex flex-col'>
-              <span className='text-[10px] uppercase text-gray-400 font-bold tracking-tight'>Value</span>
-              <span className='text-sm font-semibold text-gray-700'>{amountDisplay}</span>
-            </div>
-          </div>
-        )}
 
         {deadlineDisplay && (
           <div className='flex items-center gap-3'>

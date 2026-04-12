@@ -37,19 +37,6 @@ const ScholarshipViewModal = ({ isOpen, onClose, scholarship }) => {
                             />
                         </div>
 
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-medium text-gray-500">Eligibility Criteria</h4>
-                            <div className="font-medium bg-gray-50 p-3 rounded border">
-                                {scholarship.eligibilityCriteria || 'N/A'}
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-medium text-gray-500">Renewal Criteria</h4>
-                            <div className="font-medium bg-gray-50 p-3 rounded border">
-                                {scholarship.renewalCriteria || 'N/A'}
-                            </div>
-                        </div>
 
                         <div className="bg-gray-50 p-4 rounded-md border flex justify-between items-center">
                             <h4 className="text-sm font-medium text-gray-500">Financial Details (Amount)</h4>

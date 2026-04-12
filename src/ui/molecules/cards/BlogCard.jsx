@@ -1,8 +1,9 @@
 'use client'
 
 import React from 'react'
-import { Share } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { formatDate } from '@/utils/date.util'
 
 /**
  * Reusable blog card. Accepts either a `blog` object or flat props.
@@ -15,44 +16,20 @@ const BlogCard = ({
   description: descriptionProp,
   slug: slugProp
 }) => {
-  const { toast } = useToast()
   const slug = blogProp?.slug ?? slugProp
   const image =
     blogProp?.featuredImage ?? blogProp?.featured_image ?? imageProp ?? '/images/logo.png'
   const title = blogProp?.title ?? titleProp ?? ''
   const description = blogProp?.description ?? descriptionProp ?? ''
+  
+  // Use the utility to format the date
   const rawDate = blogProp?.createdAt ?? blogProp?.created_at ?? blogProp?.date ?? dateProp
-  const date =
-    typeof rawDate === 'string' && rawDate
-      ? (() => {
-        try {
-          return new Date(rawDate).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })
-        } catch {
-          return rawDate
-        }
-      })()
-      : dateProp ?? ''
+  const date = (rawDate && rawDate !== dateProp) ? formatDate(rawDate) : (dateProp || '')
 
-  const handleShareClick = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (typeof window === 'undefined' || !slug) return
-    const blogUrl = `${window.location.origin}/blogs/${slug}`
-    navigator.clipboard.writeText(blogUrl).then(() => {
-      toast({
-        title: 'Link Copied',
-        description: 'Blog URL copied to clipboard!'
-      })
-    })
-  }
 
   return (
     <div className='group bg-white rounded-md shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out border border-gray-100 overflow-hidden h-full flex flex-col'>
-      <div className='h-[200px] relative overflow-hidden'>
+      <div className='aspect-video relative overflow-hidden bg-gray-100'>
         <img
           src={image}
           alt={`${title} thumbnail`}
@@ -79,15 +56,14 @@ const BlogCard = ({
           {description}
         </p>
 
-        <div className='pt-4 mt-auto border-t border-gray-100 flex items-center justify-between text-gray-500'>
-          <button
-            type='button'
-            onClick={handleShareClick}
-            className='flex items-center gap-2 text-xs font-medium hover:text-[#0A70A7] transition-colors'
+        <div className='pt-4 mt-auto border-t border-gray-100 flex items-center justify-between'>
+          <Link
+            href={`/blogs/${slug}`}
+            className='flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#0A70A7] transition-all duration-300'
           >
-            <Share size={16} />
-            <span>Share</span>
-          </button>
+            <span>View details</span>
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </div>

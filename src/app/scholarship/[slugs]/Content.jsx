@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { FaArrowLeft, FaAward, FaCalendar, FaUser, FaFile } from 'react-icons/fa'
+import { FaArrowLeft, FaAward, FaCalendar, FaUser } from 'react-icons/fa'
 import Link from 'next/link'
 import Loading from '../../../ui/molecules/Loading'
 import EmptyState from '@/ui/shadcn/EmptyState'
@@ -30,22 +30,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
     )
   }
 
-  const parseCriteria = (value) => {
-    if (!value) return []
-    if (Array.isArray(value)) return value
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value)
-        return Array.isArray(parsed) ? parsed : [parsed]
-      } catch (e) {
-        return [value]
-      }
-    }
-    return [value]
-  }
-
-  const eligibilityCriteria = parseCriteria(scholarship?.eligibilityCriteria)
-  const renewalCriteria = parseCriteria(scholarship?.renewalCriteria)
 
   return (
     <div className='bg-white min-h-screen'>
@@ -83,36 +67,6 @@ const ScholarshipContent = ({ scholarship, error }) => {
               </div>
             )}
 
-            {eligibilityCriteria.length > 0 && (
-              <div className='mb-12'>
-                <h2 className='text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2'>
-                  <FaFile className='w-6 h-6 text-[#0A6FA7]' />
-                  Eligibility Criteria
-                </h2>
-                <ul className='space-y-3'>
-                  {eligibilityCriteria.map((criteria, index) => (
-                    <li key={index} className='flex items-start gap-3 text-gray-700'>
-                      <span className='text-[#0A6FA7] mt-1.5'>•</span>
-                      <span> {typeof criteria === 'string' ? criteria : criteria?.text || JSON.stringify(criteria)} </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {renewalCriteria.length > 0 && (
-              <div className='mb-12'>
-                <h2 className='text-2xl font-bold text-gray-900 mb-6'> Renewal Criteria </h2>
-                <ul className='space-y-3'>
-                  {renewalCriteria.map((criteria, index) => (
-                    <li key={index} className='flex items-start gap-3 text-gray-700'>
-                      <span className='text-[#0A6FA7] mt-1.5'>•</span>
-                      <span> {typeof criteria === 'string' ? criteria : criteria?.text || JSON.stringify(criteria)} </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             {scholarship.contactInfo && (
               <div className='mb-12'>

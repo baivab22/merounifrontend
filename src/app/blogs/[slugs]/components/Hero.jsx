@@ -53,18 +53,6 @@ const Hero = ({ blog }) => {
         </div>
       )}
 
-      {/* Featured Image */}
-      {blog?.featured_image && (
-        <div className='w-full mb-12 group'>
-          <div className='overflow-hidden rounded-2xl md:rounded-[2.5rem] shadow-2xl shadow-blue-100/50 transition-transform duration-700 hover:scale-[1.01]'>
-            <img
-              src={blog.featured_image}
-              alt={blog?.title || 'Blog featured image'}
-              className='w-full h-auto max-h-[600px] object-cover'
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }
