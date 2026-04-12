@@ -7,7 +7,7 @@ const NewsCard = ({ image, title, description, date, slug }) => {
     return (
         <div className='bg-white rounded-md shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col group'>
             {/* Image */}
-            <div className='relative h-48 w-full overflow-hidden'>
+            <div className='relative w-full aspect-video overflow-hidden bg-gray-50 flex items-center justify-center'>
                 <Image
                     src={image}
                     alt={title}

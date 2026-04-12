@@ -59,11 +59,10 @@ const FilterSection = React.memo(function FilterSection({
           filteredOptions.map((opt) => (
             <label key={opt.id} className='flex items-center gap-3 group cursor-pointer'>
               <input
-                type='radio'
-                name={title}
+                type='checkbox'
                 checked={String(selectedValue) === String(opt.id)}
                 onChange={() => onSelect(opt.id)}
-                className='w-4 h-4 rounded-full border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
+                className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
               />
               <span className={`text-sm transition-colors ${String(selectedValue) === String(opt.id) ? 'text-[#0A70A7] font-bold' : 'text-gray-600 group-hover:text-gray-900 font-medium'}`}>
                 {opt.title || opt.fullname || opt.name}
@@ -352,27 +351,27 @@ export default function ExamsPage() {
                       onClick={() => router.push(`/exams/${exam.slugs}`)}
                       className='group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#0A6FA7]/20 transition-all duration-300 cursor-pointer flex flex-col'
                     >
-                      <div className='flex items-start justify-between mb-6'>
-                        <div className='bg-blue-50 p-3 rounded-xl group-hover:bg-[#0A6FA7] group-hover:text-white transition-all duration-300'>
+                      <div className='flex items-start gap-3.5 mb-4'>
+                        <div className='bg-blue-50 p-3 rounded-xl group-hover:bg-[#0A6FA7] group-hover:text-white transition-all duration-300 shrink-0 mt-0.5'>
                           <ClipboardCheck className='w-5 h-5 text-[#0A6FA7] group-hover:text-white' />
                         </div>
-                        <div className='flex flex-col items-end gap-1.5'>
-                          {exam.level?.title && (
-                            <span className='px-2.5 py-1 bg-gray-50 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-100'>
-                              {exam.level.title}
-                            </span>
-                          )}
-                          {exam.exam_type && (
-                            <span className='px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider'>
-                              {exam.exam_type}
-                            </span>
-                          )}
-                        </div>
+                        <h2 className='text-lg font-bold text-gray-900 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 leading-snug flex-1'>
+                          {exam.title}
+                        </h2>
                       </div>
-
-                      <h2 className='text-lg font-bold text-gray-900 mb-3 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 min-h-[3.5rem] leading-tight'>
-                        {exam.title}
-                      </h2>
+                      
+                      <div className='flex flex-row flex-wrap items-center gap-2 mb-4'>
+                        {exam.level?.title && (
+                          <span className='px-2.5 py-1 bg-gray-50 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-100'>
+                            {exam.level.title}
+                          </span>
+                        )}
+                        {exam.exam_type && (
+                          <span className='px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider'>
+                            {exam.exam_type}
+                          </span>
+                        )}
+                      </div>
 
                       {Array.isArray(exam.affiliation) && exam.affiliation.length > 0 && (
                         <div className='flex items-center gap-2 mb-5'>
