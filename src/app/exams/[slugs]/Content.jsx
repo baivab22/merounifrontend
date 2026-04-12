@@ -57,7 +57,8 @@ export default function ExamDetailContent({ exam: initialExam }) {
   }
 
   const decodedContent = exam?.description ? he.decode(exam.description) : ''
-  const affiliations = exam.affiliation || exam.universities || (exam.university ? [exam.university] : [])
+  const rawAffiliations = exam.affiliation || exam.universities || (exam.university ? [exam.university] : [])
+  const affiliations = Array.isArray(rawAffiliations) ? rawAffiliations : []
   const pastQuestions = (Array.isArray(exam.pastQuestion) ? exam.pastQuestion : (typeof exam.pastQuestion === 'string' ? exam.pastQuestion.split(',') : [])).filter(Boolean)
 
   return (
@@ -104,7 +105,7 @@ export default function ExamDetailContent({ exam: initialExam }) {
               <h1 className='text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight'>
                 {exam.title}
               </h1>
-              {affiliations.length > 0 && (
+              {Array.isArray(affiliations) && affiliations.length > 0 && (
                 <div className='flex items-center flex-wrap gap-2 mt-2'>
                   <Building2 className='w-4 h-4 text-gray-400 shrink-0' />
                   {affiliations.map((uni, idx) => (

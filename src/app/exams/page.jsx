@@ -374,7 +374,7 @@ export default function ExamsPage() {
                         {exam.title}
                       </h2>
 
-                      {exam.affiliation && exam.affiliation.length > 0 && (
+                      {Array.isArray(exam.affiliation) && exam.affiliation.length > 0 && (
                         <div className='flex items-center gap-2 mb-5'>
                           <div className='flex -space-x-2'>
                             {exam.affiliation.slice(0, 3).map((uni, idx) => (
@@ -384,7 +384,7 @@ export default function ExamsPage() {
                             ))}
                           </div>
                           <span className='text-[11px] font-bold text-gray-400 truncate'>
-                            {exam.affiliation[0].fullname}
+                            {exam.affiliation[0]?.fullname || exam.affiliation[0]?.name || 'Affiliation'}
                             {exam.affiliation.length > 1 && ` +${exam.affiliation.length - 1} more`}
                           </span>
                         </div>
