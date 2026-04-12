@@ -201,7 +201,7 @@ const ScholarshipFormDialog = ({
 
               <div className='space-y-2'>
                 <Label htmlFor='amount'>
-                  Amount <span className='text-red-500'> *</span>
+                  Amount
                 </Label>
                 <Input
                   id='amount'
@@ -211,7 +211,6 @@ const ScholarshipFormDialog = ({
                   onChange={(e) =>
                     setFormData({ ...formData, amount: e.target.value })
                   }
-                  required
                 />
               </div>
 

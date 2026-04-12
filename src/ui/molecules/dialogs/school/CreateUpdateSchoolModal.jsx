@@ -1040,35 +1040,46 @@ const CreateUpdateSchoolModal = ({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-40 rounded-b-3xl'>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest mr-2">Status:</span>
-                            <select
-                                {...register('status')}
-                                className="bg-gray-100 border-none rounded-full px-4 py-1.5 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#387cae]/20 transition-all cursor-pointer"
-                            >
-                                <option value="published">Published</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                        </div>
-                        <div className='flex gap-4 w-full sm:w-auto'>
-                            <Button
-                                type='button'
-                                variant='outline'
-                                onClick={onSaveDraft}
-                                disabled={submittingDraft || submitting}
-                                className='flex-1 sm:flex-none h-11 px-8 rounded-md font-bold'
-                            >
-                                {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : 'Save as Draft'}
-                            </Button>
-                            <Button
-                                type='submit'
-                                disabled={submitting || submittingDraft}
-                                className='flex-1 sm:flex-none h-11 px-10 rounded-md bg-[#387cae] hover:bg-[#387cae]/90 text-white font-bold shadow-lg shadow-[#387cae]/20 transition-all'
-                            >
-                                {submitting ? <Loader2 className="animate-spin mr-2" size={18} /> : (editSlug ? 'Update School' : 'Create School')}
-                            </Button>
-                        </div>
+                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex justify-end gap-3 z-40 rounded-b-3xl'>
+                        <Button
+                            type='button'
+                            variant='outline'
+                            onClick={handleCloseAttempt}
+                            className='px-8 border-gray-200 text-gray-600 hover:bg-gray-50'
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            type='button' 
+                            variant='secondary'
+                            disabled={submittingDraft || submitting} 
+                            onClick={onSaveDraft}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+                        >
+                            {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : <FileText className='w-4 h-4 mr-2' />}
+                            <span>Save as Draft</span>
+                        </Button>
+                        <Button 
+                            type='button' 
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true });
+                                handleSubmit((data) => onSubmit(data))();
+                            }}
+                            disabled={submitting || submittingDraft}
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                                    <span>Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    {editSlug ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{editSlug ? 'Update School' : 'Create School'}</span>
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </form>
             </DialogContent>
