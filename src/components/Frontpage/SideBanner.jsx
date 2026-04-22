@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Image from 'next/image'
 
 const isExpired = (banner) => {
@@ -23,15 +22,15 @@ const SideBanner = ({ banners = [] }) => {
           target='_blank'
           rel='noopener noreferrer'
           key={banner.id}
-          className='group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-white w-full md:w-[384px] h-[199px] mx-auto'
+          className='group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full h-[148px] mx-auto'
         >
           <Image
             src={banner.banner_image || '/images/meroUniLarge.gif'}
             alt={`Banner position ${banner.display_position}`}
             fill
             unoptimized
-            sizes="(max-width: 768px) 100vw, 384px"
-            className='object-cover'
+            sizes='(max-width: 768px) 50vw, 25vw'
+            className='object-contain object-center'
           />
           <div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-300' />
         </a>

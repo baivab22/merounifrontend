@@ -250,7 +250,7 @@ const CollegeCard = ({
             className='flex-1 py-2.5 px-3 bg-[#0A70A7] text-white rounded-md hover:bg-[#085a86] transition-all text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm uppercase tracking-wider'
           >
             <GraduationCap className='w-3.5 h-3.5' />
-            Apply Now
+            Apply
           </Link>
         </div>
       </div>

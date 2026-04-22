@@ -9,10 +9,8 @@ const FeaturedAdmission = async () => {
   try {
     const response = await getFeaturedCollege()
     data = response.items || []
-    console.log(data,"Data data");
-    
+    console.log(data, 'Data data')
   } catch (error) {
-    console.log(error,"Thanks a lot on the top")
     console.error('Error fetching Top Picks colleges:', error)
   }
 
@@ -22,7 +20,10 @@ const FeaturedAdmission = async () => {
         <h2 className='text-lg md:text-xl font-bold text-gray-900'>
           Top Picks
         </h2>
-        <Link href='/admission' className='text-sm font-semibold text-[#387cae] hover:underline'>
+        <Link
+          href='/admission'
+          className='text-sm font-semibold text-[#387cae] hover:underline'
+        >
           View All
         </Link>
       </div>
