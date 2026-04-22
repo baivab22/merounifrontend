@@ -38,7 +38,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
     createOrUpdateCollege,
     fetchUniversities,
-    getProgramsByUniversity,
+    getProgramsByDegreeIds,
     getDegreesByUniversity,
     saveDraft
 } from '@/app/(dashboard)/dashboard/colleges/actions'
@@ -49,6 +49,10 @@ import GallerySection from './components/GallerySection'
 import { DistrictLists } from '@/constants/district'
 import FileUploadWithPreview from './components/MediaUploadWithBranding'
 import VideoSection from './components/VideoSection'
+
+/** Stable comparison for affiliated university IDs (user-driven changes vs programmatic load). */
+const universitySelectionKey = (ids) =>
+    [...new Set((ids || []).map((id) => Number(id)).filter((n) => !isNaN(n)))].sort((a, b) => a - b).join(',')
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div className="flex items-center gap-3 mb-6">
@@ -222,6 +226,14 @@ const CreateUpdateCollegeModal = ({
         }
     }, [isOpen, reset])
 
+    // Add-college: keep team & FAQ empty until user clicks Add (edit loads members from API separately)
+    useEffect(() => {
+        if (isOpen && !editSlug) {
+            setValue('members', [], { shouldDirty: false })
+            setValue('faqs', [], { shouldDirty: false })
+        }
+    }, [isOpen, editSlug, setValue])
+
     useEffect(() => {
         if (isOpen && editSlug) {
             const fetchCollegeData = async () => {
@@ -361,7 +373,7 @@ const CreateUpdateCollegeModal = ({
                             question: f.question || '',
                             answer: f.answer || ''
                         }))
-                        : [{ question: '', answer: '' }]
+                        : []
                     setValue('faqs', faqData)
 
                 } catch (error) {
@@ -400,36 +412,30 @@ const CreateUpdateCollegeModal = ({
             }
         }
         fetchDegrees()
-
-        // Reset degrees and programs when university selection changes
-        // This ensures the dependency chain remains consistent
-        if (!loadingData) {
-            const currentDegrees = getValues('degrees') || []
-            const currentPrograms = getValues('programs') || []
-            if (currentDegrees.length > 0) setValue('degrees', [], { shouldDirty: true })
-            if (currentPrograms.length > 0) setValue('programs', [], { shouldDirty: true })
-        }
+        // Do not clear degrees/programs here: when opening edit, university_id is set after
+        // fetch completes while loadingData is false, which would wipe hydrated values.
+        // Clearing runs only in onSelect/onRemove for affiliated universities.
     }, [JSON.stringify(selectedUniIds)])
 
-    // Effect to fetch programs when degrees change
+    // Effect to fetch programs when selected degrees change (programs_degrees only; not filtered by university)
     useEffect(() => {
         const fetchPrograms = async () => {
-            if (!selectedUniIds || selectedUniIds.length === 0 || !selectedDegreeIdsArray || selectedDegreeIdsArray.length === 0) {
+            if (!selectedDegreeIdsArray || selectedDegreeIdsArray.length === 0) {
                 setUniversityPrograms([])
                 return
             }
             try {
                 setLoadingPrograms(true)
-                const universityData = await getProgramsByUniversity(selectedUniIds, selectedDegreeIdsArray)
-                setUniversityPrograms(universityData || [])
+                const programItems = await getProgramsByDegreeIds(selectedDegreeIdsArray)
+                setUniversityPrograms(programItems || [])
             } catch (error) {
-                console.error('Error fetching university programs:', error)
+                console.error('Error fetching programs by degree:', error)
             } finally {
                 setLoadingPrograms(false)
             }
         }
         fetchPrograms()
-    }, [JSON.stringify(selectedUniIds), JSON.stringify(selectedDegreeIdsArray)])
+    }, [JSON.stringify(selectedDegreeIdsArray)])
 
     const onSearchPrograms = async (query) => {
         if (!universityPrograms) return []
@@ -729,6 +735,10 @@ const CreateUpdateCollegeModal = ({
                                                 onSelect={(uni) => {
                                                     const current = getValues('university_id') || []
                                                     const newIds = [...new Set([...current, uni.id])]
+                                                    if (universitySelectionKey(newIds) !== universitySelectionKey(current)) {
+                                                        setValue('degrees', [], { shouldDirty: true })
+                                                        setValue('programs', [], { shouldDirty: true })
+                                                    }
                                                     setValue('university_id', newIds, { shouldDirty: true, shouldValidate: true })
 
                                                     const currentUnis = selectedUniversities || []
@@ -741,6 +751,10 @@ const CreateUpdateCollegeModal = ({
                                                     const targetId = uni.id || uni
                                                     const current = getValues('university_id') || []
                                                     const newIds = current.filter(id => id !== targetId)
+                                                    if (universitySelectionKey(newIds) !== universitySelectionKey(current)) {
+                                                        setValue('degrees', [], { shouldDirty: true })
+                                                        setValue('programs', [], { shouldDirty: true })
+                                                    }
                                                     setValue('university_id', newIds, { shouldDirty: true, shouldValidate: true })
 
                                                     const updatedUnis = selectedUniversities.filter(u => u.id !== targetId)
@@ -1073,6 +1087,12 @@ const CreateUpdateCollegeModal = ({
                                             Add Member
                                         </Button>
                                     </div>
+                                    {memberFields.length === 0 && (
+                                        <p className='text-sm text-gray-500 mb-4'>
+                                            No team members yet. Click &quot;Add Member&quot; to add profiles (optional).
+                                        </p>
+                                    )}
+                                    {memberFields.length > 0 && (
                                     <div className='grid grid-cols-1 gap-6'>
                                         {memberFields.map((field, index) => (
                                             <div key={field.id} className='group relative p-6 bg-white border border-gray-100 rounded-3xl transition-all hover:shadow-xl hover:shadow-[#387cae]/5 hover:border-[#387cae]/20'>
@@ -1147,6 +1167,7 @@ const CreateUpdateCollegeModal = ({
                                             </div>
                                         ))}
                                     </div>
+                                    )}
                                 </div>
 
                                 {/* FAQs */}
@@ -1164,6 +1185,12 @@ const CreateUpdateCollegeModal = ({
                                             Add FAQ
                                         </Button>
                                     </div>
+                                    {faqFields.length === 0 && (
+                                        <p className='text-sm text-gray-500 mb-4'>
+                                            No FAQs yet. Click &quot;Add FAQ&quot; to add one (optional).
+                                        </p>
+                                    )}
+                                    {faqFields.length > 0 && (
                                     <div className='space-y-4'>
                                         {faqFields.map((field, index) => (
                                             <div key={field.id} className='group relative p-6 bg-white border border-gray-100 rounded-2xl transition-all hover:shadow-lg hover:shadow-[#387cae]/5 hover:border-[#387cae]/20'>
@@ -1212,6 +1239,7 @@ const CreateUpdateCollegeModal = ({
                                             </div>
                                         ))}
                                     </div>
+                                    )}
                                 </div>
                             </div>
 

@@ -20,7 +20,6 @@ import {
   GraduationCap,
   Image as ImageIcon,
   Info,
-  Layers,
   Loader2,
   Mail,
   MapPin,
@@ -29,13 +28,12 @@ import {
   Trash2,
   Users
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 
 import {
-  fetchAllCourse,
   fetchLevel,
   saveUniversityDraft
 } from '@/app/(dashboard)/dashboard/university/actions'
@@ -62,6 +60,20 @@ const SectionHeader = ({ icon: Icon, title, subtitle }) => (
   </div>
 )
 
+/** Dot-paths for all leaf validation errors (react-hook-form shape). */
+function collectErrorPaths(err, prefix = '') {
+  if (!err || typeof err !== 'object') return []
+  if (typeof err.message === 'string' && err.message) {
+    return prefix ? [prefix] : []
+  }
+  const paths = []
+  for (const key of Object.keys(err)) {
+    const p = prefix ? `${prefix}.${key}` : key
+    paths.push(...collectErrorPaths(err[key], p))
+  }
+  return paths
+}
+
 const CreateUpdateUniversityModal = ({
   isOpen,
   handleCloseModal: onSystemClose,
@@ -74,7 +86,6 @@ const CreateUpdateUniversityModal = ({
   const [loadingData, setLoadingData] = useState(false)
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [allLevels, setAllLevels] = useState([])
-  const [allCourses, setAllCourses] = useState([])
   const [loadingResources, setLoadingResources] = useState(false)
   const [filesDirty, setFilesDirty] = useState(false)
 
@@ -84,6 +95,13 @@ const CreateUpdateUniversityModal = ({
     images: [],
     videos: []
   })
+
+  const basicInfoRef = useRef(null)
+  const detailsRef = useRef(null)
+  const locationRef = useRef(null)
+  const contactRef = useRef(null)
+  const teamRef = useRef(null)
+  const brandingRef = useRef(null)
 
   const author_id = useSelector((state) => state.user.data?.id)
 
@@ -95,7 +113,7 @@ const CreateUpdateUniversityModal = ({
     reset,
     watch,
     getValues,
-    formState: { errors, isDirty }
+    formState: { errors, isDirty, submitCount }
   } = useForm({
     defaultValues: {
       fullname: '',
@@ -116,7 +134,6 @@ const CreateUpdateUniversityModal = ({
         phone_number: ''
       },
       levels: [],
-      programs: [],
       members: [
         {
           role: '',
@@ -139,6 +156,49 @@ const CreateUpdateUniversityModal = ({
     remove: removeMember
   } = useFieldArray({ control, name: 'members' })
 
+  const errorSectionOrder = [
+    {
+      keys: ['fullname', 'type_of_institute', 'date_of_establish', 'levels', 'meta_description'],
+      ref: basicInfoRef
+    },
+    { keys: ['description'], ref: detailsRef },
+    {
+      keys: ['country', 'state', 'city', 'street', 'postal_code', 'map'],
+      ref: locationRef
+    },
+    { keys: ['contact'], ref: contactRef },
+    { keys: ['members'], ref: teamRef },
+    { keys: ['logo', 'featured_image', 'gallery'], ref: brandingRef }
+  ]
+
+  useEffect(() => {
+    if (submitCount === 0) return
+    const paths = collectErrorPaths(errors)
+    if (paths.length === 0) return
+
+    const section = errorSectionOrder.find((item) =>
+      paths.some((path) =>
+        item.keys.some(
+          (key) => path === key || path.startsWith(`${key}.`)
+        )
+      )
+    )
+
+    if (section?.ref.current) {
+      section.ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => {
+        const root = section.ref.current
+        if (!root) return
+        const firstInvalid = root.querySelector(
+          '[aria-invalid="true"], input.border-red-500, select.border-red-500, textarea.border-red-500, .border-red-500'
+        )
+        if (firstInvalid && typeof firstInvalid.focus === 'function') {
+          firstInvalid.focus({ preventScroll: true })
+        }
+      }, 400)
+    }
+  }, [submitCount, errors])
+
   const handleSetFiles = (updater) => {
     setUploadedFiles(updater)
     if (!loadingData) setFilesDirty(true)
@@ -153,17 +213,13 @@ const CreateUpdateUniversityModal = ({
     reset()
   }
 
-  // Load resources (levels, courses)
+  // Load resources (levels)
   useEffect(() => {
     const loadResources = async () => {
       try {
         setLoadingResources(true)
-        const [levelsData, coursesData] = await Promise.all([
-          fetchLevel(''),
-          fetchAllCourse()
-        ])
+        const levelsData = await fetchLevel('')
         setAllLevels(levelsData || [])
-        setAllCourses(coursesData || [])
       } catch (error) {
         console.error('Error fetching resources:', error)
       } finally {
@@ -215,17 +271,6 @@ const CreateUpdateUniversityModal = ({
 
           const levelIds = (uniData.levels || []).map((l) => String(l.id || l))
           setValue('levels', levelIds)
-
-          // Programs are complicates because they might be nested objects in the response
-          const programIds = (uniData.programs || [])
-            .map((p) => {
-              if (typeof p === 'object') {
-                return String(p.program_id || p.program?.id || p.id)
-              }
-              return String(p)
-            })
-            .filter(Boolean)
-          setValue('programs', programIds)
 
           const members = uniData.members?.length
             ? uniData.members
@@ -294,7 +339,6 @@ const CreateUpdateUniversityModal = ({
           website_url: ''
         },
         levels: [],
-        programs: [],
         members: [{ role: '', salutation: '', name: '', phone: '', email: '' }],
         map: '',
         gallery: [],
@@ -310,26 +354,6 @@ const CreateUpdateUniversityModal = ({
       setFilesDirty(false)
     }
   }, [isOpen, editSlug, setValue, reset, author_id])
-
-  // Match program names to IDs once courses are loaded
-  useEffect(() => {
-    if (isOpen && allCourses.length > 0) {
-      const currentPrograms = getValues('programs') || []
-      const updatedPrograms = currentPrograms
-        .map((p) => {
-          if (isNaN(p)) {
-            const match = allCourses.find((c) => c.title === p)
-            return match ? String(match.id) : p
-          }
-          return p
-        })
-        .filter((p) => !isNaN(p))
-
-      if (JSON.stringify(currentPrograms) !== JSON.stringify(updatedPrograms)) {
-        setValue('programs', updatedPrograms)
-      }
-    }
-  }, [allCourses, isOpen])
 
   const onMediaUpload = async (file) => {
     const formData = new FormData()
@@ -378,9 +402,7 @@ const CreateUpdateUniversityModal = ({
       data.levels = (data.levels || [])
         .map((id) => parseInt(id))
         .filter((id) => !isNaN(id))
-      data.programs = (data.programs || [])
-        .map((id) => parseInt(id))
-        .filter((id) => !isNaN(id))
+      delete data.programs
 
       data.status = status
 
@@ -443,40 +465,6 @@ const CreateUpdateUniversityModal = ({
     }
     await handleSave(data, 'Draft')
   }
-
-  const onSearchCourses = async (query) => {
-    if (!allCourses) return []
-    return query
-      ? allCourses.filter((c) =>
-        c.title?.toLowerCase().includes(query.toLowerCase())
-      )
-      : allCourses
-  }
-
-  const handleSelectProgram = (program) => {
-    const current = getValues('programs') || []
-    const id = String(program.id || program)
-    if (!current.includes(id)) {
-      setValue('programs', [...current, id], {
-        shouldDirty: true,
-        shouldValidate: true
-      })
-    }
-  }
-
-  const handleRemoveProgram = (program) => {
-    const current = getValues('programs') || []
-    const id = String(program.id || program)
-    setValue(
-      'programs',
-      current.filter((i) => i !== id),
-      { shouldDirty: true, shouldValidate: true }
-    )
-  }
-
-  const selectedPrograms = allCourses
-    .filter((c) => watch('programs')?.includes(String(c.id)))
-    .map((c) => ({ id: c.id, title: c.title }))
 
   const onSearchLevels = async (query) => {
     if (!allLevels) return []
@@ -549,12 +537,15 @@ const CreateUpdateUniversityModal = ({
               </div>
             </div>
           )}
-          <div className='flex-1  p-8'>
+          <div className='flex-1 min-h-0 overflow-y-auto p-8'>
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8'>
               {/* Left Column - Main Content (8/12) */}
               <div className='lg:col-span-8 space-y-8'>
                 {/* Basic Information */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={basicInfoRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <SectionHeader
                     icon={Info}
                     title='Basic Information'
@@ -678,11 +669,14 @@ const CreateUpdateUniversityModal = ({
                 </div>
 
                 {/* About & Content */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={detailsRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <SectionHeader
                     icon={FileText}
                     title='University Details'
-                    subtitle='Description and academic programs'
+                    subtitle='Description and overview'
                   />
                   <div className='space-y-6'>
                     <div>
@@ -711,40 +705,14 @@ const CreateUpdateUniversityModal = ({
                         </p>
                       )}
                     </div>
-
-                    <div>
-                      <Label required={true} className='mb-3 block'>
-                        Programs Offered
-                      </Label>
-                      <SearchSelectCreate
-                        onSearch={onSearchCourses}
-                        onSelect={handleSelectProgram}
-                        onRemove={handleRemoveProgram}
-                        selectedItems={selectedPrograms}
-                        placeholder='Search or select programs...'
-                        displayKey='title'
-                        valueKey='id'
-                        isMulti={true}
-                        className='w-full'
-                        isLoading={loadingResources}
-                      />
-                      {errors.programs && (
-                        <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
-                          {errors.programs.message}
-                        </p>
-                      )}
-                      <input
-                        type='hidden'
-                        {...register('programs', {
-                          required: 'At least one program is required'
-                        })}
-                      />
-                    </div>
                   </div>
                 </div>
 
                 {/* Location */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={locationRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <SectionHeader
                     icon={MapPin}
                     title='Location Details'
@@ -854,7 +822,10 @@ const CreateUpdateUniversityModal = ({
                 </div>
 
                 {/* Contact Details */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={contactRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <SectionHeader
                     icon={Phone}
                     title='Contact Information'
@@ -941,7 +912,10 @@ const CreateUpdateUniversityModal = ({
                 </div>
 
                 {/* Team Members */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={teamRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <div className='flex justify-between items-center mb-6'>
                     <SectionHeader
                       icon={Users}
@@ -1055,7 +1029,10 @@ const CreateUpdateUniversityModal = ({
               {/* Right Column - Media & Sidebar (4/12) */}
               <div className='lg:col-span-4 space-y-8'>
                 {/* Branding & Visuals */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                <div
+                  ref={brandingRef}
+                  className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'
+                >
                   <SectionHeader
                     icon={ImageIcon}
                     title='Branding'

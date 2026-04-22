@@ -222,9 +222,12 @@ export default function ProgramForm() {
       accessorKey: 'duration'
     },
     {
-      header: 'Degree',
-      accessorKey: 'programdegree.title',
-      cell: ({ row }) => row.original.programdegree?.title || '—'
+      header: 'Degrees',
+      id: 'degrees',
+      accessorFn: (row) =>
+        (row.degrees || []).map((d) => d.short_name || d.title).join(', ') || '—',
+      cell: ({ row }) =>
+        (row.original.degrees || []).map((d) => d.short_name || d.title).join(', ') || '—'
     },
     {
       header: 'Level',

@@ -31,9 +31,9 @@ const ProgramCard = ({ program }) => {
 
                 <div className='p-5 flex flex-col flex-1'>
                     <div className='flex-1'>
-                        {program.programdegree?.title && (
+                        {program.degrees?.length > 0 && (
                             <p className='text-[10px] font-bold text-[#0A6FA7] uppercase tracking-widest mb-2 opacity-80'>
-                                {program.programdegree.short_name || program.programdegree.title}
+                                {program.degrees.map((d) => d.short_name || d.title).join(' · ')}
                             </p>
                         )}
                         <h2 className='text-lg font-bold text-gray-900 line-clamp-2 mb-3 group-hover:text-[#0A6FA7] transition-colors'>

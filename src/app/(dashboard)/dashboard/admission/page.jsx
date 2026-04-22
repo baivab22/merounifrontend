@@ -3,7 +3,15 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
-import { Edit2, Eye, Trash2, Plus, GripVertical, Building2, GraduationCap } from 'lucide-react'
+import {
+  Edit2,
+  Eye,
+  Trash2,
+  Plus,
+  GripVertical,
+  Building2,
+  GraduationCap
+} from 'lucide-react'
 
 import { Button } from '@/ui/shadcn/button'
 import { Label } from '@/ui/shadcn/label'
@@ -54,7 +62,14 @@ import { cn } from '@/app/lib/utils'
 
 // ─── Sortable Admission Card ───────────────────────────────────────────────────
 const SortableCard = ({ admission, onView, onEdit, onDelete }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: admission.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: admission.id })
 
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
@@ -63,7 +78,10 @@ const SortableCard = ({ admission, onView, onEdit, onDelete }) => {
   }
 
   const collegeName = admission.collegeAdmissionCollege?.name || 'N/A'
-  const collegeLogo = admission.collegeAdmissionCollege?.college_logo || admission.collegeAdmissionCollege?.featured_img || null
+  const collegeLogo =
+    admission.collegeAdmissionCollege?.college_logo ||
+    admission.collegeAdmissionCollege?.featured_img ||
+    null
   const programTitle = admission.program?.title || 'N/A'
 
   return (
@@ -89,10 +107,18 @@ const SortableCard = ({ admission, onView, onEdit, onDelete }) => {
         </div>
 
         {/* Logo */}
-        <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm'>
-          {collegeLogo
-            ? <img src={collegeLogo} alt={collegeName} className='w-full h-full object-contain p-1.5' />
-            : <Building2 className='w-7 h-7 text-gray-300' />}
+        <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden shrink-0 shadow-sm'>
+          {collegeLogo ? (
+            <img
+              src={collegeLogo}
+              alt={collegeName}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <div className='w-full h-full flex items-center justify-center'>
+              <Building2 className='w-7 h-7 text-gray-300' />
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -140,20 +166,36 @@ const SortableCard = ({ admission, onView, onEdit, onDelete }) => {
 // ─── Drag Overlay Ghost Card ──────────────────────────────────────────────────
 const OverlayCard = ({ admission }) => {
   const collegeName = admission.collegeAdmissionCollege?.name || 'N/A'
-  const collegeLogo = admission.collegeAdmissionCollege?.college_logo || admission.collegeAdmissionCollege?.featured_img || null
+  const collegeLogo =
+    admission.collegeAdmissionCollege?.college_logo ||
+    admission.collegeAdmissionCollege?.featured_img ||
+    null
   const programTitle = admission.program?.title || 'N/A'
 
   return (
     <div className='bg-white border-2 border-[#387cae]/40 rounded-xl shadow-2xl rotate-[0.6deg] scale-[1.01]'>
       <div className='flex items-center gap-4 p-4'>
-        <GripVertical size={20} className='text-[#387cae]/50 cursor-grabbing shrink-0' />
-        <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0'>
-          {collegeLogo
-            ? <img src={collegeLogo} alt={collegeName} className='w-full h-full object-contain p-1.5' />
-            : <Building2 className='w-7 h-7 text-gray-300' />}
+        <GripVertical
+          size={20}
+          className='text-[#387cae]/50 cursor-grabbing shrink-0'
+        />
+        <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden shrink-0'>
+          {collegeLogo ? (
+            <img
+              src={collegeLogo}
+              alt={collegeName}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <div className='w-full h-full flex items-center justify-center'>
+              <Building2 className='w-7 h-7 text-gray-300' />
+            </div>
+          )}
         </div>
         <div className='flex-1 min-w-0'>
-          <h3 className='text-[16px] font-bold text-gray-900 truncate mb-1'>{collegeName}</h3>
+          <h3 className='text-[16px] font-bold text-gray-900 truncate mb-1'>
+            {collegeName}
+          </h3>
           <div className='flex items-center gap-1.5 text-[13px] text-gray-500'>
             <span className='truncate'>{programTitle}</span>
           </div>
@@ -177,20 +219,24 @@ const CardSkeleton = ({ i = 0 }) => (
         <div className='h-3 bg-gray-200 rounded w-1/4' />
       </div>
       <div className='flex gap-2 pl-4 border-l border-gray-100'>
-        {[0, 1, 2].map(j => <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />)}
+        {[0, 1, 2].map((j) => (
+          <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />
+        ))}
       </div>
     </div>
   </div>
 )
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
-  <div className="flex items-center gap-3 mb-6">
-    <div className="w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20">
+  <div className='flex items-center gap-3 mb-6'>
+    <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20'>
       <Icon size={20} />
     </div>
     <div>
-      <h3 className="text-lg font-bold text-gray-900 leading-tight">{title}</h3>
-      {subtitle && <p className="text-xs text-gray-400 mt-0.5 font-medium">{subtitle}</p>}
+      <h3 className='text-lg font-bold text-gray-900 leading-tight'>{title}</h3>
+      {subtitle && (
+        <p className='text-xs text-gray-400 mt-0.5 font-medium'>{subtitle}</p>
+      )}
     </div>
   </div>
 )
@@ -265,7 +311,9 @@ export default function AdmissionManager() {
       }
 
       // Display all recursively fetched items for drag-and-drop
-      const uniqueItems = Array.from(new Map(all.map((a) => [a.id, a])).values())
+      const uniqueItems = Array.from(
+        new Map(all.map((a) => [a.id, a])).values()
+      )
 
       uniqueItems.sort((a, b) => {
         const oA = a.order_no ?? Infinity
@@ -363,7 +411,9 @@ export default function AdmissionManager() {
       await createOrUpdateAdmission(payload)
       toast({
         title: 'Success',
-        description: editing ? 'Admission updated successfully' : 'Admission created successfully'
+        description: editing
+          ? 'Admission updated successfully'
+          : 'Admission created successfully'
       })
       handleCloseModal()
       loadAdmissions(searchQuery, false)
@@ -386,19 +436,19 @@ export default function AdmissionManager() {
     setSelectedCollege(
       item.collegeAdmissionCollege
         ? {
-          id: item.collegeAdmissionCollege.id,
-          name: item.collegeAdmissionCollege.name,
-          college_logo: item.collegeAdmissionCollege.college_logo
-        }
+            id: item.collegeAdmissionCollege.id,
+            name: item.collegeAdmissionCollege.name,
+            college_logo: item.collegeAdmissionCollege.college_logo
+          }
         : null
     )
 
     setSelectedProgram(
       item.program
         ? {
-          id: item.program.id,
-          title: item.program.title
-        }
+            id: item.program.id,
+            title: item.program.title
+          }
         : null
     )
 
@@ -464,7 +514,6 @@ export default function AdmissionManager() {
 
   return (
     <div className='w-full'>
-
       <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200'>
         <div className='flex items-center gap-3 w-full sm:w-auto'>
           <div className='relative w-full sm:w-64 shrink-0'>
@@ -489,13 +538,17 @@ export default function AdmissionManager() {
       <div className='mt-2'>
         {loading ? (
           <div className='flex flex-col gap-3'>
-            {[...Array(6)].map((_, i) => <CardSkeleton key={i} i={i} />)}
+            {[...Array(6)].map((_, i) => (
+              <CardSkeleton key={i} i={i} />
+            ))}
           </div>
         ) : admissions.length === 0 ? (
           <div className='bg-white border border-dashed border-gray-200 rounded-2xl py-20 text-center'>
             <GraduationCap className='w-10 h-10 text-gray-200 mx-auto mb-3' />
             <p className='text-gray-500 font-medium text-sm'>
-              {searchQuery ? 'No admissions match your search.' : 'No admissions found.'}
+              {searchQuery
+                ? 'No admissions match your search.'
+                : 'No admissions found.'}
             </p>
           </div>
         ) : (
@@ -503,7 +556,11 @@ export default function AdmissionManager() {
             <p className='text-[11px] text-gray-400 px-1 mb-2 flex items-center gap-1.5'>
               <GripVertical size={11} className='text-gray-300' />
               Drag the grip handle to reorder · Changes save automatically
-              {saving && <span className='text-[#387cae] ml-2 animate-pulse'>Saving order...</span>}
+              {saving && (
+                <span className='text-[#387cae] ml-2 animate-pulse'>
+                  Saving order...
+                </span>
+              )}
             </p>
 
             <DndContext
@@ -514,7 +571,7 @@ export default function AdmissionManager() {
               onDragCancel={handleDragCancel}
             >
               <SortableContext
-                items={admissions.map(a => a.id)}
+                items={admissions.map((a) => a.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className='flex flex-col gap-3'>
@@ -530,8 +587,17 @@ export default function AdmissionManager() {
                 </div>
               </SortableContext>
 
-              <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-                {activeId ? <OverlayCard admission={admissions.find(a => a.id === activeId)} /> : null}
+              <DragOverlay
+                dropAnimation={{
+                  duration: 180,
+                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)'
+                }}
+              >
+                {activeId ? (
+                  <OverlayCard
+                    admission={admissions.find((a) => a.id === activeId)}
+                  />
+                ) : null}
               </DragOverlay>
             </DndContext>
           </>
@@ -544,9 +610,9 @@ export default function AdmissionManager() {
         closeOnOutsideClick={false}
         className='max-w-5xl'
       >
-        <DialogHeader className="bg-white border-b border-gray-100 p-6">
-          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <GraduationCap className="text-[#387cae]" size={28} />
+        <DialogHeader className='bg-white border-b border-gray-100 p-6'>
+          <DialogTitle className='text-2xl font-bold text-gray-900 flex items-center gap-3'>
+            <GraduationCap className='text-[#387cae]' size={28} />
             {editing ? 'Edit Admission Detail' : 'Create Admission Record'}
           </DialogTitle>
           <DialogClose onClick={handleCloseModal} />
@@ -559,19 +625,24 @@ export default function AdmissionManager() {
             className='flex flex-col max-h-[calc(100vh-160px)]'
           >
             <div className='flex-1 overflow-y-auto p-8'>
-              <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+              <div className='grid grid-cols-1 lg:grid-cols-1 gap-8'>
                 {/* Basic Selection Card */}
                 <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                   <SectionHeader
                     icon={Building2}
-                    title="Institution & Program"
-                    subtitle="Select the college and corresponding program"
+                    title='Institution & Program'
+                    subtitle='Select the college and corresponding program'
                   />
 
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                     {/* College Selection */}
                     <div className='space-y-2.5'>
-                      <Label required className="text-gray-700 font-semibold mb-1.5 block text-sm">Target College</Label>
+                      <Label
+                        required
+                        className='text-gray-700 font-semibold mb-1.5 block text-sm'
+                      >
+                        Target College
+                      </Label>
                       <SearchSelectCreate
                         onSearch={fetchColleges}
                         onSelect={(item) => {
@@ -633,17 +704,31 @@ export default function AdmissionManager() {
                           </div>
                         )}
                       />
-                      <input type='hidden' {...register('college_id', { required: 'College is required' })} />
+                      <input
+                        type='hidden'
+                        {...register('college_id', {
+                          required: 'College is required'
+                        })}
+                      />
                       {errors.college_id && (
-                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>{errors.college_id.message}</p>
+                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
+                          {errors.college_id.message}
+                        </p>
                       )}
                     </div>
 
                     {/* Program Selection */}
                     <div className='space-y-2.5'>
-                      <Label required className="text-gray-700 font-semibold mb-1.5 block text-sm">Academic Program</Label>
+                      <Label
+                        required
+                        className='text-gray-700 font-semibold mb-1.5 block text-sm'
+                      >
+                        Academic Program
+                      </Label>
                       <SearchSelectCreate
-                        onSearch={(q) => fetchProgramsByCollege(selectedCollege?.id, q)}
+                        onSearch={(q) =>
+                          fetchProgramsByCollege(selectedCollege?.id, q)
+                        }
                         onSelect={(item) => {
                           setSelectedProgram(item)
                           setValue('program_id', item.id, {
@@ -655,14 +740,25 @@ export default function AdmissionManager() {
                           setValue('program_id', '', { shouldValidate: true })
                         }}
                         selectedItems={selectedProgram}
-                        placeholder={selectedCollege ? 'Search and select program...' : 'Select a college first'}
+                        placeholder={
+                          selectedCollege
+                            ? 'Search and select program...'
+                            : 'Select a college first'
+                        }
                         isMulti={false}
                         displayKey='title'
                         isLoading={!selectedCollege}
                       />
-                      <input type='hidden' {...register('program_id', { required: 'Program is required' })} />
+                      <input
+                        type='hidden'
+                        {...register('program_id', {
+                          required: 'Program is required'
+                        })}
+                      />
                       {errors.program_id && (
-                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>{errors.program_id.message}</p>
+                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
+                          {errors.program_id.message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -672,13 +768,15 @@ export default function AdmissionManager() {
                 <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
                   <SectionHeader
                     icon={Edit2}
-                    title="Admission Details"
-                    subtitle="Criteria, process, and fee information"
+                    title='Admission Details'
+                    subtitle='Criteria, process, and fee information'
                   />
 
                   <div className='grid grid-cols-1 gap-8'>
                     <div className='space-y-2.5'>
-                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Eligibility Criteria</Label>
+                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                        Eligibility Criteria
+                      </Label>
                       <Textarea
                         {...register('eligibility_criteria')}
                         className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
@@ -687,7 +785,9 @@ export default function AdmissionManager() {
                     </div>
 
                     <div className='space-y-2.5'>
-                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Admission Process</Label>
+                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                        Admission Process
+                      </Label>
                       <Textarea
                         {...register('admission_process')}
                         className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
@@ -696,7 +796,9 @@ export default function AdmissionManager() {
                     </div>
 
                     <div className='space-y-2.5'>
-                      <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Fee Structure & Details</Label>
+                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                        Fee Structure & Details
+                      </Label>
                       <Textarea
                         {...register('fee_details')}
                         className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
@@ -705,8 +807,10 @@ export default function AdmissionManager() {
                     </div>
 
                     <div className='space-y-3'>
-                      <Label className="text-gray-700 font-semibold mb-1 block text-sm">Comprehensive Description</Label>
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <Label className='text-gray-700 font-semibold mb-1 block text-sm'>
+                        Comprehensive Description
+                      </Label>
+                      <div className='border border-gray-200 rounded-lg overflow-hidden'>
                         <TipTapEditor
                           value={watch('description')}
                           onChange={(html) => setValue('description', html)}
@@ -720,20 +824,28 @@ export default function AdmissionManager() {
             </div>
 
             <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
-              <Button type='button' variant='outline' onClick={handleCloseModal}>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleCloseModal}
+              >
                 Discard Changes
               </Button>
               <Button
                 type='submit'
                 disabled={loading}
-                className="bg-[#387cae] hover:bg-[#2d658d] text-white min-w-[140px]"
+                className='bg-[#387cae] hover:bg-[#2d658d] text-white min-w-[140px]'
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className='flex items-center gap-2'>
+                    <span className='h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white' />
                     Saving...
                   </span>
-                ) : editing ? 'Update Record' : 'Create Admission'}
+                ) : editing ? (
+                  'Update Record'
+                ) : (
+                  'Create Admission'
+                )}
               </Button>
             </div>
           </form>

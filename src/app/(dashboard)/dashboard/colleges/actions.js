@@ -1,23 +1,20 @@
 import { authFetch } from '@/app/utils/authFetch'
 export async function createOrUpdateCollege(data) {
-  const response = await authFetch(
-    `${process.env.baseUrl}/college`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    }
-  )
+  const response = await authFetch(`${process.env.baseUrl}/college`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
 
   const result = await response.json() // Always parse once
 
-  console.log("API response:", result)
+  console.log('API response:', result)
 
   if (!response.ok) {
-    console.error("API error:", result)
-    throw new Error(result.message || "Something went wrong")
+    console.error('API error:', result)
+    throw new Error(result.message || 'Something went wrong')
   }
 
   return result
@@ -41,8 +38,6 @@ export async function saveDraft(data) {
 
   return response.json()
 }
-
-
 
 export const fetchUniversities = async (searchQuery = '') => {
   try {
@@ -79,9 +74,7 @@ export const fetchCourse = async (searchQuery = '') => {
 
 export const fetchAllCourse = async () => {
   try {
-    const response = await authFetch(
-      `${process.env.baseUrl}/program?limit=100`
-    )
+    const response = await authFetch(`${process.env.baseUrl}/program?limit=100`)
     if (!response.ok) {
       throw new Error('Failed to fetch courses')
     }
@@ -109,12 +102,14 @@ export const fetchAllUniversity = async () => {
   }
 }
 
-export const getProgramsByUniversity = async (universityIds, degreeIds = []) => {
+/** Published programs linked to any of the given degrees (via programs_degrees). */
+export const getProgramsByDegreeIds = async (degreeIds = []) => {
   try {
-    let url = `${process.env.baseUrl}/program?universityIds=${universityIds.join(',')}&limit=1000`
-    if (degreeIds && degreeIds.length > 0) {
-      url += `&degreeIds=${degreeIds.join(',')}`
-    }
+    const ids = (Array.isArray(degreeIds) ? degreeIds : [])
+      .map((id) => String(id).trim())
+      .filter(Boolean)
+    if (ids.length === 0) return []
+    const url = `${process.env.baseUrl}/program?degreeIds=${ids.join(',')}&limit=1000`
     const response = await authFetch(url)
     if (!response.ok) {
       throw new Error('Failed to fetch programs')
@@ -138,10 +133,10 @@ export const getDegreesByUniversity = async (universityIds) => {
     const data = await response.json()
     // Extract unique degrees from programs
     const degreesMap = new Map()
-    data.items.forEach(program => {
-      if (program.programdegree) {
-        degreesMap.set(program.programdegree.id, program.programdegree)
-      }
+    data.items.forEach((program) => {
+      ;(program.degrees || []).forEach((deg) => {
+        degreesMap.set(deg.id, deg)
+      })
     })
     return Array.from(degreesMap.values())
   } catch (error) {
@@ -149,7 +144,6 @@ export const getDegreesByUniversity = async (universityIds) => {
     throw error
   }
 }
-
 
 export const getUniversityBySlug = async (slug) => {
   try {
@@ -176,9 +170,7 @@ export const getUniversityBySlug = async (slug) => {
 
 export const fetchAllDegrees = async () => {
   try {
-    const response = await authFetch(
-      `${process.env.baseUrl}/degree?limit=1000`
-    )
+    const response = await authFetch(`${process.env.baseUrl}/degree?limit=1000`)
     if (!response.ok) {
       throw new Error('Failed to fetch degrees')
     }

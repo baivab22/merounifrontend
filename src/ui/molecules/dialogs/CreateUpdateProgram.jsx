@@ -4,7 +4,7 @@ import { authFetch } from '@/app/utils/authFetch'
 import { Button } from '@/ui/shadcn/button'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
-import { Building2, Plus, Trash2 } from 'lucide-react'
+import { Building2, Check, FileText, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
@@ -23,6 +23,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
     const author_id = useSelector((state) => state.user.data?.id)
     const [loading, setLoading] = useState(false)
     const [submitting, setSubmitting] = useState(false)
+    const [submittingDraft, setSubmittingDraft] = useState(false)
 
     // Rich text field values (managed outside react-hook-form)
     const [learningOutcomes, setLearningOutcomes] = useState('')
@@ -44,7 +45,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
 
     // Single-select states for dropdowns
     const [selectedLevel, setSelectedLevel] = useState(null)
-    const [selectedDegree, setSelectedDegree] = useState(null)
+    const [selectedDegrees, setSelectedDegrees] = useState([])
     const [selectedScholarship, setSelectedScholarship] = useState(null)
     const [selectedExam, setSelectedExam] = useState(null)
     const [selectedStream, setSelectedStream] = useState(null)
@@ -66,7 +67,6 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
             duration: '',
             credits: '',
             level_id: '',
-            degree_id: '',
             language: '',
             eligibility_criteria: '',
             fee: '',
@@ -97,7 +97,6 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
             duration: '',
             credits: '',
             level_id: '',
-            degree_id: '',
             language: '',
             eligibility_criteria: '',
             fee: '',
@@ -120,7 +119,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
         setCurriculumError(false)
         setSelectedUniversities([])
         setSelectedLevel(null)
-        setSelectedDegree(null)
+        setSelectedDegrees([])
         setSelectedScholarship(null)
         setSelectedExam(null)
         setSelectedStream(null)
@@ -201,7 +200,6 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
             setValue('scholarship_id', program.scholarship_id ?? program.programscholarship?.id ?? '')
             setValue('exam_id', program.exam_id ?? program.programexam?.id ?? '')
             setValue('level_id', program.level_id ?? program.programlevel?.id ?? '')
-            setValue('degree_id', program.degree_id ?? program.programdegree?.id ?? '')
             setValue('stream_id', program.stream_id ?? program.stream?.id ?? '')
 
 
@@ -210,10 +208,16 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                 const lvl = program.programlevel
                 if (lvl) setSelectedLevel({ id: lvl.id, title: lvl.title })
             }
-            // Degree
-            if (program.degree_id || program.programdegree) {
-                const deg = program.programdegree
-                if (deg) setSelectedDegree({ id: deg.id, title: deg.short_name ? `${deg.short_name} – ${deg.title}` : deg.title })
+            // Degrees (many-to-many)
+            if (program.degrees?.length) {
+                setSelectedDegrees(
+                    program.degrees.map((deg) => ({
+                        id: deg.id,
+                        title: deg.short_name ? `${deg.short_name} – ${deg.title}` : deg.title
+                    }))
+                )
+            } else {
+                setSelectedDegrees([])
             }
             // Scholarship
             if (program.scholarship_id || program.programscholarship) {
@@ -372,8 +376,13 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
     }
 
     const onSubmit = async (data) => {
+        const isDraftSave = data.status === 'draft'
         try {
-            setSubmitting(true)
+            if (isDraftSave) {
+                setSubmittingDraft(true)
+            } else {
+                setSubmitting(true)
+            }
             const cleanedData = Object.fromEntries(
                 Object.entries({
                     ...data,
@@ -381,7 +390,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                     eligibility_criteria: eligibilityCriteria || undefined,
                     curriculum: curriculum || undefined,
                     level_id: data.level_id ? Number(data.level_id) : undefined,
-                    degree_id: data.degree_id ? Number(data.degree_id) : undefined,
+                    degree_ids: selectedDegrees.map((d) => d.id),
                     stream_id: data.stream_id ? Number(data.stream_id) : undefined,
                     scholarship_id: data.scholarship_id ? Number(data.scholarship_id) : undefined,
 
@@ -397,7 +406,6 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                 }).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
             )
 
-            const isDraftSave = data.status === 'draft'
             const endpoint = isDraftSave ? `${process.env.baseUrl}/program/save-as-draft` : `${process.env.baseUrl}/program`
 
             isDraftSave ? cleanedData.status = 'draft' : cleanedData.status = 'published'
@@ -439,31 +447,50 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
             }
         } finally {
             setSubmitting(false)
+            setSubmittingDraft(false)
         }
+    }
+
+    const onSaveDraft = async () => {
+        const title = watch('title')
+        if (!title?.trim()) {
+            toast({
+                title: 'Required Field',
+                description: 'Please enter at least the program title to save as a draft',
+                variant: 'destructive'
+            })
+            return
+        }
+        setValue('status', 'draft')
+        await handleSubmit(onSubmit)()
     }
 
     return (
         <Dialog isOpen={isOpen} onClose={onClose} className='max-w-6xl'>
-            <DialogContent className='max-w-6xl max-h-[90vh] flex flex-col p-0'>
+            <DialogContent className='max-w-6xl max-h-[90vh] flex flex-col p-0 bg-gray-50/50'>
                 {/* Sticky Header */}
-                <DialogHeader className='px-6 py-4 border-b shrink-0'>
+                <DialogHeader className='px-6 py-4 border-b border-gray-100 shrink-0 bg-white'>
                     <DialogTitle className="text-lg font-semibold text-gray-900">
                         {slug ? 'Edit Program' : 'Add New Program'}
                     </DialogTitle>
                     <DialogClose onClick={onClose} />
                 </DialogHeader>
 
-                {/* Scrollable Body */}
-                <div className='flex-1 overflow-y-auto p-6'>
-                    {loading ? (
-                        <div className='flex items-center justify-center py-20'>
-                            <div className='flex flex-col items-center gap-3'>
-                                <div className='animate-spin rounded-full h-10 w-10 border-b-2 border-[#387cae]' />
-                                <p className='text-sm text-gray-500'>Loading program details...</p>
-                            </div>
+                {loading ? (
+                    <div className='flex flex-1 items-center justify-center py-20'>
+                        <div className='flex flex-col items-center gap-3'>
+                            <div className='animate-spin rounded-full h-10 w-10 border-b-2 border-[#387cae]' />
+                            <p className='text-sm text-gray-500'>Loading program details...</p>
                         </div>
-                    ) : (
-                        <form id="program-form" onSubmit={handleSubmit(onSubmit)} className='space-y-8'>
+                    </div>
+                ) : (
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className='flex flex-col flex-1 min-h-0 relative'
+                    >
+                        {/* Scrollable Body */}
+                        <div className='flex-1 min-h-0 overflow-y-auto p-6'>
+                            <div className='space-y-8'>
 
                             {/* ── Section 1: Basic Information ── */}
                             <section className="space-y-5">
@@ -532,16 +559,31 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <Label>Degree</Label>
+                                        <Label>Degrees</Label>
                                         <SearchSelectCreate
                                             onSearch={onSearchDegrees}
-                                            onSelect={(item) => { setSelectedDegree(item); setValue('degree_id', item.id) }}
-                                            onRemove={() => { setSelectedDegree(null); setValue('degree_id', '') }}
-                                            selectedItems={selectedDegree ? [selectedDegree] : []}
-                                            placeholder='Search degree…'
+                                            onSelect={(item) => {
+                                                if (!selectedDegrees.find((d) => d.id === item.id)) {
+                                                    setSelectedDegrees([
+                                                        ...selectedDegrees,
+                                                        {
+                                                            id: item.id,
+                                                            title: item.short_name
+                                                                ? `${item.short_name} – ${item.title}`
+                                                                : item.title
+                                                        }
+                                                    ])
+                                                }
+                                            }}
+                                            onRemove={(item) => {
+                                                const id = item.id ?? item
+                                                setSelectedDegrees(selectedDegrees.filter((d) => d.id !== id))
+                                            }}
+                                            selectedItems={selectedDegrees}
+                                            placeholder='Search degrees…'
                                             displayKey='title'
                                             valueKey='id'
-                                            isMulti={false}
+                                            isMulti={true}
                                             allowCreate={false}
                                             inputSize="sm"
                                         />
@@ -876,53 +918,54 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                                 )}
                             </section>
 
-                        </form>
-                    )}
-                </div>
+                            </div>
+                        </div>
 
-                {/* Sticky Footer */}
-                <div className='sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3 shrink-0'>
-                    <Button type='button' variant='outline' onClick={onClose} disabled={submitting}>
-                        Cancel
-                    </Button>
-                    <div className="flex gap-2">
+                    {/* Footer Actions */}
+                    <div className='sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 p-6 flex justify-end gap-3 z-40 shrink-0 rounded-b-3xl'>
+                        <Button
+                            type='button'
+                            variant='outline'
+                            onClick={onClose}
+                            disabled={submitting || submittingDraft}
+                            className='px-8 border-gray-200 text-gray-600 hover:bg-gray-50'
+                        >
+                            Cancel
+                        </Button>
                         <Button
                             type='button'
                             variant='secondary'
-                            disabled={submitting || loading}
-                            onClick={async () => {
-                                const title = watch('title')
-                                if (!title) {
-                                    toast({
-                                        title: 'Required Field',
-                                        description: 'Please enter at least the program title to save as a draft',
-                                        variant: 'destructive'
-                                    })
-                                    return
-                                }
-                                setValue('status', 'draft')
-                                await handleSubmit(onSubmit)()
-                            }}
-                            className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            disabled={submittingDraft || submitting}
+                            onClick={onSaveDraft}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
                         >
-                            Save as Draft
+                            {submittingDraft ? <Loader2 className="animate-spin mr-2" size={16} /> : <FileText className='w-4 h-4 mr-2' />}
+                            <span>Save as Draft</span>
                         </Button>
                         <Button
-                            type='submit'
-                            form="program-form"
-                            disabled={submitting || loading}
-                            onClick={() => setValue('status', 'published')}
-                            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white min-w-[120px]"
+                            type='button'
+                            onClick={() => {
+                                setValue('status', 'published', { shouldDirty: true })
+                                handleSubmit(onSubmit)()
+                            }}
+                            disabled={submitting || submittingDraft}
+                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
                         >
                             {submitting ? (
-                                <span className='flex items-center gap-2'>
-                                    <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
-                                    Saving...
-                                </span>
-                            ) : slug ? 'Update Program' : 'Publish Program'}
+                                <>
+                                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                                    <span>Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    {slug ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
+                                    <span>{slug ? 'Update Program' : 'Publish Program'}</span>
+                                </>
+                            )}
                         </Button>
                     </div>
-                </div>
+                </form>
+                )}
             </DialogContent>
         </Dialog>
     )

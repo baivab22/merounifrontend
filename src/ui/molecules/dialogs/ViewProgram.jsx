@@ -87,10 +87,12 @@ const ViewProgram = ({ isOpen, onClose, slug }) => {
                                             <p className='text-gray-900'>{viewProgram.programlevel.title}</p>
                                         </div>
                                     )}
-                                    {viewProgram.programdegree?.title && (
+                                    {viewProgram.degrees?.length > 0 && (
                                         <div className='space-y-0.5'>
-                                            <span className='font-medium text-gray-500 text-xs uppercase tracking-wide'>Degree</span>
-                                            <p className='text-gray-900'>{viewProgram.programdegree.title}</p>
+                                            <span className='font-medium text-gray-500 text-xs uppercase tracking-wide'>Degrees</span>
+                                            <p className='text-gray-900'>
+                                                {viewProgram.degrees.map((d) => d.short_name || d.title).join(', ')}
+                                            </p>
                                         </div>
                                     )}
                                     {viewProgram.duration && (

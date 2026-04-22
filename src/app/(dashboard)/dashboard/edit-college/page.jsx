@@ -12,14 +12,13 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import {
   fetchAllCourse,
   fetchAllUniversity,
-  getUniversityBySlug
+  getUniversityBySlug,
+  fetchAllDegrees
 } from '../colleges/actions'
 import { Upload } from 'lucide-react'
 import GallerySection from '@/ui/molecules/dialogs/college/components/GallerySection'
 import VideoSection from '@/ui/molecules/dialogs/college/components/VideoSection'
 import { DistrictLists } from '@/constants/district'
-
-
 
 const FileUploadWithPreview = ({
   onUploadComplete,
@@ -168,6 +167,7 @@ const EditCollegePage = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [courses, setCourses] = useState([])
+  const [allDegrees, setAllDegrees] = useState([])
   const [allUniversity, setAllUniversity] = useState([])
   const [uniSlug, setUniSlug] = useState('')
   const [collectUni, setCollectUni] = useState([])
@@ -198,7 +198,8 @@ const EditCollegePage = () => {
       name: '',
       institute_type: 'Private',
       institute_level: [],
-      courses: [],
+      degrees: [],
+      programs: [],
       description: '',
       content: '',
       website_url: '',
@@ -224,14 +225,7 @@ const EditCollegePage = () => {
         postal_code: ''
       },
       contacts: ['', ''],
-      members: [
-        {
-          name: '',
-          contact_number: '',
-          role: '',
-          description: ''
-        }
-      ]
+      members: []
     }
   })
 
@@ -252,6 +246,7 @@ const EditCollegePage = () => {
     loadCollegeData()
     loadCourses()
     loadUniversities()
+    loadDegrees()
   }, [])
 
   // Fetch university details for programs
@@ -364,7 +359,10 @@ const EditCollegePage = () => {
           .filter((id) => id !== undefined) || []
 
       const uniqueProgramIds = [...new Set(programIds)]
-      setValue('courses', uniqueProgramIds)
+      setValue('programs', uniqueProgramIds)
+
+      const degreeIds = collegeData.degrees?.map((d) => d.id) || []
+      setValue('degrees', degreeIds)
 
       // Address
       if (collegeData.collegeAddress) {
@@ -403,33 +401,26 @@ const EditCollegePage = () => {
         videos
       })
 
-      // Members
+      // Members — empty until API has rows; user adds via "Add Member"
       const memberData = collegeData.collegeMembers?.length
         ? collegeData.collegeMembers
-        : [
-          {
-            name: '',
-            contact_number: '',
-            role: '',
-            description: ''
-          }
-        ]
+        : []
       setValue('members', memberData)
 
       // Facilities
       const facilityData = collegeData.collegeFacility?.length
         ? collegeData.collegeFacility.map((facility) => ({
-          title: facility.title || '',
-          description: facility.description || '',
-          icon: facility.icon || ''
-        }))
+            title: facility.title || '',
+            description: facility.description || '',
+            icon: facility.icon || ''
+          }))
         : [
-          {
-            title: '',
-            description: '',
-            icon: ''
-          }
-        ]
+            {
+              title: '',
+              description: '',
+              icon: ''
+            }
+          ]
       setValue('facilities', facilityData)
 
       setValue('facilities', facilityData)
@@ -468,6 +459,15 @@ const EditCollegePage = () => {
     }
   }
 
+  const loadDegrees = async () => {
+    try {
+      const data = await fetchAllDegrees()
+      setAllDegrees(data)
+    } catch (err) {
+      console.error('Error loading degrees:', err)
+    }
+  }
+
   const onSubmit = async (data) => {
     try {
       setSubmitting(true)
@@ -496,18 +496,32 @@ const EditCollegePage = () => {
         data.university_id = parseInt(data.university_id)
       }
 
-      // Only include courses in payload if there are courses
-      if (data.courses && data.courses.length > 0) {
-        const coursesArray = data.courses
-          .map((course) => parseInt(course))
-          .filter((course) => !isNaN(course) && course > 0)
-        if (coursesArray.length > 0) {
-          data.courses = coursesArray
+      // Only include programs in payload if there are programs
+      if (data.programs && data.programs.length > 0) {
+        const programsArray = data.programs
+          .map((program) => parseInt(program))
+          .filter((program) => !isNaN(program) && program > 0)
+        if (programsArray.length > 0) {
+          data.programs = programsArray
         } else {
-          delete data.courses
+          delete data.programs
         }
       } else {
-        delete data.courses
+        delete data.programs
+      }
+
+      // Handle degrees similarly
+      if (data.degrees && data.degrees.length > 0) {
+        const degreesArray = data.degrees
+          .map((degree) => parseInt(degree))
+          .filter((degree) => !isNaN(degree) && degree > 0)
+        if (degreesArray.length > 0) {
+          data.degrees = degreesArray
+        } else {
+          delete data.degrees
+        }
+      } else {
+        delete data.degrees
       }
 
       // Set file uploads
@@ -579,7 +593,6 @@ const EditCollegePage = () => {
 
   return (
     <div className='p-4 flex flex-col h-[calc(100vh-120px)]'>
-
       <form
         onSubmit={handleSubmit(onSubmit)}
         className='flex flex-col flex-1 overflow-hidden'
@@ -691,6 +704,48 @@ const EditCollegePage = () => {
             </div>
           </div>
 
+          {/* Degrees Section */}
+          <div className='bg-white p-6 rounded-md shadow-md'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold'>Degrees</h2>
+            </div>
+            <div className='text-sm text-gray-500 mb-2'>
+              {getValues('degrees')?.length || 0} degrees selected
+            </div>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto'>
+              {allDegrees.map((degree) => {
+                const isChecked = getValues('degrees')?.includes(degree.id)
+                return (
+                  <label key={degree.id} className='flex items-center'>
+                    <input
+                      type='checkbox'
+                      value={degree.id}
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const currentDegrees = getValues('degrees') || []
+                        if (e.target.checked) {
+                          setValue('degrees', [...currentDegrees, degree.id])
+                        } else {
+                          setValue(
+                            'degrees',
+                            currentDegrees.filter((id) => id !== degree.id)
+                          )
+                        }
+                      }}
+                      className='mr-2'
+                    />
+                    {degree.title || degree.short_name || degree.slugs}
+                  </label>
+                )
+              })}
+              {allDegrees.length === 0 && (
+                <p className='text-gray-500 col-span-full'>
+                  No Degrees Available
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Programs Section */}
           <div className='bg-white p-6 rounded-md shadow-md'>
             <div className='flex justify-between items-center mb-4'>
@@ -713,7 +768,7 @@ const EditCollegePage = () => {
             ) : (
               <>
                 <div className='text-sm text-gray-500 mb-2'>
-                  {getValues('courses')?.length || 0} programs selected
+                  {getValues('programs')?.length || 0} programs selected
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto'>
                   {filteredPrograms
@@ -723,7 +778,7 @@ const EditCollegePage = () => {
                         .includes(courseSearch.toLowerCase())
                     )
                     .map((course) => {
-                      const isChecked = getValues('courses')?.includes(
+                      const isChecked = getValues('programs')?.includes(
                         course.id
                       )
                       return (
@@ -733,16 +788,17 @@ const EditCollegePage = () => {
                             value={course.id}
                             checked={isChecked}
                             onChange={(e) => {
-                              const currentCourses = getValues('courses') || []
+                              const currentPrograms =
+                                getValues('programs') || []
                               if (e.target.checked) {
-                                setValue('courses', [
-                                  ...currentCourses,
+                                setValue('programs', [
+                                  ...currentPrograms,
                                   course.id
                                 ])
                               } else {
                                 setValue(
-                                  'courses',
-                                  currentCourses.filter(
+                                  'programs',
+                                  currentPrograms.filter(
                                     (id) => id !== course.id
                                   )
                                 )
@@ -848,9 +904,7 @@ const EditCollegePage = () => {
                 className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border rounded'
               >
                 <div>
-                  <label className='block mb-2'>
-                    Title
-                  </label>
+                  <label className='block mb-2'>Title</label>
                   <input
                     {...register(`facilities.${index}.title`)}
                     className='w-full p-2 border rounded'
@@ -918,6 +972,12 @@ const EditCollegePage = () => {
               </button>
             </div>
 
+            {memberFields.length === 0 && (
+              <p className='text-sm text-gray-500 mb-4'>
+                No team members yet. Click &quot;Add Member&quot; to add one.
+              </p>
+            )}
+
             {memberFields.map((field, index) => (
               <div
                 key={field.id}
@@ -960,21 +1020,10 @@ const EditCollegePage = () => {
                 </div>
                 <button
                   type='button'
-                  onClick={() => {
-                    if (memberFields.length > 1) {
-                      removeMember(index)
-                    } else {
-                      setValue(`members.${index}`, {
-                        name: '',
-                        contact_number: '',
-                        role: '',
-                        description: ''
-                      })
-                    }
-                  }}
+                  onClick={() => removeMember(index)}
                   className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600'
                 >
-                  {memberFields.length > 1 ? 'Remove' : 'Clear'}
+                  Remove
                 </button>
               </div>
             ))}

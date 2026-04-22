@@ -84,9 +84,14 @@ const ProgramContent = ({ program, error }) => {
                   {program.code && (
                     <span className='px-3 py-1 bg-[#0A6FA7] text-white text-[10px] font-black uppercase tracking-widest rounded shadow-lg shadow-[#0A6FA7]/20'> {program.code} </span>
                   )}
-                  {program.programdegree?.title && (
-                    <span className='bg-white px-3 py-1 rounded-md text-[#0A6FA7] text-xs font-bold border border-[#0A6FA7]/10 shadow-sm'> {program.programdegree.short_name || program.programdegree.title} </span>
-                  )}
+                  {(program.degrees || []).map((deg) => (
+                    <span
+                      key={deg.id}
+                      className='bg-white px-3 py-1 rounded-md text-[#0A6FA7] text-xs font-bold border border-[#0A6FA7]/10 shadow-sm'
+                    >
+                      {deg.short_name || deg.title}
+                    </span>
+                  ))}
                   {program.programlevel?.title && (
                     <span className='text-gray-400 text-xs font-medium bg-gray-100/50 px-2 py-1 rounded'> {program.programlevel.title} </span>
                   )}
