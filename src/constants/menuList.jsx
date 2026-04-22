@@ -1,7 +1,7 @@
 import { FaHome } from 'react-icons/fa'
 
 // Icons
-import { HandCoins, Lightbulb, PlayCircle, Rss, SortAsc } from 'lucide-react'
+import { HandCoins, Lightbulb, PlayCircle, Rss, Search, SortAsc } from 'lucide-react'
 import { BsCalendarEvent, BsLayers, BsNewspaper } from 'react-icons/bs'
 import {
   FaBook,
@@ -381,6 +381,12 @@ export const menuItems = [
   {
     title: 'OTHERS',
     items: [
+      {
+        icon: <Search className='text-xl' />,
+        label: 'Search Terms',
+        href: '/dashboard/search-terms',
+        visible: ['admin']
+      },
       {
         icon: <MdOutlineDescription className='text-xl' />,
         label: 'Database Export',
