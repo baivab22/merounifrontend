@@ -1,7 +1,14 @@
 import { FaHome } from 'react-icons/fa'
 
 // Icons
-import { HandCoins, Lightbulb, PlayCircle, Rss, Search, SortAsc } from 'lucide-react'
+import {
+  HandCoins,
+  Lightbulb,
+  PlayCircle,
+  Rss,
+  Search,
+  SortAsc
+} from 'lucide-react'
 import { BsCalendarEvent, BsLayers, BsNewspaper } from 'react-icons/bs'
 import {
   FaBook,
@@ -37,7 +44,14 @@ export const menuItems = [
         icon: <FaHome className='text-xl' />,
         label: 'Home',
         href: '/dashboard',
-        visible: ['admin', 'editor', 'student', 'institution', 'consultancy', "agent"]
+        visible: [
+          'admin',
+          'editor',
+          'student',
+          'institution',
+          'consultancy',
+          'agent'
+        ]
       },
       {
         icon: <FaGlobe className='text-xl' />,
@@ -110,7 +124,7 @@ export const menuItems = [
         visible: ['student']
       },
       {
-        label: "Applied Colleges",
+        label: 'Applied Colleges',
         icon: <IoSchoolSharp className='text-xl' />,
         href: '/dashboard/applied-colleges',
         visible: ['student']
@@ -128,7 +142,6 @@ export const menuItems = [
         href: '/dashboard/applied-consultancies',
         visible: ['student']
       },
-  
 
       {
         icon: <IoSchoolSharp className='text-xl' />,
@@ -146,18 +159,12 @@ export const menuItems = [
             icon: <MdEmojiEvents className='text-lg' />,
             label: 'College Rankings',
             href: '/dashboard/college-rankings',
-            visible: ['admin','editor']
+            visible: ['admin', 'editor']
           },
           {
             icon: <SortAsc className='text-lg' />,
             label: 'College Orderings',
             href: '/dashboard/college-orderings',
-            visible: ['admin', 'editor']
-          },
-          {
-            icon: <VscReferences className='text-lg' />,
-            label: 'Referable Colleges',
-            href: '/dashboard/referable-colleges',
             visible: ['admin', 'editor']
           },
           {
@@ -180,14 +187,14 @@ export const menuItems = [
         href: '/dashboard/university',
         visible: ['admin', 'editor']
       },
-     
+
       {
         icon: <FaHandshake className='text-xl' />,
         label: 'Consultancy',
         href: '/dashboard/consultancy',
         visible: ['admin', 'editor']
       },
-          {
+      {
         icon: <MdQuiz className='text-xl' />,
         label: 'Exams',
         href: '/dashboard/exams',
@@ -219,7 +226,6 @@ export const menuItems = [
         visible: ['admin', 'editor']
       },
 
-
       {
         icon: <MdOutlineDescription className='text-xl' />,
         label: 'Material',
@@ -243,13 +249,13 @@ export const menuItems = [
         icon: <MdBackHand />,
         label: 'Refer Students',
         href: '/dashboard/referStudent',
-        visible: ['agent','consultancy'],
+        visible: ['agent', 'consultancy'],
         submenus: [
           {
             icon: <MdBackHand />,
             label: 'Colleges',
             href: '/dashboard/referStudent',
-            visible: ['agent','consultancy']
+            visible: ['agent', 'consultancy']
           },
           {
             icon: <HiOutlineUsers />,
@@ -263,13 +269,13 @@ export const menuItems = [
         icon: <MdBackHand />,
         label: 'Refered Students',
         href: '/dashboard/referedStudent',
-        visible: ['agent','consultancy'],
+        visible: ['agent', 'consultancy'],
         submenus: [
           {
             icon: <MdBackHand />,
             label: 'Colleges',
             href: '/dashboard/college-referrals',
-            visible: ['agent','consultancy']
+            visible: ['agent', 'consultancy']
           },
           {
             icon: <HiOutlineUsers />,

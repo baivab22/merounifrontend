@@ -20,6 +20,7 @@ import ViewCollegeModal from '@/ui/molecules/dialogs/college/ViewCollegeModal'
 import { Button } from '../../../../ui/shadcn/button'
 import { createColumns } from './columns'
 import ImageLightbox from '@/ui/molecules/image-lightbox'
+import ViewReferableCollegesModal from '@/ui/molecules/dialogs/college/ViewReferableCollegesModal'
 
 
 
@@ -51,6 +52,7 @@ export default function CollegeForm() {
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewCollegeData, setViewCollegeData] = useState(null)
   const [loadingView, setLoadingView] = useState(false)
+  const [referableModalOpen, setReferableModalOpen] = useState(false)
 
   // Lightbox State
   const [lightbox, setLightbox] = useState({
@@ -403,16 +405,25 @@ export default function CollegeForm() {
           </select>
         </div>
         {/* Button */}
-        <Button
-          onClick={() => {
-            setIsOpen(true)
-            setEditSlug('')
-          }}
-          className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 rounded-md shadow-sm transition-all shrink-0 w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Add College
-        </Button>
+        <div className='flex gap-2 w-full sm:w-auto'>
+          <Button
+            onClick={() => setReferableModalOpen(true)}
+            variant="outline"
+            className="border-[#387cae] text-[#387cae] hover:bg-[#387cae]/5 gap-2 h-11 px-6 rounded-md shadow-sm transition-all shrink-0 w-full sm:w-auto"
+          >
+            View Referable Colleges
+          </Button>
+          <Button
+            onClick={() => {
+              setIsOpen(true)
+              setEditSlug('')
+            }}
+            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 rounded-md shadow-sm transition-all shrink-0 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Add College
+          </Button>
+        </div>
       </div>
  
       <CreateUpdateCollegeModal
@@ -460,6 +471,16 @@ export default function CollegeForm() {
         pagination={pagination}
         setPagination={setPagination}
         setColleges={setColleges}
+      />
+
+      <ViewReferableCollegesModal
+        isOpen={referableModalOpen}
+        onClose={() => setReferableModalOpen(false)}
+        onRemoveSuccess={(id) => {
+          setColleges(prev =>
+            prev.map(c => c.id === id ? { ...c, is_referable: false } : c)
+          )
+        }}
       />
 
       <ImageLightbox
