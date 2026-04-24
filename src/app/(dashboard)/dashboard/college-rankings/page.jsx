@@ -30,6 +30,8 @@ import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { cn } from '@/app/lib/utils'
+import TipTapEditor from '@/ui/shadcn/tiptap-editor'
+import axios from 'axios'
 import * as actions from './actions'
 
 export default function CollegeRankingsPage() {
@@ -40,7 +42,8 @@ export default function CollegeRankingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [deleteDegreeId, setDeleteDegreeId] = useState(null)
   const [deleteRankingId, setDeleteRankingId] = useState(null)
-  const [isRemoveRankingDialogOpen, setIsRemoveRankingDialogOpen] = useState(false)
+  const [isRemoveRankingDialogOpen, setIsRemoveRankingDialogOpen] =
+    useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDescModalOpen, setIsDescModalOpen] = useState(false)
   const [draggedItem, setDraggedItem] = useState(null)
@@ -48,6 +51,7 @@ export default function CollegeRankingsPage() {
   const [selectedDegree, setSelectedDegree] = useState(null)
   const [selectedCollege, setSelectedCollege] = useState(null)
   const [description, setDescription] = useState('')
+  const [content, setContent] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -146,7 +150,11 @@ export default function CollegeRankingsPage() {
     const draggedIndex = items.findIndex((r) => r.id === draggedItem.ranking.id)
     const targetIndex = items.findIndex((r) => r.id === targetRanking.id)
 
-    if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) {
+    if (
+      draggedIndex === -1 ||
+      targetIndex === -1 ||
+      draggedIndex === targetIndex
+    ) {
       setDraggedItem(null)
       return
     }
@@ -185,14 +193,21 @@ export default function CollegeRankingsPage() {
 
   const handleDegreeDrop = async (e, targetDegreeGroup) => {
     e.preventDefault()
-    if (!draggedDegree || draggedDegree.degree?.id === targetDegreeGroup.degree?.id) {
+    if (
+      !draggedDegree ||
+      draggedDegree.degree?.id === targetDegreeGroup.degree?.id
+    ) {
       setDraggedDegree(null)
       return
     }
 
     const items = [...rankings]
-    const draggedIndex = items.findIndex((r) => r.degree?.id === draggedDegree.degree?.id)
-    const targetIndex = items.findIndex((r) => r.degree?.id === targetDegreeGroup.degree?.id)
+    const draggedIndex = items.findIndex(
+      (r) => r.degree?.id === draggedDegree.degree?.id
+    )
+    const targetIndex = items.findIndex(
+      (r) => r.degree?.id === targetDegreeGroup.degree?.id
+    )
 
     if (draggedIndex === -1 || targetIndex === -1) {
       setDraggedDegree(null)
@@ -248,6 +263,8 @@ export default function CollegeRankingsPage() {
       setIsEditModalOpen(false)
       setSelectedDegree(null)
       setSelectedCollege(null)
+      setDescription('')
+      setContent('')
     } catch (error) {
       toast({
         title: 'Error',
@@ -263,15 +280,20 @@ export default function CollegeRankingsPage() {
     if (!selectedDegree) return
     try {
       setSubmitting(true)
-      await actions.updateDegreeDescription(selectedDegree.id, description)
+      await actions.updateDegreeDescription(
+        selectedDegree.id,
+        description,
+        content
+      )
       toast({
         title: 'Success',
-        description: 'Description updated successfully'
+        description: 'Description and content updated successfully'
       })
       loadRankings()
       setIsDescModalOpen(false)
       setSelectedDegree(null)
       setDescription('')
+      setContent('')
     } catch (error) {
       toast({
         title: 'Error',
@@ -283,9 +305,42 @@ export default function CollegeRankingsPage() {
     }
   }
 
-  const filteredRankings = rankings.filter(group =>
-    group.degree?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    group.rankings?.some(r => r.college?.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+  const onMediaUpload = async (file) => {
+    const formData = new FormData()
+    formData.append('title', file.name)
+    formData.append('altText', file.name)
+    formData.append('description', '')
+    formData.append('file', file)
+    formData.append('authorId', '1')
+
+    try {
+      const response = await axios.post(
+        `${process.env.mediaUrl}${process.env.version}/media/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+      return response.data?.media?.url
+    } catch (error) {
+      console.error('Image upload failed:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to upload image',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
+  const filteredRankings = rankings.filter(
+    (group) =>
+      group.degree?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.rankings?.some((r) =>
+        r.college?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
   )
 
   const onSearchDegrees = async (q) => {
@@ -298,10 +353,12 @@ export default function CollegeRankingsPage() {
     const colleges = await actions.fetchColleges(selectedDegree.id, q)
 
     // Filter out colleges already ranked for this degree
-    const rankedCollegeIds = rankings.find(r => r.degree?.id === selectedDegree.id)
-      ?.rankings?.map(r => r.college?.id) || []
+    const rankedCollegeIds =
+      rankings
+        .find((r) => r.degree?.id === selectedDegree.id)
+        ?.rankings?.map((r) => r.college?.id) || []
 
-    return colleges.filter(c => !rankedCollegeIds.includes(c.id))
+    return colleges.filter((c) => !rankedCollegeIds.includes(c.id))
   }
 
   if (loading && rankings.length === 0) {
@@ -313,7 +370,9 @@ export default function CollegeRankingsPage() {
             <Trophy size={20} className='text-[#387cae] animate-pulse' />
           </div>
         </div>
-        <p className='text-gray-500 font-medium animate-pulse'>Loading college rankings...</p>
+        <p className='text-gray-500 font-medium animate-pulse'>
+          Loading college rankings...
+        </p>
       </div>
     )
   }
@@ -324,7 +383,10 @@ export default function CollegeRankingsPage() {
       <div className='sticky mb-3 top-0 z-20 bg-gray-50/80 backdrop-blur-md pb-4 pt-2 -mt-2'>
         <div className='flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
           <div className='relative w-full md:w-96 group'>
-            <Search className='absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#387cae] transition-colors' size={18} />
+            <Search
+              className='absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#387cae] transition-colors'
+              size={18}
+            />
             <Input
               placeholder='Search degrees or colleges...'
               className='pl-11 h-11 rounded-md border-gray-200 bg-gray-50/50 focus:bg-white transition-all'
@@ -337,6 +399,7 @@ export default function CollegeRankingsPage() {
               setSelectedDegree(null)
               setSelectedCollege(null)
               setDescription('')
+              setContent('')
               setIsEditModalOpen(true)
             }}
           >
@@ -365,7 +428,10 @@ export default function CollegeRankingsPage() {
                   <GripVertical size={20} />
                 </div>
                 <div className='flex flex-col overflow-hidden'>
-                  <h2 className='text-[15px] font-bold text-slate-900 truncate' title={degreeGroup.degree?.title}>
+                  <h2
+                    className='text-[15px] font-bold text-slate-900 truncate'
+                    title={degreeGroup.degree?.title}
+                  >
                     {degreeGroup.degree?.title}
                   </h2>
                   <span className='text-[11px] text-slate-500 font-semibold'>
@@ -378,6 +444,7 @@ export default function CollegeRankingsPage() {
                   onClick={() => {
                     setSelectedDegree(degreeGroup.degree)
                     setDescription(degreeGroup.description || '')
+                    setContent(degreeGroup.content || '')
                     setIsDescModalOpen(true)
                   }}
                   className='p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors'
@@ -390,6 +457,7 @@ export default function CollegeRankingsPage() {
                     setSelectedDegree(degreeGroup.degree)
                     setSelectedCollege(null)
                     setDescription('')
+                    setContent('')
                     setIsEditModalOpen(true)
                   }}
                   className='p-2 text-[#387cae] hover:bg-[#387cae]/5 rounded-md transition-colors'
@@ -422,23 +490,32 @@ export default function CollegeRankingsPage() {
                   <div
                     key={ranking.id}
                     draggable
-                    onDragStart={(e) => handleDragStart(e, ranking, degreeGroup.degree?.id)}
+                    onDragStart={(e) =>
+                      handleDragStart(e, ranking, degreeGroup.degree?.id)
+                    }
                     onDragEnd={handleDragEnd}
                     onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, ranking, degreeGroup.degree?.id)}
+                    onDrop={(e) =>
+                      handleDrop(e, ranking, degreeGroup.degree?.id)
+                    }
                     className='group/item flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-md hover:border-[#387cae]/30 hover:shadow-lg hover:shadow-[#387cae]/5 transition-all duration-200 cursor-grab active:cursor-grabbing'
                   >
                     <div className='text-gray-300 group-hover/item:text-[#387cae] transition-colors'>
                       <GripVertical size={18} />
                     </div>
 
-                    <div className={cn(
-                      'flex items-center justify-center w-8 h-8 rounded-md font-bold text-xs shadow-sm',
-                      ranking.rank === 1 ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                        ranking.rank === 2 ? 'bg-gray-100 text-gray-700 border border-gray-200' :
-                          ranking.rank === 3 ? 'bg-orange-100 text-orange-700 border border-orange-200' :
-                            'bg-blue-50 text-blue-700 border border-blue-100'
-                    )}>
+                    <div
+                      className={cn(
+                        'flex items-center justify-center w-8 h-8 rounded-md font-bold text-xs shadow-sm',
+                        ranking.rank === 1
+                          ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                          : ranking.rank === 2
+                            ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                            : ranking.rank === 3
+                              ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                              : 'bg-blue-50 text-blue-700 border border-blue-100'
+                      )}
+                    >
                       #{ranking.rank}
                     </div>
 
@@ -462,7 +539,8 @@ export default function CollegeRankingsPage() {
                           {ranking.college?.name}
                         </span>
                         <span className='text-[11px] text-slate-400 font-semibold truncate'>
-                          {ranking.college?.collegeAddress?.city}, {ranking.college?.collegeAddress?.state}
+                          {ranking.college?.collegeAddress?.city},{' '}
+                          {ranking.college?.collegeAddress?.state}
                         </span>
                       </div>
                     </div>
@@ -481,7 +559,9 @@ export default function CollegeRankingsPage() {
                   <div className='p-3 rounded-full bg-gray-50 text-gray-300'>
                     <Trophy size={24} />
                   </div>
-                  <p className='text-[11px] font-bold text-slate-400 uppercase tracking-wider'>No Colleges Ranked</p>
+                  <p className='text-[11px] font-bold text-slate-400 uppercase tracking-wider'>
+                    No Colleges Ranked
+                  </p>
                 </div>
               )}
             </div>
@@ -495,8 +575,12 @@ export default function CollegeRankingsPage() {
             <AlertCircle size={40} />
           </div>
           <div className='text-center'>
-            <h3 className='text-lg font-bold text-gray-900'>No rankings found</h3>
-            <p className='text-sm text-gray-500'>Click the "Add Ranking" button to start ranking colleges.</p>
+            <h3 className='text-lg font-bold text-gray-900'>
+              No rankings found
+            </h3>
+            <p className='text-sm text-gray-500'>
+              Click the "Add Ranking" button to start ranking colleges.
+            </p>
           </div>
           {searchTerm && (
             <Button
@@ -517,6 +601,8 @@ export default function CollegeRankingsPage() {
           setIsEditModalOpen(false)
           setSelectedDegree(null)
           setSelectedCollege(null)
+          setDescription('')
+          setContent('')
         }}
         closeOnOutsideClick={false}
       >
@@ -557,10 +643,12 @@ export default function CollegeRankingsPage() {
             </div>
 
             {/* College Selection */}
-            <div className={cn(
-              'space-y-3 transition-all duration-300',
-              !selectedDegree && 'opacity-30 pointer-events-none grayscale'
-            )}>
+            <div
+              className={cn(
+                'space-y-3 transition-all duration-300',
+                !selectedDegree && 'opacity-30 pointer-events-none grayscale'
+              )}
+            >
               <div className='flex items-center justify-between'>
                 <Label required={!!selectedDegree} className='text-[11px] '>
                   Select College
@@ -576,7 +664,11 @@ export default function CollegeRankingsPage() {
                 onSelect={setSelectedCollege}
                 onRemove={() => setSelectedCollege(null)}
                 selectedItems={selectedCollege}
-                placeholder={selectedDegree ? 'Search colleges...' : 'Please select a degree first'}
+                placeholder={
+                  selectedDegree
+                    ? 'Search colleges...'
+                    : 'Please select a degree first'
+                }
                 displayKey='name'
                 valueKey='id'
                 isMulti={false}
@@ -618,6 +710,7 @@ export default function CollegeRankingsPage() {
           setIsDescModalOpen(false)
           setSelectedDegree(null)
           setDescription('')
+          setContent('')
         }}
         closeOnOutsideClick={false}
       >
@@ -635,17 +728,34 @@ export default function CollegeRankingsPage() {
             <DialogClose onClick={() => setIsDescModalOpen(false)} />
           </DialogHeader>
 
-          <div className='p-8 space-y-4'>
-            <Label className='text-[11px] font-bold uppercase tracking-wider text-slate-500'>
-              Description
-            </Label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder='Enter a description for this ranking category...'
-              className='w-full min-h-[120px] px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] bg-gray-50/50 focus:bg-white transition-all resize-y shadow-inner'
-              rows={4}
-            />
+          <div className='p-8 space-y-6 max-h-[60vh] overflow-y-auto scrollbar-thin'>
+            <div className='space-y-3'>
+              <Label className='text-[11px] font-bold uppercase tracking-wider text-slate-500'>
+                Short Description
+              </Label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder='Enter a short description for this ranking category...'
+                className='w-full min-h-[80px] px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] bg-gray-50/50 focus:bg-white transition-all resize-y shadow-inner'
+                rows={3}
+              />
+            </div>
+
+            <div className='space-y-3'>
+              <Label className='text-[11px] font-bold uppercase tracking-wider text-slate-500'>
+                Detailed Content
+              </Label>
+              <div className='border border-gray-200 rounded-xl overflow-hidden bg-gray-50/30'>
+                <TipTapEditor
+                  value={content}
+                  onChange={setContent}
+                  onMediaUpload={onMediaUpload}
+                  showImageUpload={true}
+                  placeholder='Start writing detailed content about this ranking category...'
+                />
+              </div>
+            </div>
           </div>
 
           <div className='p-6 bg-gray-50/50 border-t border-gray-100 flex justify-end gap-3'>

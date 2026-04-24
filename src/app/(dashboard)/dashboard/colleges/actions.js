@@ -103,13 +103,25 @@ export const fetchAllUniversity = async () => {
 }
 
 /** Published programs linked to any of the given degrees (via programs_degrees). */
-export const getProgramsByDegreeIds = async (degreeIds = []) => {
+export const getProgramsByDegreeIds = async (
+  degreeIds = [],
+  universityIds = []
+) => {
   try {
     const ids = (Array.isArray(degreeIds) ? degreeIds : [])
       .map((id) => String(id).trim())
       .filter(Boolean)
     if (ids.length === 0) return []
-    const url = `${process.env.baseUrl}/program?degreeIds=${ids.join(',')}&limit=1000`
+
+    let url = `${process.env.baseUrl}/program?degreeIds=${ids.join(',')}&limit=1000`
+
+    const uIds = (Array.isArray(universityIds) ? universityIds : [])
+      .map((id) => String(id).trim())
+      .filter(Boolean)
+    if (uIds.length > 0) {
+      url += `&universityIds=${uIds.join(',')}`
+    }
+
     const response = await authFetch(url)
     if (!response.ok) {
       throw new Error('Failed to fetch programs')

@@ -20,7 +20,9 @@ export async function generateMetadata({ params }) {
     }
 
     const title = `Top ${rankingGroup.degree.title} Colleges in Nepal | MeroUni`
-    const description = rankingGroup.description || `Explore the best colleges offering ${rankingGroup.degree.title} in Nepal. Compare rankings, programs, and facilities.`
+    const description =
+      rankingGroup.description ||
+      `Explore the best colleges offering ${rankingGroup.degree.title} in Nepal. Compare rankings, programs, and facilities.`
 
     return {
       title: title,
@@ -35,7 +37,7 @@ export async function generateMetadata({ params }) {
       twitter: {
         card: 'summary_large_image',
         title: title,
-        description: description,
+        description: description
       }
     }
   } catch (error) {
@@ -91,7 +93,8 @@ export default async function CollegeRankingDetailPage({ params }) {
                 <Trophy className='w-6 h-6' />
               </div>
               <h1 className='text-3xl md:text-4xl font-black text-gray-900 leading-tight'>
-                Top Colleges for <span className='text-[#0A6FA7]'>{degree.title}</span>
+                Top Colleges for{' '}
+                <span className='text-[#0A6FA7]'>{degree.title}</span>
               </h1>
             </div>
 
@@ -102,15 +105,14 @@ export default async function CollegeRankingDetailPage({ params }) {
             )}
 
             <div className='flex items-center gap-6 mt-10'>
-              <div className='px-4 py-2 rounded-xl bg-blue-50/50 text-blue-700 text-xs font-bold border border-blue-100 uppercase tracking-widest'>
-                {rankings.length} Colleges Featured
-              </div>
               <Link
                 href={`/degree/${degree.slug || ''}`}
                 className='text-sm font-bold text-[#0A6FA7] hover:text-[#085a86] transition-colors flex items-center gap-1 group/link'
               >
                 <span>View Degree</span>
-                <span className='group-hover/link:translate-x-1 transition-transform'>&rarr;</span>
+                <span className='group-hover/link:translate-x-1 transition-transform'>
+                  &rarr;
+                </span>
               </Link>
             </div>
           </div>
@@ -132,21 +134,24 @@ export default async function CollegeRankingDetailPage({ params }) {
                   className='group block bg-white rounded-3xl p-6 transition-all duration-300 border border-gray-100 hover:border-[#0A6FA7] hover:shadow-2xl hover:shadow-[#0A6FA7]/10'
                 >
                   <div className='flex flex-col sm:flex-row items-center gap-6 md:gap-8'>
-
                     {/* Rank Badge */}
-                    <div className={cn(
-                      'flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-black text-xl md:text-2xl shadow-sm border',
-                      ranking.rank === 1 ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-700 border-yellow-200 shadow-yellow-100' :
-                        ranking.rank === 2 ? 'bg-gradient-to-br from-gray-200 to-gray-100 text-gray-700 border-gray-300 shadow-gray-200' :
-                          ranking.rank === 3 ? 'bg-gradient-to-br from-orange-200 to-orange-100 text-orange-800 border-orange-300 shadow-orange-200' :
-                            'bg-gray-50 text-gray-600 border-gray-200'
-                    )}>
+                    <div
+                      className={cn(
+                        'flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-black text-xl md:text-2xl shadow-sm border',
+                        ranking.rank === 1
+                          ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-700 border-yellow-200 shadow-yellow-100'
+                          : ranking.rank === 2
+                            ? 'bg-gradient-to-br from-gray-200 to-gray-100 text-gray-700 border-gray-300 shadow-gray-200'
+                            : ranking.rank === 3
+                              ? 'bg-gradient-to-br from-orange-200 to-orange-100 text-orange-800 border-orange-300 shadow-orange-200'
+                              : 'bg-gray-50 text-gray-600 border-gray-200'
+                      )}
+                    >
                       #{ranking.rank}
                     </div>
 
                     {/* College Info */}
                     <div className='flex flex-1 items-center gap-4 md:gap-6 min-w-0'>
-
                       {/* Logo */}
                       <div className='hidden sm:flex flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl border border-gray-50 bg-white p-2.5 items-center justify-center shadow-sm overflow-hidden group-hover:scale-[1.02] transition-transform duration-300'>
                         {college.college_logo ? (
@@ -173,7 +178,10 @@ export default async function CollegeRankingDetailPage({ params }) {
                           <div className='flex items-center text-sm font-medium text-gray-400 mt-2'>
                             <MapPin className='w-4 h-4 mr-1.5 text-[#0A6FA7]/50' />
                             <span>
-                              {college.collegeAddress.city}{college.collegeAddress.state ? `, ${college.collegeAddress.state}` : ''}
+                              {college.collegeAddress.city}
+                              {college.collegeAddress.state
+                                ? `, ${college.collegeAddress.state}`
+                                : ''}
                             </span>
                           </div>
                         )}
@@ -186,12 +194,21 @@ export default async function CollegeRankingDetailPage({ params }) {
                         Explore
                       </span>
                     </div>
-
                   </div>
                 </Link>
               )
             })}
           </div>
+
+          {/* Detailed Content Section */}
+          {rankingGroup.content && (
+            <div className='mt-16 bg-white rounded-3xl p-8 md:p-12 border border-gray-100 shadow-sm'>
+              <div
+                className='prose prose-blue max-w-none prose-headings:font-black prose-headings:text-gray-900 prose-p:text-gray-600 prose-p:leading-relaxed prose-li:text-gray-600 prose-strong:text-gray-900 prose-img:rounded-2xl prose-img:shadow-lg'
+                dangerouslySetInnerHTML={{ __html: rankingGroup.content }}
+              />
+            </div>
+          )}
         </div>
       </main>
 
