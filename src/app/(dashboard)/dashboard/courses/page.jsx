@@ -479,13 +479,10 @@ export default function CourseForm() {
                           <Label htmlFor='credits'>Credits</Label>
                           <Input
                             id='credits'
-                            type='number'
-                            placeholder='e.g., 3.0'
-                            step='0.1'
+                            type='text'
+                            placeholder='e.g., 3.0, 4-5'
                             {...register('credits', {
                               required: false,
-                              valueAsNumber: true,
-                              min: { value: 0, message: 'Credits must be positive' }
                             })}
                             className={errors.credits ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />

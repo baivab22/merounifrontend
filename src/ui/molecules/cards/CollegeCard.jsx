@@ -8,7 +8,6 @@ import { authFetch } from '@/app/utils/authFetch'
 import { useRouter } from '@bprogress/next/app'
 import Link from 'next/link'
 
-
 import Image from 'next/image'
 
 const CollegeCard = ({
@@ -30,10 +29,12 @@ const CollegeCard = ({
   const name = collegeProp?.name ?? nameProp
   const slug = collegeProp?.slugs ?? collegeProp?.slug ?? slugProp
   const collegeId = collegeProp?.id ?? collegeIdProp
-  const collegeImage = 
+  const collegeImage =
     collegeProp?.featured_img ?? collegeProp?.featuredImg ?? collegeImageProp
   const instituteType =
-    collegeProp?.institute_type ?? collegeProp?.instituteType ?? instituteTypeProp
+    collegeProp?.institute_type ??
+    collegeProp?.instituteType ??
+    instituteTypeProp
   const universityName =
     collegeProp?.university?.fullname ??
     collegeProp?.university?.name ??
@@ -42,12 +43,14 @@ const CollegeCard = ({
     locationProp ??
     (collegeProp?.collegeAddress || collegeProp?.address
       ? [
-        collegeProp?.collegeAddress?.city || collegeProp?.address?.city,
-        collegeProp?.collegeAddress?.state || collegeProp?.address?.state,
-        collegeProp?.collegeAddress?.country || collegeProp?.address?.country
-      ]
-        .filter(Boolean)
-        .join(', ')
+          collegeProp?.collegeAddress?.street || collegeProp?.address?.street,
+          collegeProp?.collegeAddress?.city ||
+            collegeProp?.address?.city ||
+            collegeProp?.collegeAddress?.district ||
+            collegeProp?.address?.district
+        ]
+          .filter(Boolean)
+          .join(', ')
       : '')
 
   const isParentControlledWishlist =
@@ -98,14 +101,11 @@ const CollegeCard = ({
     setIsLoading(true)
     try {
       const method = isInWishlist ? 'DELETE' : 'POST'
-      const response = await authFetch(
-        `${process.env.baseUrl}/wishlist`,
-        {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ college_id: collegeId, user_id: user.id })
-        }
-      )
+      const response = await authFetch(`${process.env.baseUrl}/wishlist`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ college_id: collegeId, user_id: user.id })
+      })
       if (!response.ok) throw new Error('Wishlist request failed')
 
       if (isParentControlledWishlist && onWishlistUpdate) {
@@ -119,9 +119,10 @@ const CollegeCard = ({
 
       toast({
         title: 'Success',
-        description: method === 'DELETE'
-          ? 'Successfully removed from wishlist'
-          : 'Successfully added to wishlist'
+        description:
+          method === 'DELETE'
+            ? 'Successfully removed from wishlist'
+            : 'Successfully added to wishlist'
       })
     } catch (err) {
       console.error('Wishlist update error:', err)
@@ -154,7 +155,7 @@ const CollegeCard = ({
           src={collegeImage || '/images/logo.png'}
           alt={name || 'College'}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
           className='object-cover group-hover:scale-105 transition-transform duration-500'
         />
         <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none' />
@@ -167,12 +168,15 @@ const CollegeCard = ({
 
         <div className='absolute top-3 right-3 z-10'>
           {(() => {
-            if (!user) return null;
+            if (!user) return null
             try {
-              const roles = typeof user.role === 'string' ? JSON.parse(user.role) : user.role;
-              if (roles?.admin || roles?.editor) return null;
+              const roles =
+                typeof user.role === 'string'
+                  ? JSON.parse(user.role)
+                  : user.role
+              if (roles?.admin || roles?.editor) return null
             } catch (err) {
-              console.error("Error parsing user roles:", err);
+              console.error('Error parsing user roles:', err)
             }
             return (
               <button
@@ -182,13 +186,12 @@ const CollegeCard = ({
                 className='p-2 bg-white/80 hover:bg-white rounded-full transition-all shadow-sm'
               >
                 <Heart
-                  className={`w-4 h-4 transition-all ${isInWishlist
-                    ? 'fill-red-500 text-red-500'
-                    : 'text-gray-600'
-                    } ${isLoading ? 'opacity-50' : ''}`}
+                  className={`w-4 h-4 transition-all ${
+                    isInWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                  } ${isLoading ? 'opacity-50' : ''}`}
                 />
               </button>
-            );
+            )
           })()}
         </div>
 
@@ -215,7 +218,11 @@ const CollegeCard = ({
         {collegeProp?.degrees?.length > 0 && (
           <div className='flex flex-wrap gap-1.5 mb-4'>
             {collegeProp.degrees.slice(0, 4).map((prog) => {
-              const abbreviation = prog.short_name || prog.shortName || (prog.title.match(/\(([^)]+)\)/)?.[1] || prog.title)
+              const abbreviation =
+                prog.short_name ||
+                prog.shortName ||
+                prog.title.match(/\(([^)]+)\)/)?.[1] ||
+                prog.title
               return (
                 <Link
                   key={prog.id}

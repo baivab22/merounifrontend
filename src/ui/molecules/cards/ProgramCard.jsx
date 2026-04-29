@@ -7,8 +7,11 @@ const ProgramCard = ({ program }) => {
     const slug = program.slugs || program.slug
     const universityNames = program.universities?.map(u => u.short_name || u.fullname).join(', ')
 
+    const universitySlug = program.universities?.[0]?.slugs || program.universities?.[0]?.slug
+    const detailHref = universitySlug ? `/${universitySlug}/programs/${slug}` : `/programs/${slug}`
+
     return (
-        <Link href={`/programs/${slug}`} className='group'>
+        <Link href={detailHref} className='group'>
             <article className='bg-white rounded-xl border border-gray-100 overflow-hidden flex flex-col hover:border-[#0A6FA7]/30 hover:shadow-xl hover:shadow-[#0A6FA7]/5 transition-all duration-300 h-full'>
                 <div className='aspect-[16/9] w-full bg-gray-50 flex items-center justify-center overflow-hidden relative'>
                     <img

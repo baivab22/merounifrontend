@@ -36,13 +36,6 @@ export async function getFeaturedCollege() {
       }
     )
 
-    // console.log(await response.json(),"YOYO");
-    
-
-    // if (!response.ok) {
-    //   throw new Error('Failed to fetch featured colleges')
-    // }
-    
     return await response.json()
   } catch (error) {
     console.log('Error fetching colleges:', error)

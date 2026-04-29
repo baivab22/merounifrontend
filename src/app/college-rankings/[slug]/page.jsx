@@ -16,10 +16,10 @@ export async function generateMetadata({ params }) {
     const rankingGroup = await getRankingsByDegreeSlug(decodedSlug)
 
     if (!rankingGroup?.degree) {
-      return { title: 'Rankings Not Found | MeroUni' }
+      return { title: 'Rankings Not Found' }
     }
 
-    const title = `Top ${rankingGroup.degree.title} Colleges in Nepal | MeroUni`
+    const title = `Top ${rankingGroup.degree.title} Colleges in Nepal`
     const description =
       rankingGroup.description ||
       `Explore the best colleges offering ${rankingGroup.degree.title} in Nepal. Compare rankings, programs, and facilities.`
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }) {
       }
     }
   } catch (error) {
-    return { title: 'College Rankings | MeroUni' }
+    return { title: 'College Rankings' }
   }
 }
 

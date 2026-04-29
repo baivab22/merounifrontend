@@ -27,9 +27,12 @@ const ProgramCard = ({ program }) => {
 
   const universityName = program.university_programs?.[0]?.university?.fullname;
 
+  const universitySlug = program.university_programs?.[0]?.university?.slugs || program.university_programs?.[0]?.university?.slug;
+  const detailHref = universitySlug ? `/${universitySlug}/programs/${program.slugs}` : `/programs/${program.slugs}`;
+
   return (
     <Link
-      href={`/programs/${program.slugs}`}
+      href={detailHref}
       className='group relative h-full p-6 rounded-2xl border border-gray-100 bg-white hover:border-[#30AD8F] hover:shadow-xl transition-all duration-300 block'
     >
       <div className='flex flex-col h-full'>

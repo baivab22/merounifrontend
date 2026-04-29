@@ -2,10 +2,8 @@
 
 const BASE_URL = process.env.baseUrl
 
-export async function getRankingsByDegreeSlug(slug) {
+export async function getAllRankings() {
   try {
-    // We can use the existing ranking endpoint which returns grouped rankings 
-    // and filter by the degree slug.
     const response = await fetch(`${BASE_URL}/college-ranking?limit=100`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -15,8 +13,16 @@ export async function getRankingsByDegreeSlug(slug) {
     if (!response.ok) throw new Error('Failed to fetch rankings')
     
     const data = await response.json()
-    const rankings = data.items || []
-    
+    return data.items || []
+  } catch (error) {
+    console.error('getAllRankings error:', error)
+    return []
+  }
+}
+
+export async function getRankingsByDegreeSlug(slug) {
+  try {
+    const rankings = await getAllRankings()
     // Find the degree group that matches the slug
     const degreeGroup = rankings.find(g => g.degree?.slug === slug)
     return degreeGroup || null

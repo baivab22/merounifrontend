@@ -40,8 +40,8 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
     const [currentSemester, setCurrentSemester] = useState(1)
     const [currentCourse, setCurrentCourse] = useState({ id: '', title: '' })
 
-    // Selected universities state
-    const [selectedUniversities, setSelectedUniversities] = useState([])
+    // Selected university state (restricted to one)
+    const [selectedUniversity, setSelectedUniversity] = useState(null)
 
     // Single-select states for dropdowns
     const [selectedLevel, setSelectedLevel] = useState(null)
@@ -117,7 +117,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
         setEligibilityCriteriaError(false)
         setCurriculum('')
         setCurriculumError(false)
-        setSelectedUniversities([])
+        setSelectedUniversity(null)
         setSelectedLevel(null)
         setSelectedDegrees([])
         setSelectedScholarship(null)
@@ -236,17 +236,15 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
             }
 
 
-            // Universities
+            // University (now restricted to one)
             if (program.universities?.length) {
-                const universityIds = program.universities.map((u) => u.id)
-                setValue('universities', universityIds)
-                setSelectedUniversities(
-                    program.universities.map((u) => ({
-                        id: u.id,
-                        fullname: u.fullname,
-                        slugs: u.slugs
-                    }))
-                )
+                const u = program.universities[0]
+                setValue('universities', [u.id])
+                setSelectedUniversity({
+                    id: u.id,
+                    fullname: u.fullname,
+                    slugs: u.slugs
+                })
             }
             setValue('status', program.status || 'published')
         } catch (error) {
@@ -274,19 +272,15 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
         } catch { return [] }
     }
 
-    const addUniversity = (university) => {
+    const setUniversity = (university) => {
         if (!university) return
-        if (!selectedUniversities.some((u) => u.id === university.id)) {
-            const updated = [...selectedUniversities, university]
-            setSelectedUniversities(updated)
-            setValue('universities', updated.map((u) => u.id))
-        }
+        setSelectedUniversity(university)
+        setValue('universities', [university.id])
     }
 
-    const removeUniversity = (university) => {
-        const updated = selectedUniversities.filter((u) => u.id !== university.id)
-        setSelectedUniversities(updated)
-        setValue('universities', updated.map((u) => u.id))
+    const removeUniversity = () => {
+        setSelectedUniversity(null)
+        setValue('universities', [])
     }
 
     // Generic single-select search helpers
@@ -396,7 +390,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
 
                     exam_id: data.exam_id ? Number(data.exam_id) : undefined,
                     credits: data.credits || undefined,
-                    universities: selectedUniversities.map((u) => u.id),
+                    universities: selectedUniversity ? [selectedUniversity.id] : [],
                     syllabus: data.syllabus.map((item) => ({
                         year: item.year,
                         semester: item.semester,
@@ -763,16 +757,16 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
                                     <h3 className="text-base font-semibold text-slate-800">Associated Universities</h3>
 
                                 </div>
-                                <p className="text-xs text-gray-400">Search and select the universities this program is affiliated with. You can select multiple.</p>
+                                <p className="text-xs text-gray-400">Search and select the university this program is affiliated with.</p>
                                 <SearchSelectCreate
                                     onSearch={onSearchUniversities}
-                                    onSelect={addUniversity}
+                                    onSelect={setUniversity}
                                     onRemove={removeUniversity}
-                                    selectedItems={selectedUniversities}
-                                    placeholder="Search universities…"
+                                    selectedItems={selectedUniversity ? [selectedUniversity] : []}
+                                    placeholder="Search university…"
                                     displayKey="fullname"
                                     valueKey="id"
-                                    isMulti={true}
+                                    isMulti={false}
                                     allowCreate={false}
                                     inputSize="sm"
                                 />

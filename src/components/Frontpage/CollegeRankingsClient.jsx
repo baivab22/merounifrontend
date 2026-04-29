@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, GraduationCap } from 'lucide-react'
+import { ChevronLeft, ChevronRight, GraduationCap, ExternalLink } from 'lucide-react'
 
 const CollegeRankingsClient = ({ rankings = [] }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -49,9 +49,15 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
   return (
     <div className='py-8 md:py-10 bg-white'>
       <div className='mb-6'>
-        <h2 className='text-lg md:text-xl font-bold text-gray-900'>
-          College Rankings
-        </h2>
+        <Link
+          href='/college-rankings'
+          className='group/title inline-flex items-center gap-2'
+        >
+          <h2 className='text-lg md:text-xl font-bold text-gray-900 group-hover/title:text-[#0A6FA7] transition-colors'>
+            College Rankings
+          </h2>
+          <ExternalLink className='w-4 h-4 text-[#0A6FA7] opacity-0 group-hover/title:opacity-100 transition-all transform translate-y-0.5' />
+        </Link>
       </div>
 
       <div className='relative group'>
@@ -59,7 +65,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
           <button
             type='button'
             onClick={() => scroll('left')}
-            className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md border border-gray-200/80 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all opacity-0 group-hover:opacity-100 md:opacity-100'
+            className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md border border-gray-200/80 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all opacity-100'
             aria-label='Scroll left'
           >
             <ChevronLeft className='w-5 h-5' />
@@ -86,7 +92,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                     <div className='p-1.5 rounded-md bg-[#0A6FA7]/10 mt-0.5 shrink-0'>
                       <GraduationCap className='w-4 h-4 text-[#0A6FA7]' />
                     </div>
-                    <h3 className='text-base font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[3rem]'>
+                    <h3 className='text-base font-semibold text-gray-900 leading-snug line-clamp-3 min-h-[4.5rem]'>
                       <span>{degreeGroup.degree.title || 'Degree'}</span>
                       {degreeGroup.degree.short_name ? (
                         <>
@@ -157,7 +163,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
           <button
             type='button'
             onClick={() => scroll('right')}
-            className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md border border-gray-200/80 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all opacity-0 group-hover:opacity-100 md:opacity-100'
+            className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md border border-gray-200/80 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-lg transition-all opacity-100'
             aria-label='Scroll right'
           >
             <ChevronRight className='w-5 h-5' />

@@ -4,7 +4,6 @@ import ProgramSection from './sections/ProgramSection'
 import LevelSection from './sections/LevelSection'
 import MemberSection from './sections/MemberSection'
 import GallerySection from './sections/GallerySection'
-import VideoSection from './sections/VideoSection'
 import GoogleMap from './GoogleMap'
 
 const UniversityOverview = ({ university }) => {
@@ -13,7 +12,6 @@ const UniversityOverview = ({ university }) => {
   const levelsRef = useRef(null)
   const membersRef = useRef(null)
   const galleryRef = useRef(null)
-  const videosRef = useRef(null)
 
   const [activeSection, setActiveSection] = useState(0)
 
@@ -61,15 +59,10 @@ const UniversityOverview = ({ university }) => {
     },
     {
       name: 'Gallery',
-      visible: university?.gallery?.length > 0,
+      visible:
+        university?.gallery?.length > 0 || university?.videos?.length > 0,
       ref: galleryRef,
       component: <GallerySection university={university} />
-    },
-    {
-      name: 'Videos',
-      visible: university?.videos?.length > 0,
-      ref: videosRef,
-      component: <VideoSection university={university} />
     }
   ]
 
@@ -125,7 +118,9 @@ const UniversityOverview = ({ university }) => {
         <aside className='w-full md:w-48 lg:w-56 md:sticky md:top-32 flex-shrink-0'>
           <div className='hidden md:flex items-center gap-2 mb-6'>
             <div className='w-1 h-5 bg-[#0A6FA7] rounded-full' />
-            <p className='text-sm font-medium text-gray-900'>University Details</p>
+            <p className='text-sm font-medium text-gray-900'>
+              University Details
+            </p>
           </div>
 
           <ul className='flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto no-scrollbar pb-4 md:pb-0 border-b md:border-b-0 border-gray-100'>
@@ -191,9 +186,15 @@ const UniversityOverview = ({ university }) => {
                           .filter(Boolean)
                           .join(', ') || '—'}
                       </p>
-                      {(university?.state || university?.postal_code || university?.country) && (
+                      {(university?.state ||
+                        university?.postal_code ||
+                        university?.country) && (
                         <p className='text-xs text-gray-500 mt-1 font-medium'>
-                          {[university?.state, university?.postal_code, university?.country]
+                          {[
+                            university?.state,
+                            university?.postal_code,
+                            university?.country
+                          ]
                             .filter(Boolean)
                             .join(', ')}
                         </p>
@@ -238,9 +239,15 @@ const UniversityOverview = ({ university }) => {
                         .filter(Boolean)
                         .join(', ') || '—'}
                     </p>
-                    {(university?.state || university?.postal_code || university?.country) && (
+                    {(university?.state ||
+                      university?.postal_code ||
+                      university?.country) && (
                       <p className='text-xs text-gray-500 mt-1 font-medium'>
-                        {[university?.state, university?.postal_code, university?.country]
+                        {[
+                          university?.state,
+                          university?.postal_code,
+                          university?.country
+                        ]
                           .filter(Boolean)
                           .join(', ')}
                       </p>

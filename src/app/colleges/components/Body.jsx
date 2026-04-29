@@ -24,7 +24,7 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
       degree_ids: filters.degree_ids || [],
       districts: filters.districts || [],
       university_ids: filters.university_ids || [],
-      types: (filters.types || []).map(t => t.toLowerCase()),
+      types: (filters.types || []).map((t) => t.toLowerCase()),
       institute_level: ['college'],
       q: q || ''
     }
@@ -45,7 +45,15 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
       colleges:
         data.items?.map((college) => ({
           name: college.name,
-          location: [college.collegeAddress?.city || college.address?.city, college.collegeAddress?.district || college.address?.district].filter(Boolean).join(', '),
+          location: [
+            college.collegeAddress?.street || college.address?.street,
+            college.collegeAddress?.city ||
+              college.address?.city ||
+              college.collegeAddress?.district ||
+              college.address?.district
+          ]
+            .filter(Boolean)
+            .join(', '),
           description: college.description,
           googleMapUrl: college.google_map_url,
           instituteType: college.institute_type,
@@ -95,7 +103,15 @@ const searchColleges = async (query) => {
       name: clz.name,
       slug: clz.slugs,
       collegeImage: clz.featured_img,
-      location: [clz.collegeAddress?.city || clz.address?.city, clz.collegeAddress?.district || clz.address?.district].filter(Boolean).join(', '),
+      location: [
+        clz.collegeAddress?.street || clz.address?.street,
+        clz.collegeAddress?.city ||
+          clz.address?.city ||
+          clz.collegeAddress?.district ||
+          clz.address?.district
+      ]
+        .filter(Boolean)
+        .join(', '),
       description: clz.description || 'No description available.',
       logo: clz.college_logo || 'default_logo.png',
       instituteType: clz.institute_type || 'Unknown'
@@ -235,7 +251,6 @@ const FilterSection = React.memo(function FilterSection({
   )
 })
 
-
 const CollegeFinder = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -244,14 +259,30 @@ const CollegeFinder = () => {
   // Derived Values from URL (Single Source of Truth)
   const q = searchParams.get('q') || ''
   const page = parseInt(searchParams.get('page')) || 1
-  const selectedDegreeIds = useMemo(() => searchParams.get('degree_ids')?.split(',').filter(Boolean) || [], [searchParams])
-  const selectedDistricts = useMemo(() => searchParams.get('districts')?.split(',').filter(Boolean) || [], [searchParams])
-  const selectedUniversityIds = useMemo(() => searchParams.get('university_ids')?.split(',').filter(Boolean) || [], [searchParams])
-  const selectedTypes = useMemo(() => searchParams.get('types')?.split(',').filter(Boolean) || [], [searchParams])
+  const selectedDegreeIds = useMemo(
+    () => searchParams.get('degree_ids')?.split(',').filter(Boolean) || [],
+    [searchParams]
+  )
+  const selectedDistricts = useMemo(
+    () => searchParams.get('districts')?.split(',').filter(Boolean) || [],
+    [searchParams]
+  )
+  const selectedUniversityIds = useMemo(
+    () => searchParams.get('university_ids')?.split(',').filter(Boolean) || [],
+    [searchParams]
+  )
+  const selectedTypes = useMemo(
+    () => searchParams.get('types')?.split(',').filter(Boolean) || [],
+    [searchParams]
+  )
 
   // UI States
   const [colleges, setColleges] = useState([])
-  const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1, totalCount: 0 })
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    currentPage: 1,
+    totalCount: 0
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [searchInputValue, setSearchInputValue] = useState(q)
   const [isSearching, setIsSearching] = useState(false)
@@ -272,20 +303,23 @@ const CollegeFinder = () => {
   const [wishlistCollegeIds, setWishlistCollegeIds] = useState(new Set())
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        if (value.length > 0) newParams.set(key, value.join(','))
-        else newParams.delete(key)
-      } else if (value !== undefined && value !== null && value !== '') {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          if (value.length > 0) newParams.set(key, value.join(','))
+          else newParams.delete(key)
+        } else if (value !== undefined && value !== null && value !== '') {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Initial Data for Filters
   useEffect(() => {
@@ -317,13 +351,23 @@ const CollegeFinder = () => {
 
   // Filter Event Handlers
   const handleFilterChange = (type, value) => {
-    const currentParam = type === 'uni' ? 'university_ids' :
-      type === 'degree' ? 'degree_ids' :
-        type === 'type' ? 'types' : 'districts'
+    const currentParam =
+      type === 'uni'
+        ? 'university_ids'
+        : type === 'degree'
+          ? 'degree_ids'
+          : type === 'type'
+            ? 'types'
+            : 'districts'
 
-    const currentValues = type === 'uni' ? selectedUniversityIds :
-      type === 'degree' ? selectedDegreeIds :
-        type === 'type' ? selectedTypes : selectedDistricts
+    const currentValues =
+      type === 'uni'
+        ? selectedUniversityIds
+        : type === 'degree'
+          ? selectedDegreeIds
+          : type === 'type'
+            ? selectedTypes
+            : selectedDistricts
 
     const nextValues = currentValues.includes(String(value))
       ? currentValues.filter((v) => v !== String(value))
@@ -333,17 +377,17 @@ const CollegeFinder = () => {
   }
 
   const handleFilterSearch = async (field, value) => {
-    setFilterSearchInputs(prev => ({ ...prev, [field]: value }))
+    setFilterSearchInputs((prev) => ({ ...prev, [field]: value }))
     if (field === 'degree') {
       setIsDegreesLoading(true)
       const data = await getDegrees(value)
-      setFilteredDegrees(data.map(p => ({ id: p.id, name: p.title })))
+      setFilteredDegrees(data.map((p) => ({ id: p.id, name: p.title })))
       setIsDegreesLoading(false)
     }
     if (field === 'affiliation') {
       setIsAffiliationLoading(true)
       const data = await getUniversity(value)
-      setFilteredAffiliations(data.map(u => ({ id: u.id, name: u.fullname })))
+      setFilteredAffiliations(data.map((u) => ({ id: u.id, name: u.fullname })))
       setIsAffiliationLoading(false)
     }
   }
@@ -374,33 +418,56 @@ const CollegeFinder = () => {
       }
     }
     loadData()
-  }, [page, q, selectedDegreeIds, selectedDistricts, selectedUniversityIds, selectedTypes])
+  }, [
+    page,
+    q,
+    selectedDegreeIds,
+    selectedDistricts,
+    selectedUniversityIds,
+    selectedTypes
+  ])
 
   // Wishlist Logic
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!user?.id) return setWishlistCollegeIds(new Set())
       try {
-        const response = await authFetch(`${process.env.baseUrl}/wishlist?user_id=${user.id}`)
+        const response = await authFetch(
+          `${process.env.baseUrl}/wishlist?user_id=${user.id}`
+        )
         if (response.ok) {
           const data = await response.json()
-          setWishlistCollegeIds(new Set((data.items || []).map((item) => item.college?.id).filter(Boolean)))
+          setWishlistCollegeIds(
+            new Set(
+              (data.items || []).map((item) => item.college?.id).filter(Boolean)
+            )
+          )
         }
-      } catch (error) { }
+      } catch (error) {}
     }
     fetchWishlist()
   }, [user?.id])
 
   // Filter Option Lists
-  const districts = useMemo(() =>
-    DistrictLists.filter(d => d.toLowerCase().includes(filterSearchInputs.district.toLowerCase()))
-      .map(d => ({ id: d, name: d })),
-    [filterSearchInputs.district])
+  const districts = useMemo(
+    () =>
+      DistrictLists.filter((d) =>
+        d.toLowerCase().includes(filterSearchInputs.district.toLowerCase())
+      ).map((d) => ({ id: d, name: d })),
+    [filterSearchInputs.district]
+  )
 
-  const instituteTypes = useMemo(() =>
-    ['Private', 'Public'].filter(t => t.toLowerCase().includes(filterSearchInputs.instituteType.toLowerCase()))
-      .map(t => ({ id: t.toLowerCase(), name: t })),
-    [filterSearchInputs.instituteType])
+  const instituteTypes = useMemo(
+    () =>
+      ['Private', 'Public']
+        .filter((t) =>
+          t
+            .toLowerCase()
+            .includes(filterSearchInputs.instituteType.toLowerCase())
+        )
+        .map((t) => ({ id: t.toLowerCase(), name: t })),
+    [filterSearchInputs.instituteType]
+  )
 
   return (
     <div className='max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 mb-5'>
@@ -408,7 +475,9 @@ const CollegeFinder = () => {
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>
           <div className='flex items-center gap-4 mb-2'>
-            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Colleges</h2>
+            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+              Colleges
+            </h2>
             <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
               {pagination.totalCount || '0'} Results
             </span>
@@ -423,9 +492,17 @@ const CollegeFinder = () => {
               className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
             />
             <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-              {isSearching && <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>}
+              {isSearching && (
+                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+              )}
               {searchInputValue && (
-                <button onClick={() => { setSearchInputValue(''); updateURL({ q: '', page: 1 }) }} className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500'>
+                <button
+                  onClick={() => {
+                    setSearchInputValue('')
+                    updateURL({ q: '', page: 1 })
+                  }}
+                  className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500'
+                >
                   <X className='w-5 h-5' />
                 </button>
               )}
@@ -438,7 +515,9 @@ const CollegeFinder = () => {
         {/* Sidebar Filters */}
         <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
           <div className='flex justify-between items-center mb-[-16px] px-1'>
-            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+              Filters
+            </span>
             <button
               className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider'
               onClick={() => router.push(pathname, { scroll: false })}
@@ -463,7 +542,9 @@ const CollegeFinder = () => {
             selectedValues={selectedDistricts}
             onCheckboxChange={(val) => handleFilterChange('district', val)}
             defaultValue={filterSearchInputs.district}
-            onSearchChange={(f, v) => setFilterSearchInputs(prev => ({ ...prev, district: v }))}
+            onSearchChange={(f, v) =>
+              setFilterSearchInputs((prev) => ({ ...prev, district: v }))
+            }
           />
           <FilterSection
             title='Affiliation'
@@ -482,7 +563,9 @@ const CollegeFinder = () => {
             selectedValues={selectedTypes}
             onCheckboxChange={(val) => handleFilterChange('type', val)}
             defaultValue={filterSearchInputs.instituteType}
-            onSearchChange={(f, v) => setFilterSearchInputs(prev => ({ ...prev, instituteType: v }))}
+            onSearchChange={(f, v) =>
+              setFilterSearchInputs((prev) => ({ ...prev, instituteType: v }))
+            }
           />
         </div>
 
@@ -490,7 +573,9 @@ const CollegeFinder = () => {
         <div className='flex-1'>
           {isLoading ? (
             <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
-              {Array.from({ length: 9 }).map((_, idx) => <UniversityCardShimmer key={idx} />)}
+              {Array.from({ length: 9 }).map((_, idx) => (
+                <UniversityCardShimmer key={idx} />
+              ))}
             </div>
           ) : colleges.length > 0 ? (
             <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
@@ -513,7 +598,10 @@ const CollegeFinder = () => {
               icon={Building2}
               title='No Colleges Found'
               description="We couldn't find any colleges matching your criteria. Try clearing filters."
-              action={{ label: 'Clear All Filters', onClick: () => router.push(pathname, { scroll: false }) }}
+              action={{
+                label: 'Clear All Filters',
+                onClick: () => router.push(pathname, { scroll: false })
+              }}
             />
           )}
 
@@ -526,7 +614,6 @@ const CollegeFinder = () => {
         </div>
       </div>
     </div>
-
   )
 }
 
