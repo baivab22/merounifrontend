@@ -41,7 +41,11 @@ const CollegeCard = ({
     collegeProp?.university?.fullname ??
     collegeProp?.university?.name ??
     universityNameProp
-  const logo = logoProp ?? collegeProp?.college_logo ?? collegeProp?.logo ?? '/images/logo.png'
+  const logo =
+    logoProp ??
+    collegeProp?.college_logo ??
+    collegeProp?.logo ??
+    '/images/logo.png'
   const degrees = degreesProp ?? collegeProp?.degrees ?? []
 
   const location =
@@ -227,12 +231,6 @@ const CollegeCard = ({
             )}
           </div>
         </div>
-
-        {universityName && (
-          <p className='text-[11px] font-medium text-gray-400 line-clamp-1 mb-3 italic px-1'>
-            {universityName}
-          </p>
-        )}
 
         {degrees?.length > 0 && (
           <div className='flex flex-wrap gap-1.5 mb-5'>
