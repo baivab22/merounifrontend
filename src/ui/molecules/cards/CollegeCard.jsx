@@ -48,16 +48,11 @@ const CollegeCard = ({
     '/images/logo.png'
   const degrees = degreesProp ?? collegeProp?.degrees ?? []
 
+  const addressObj = collegeProp?.collegeAddress || collegeProp?.address
   const location =
     locationProp ??
-    (collegeProp?.collegeAddress || collegeProp?.address
-      ? [
-          collegeProp?.collegeAddress?.street || collegeProp?.address?.street,
-          collegeProp?.collegeAddress?.city ||
-            collegeProp?.address?.city ||
-            collegeProp?.collegeAddress?.district ||
-            collegeProp?.address?.district
-        ]
+    (addressObj
+      ? [addressObj.street || addressObj.city, addressObj.district]
           .filter(Boolean)
           .join(', ')
       : '')
