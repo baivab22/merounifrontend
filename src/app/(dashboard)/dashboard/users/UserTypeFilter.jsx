@@ -7,6 +7,7 @@ const ROLES = [
   { id: 'editor', label: 'Editor' },
   { id: 'agent', label: 'Partner (Agent)' },
   { id: 'institution', label: 'Institution' },
+  { id: 'consultancy', label: 'Consultancy' },
   { id: 'student', label: 'Student' }
 ]
 
@@ -72,7 +73,7 @@ export default function UserTypeFilter({ selectedTypes, onChange }) {
                 </button>
               )}
             </div>
-            
+
             <div className='space-y-1 max-h-60 overflow-y-auto'>
               {ROLES.map((role) => {
                 const isSelected = selectedTypes.includes(role.id)
@@ -82,14 +83,18 @@ export default function UserTypeFilter({ selectedTypes, onChange }) {
                     type='button'
                     onClick={() => toggleRole(role.id)}
                     className={`flex items-center w-full px-2 py-2 text-sm rounded-md transition-colors ${
-                      isSelected ? 'bg-[#387cae]/5 text-[#387cae]' : 'text-gray-700 hover:bg-gray-50'
+                      isSelected
+                        ? 'bg-[#387cae]/5 text-[#387cae]'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <div className={`mr-3 flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
-                      isSelected 
-                        ? 'bg-[#387cae] border-[#387cae]' 
-                        : 'border-gray-300 bg-white'
-                    }`}>
+                    <div
+                      className={`mr-3 flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+                        isSelected
+                          ? 'bg-[#387cae] border-[#387cae]'
+                          : 'border-gray-300 bg-white'
+                      }`}
+                    >
                       {isSelected && <Check className='h-3 w-3 text-white' />}
                     </div>
                     <span>{role.label}</span>

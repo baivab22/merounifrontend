@@ -41,8 +41,7 @@ const EMPTY_FORM = {
     student: true,
     editor: false,
     admin: false,
-    agent: false,
-    institution: false
+    agent: false
   }
 }
 
@@ -81,7 +80,10 @@ export default function UsersManager() {
   useEffect(() => {
     const roleParam = searchParams.get('role')
     if (roleParam) {
-      const roles = roleParam.split(',').map((r) => r.trim()).filter(Boolean)
+      const roles = roleParam
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean)
       if (roles.length > 0) setSelectedUserTypes(roles)
     }
   }, [searchParams])
@@ -139,7 +141,10 @@ export default function UsersManager() {
   }
 
   const handleSearch = async (query) => {
-    if (!query) { loadUsers(); return }
+    if (!query) {
+      loadUsers()
+      return
+    }
     try {
       const token = localStorage.getItem('access_token')
       let url = `${process.env.baseUrl}/users?q=${query}`
@@ -206,9 +211,18 @@ export default function UsersManager() {
 
       const rolesObject = formData.roles || {}
       let rolesString = 'student'
-      const roleMap = { admin: 'admin', editor: 'editor', agent: 'agent', student: 'student', institution: 'institution' }
+      const roleMap = {
+        admin: 'admin',
+        editor: 'editor',
+        agent: 'agent',
+        student: 'student',
+        institution: 'institution'
+      }
       for (const [key, value] of Object.entries(rolesObject)) {
-        if (value === true && roleMap[key]) { rolesString = roleMap[key]; break }
+        if (value === true && roleMap[key]) {
+          rolesString = roleMap[key]
+          break
+        }
       }
 
       const submitData = { ...formData, email: fullEmail, roles: rolesString }
@@ -235,12 +249,19 @@ export default function UsersManager() {
       }
 
       handleCloseForm()
-      try { await loadUsers() } catch (err) { console.error(err) }
+      try {
+        await loadUsers()
+      } catch (err) {
+        console.error(err)
+      }
     } catch (err) {
-      setFormError(err.message || `Failed to ${editingId ? 'update' : 'create'} user`)
+      setFormError(
+        err.message || `Failed to ${editingId ? 'update' : 'create'} user`
+      )
       toast({
         title: 'Error',
-        description: err.message || `Failed to ${editingId ? 'update' : 'create'} user`,
+        description:
+          err.message || `Failed to ${editingId ? 'update' : 'create'} user`,
         variant: 'destructive'
       })
     } finally {
@@ -251,7 +272,8 @@ export default function UsersManager() {
   const handleEdit = (user) => {
     let parsedRoles = {}
     try {
-      parsedRoles = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles
+      parsedRoles =
+        typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles
     } catch (e) {
       console.error('Failed to parse roles:', e)
     }
@@ -262,7 +284,9 @@ export default function UsersManager() {
       emailUsername = user.email.replace('@merouni.com', '')
     } else if (user.email) {
       emailUsername = user.email.split('@')[0] || ''
-      emailDomain = user.email.includes('@') ? `@${user.email.split('@')[1]}` : '@merouni.com'
+      emailDomain = user.email.includes('@')
+        ? `@${user.email.split('@')[1]}`
+        : '@merouni.com'
     }
 
     setFormData({
@@ -319,8 +343,7 @@ export default function UsersManager() {
         student: selectedRole === 'student',
         editor: selectedRole === 'editor',
         admin: selectedRole === 'admin',
-        agent: selectedRole === 'agent',
-        institution: selectedRole === 'institution'
+        agent: selectedRole === 'agent'
       }
     })
   }
@@ -335,14 +358,17 @@ export default function UsersManager() {
   }
 
   const columns = useMemo(
-    () => createColumns({ handleEdit, handleDelete: handleDeleteClick, handleView }),
+    () =>
+      createColumns({
+        handleEdit,
+        handleDelete: handleDeleteClick,
+        handleView
+      }),
     []
   )
 
   return (
     <div className='w-full'>
-
-
       {/* Sticky Header */}
       <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
@@ -374,6 +400,15 @@ export default function UsersManager() {
             </Button>
           </div>
         </div>
+
+        {/* Informational Note */}
+        <div className='mt-3 flex items-center gap-2 px-1'>
+          <div className='w-1 h-1 rounded-full bg-[#387cae]' />
+          <p className='text-[11px] font-medium text-slate-500 italic'>
+            Note: Manage School/College and consultancy edits from their own
+            respective pages.
+          </p>
+        </div>
       </div>
 
       {/* Table */}
@@ -401,17 +436,20 @@ export default function UsersManager() {
 
           <div className='flex-1 overflow-y-auto p-6'>
             <form id='user-form' onSubmit={handleSubmit} className='space-y-8'>
-
               {/* Personal Details */}
               <section className='space-y-5'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>Personal Details</h3>
+                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                  Personal Details
+                </h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
                   <div className='space-y-1.5'>
                     <Label required>First Name</Label>
                     <Input
                       placeholder='First Name'
                       value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, firstName: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -420,7 +458,9 @@ export default function UsersManager() {
                     <Input
                       placeholder='Last Name'
                       value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lastName: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -432,7 +472,9 @@ export default function UsersManager() {
                     type='tel'
                     placeholder='e.g. 9800000000'
                     value={formData.phoneNo}
-                    onChange={(e) => setFormData({ ...formData, phoneNo: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phoneNo: e.target.value })
+                    }
                     required
                     maxLength={10}
                   />
@@ -441,7 +483,9 @@ export default function UsersManager() {
 
               {/* Account Details */}
               <section className='space-y-5'>
-                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>Account Details</h3>
+                <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                  Account Details
+                </h3>
 
                 <div className='space-y-1.5'>
                   <Label required>Email</Label>
@@ -450,7 +494,12 @@ export default function UsersManager() {
                       type='text'
                       placeholder='username'
                       value={formData.emailUsername}
-                      onChange={(e) => setFormData({ ...formData, emailUsername: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          emailUsername: e.target.value
+                        })
+                      }
                       required
                       className='flex-1'
                     />
@@ -464,15 +513,23 @@ export default function UsersManager() {
                   <Label required={!editingId}>
                     Password{' '}
                     {editingId && (
-                      <span className='text-gray-400 text-xs font-normal'>(leave blank to keep current)</span>
+                      <span className='text-gray-400 text-xs font-normal'>
+                        (leave blank to keep current)
+                      </span>
                     )}
                   </Label>
                   <div className='relative'>
                     <Input
                       type={showPasswordValue ? 'text' : 'password'}
-                      placeholder={editingId ? 'Leave blank to keep current password' : 'Enter password'}
+                      placeholder={
+                        editingId
+                          ? 'Leave blank to keep current password'
+                          : 'Enter password'
+                      }
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
                       required={!editingId}
                       className='pr-10'
                     />
@@ -481,7 +538,11 @@ export default function UsersManager() {
                       className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors'
                       onClick={() => setShowPasswordValue((prev) => !prev)}
                     >
-                      {showPasswordValue ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
+                      {showPasswordValue ? (
+                        <EyeOff className='w-4 h-4' />
+                      ) : (
+                        <Eye className='w-4 h-4' />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -498,7 +559,6 @@ export default function UsersManager() {
                     <option value='editor'>Editor</option>
                     <option value='admin'>Admin</option>
                     <option value='agent'>Partner (Agent)</option>
-                    <option value='institution'>Institution</option>
                   </select>
                 </div>
 
@@ -513,7 +573,12 @@ export default function UsersManager() {
 
           {/* Sticky Footer */}
           <div className='sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3 shrink-0'>
-            <Button type='button' variant='outline' onClick={handleCloseForm} disabled={isSubmitting}>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={handleCloseForm}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button
@@ -527,7 +592,11 @@ export default function UsersManager() {
                   <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white' />
                   Processing...
                 </span>
-              ) : editingId ? 'Update User' : 'Create User'}
+              ) : editingId ? (
+                'Update User'
+              ) : (
+                'Create User'
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -536,7 +605,10 @@ export default function UsersManager() {
       {/* Delete Confirmation */}
       <ConfirmationDialog
         open={isDeleteDialogOpen}
-        onClose={() => { setIsDeleteDialogOpen(false); setDeleteId(null) }}
+        onClose={() => {
+          setIsDeleteDialogOpen(false)
+          setDeleteId(null)
+        }}
         onConfirm={handleDeleteConfirm}
         title='Confirm Deletion'
         message='Are you sure you want to delete this user? This action cannot be undone.'
@@ -556,7 +628,10 @@ export default function UsersManager() {
       {/* Student Details View Modal */}
       <StudentDetailsModal
         isOpen={isViewModalOpen}
-        onClose={() => { setIsViewModalOpen(false); setViewingStudent(null) }}
+        onClose={() => {
+          setIsViewModalOpen(false)
+          setViewingStudent(null)
+        }}
         student={viewingStudent}
       />
     </div>

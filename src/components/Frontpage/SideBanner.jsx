@@ -7,10 +7,12 @@ const isExpired = (banner) => {
 
 const SideBanner = ({ banners = [] }) => {
   // Get banners for positions 4,5,6,7
-  const displayBanners = [4, 5, 6, 7].map((position) => {
-    const banner = banners.find((b) => b.display_position === position)
-    return (!banner || isExpired(banner)) ? null : banner
-  }).filter(Boolean)
+  const displayBanners = [4, 5, 6, 7]
+    .map((position) => {
+      const banner = banners.find((b) => b.display_position === position)
+      return !banner || isExpired(banner) ? null : banner
+    })
+    .filter(Boolean)
 
   if (displayBanners.length === 0) return null
 
@@ -22,7 +24,7 @@ const SideBanner = ({ banners = [] }) => {
           target='_blank'
           rel='noopener noreferrer'
           key={banner.id}
-          className='group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full h-[148px] mx-auto'
+          className='group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full aspect-video md:h-[148px] mx-auto'
         >
           <Image
             src={banner.banner_image || '/images/meroUniLarge.gif'}
@@ -30,7 +32,7 @@ const SideBanner = ({ banners = [] }) => {
             fill
             unoptimized
             sizes='(max-width: 768px) 50vw, 25vw'
-            className='object-contain object-center'
+            className='object-cover object-center'
           />
           <div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-300' />
         </a>

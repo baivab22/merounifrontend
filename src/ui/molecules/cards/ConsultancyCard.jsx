@@ -79,22 +79,23 @@ const ConsultancyCard = ({ consultancy }) => {
     setIsLoading(true)
     try {
       const method = isInWishlist ? 'DELETE' : 'POST'
-      const response = await authFetch(
-        `${process.env.baseUrl}/wishlist`,
-        {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ consultancy_id: consultancyId, user_id: user.id })
-        }
-      )
+      const response = await authFetch(`${process.env.baseUrl}/wishlist`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consultancy_id: consultancyId,
+          user_id: user.id
+        })
+      })
       if (!response.ok) throw new Error('Wishlist request failed')
 
       setIsInWishlist(!isInWishlist)
       toast({
         title: 'Success',
-        description: method === 'DELETE'
-          ? 'Successfully removed from wishlist'
-          : 'Successfully added to wishlist'
+        description:
+          method === 'DELETE'
+            ? 'Successfully removed from wishlist'
+            : 'Successfully added to wishlist'
       })
     } catch (err) {
       console.error('Wishlist update error:', err)
@@ -128,12 +129,15 @@ const ConsultancyCard = ({ consultancy }) => {
           {/* Wishlist Button */}
           <div className='absolute top-3 right-3 z-10'>
             {(() => {
-              if (!user) return null;
+              if (!user) return null
               try {
-                const roles = typeof user.role === 'string' ? JSON.parse(user.role) : user.role;
-                if (roles?.admin || roles?.editor) return null;
+                const roles =
+                  typeof user.role === 'string'
+                    ? JSON.parse(user.role)
+                    : user.role
+                if (roles?.admin || roles?.editor) return null
               } catch (err) {
-                console.error("Error parsing user roles:", err);
+                console.error('Error parsing user roles:', err)
               }
               return (
                 <button
@@ -146,13 +150,14 @@ const ConsultancyCard = ({ consultancy }) => {
                   className='p-2 bg-white/80 hover:bg-white rounded-full transition-all shadow-sm'
                 >
                   <Heart
-                    className={`w-4 h-4 transition-all ${isInWishlist
-                      ? 'fill-red-500 text-red-500'
-                      : 'text-gray-600'
-                      } ${isLoading ? 'opacity-50' : ''}`}
+                    className={`w-4 h-4 transition-all ${
+                      isInWishlist
+                        ? 'fill-red-500 text-red-500'
+                        : 'text-gray-600'
+                    } ${isLoading ? 'opacity-50' : ''}`}
                   />
                 </button>
-              );
+              )
             })()}
           </div>
 
@@ -165,26 +170,28 @@ const ConsultancyCard = ({ consultancy }) => {
 
         {/* Content */}
         <div className='p-5 flex flex-col flex-1 min-w-0'>
-          <div className='flex items-start gap-3 mb-3'>
+          <div className='flex items-start gap-3 mb-4'>
             {logo && (
               <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden'>
                 <Image src={logo} alt='' fill className='object-contain p-1' />
               </div>
             )}
-            <h2 className='text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A6FA7] transition-colors flex-1 min-w-0'>
-              {consultancy?.title || 'Consultancy'}
-            </h2>
+            <div className='flex-1 min-w-0'>
+              <h2 className='text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A6FA7] transition-colors mb-1'>
+                {consultancy?.title || 'Consultancy'}
+              </h2>
+              {locationText && (
+                <div className='flex items-center gap-1.5 text-sm text-gray-500 min-w-0'>
+                  <MapPin className='w-3.5 h-3.5 flex-shrink-0 text-[#0A6FA7]' />
+                  <span className='truncate'>{locationText}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {description && (
-            <p className='text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed'>
-              {description}
-            </p>
-          )}
-
-          <div className='mt-auto space-y-3 pt-4 border-t border-gray-100'>
+          <div className='mt-auto pt-4'>
             {destinations.length > 0 && (
-              <div className='flex flex-wrap gap-1.5'>
+              <div className='pt-4 border-t border-gray-100 flex flex-wrap gap-1.5'>
                 {destinations.slice(0, 3).map((d, i) => (
                   <span
                     key={i}
@@ -198,12 +205,6 @@ const ConsultancyCard = ({ consultancy }) => {
                     +{destinations.length - 3}
                   </span>
                 )}
-              </div>
-            )}
-            {locationText && (
-              <div className='flex items-center gap-1.5 text-sm text-gray-600 min-w-0'>
-                <MapPin className='w-4 h-4 flex-shrink-0 text-[#0A6FA7]' />
-                <span className='truncate'>{locationText}</span>
               </div>
             )}
           </div>

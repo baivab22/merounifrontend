@@ -20,7 +20,7 @@ import {
 } from './actions'
 import ScholarshipFormModal from './components/ScholarshipFormModal'
 import ScholarshipViewModal from './ScholarshipViewModal'
-import CircularLoader from '@/ui/molecules/CircularLoader'
+import Loading from '@/ui/molecules/Loading'
 
 export default function ScholarshipManager() {
   const { toast } = useToast()
@@ -62,7 +62,11 @@ export default function ScholarshipManager() {
     }
   }, [searchParams, router])
 
-  const loadScholarships = async (page = 1, query = searchQuery, status = statusFilter) => {
+  const loadScholarships = async (
+    page = 1,
+    query = searchQuery,
+    status = statusFilter
+  ) => {
     setTableLoading(true)
     try {
       let url = `${process.env.baseUrl}/scholarship?page=${page}`
@@ -73,11 +77,15 @@ export default function ScholarshipManager() {
       const response = await res.json()
 
       const items = response.scholarships || response.items || []
-      setScholarships(items.map(s => ({
-        ...s,
-        categoryId: s.scholarshipCategory?.id,
-        applicationDeadline: s.applicationDeadline ? new Date(s.applicationDeadline) : null
-      })))
+      setScholarships(
+        items.map((s) => ({
+          ...s,
+          categoryId: s.scholarshipCategory?.id,
+          applicationDeadline: s.applicationDeadline
+            ? new Date(s.applicationDeadline)
+            : null
+        }))
+      )
 
       setPagination({
         currentPage: response.pagination?.currentPage || 1,
@@ -126,10 +134,16 @@ export default function ScholarshipManager() {
       setTableLoading(true)
       if (editingId) {
         await updateScholarship(editingId, payload)
-        toast({ title: 'Success', description: 'Scholarship updated successfully' })
+        toast({
+          title: 'Success',
+          description: 'Scholarship updated successfully'
+        })
       } else {
         await createScholarship(payload)
-        toast({ title: 'Success', description: 'Scholarship created successfully' })
+        toast({
+          title: 'Success',
+          description: 'Scholarship created successfully'
+        })
       }
       handleModalClose()
       loadScholarships(pagination.currentPage)
@@ -153,10 +167,17 @@ export default function ScholarshipManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteScholarship(deleteId)
-      toast({ title: 'Success', description: 'Scholarship deleted successfully' })
+      toast({
+        title: 'Success',
+        description: 'Scholarship deleted successfully'
+      })
       loadScholarships(pagination.currentPage)
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to delete scholarship', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description: 'Failed to delete scholarship',
+        variant: 'destructive'
+      })
     } finally {
       setIsDialogOpen(false)
       setDeleteId(null)
@@ -171,96 +192,106 @@ export default function ScholarshipManager() {
       const data = await getScholarshipApplications(scholarshipId)
       setApplicationsData(data.applications || [])
     } catch (err) {
-      toast({ title: 'Error', description: 'Failed to load applications', variant: 'destructive' })
+      toast({
+        title: 'Error',
+        description: 'Failed to load applications',
+        variant: 'destructive'
+      })
     } finally {
       setApplicationsLoading(false)
     }
   }
 
-  const columns = useMemo(() => [
-    {
-      header: 'Scholarship',
-      accessorKey: 'name',
-      cell: ({ row }) => (
-        <div className="flex flex-col gap-1.5 py-1">
-          <div className="font-semibold text-gray-900 leading-none">{row.original.name}</div>
-          {row.original.scholarshipCategory?.title && (
-            <span className='w-fit px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-tight border border-purple-100/50'>
-              {row.original.scholarshipCategory.title}
+  const columns = useMemo(
+    () => [
+      {
+        header: 'Scholarship',
+        accessorKey: 'name',
+        cell: ({ row }) => (
+          <div className='flex flex-col gap-1.5 py-1'>
+            <div className='font-semibold text-gray-900 leading-none'>
+              {row.original.name}
+            </div>
+            {row.original.scholarshipCategory?.title && (
+              <span className='w-fit px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-tight border border-purple-100/50'>
+                {row.original.scholarshipCategory.title}
+              </span>
+            )}
+          </div>
+        )
+      },
+      {
+        header: 'Status',
+        accessorKey: 'status',
+        cell: ({ row }) => {
+          const isPublished = row.original.status === 'published'
+          return (
+            <span
+              className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                isPublished
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+              }`}
+            >
+              {row.original.status || 'published'}
             </span>
-          )}
-        </div>
-      )
-    },
-    {
-      header: 'Status',
-      accessorKey: 'status',
-      cell: ({ row }) => {
-        const isPublished = row.original.status === 'published'
-        return (
-          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isPublished
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-            : 'bg-amber-50 text-amber-700 border border-amber-100'
-            }`}>
-            {row.original.status || 'published'}
-          </span>
+          )
+        }
+      },
+      {
+        header: 'Deadline',
+        accessorKey: 'applicationDeadline',
+        cell: ({ row }) =>
+          row.original.applicationDeadline
+            ? formatDate(row.original.applicationDeadline)
+            : 'N/A'
+      },
+      {
+        header: 'Actions',
+        id: 'actions',
+        cell: ({ row }) => (
+          <div className='flex gap-1'>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => {
+                setViewData(row.original)
+                setIsViewOpen(true)
+              }}
+              className='hover:bg-blue-50 text-blue-600'
+            >
+              <Eye className='w-4 h-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => handleViewApplications(row.original.id)}
+              className='hover:bg-purple-50 text-purple-600'
+            >
+              <Users className='w-4 h-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => handleEdit(row.original)}
+              className='hover:bg-amber-50 text-amber-600'
+            >
+              <Edit2 className='w-4 h-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => handleDeleteClick(row.original.id)}
+              className='hover:bg-red-50 text-red-600'
+            >
+              <Trash2 className='w-4 h-4' />
+            </Button>
+          </div>
         )
       }
-    },
-    {
-      header: 'Amount',
-      accessorKey: 'amount',
-      cell: ({ row }) => <div className="text-gray-600 font-medium">{row.original.amount || 'N/A'}</div>
-    },
-    {
-      header: 'Deadline',
-      accessorKey: 'applicationDeadline',
-      cell: ({ row }) => row.original.applicationDeadline ? formatDate(row.original.applicationDeadline) : 'N/A'
-    },
-    {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className='flex gap-1'>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setViewData(row.original)
-              setIsViewOpen(true)
-            }}
-            className='hover:bg-blue-50 text-blue-600'
-          >
-            <Eye className='w-4 h-4' />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleViewApplications(row.original.id)}
-            className='hover:bg-purple-50 text-purple-600'
-          >
-            <Users className='w-4 h-4' />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(row.original)}
-            className='hover:bg-amber-50 text-amber-600'
-          >
-            <Edit2 className='w-4 h-4' />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDeleteClick(row.original.id)}
-            className='hover:bg-red-50 text-red-600'
-          >
-            <Trash2 className='w-4 h-4' />
-          </Button>
-        </div>
-      )
-    }
-  ], [])
+    ],
+    []
+  )
 
   return (
     <div className='w-full'>
@@ -278,25 +309,30 @@ export default function ScholarshipManager() {
               onChange={(e) => handleStatusChange(e.target.value)}
               className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#387cae] transition-all font-medium text-gray-700'
             >
-              <option value="all">All Status</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
+              <option value='all'>All Status</option>
+              <option value='published'>Published</option>
+              <option value='draft'>Draft</option>
             </select>
           </div>
         </div>
-        <Button onClick={handleAdd} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-sm shrink-0 w-full sm:w-auto transition-all active:scale-95">
-          <Plus className="w-4 h-4" />
+        <Button
+          onClick={handleAdd}
+          className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-sm shrink-0 w-full sm:w-auto transition-all active:scale-95'
+        >
+          <Plus className='w-4 h-4' />
           Add Scholarship
         </Button>
       </div>
 
-      <div className="bg-white rounded-md shadow-sm border overflow-hidden">
+      <div className='bg-white rounded-md shadow-sm border overflow-hidden'>
         <Table
           loading={tableLoading}
           data={scholarships}
           columns={columns}
           pagination={pagination}
-          onPageChange={(page) => loadScholarships(page, searchQuery, statusFilter)}
+          onPageChange={(page) =>
+            loadScholarships(page, searchQuery, statusFilter)
+          }
           showSearch={false}
         />
       </div>
@@ -305,7 +341,7 @@ export default function ScholarshipManager() {
         isOpen={isOpen}
         onClose={handleModalClose}
         editingId={editingId}
-        initialData={scholarships.find(s => s.id === editingId)}
+        initialData={scholarships.find((s) => s.id === editingId)}
         onSave={onSubmit}
         submitting={tableLoading}
         author_id={author_id}
@@ -322,23 +358,34 @@ export default function ScholarshipManager() {
         open={isApplicationsOpen}
         onClose={() => setIsApplicationsOpen(false)}
         hideCancel={true}
-        title="Scholarship Applications"
+        title='Scholarship Applications'
         message={
           <div className='max-h-[60vh] overflow-y-auto mt-4'>
             {applicationsLoading ? (
-              <div className='flex justify-center p-8'><CircularLoader size='w-8 h-8' /></div>
+              <Loading fullPage={false} />
             ) : applicationsData.length === 0 ? (
-              <p className='text-center py-8 text-gray-400'>No applications found</p>
+              <p className='text-center py-8 text-gray-400'>
+                No applications found
+              </p>
             ) : (
               <div className='space-y-4'>
-                {applicationsData.map(app => (
-                  <div key={app.id} className='bg-gray-50 p-4 rounded-lg border text-left'>
+                {applicationsData.map((app) => (
+                  <div
+                    key={app.id}
+                    className='bg-gray-50 p-4 rounded-lg border text-left'
+                  >
                     <div className='flex justify-between items-start'>
                       <div>
-                        <p className='font-bold text-gray-900'>{app.student?.firstName} {app.student?.lastName}</p>
-                        <p className='text-xs text-gray-500'>{app.student?.email}</p>
+                        <p className='font-bold text-gray-900'>
+                          {app.student?.firstName} {app.student?.lastName}
+                        </p>
+                        <p className='text-xs text-gray-500'>
+                          {app.student?.email}
+                        </p>
                       </div>
-                      <span className='text-[10px] font-bold uppercase px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full'>{app.status}</span>
+                      <span className='text-[10px] font-bold uppercase px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full'>
+                        {app.status}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -358,4 +405,3 @@ export default function ScholarshipManager() {
     </div>
   )
 }
-

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import OverviewSection from './sections/OverviewSection'
 import ProgramSection from './sections/ProgramSection'
 import LevelSection from './sections/LevelSection'
@@ -112,35 +113,47 @@ const UniversityOverview = ({ university }) => {
   }, [visibleSections])
 
   return (
-    <section className='px-4 sm:px-8 md:px-12 lg:px-24 mb-20 flex flex-col md:flex-row gap-8 lg:gap-16 w-full items-start'>
+    <section className='px-4 sm:px-8 md:px-12 lg:px-24 mb-32 flex flex-col md:flex-row gap-8 lg:gap-16 w-full items-start'>
       {/* Sidebar Navigation */}
       {visibleSections.length > 0 && (
         <aside className='w-full md:w-48 lg:w-56 md:sticky md:top-32 flex-shrink-0'>
-          <div className='hidden md:flex items-center gap-2 mb-6'>
-            <div className='w-1 h-5 bg-[#0A6FA7] rounded-full' />
-            <p className='text-sm font-medium text-gray-900'>
-              University Details
-            </p>
+          <div className='hidden md:flex items-center gap-3 mb-8 px-1'>
+            <div className='w-1.5 h-6 bg-gradient-to-b from-[#0A6FA7] to-[#30AD8F] rounded-full' />
+            <p className='text-xs font-bold uppercase tracking-widest text-gray-400'>Contents</p>
           </div>
 
-          <ul className='flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto no-scrollbar pb-4 md:pb-0 border-b md:border-b-0 border-gray-100'>
+          <ul className='hidden md:flex md:flex-col gap-1 md:overflow-y-auto no-scrollbar md:pb-0'>
+            {visibleSections?.map((section, index) => (
+              <motion.li
+                key={index}
+                whileHover={{ x: 4 }}
+                onClick={() => handleScroll(index)}
+                className={`text-sm font-bold cursor-pointer whitespace-nowrap px-4 py-2.5 md:px-2 transition-all relative flex items-center gap-3 ${activeSection === index
+                    ? 'text-[#0A6FA7]'
+                    : 'text-gray-400 hover:text-gray-900'
+                  }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                  activeSection === index ? 'bg-[#0A6FA7] scale-125 shadow-[0_0_8px_rgba(10,111,167,0.5)]' : 'bg-transparent scale-0'
+                }`} />
+                {section.name}
+              </motion.li>
+            ))}
+          </ul>
+
+          {/* Mobile Navigation Pills */}
+          <ul className='flex flex-row md:hidden gap-2 overflow-x-auto no-scrollbar pb-4 border-b border-gray-100'>
             {visibleSections?.map((section, index) => (
               <li
                 key={index}
                 onClick={() => handleScroll(index)}
-                className={`text-sm font-medium cursor-pointer whitespace-nowrap px-4 py-2 md:px-0 md:py-2.5 transition-all relative group ${
+                className={`text-xs font-bold cursor-pointer whitespace-nowrap px-4 py-2 rounded-full transition-all ${
                   activeSection === index
-                    ? 'text-[#0A6FA7]'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'bg-[#0A6FA7] text-white'
+                    : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {section.name}
-                {activeSection === index && (
-                  <span className='absolute bottom-0 left-4 right-4 h-0.5 bg-[#0A6FA7] md:hidden'></span>
-                )}
-                {activeSection === index && (
-                  <span className='absolute left-[-12px] top-1/2 -translate-y-1/2 w-1 h-4 bg-[#0A6FA7] rounded-full hidden md:block'></span>
-                )}
               </li>
             ))}
           </ul>
@@ -148,93 +161,55 @@ const UniversityOverview = ({ university }) => {
       )}
 
       {/* Main Content */}
-      <div className='flex-1 w-full space-y-16 md:space-y-24'>
-        {visibleSections?.map((section, index) => (
-          <div key={index} className='scroll-mt-32' ref={section.ref}>
-            {section.component}
-          </div>
-        ))}
+      <div className='flex-1 w-full space-y-24 md:space-y-32'>
+        <AnimatePresence mode='wait'>
+          {visibleSections?.map((section, index) => (
+            <motion.div
+              key={index}
+              id={section.name.toLowerCase()}
+              className='scroll-mt-32'
+              ref={section.ref}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
+            >
+              {section.component}
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
         {/* Mobile/Tablet Map & Address */}
         {(hasMap || hasAddress) && (
-          <div className='xl:hidden w-full pt-4'>
-            <div className='bg-gray-50/30 rounded-3xl p-6 border border-gray-100/50'>
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className='xl:hidden w-full pt-8'
+          >
+            <div className='bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl shadow-gray-200/50'>
               {hasMap && (
-                <div className='mb-6'>
-                  <p className='text-sm font-medium text-gray-900 mb-4 flex items-center gap-2'>
-                    <span className='w-1 h-4 bg-[#30AD8F] rounded-full' />
+                <div className='mb-10'>
+                  <p className='text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-3'>
+                    <span className='w-1.5 h-4 bg-[#30AD8F] rounded-full' />
                     Location Map
                   </p>
-                  <div className='w-full h-44 rounded-2xl overflow-hidden border border-white bg-white'>
+                  <div className='w-full h-56 rounded-3xl overflow-hidden border border-gray-100 shadow-inner bg-gray-50'>
                     <GoogleMap mapUrl={university.map} />
                   </div>
                 </div>
               )}
               {hasAddress && (
                 <div>
-                  <p className='text-sm font-medium text-gray-900 mb-4 flex items-center gap-2'>
-                    <span className='w-1 h-4 bg-[#0A6FA7] rounded-full' />
-                    University Address
+                  <p className='text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-3'>
+                    <span className='w-1.5 h-4 bg-[#0A6FA7] rounded-full' />
+                    Office Address
                   </p>
-                  <div className='space-y-3'>
-                    <div className='bg-white/80 p-4 rounded-2xl border border-gray-100'>
-                      <p className='text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1'>
-                        Street & City
-                      </p>
-                      <p className='text-sm text-gray-700 leading-snug font-medium'>
-                        {[university?.street, university?.city]
-                          .filter(Boolean)
-                          .join(', ') || '—'}
-                      </p>
-                      {(university?.state ||
-                        university?.postal_code ||
-                        university?.country) && (
-                        <p className='text-xs text-gray-500 mt-1 font-medium'>
-                          {[
-                            university?.state,
-                            university?.postal_code,
-                            university?.country
-                          ]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Map & Address Sidebar */}
-      {(hasMap || hasAddress) && (
-        <aside className='w-full md:w-64 lg:w-72 md:sticky md:top-32 flex-shrink-0 hidden xl:block'>
-          <div className='bg-gray-50/30 rounded-3xl p-6 border border-gray-100/50 shadow-sm'>
-            {hasMap && (
-              <div className='mb-8'>
-                <p className='text-sm font-medium text-gray-900 mb-4 flex items-center gap-2'>
-                  <span className='w-1 h-4 bg-[#30AD8F] rounded-full' />
-                  Location Map
-                </p>
-                <div className='w-full h-44 rounded-2xl overflow-hidden border border-white bg-white shadow-sm'>
-                  <GoogleMap mapUrl={university.map} />
-                </div>
-              </div>
-            )}
-            {hasAddress && (
-              <div>
-                <p className='text-sm font-medium text-gray-900 mb-4 flex items-center gap-2'>
-                  <span className='w-1 h-4 bg-[#0A6FA7] rounded-full' />
-                  University Address
-                </p>
-                <div className='space-y-3'>
-                  <div className='bg-white/80 p-4 rounded-2xl border border-gray-100 shadow-sm'>
-                    <p className='text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1'>
+                  <div className='bg-gray-50/50 p-6 rounded-3xl border border-gray-100'>
+                    <p className='text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2'>
                       Street & City
                     </p>
-                    <p className='text-sm text-gray-700 leading-snug font-medium'>
+                    <p className='text-base text-gray-900 font-bold leading-snug'>
                       {[university?.street, university?.city]
                         .filter(Boolean)
                         .join(', ') || '—'}
@@ -242,7 +217,64 @@ const UniversityOverview = ({ university }) => {
                     {(university?.state ||
                       university?.postal_code ||
                       university?.country) && (
-                      <p className='text-xs text-gray-500 mt-1 font-medium'>
+                      <p className='text-sm text-gray-500 mt-2 font-medium'>
+                        {[
+                          university?.state,
+                          university?.postal_code,
+                          university?.country
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Right sidebar - Map & Address (desktop xl only) */}
+      {(hasMap || hasAddress) && (
+        <aside className='w-full md:w-64 lg:w-80 md:sticky md:top-32 flex-shrink-0 hidden xl:block'>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className='bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl shadow-gray-200/50'
+          >
+            {hasMap && (
+              <div className='mb-10'>
+                <p className='text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-3'>
+                  <span className='w-1.5 h-4 bg-[#30AD8F] rounded-full' />
+                  Location Map
+                </p>
+                <div className='w-full h-56 rounded-3xl overflow-hidden border border-gray-100 shadow-inner bg-gray-50'>
+                  <GoogleMap mapUrl={university.map} />
+                </div>
+              </div>
+            )}
+            {hasAddress && (
+              <div>
+                <p className='text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-3'>
+                  <span className='w-1.5 h-4 bg-[#0A6FA7] rounded-full' />
+                  Office Address
+                </p>
+                <div className='bg-gray-50/50 p-6 rounded-3xl border border-gray-100'>
+                  <p className='text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2'>
+                    Street & City
+                  </p>
+                  <div className='space-y-1'>
+                    <p className='text-sm text-gray-900 font-bold leading-normal'>
+                      {[university?.street, university?.city]
+                        .filter(Boolean)
+                        .join(', ') || '—'}
+                    </p>
+                    {(university?.state ||
+                      university?.postal_code ||
+                      university?.country) && (
+                      <p className='text-xs text-gray-500 font-medium'>
                         {[
                           university?.state,
                           university?.postal_code,
@@ -256,7 +288,7 @@ const UniversityOverview = ({ university }) => {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         </aside>
       )}
     </section>

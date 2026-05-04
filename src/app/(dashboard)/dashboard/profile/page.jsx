@@ -79,15 +79,12 @@ const ProfileUpdate = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await authFetch(
-        `${process.env.baseUrl}/users/profile?id=${userData.id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+      const response = await authFetch(`${process.env.baseUrl}/users/profile`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
         }
-      )
+      })
       if (!response.ok) {
         throw new Error('Failed to fetch profile')
       }
@@ -136,7 +133,8 @@ const ProfileUpdate = () => {
     if (!validateName(nameForm.firstName) || !validateName(nameForm.lastName)) {
       toast({
         title: 'Error',
-        description: 'Names must be at least 2 characters and contain only letters',
+        description:
+          'Names must be at least 2 characters and contain only letters',
         variant: 'destructive'
       })
       return
@@ -174,7 +172,6 @@ const ProfileUpdate = () => {
       })
       setShowNameModal(false)
       fetchUserProfile()
-
     } catch (error) {
       console.error('Update error:', error)
       toast({
@@ -210,7 +207,6 @@ const ProfileUpdate = () => {
             oldPassword: passwordForm.oldPassword,
             newPassword: passwordForm.newPassword,
             confirmPassword: passwordForm.confirmPassword
-
           }),
           headers: {
             'Content-Type': 'application/json'
@@ -239,7 +235,8 @@ const ProfileUpdate = () => {
   }
 
   const handleAcademicDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return
+    if (!window.confirm('Are you sure you want to delete this document?'))
+      return
 
     try {
       const response = await fetch(
@@ -257,13 +254,13 @@ const ProfileUpdate = () => {
 
   const roles = userData?.role
     ? Object.entries(
-      typeof userData.role === 'string'
-        ? JSON.parse(userData.role)
-        : userData.role
-    )
-      .filter(([_, value]) => value)
-      .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1))
-      .join(', ')
+        typeof userData.role === 'string'
+          ? JSON.parse(userData.role)
+          : userData.role
+      )
+        .filter(([_, value]) => value)
+        .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1))
+        .join(', ')
     : 'No Role Assigned'
 
   const isStudent = userData?.role
@@ -405,9 +402,7 @@ const ProfileUpdate = () => {
                   View CV
                 </a>
               ) : (
-                <p className='text-sm text-gray-500'>
-                  No CV uploaded
-                </p>
+                <p className='text-sm text-gray-500'>No CV uploaded</p>
               )}
             </div>
           )}
@@ -425,8 +420,8 @@ const ProfileUpdate = () => {
           {/* Upload Section */}
           <div className='mb-6'>
             <FileUpload
-              label="Add New Document"
-              accept="image/*,application/pdf"
+              label='Add New Document'
+              accept='image/*,application/pdf'
               authorId={userData.id}
               extraData={{ mediaType: 'ACADEMIC' }}
               onUploadComplete={() => {
@@ -447,13 +442,20 @@ const ProfileUpdate = () => {
               </div>
             ) : academicDocs.length > 0 ? (
               academicDocs.map((file) => (
-                <div key={file.id} className='group relative bg-gray-50 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300'>
+                <div
+                  key={file.id}
+                  className='group relative bg-gray-50 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300'
+                >
                   {/* File Preview Icon/Image */}
                   <div className='aspect-video bg-gray-200 flex items-center justify-center relative overflow-hidden'>
                     {file.url.endsWith('.pdf') ? (
                       <FaFilePdf className='w-12 h-12 text-red-500' />
                     ) : (
-                      <img src={file.url} alt={file.title} className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500' />
+                      <img
+                        src={file.url}
+                        alt={file.title}
+                        className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                      />
                     )}
                     <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3'>
                       <a
@@ -477,16 +479,26 @@ const ProfileUpdate = () => {
 
                   {/* Info */}
                   <div className='p-3'>
-                    <p className='text-xs font-medium text-gray-900 truncate' title={file.title}>
+                    <p
+                      className='text-xs font-medium text-gray-900 truncate'
+                      title={file.title}
+                    >
                       {file.title}
                     </p>
                     {file.description && (
-                      <p className='text-[10px] text-gray-600 mt-1 line-clamp-2 italic' title={file.description}>
+                      <p
+                        className='text-[10px] text-gray-600 mt-1 line-clamp-2 italic'
+                        title={file.description}
+                      >
                         "{file.description}"
                       </p>
                     )}
                     <p className='text-[10px] text-gray-400 mt-2 flex items-center justify-between'>
-                      <span>{new Date(file.createdAt || Date.now()).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(
+                          file.createdAt || Date.now()
+                        ).toLocaleDateString()}
+                      </span>
                       <span className='px-1.5 py-0.5 bg-gray-200 rounded text-[9px] uppercase font-bold text-gray-500'>
                         {file.url.split('.').pop()}
                       </span>
@@ -497,20 +509,23 @@ const ProfileUpdate = () => {
             ) : (
               <div className='col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50'>
                 <FaFileImage className='w-10 h-10 text-gray-300 mb-3' />
-                <p className='text-sm text-gray-500'>No academic documents uploaded yet</p>
+                <p className='text-sm text-gray-500'>
+                  No academic documents uploaded yet
+                </p>
               </div>
             )}
           </div>
         </div>
       )}
 
-
       {/* Update Profile Dialog */}
       <Dialog isOpen={showNameModal} onClose={() => setShowNameModal(false)}>
         <DialogContent className='max-w-4xl'>
           <DialogClose onClick={() => setShowNameModal(false)} />
           <DialogHeader>
-            <DialogTitle className='text-lg'>Update Profile Information</DialogTitle>
+            <DialogTitle className='text-lg'>
+              Update Profile Information
+            </DialogTitle>
             <DialogDescription className='text-sm text-gray-600'>
               Make changes to your profile information and click save.
             </DialogDescription>
@@ -520,7 +535,10 @@ const ProfileUpdate = () => {
               {/* Basic Info Grid */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='firstName' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='firstName'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     First Name <span className='text-red-500'>*</span>
                   </Label>
                   <Input
@@ -536,7 +554,10 @@ const ProfileUpdate = () => {
                   />
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='middleName' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='middleName'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Middle Name
                   </Label>
                   <Input
@@ -551,7 +572,10 @@ const ProfileUpdate = () => {
                   />
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='lastName' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='lastName'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Last Name <span className='text-red-500'>*</span>
                   </Label>
                   <Input
@@ -567,7 +591,10 @@ const ProfileUpdate = () => {
                   />
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='email' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='email'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Email Address
                   </Label>
                   <Input
@@ -584,7 +611,10 @@ const ProfileUpdate = () => {
                   />
                 </div>
                 <div className='space-y-1.5 md:col-span-2'>
-                  <Label htmlFor='phoneNo' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='phoneNo'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Phone Number <span className='text-red-500'>*</span>
                   </Label>
                   <Input
@@ -605,8 +635,12 @@ const ProfileUpdate = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-gray-200'>
                 <div className='space-y-2.5'>
                   <div className='flex flex-col'>
-                    <span className='text-sm font-medium text-gray-700'>Profile Picture</span>
-                    <span className='text-xs text-gray-500'>Square image, max 2MB</span>
+                    <span className='text-sm font-medium text-gray-700'>
+                      Profile Picture
+                    </span>
+                    <span className='text-xs text-gray-500'>
+                      Square image, max 2MB
+                    </span>
                   </div>
                   <FileUpload
                     accept='image/*'
@@ -620,8 +654,12 @@ const ProfileUpdate = () => {
                 {isStudent && (
                   <div className='space-y-2.5'>
                     <div className='flex flex-col'>
-                      <span className='text-sm font-medium text-gray-700'>Curriculum Vitae</span>
-                      <span className='text-xs text-gray-500'>PDF files only</span>
+                      <span className='text-sm font-medium text-gray-700'>
+                        Curriculum Vitae
+                      </span>
+                      <span className='text-xs text-gray-500'>
+                        PDF files only
+                      </span>
                     </div>
                     <FileUpload
                       accept='application/pdf'
@@ -643,7 +681,11 @@ const ProfileUpdate = () => {
               >
                 Cancel
               </Button>
-              <Button type='submit' disabled={isLoading} className='h-10 px-6 bg-blue-600 hover:bg-blue-700'>
+              <Button
+                type='submit'
+                disabled={isLoading}
+                className='h-10 px-6 bg-blue-600 hover:bg-blue-700'
+              >
                 {isLoading ? (
                   <div className='flex items-center gap-2'>
                     <span className='h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin' />
@@ -668,14 +710,18 @@ const ProfileUpdate = () => {
           <DialogHeader>
             <DialogTitle className='text-lg'>Change Password</DialogTitle>
             <DialogDescription className='text-sm text-gray-600'>
-              Enter your new password and make sure it meets the security requirements.
+              Enter your new password and make sure it meets the security
+              requirements.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handlePasswordSubmit} className='mt-4'>
             <div className='space-y-5'>
               <div className='grid grid-cols-1 gap-4'>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='oldPassword' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='oldPassword'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Old Password <span className='text-red-500'>*</span>
                   </Label>
                   <div className='relative'>
@@ -710,7 +756,10 @@ const ProfileUpdate = () => {
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='newPassword' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='newPassword'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     New Password <span className='text-red-500'>*</span>
                   </Label>
                   <div className='relative'>
@@ -742,7 +791,10 @@ const ProfileUpdate = () => {
                   </div>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='confirmPassword' className='text-sm font-medium text-gray-700'>
+                  <Label
+                    htmlFor='confirmPassword'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Confirm Password <span className='text-red-500'>*</span>
                   </Label>
                   <div className='relative'>
@@ -763,7 +815,9 @@ const ProfileUpdate = () => {
                     <button
                       type='button'
                       className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 p-1 rounded-md transition-colors'
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <FaEyeSlash className='h-4 w-4' />
@@ -776,7 +830,11 @@ const ProfileUpdate = () => {
               </div>
               <div className='rounded-md bg-gray-50 border border-gray-200 p-3.5'>
                 <p className='text-xs leading-relaxed text-gray-700'>
-                  <span className='font-semibold text-gray-900'>Password requirements:</span> At least 8 characters with uppercase, lowercase, number, and special character (@$!%*?&)
+                  <span className='font-semibold text-gray-900'>
+                    Password requirements:
+                  </span>{' '}
+                  At least 8 characters with uppercase, lowercase, number, and
+                  special character (@$!%*?&)
                 </p>
               </div>
             </div>
@@ -789,7 +847,11 @@ const ProfileUpdate = () => {
               >
                 Cancel
               </Button>
-              <Button type='submit' disabled={isLoading} className='h-10 px-6 bg-blue-600 hover:bg-blue-700'>
+              <Button
+                type='submit'
+                disabled={isLoading}
+                className='h-10 px-6 bg-blue-600 hover:bg-blue-700'
+              >
                 {isLoading ? (
                   <div className='flex items-center gap-2'>
                     <span className='h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin' />

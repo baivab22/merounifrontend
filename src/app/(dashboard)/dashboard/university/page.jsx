@@ -47,12 +47,14 @@ const StatusBadge = ({ status }) => {
   if (!status) return null
   const isPublished = status.toLowerCase() === 'published'
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider shrink-0',
-      isPublished
-        ? 'bg-blue-50 text-blue-600 border-blue-100'
-        : 'bg-orange-50 text-orange-600 border-orange-100'
-    )}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider shrink-0',
+        isPublished
+          ? 'bg-blue-50 text-blue-600 border-blue-100'
+          : 'bg-orange-50 text-orange-600 border-orange-100'
+      )}
+    >
       {status}
     </span>
   )
@@ -63,20 +65,33 @@ const TypeBadge = ({ type }) => {
   if (!type) return null
   const isPublic = type === 'Public'
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shrink-0',
-      isPublic
-        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-        : 'bg-violet-50 text-violet-700 border-violet-200'
-    )}>
-      <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', isPublic ? 'bg-emerald-500' : 'bg-violet-500')} />
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shrink-0',
+        isPublic
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          : 'bg-violet-50 text-violet-700 border-violet-200'
+      )}
+    >
+      <span
+        className={cn(
+          'w-1.5 h-1.5 rounded-full shrink-0',
+          isPublic ? 'bg-emerald-500' : 'bg-violet-500'
+        )}
+      />
       {type}
     </span>
   )
 }
 
 // ─── Sortable University Card (list layout, matching college-style) ──────────
-const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) => {
+const SortableCard = ({
+  university,
+  onView,
+  onEdit,
+  onDelete,
+  onImageClick
+}) => {
   const {
     attributes,
     listeners,
@@ -92,7 +107,9 @@ const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) =>
     opacity: isDragging ? 0.5 : 1
   }
 
-  const location = [university.city, university.state, university.country].filter(Boolean).join(', ')
+  const location = [university.city, university.state, university.country]
+    .filter(Boolean)
+    .join(', ')
   const year = university.date_of_establish ?? null
   const websiteUrl = university.contact?.website_url
   const mapUrl = university.map
@@ -123,16 +140,30 @@ const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) =>
         <div
           role='button'
           tabIndex={0}
-          onClick={() => university.logo && onImageClick(university.logo, university.fullname)}
-          onKeyDown={(e) => e.key === 'Enter' && university.logo && onImageClick(university.logo, university.fullname)}
+          onClick={() =>
+            university.logo &&
+            onImageClick(university.logo, university.fullname)
+          }
+          onKeyDown={(e) =>
+            e.key === 'Enter' &&
+            university.logo &&
+            onImageClick(university.logo, university.fullname)
+          }
           className={cn(
             'w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm',
-            university.logo && 'cursor-pointer hover:opacity-90 transition-opacity'
+            university.logo &&
+              'cursor-pointer hover:opacity-90 transition-opacity'
           )}
         >
-          {university.logo
-            ? <img src={university.logo} alt={university.fullname} className='w-full h-full object-contain p-1.5' />
-            : <GraduationCap className='w-7 h-7 text-gray-300' />}
+          {university.logo ? (
+            <img
+              src={university.logo}
+              alt={university.fullname}
+              className='w-full h-full object-contain p-1.5'
+            />
+          ) : (
+            <GraduationCap className='w-7 h-7 text-gray-300' />
+          )}
         </div>
 
         {/* Info */}
@@ -175,7 +206,11 @@ const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) =>
             )}
             {websiteUrl && (
               <a
-                href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
+                href={
+                  websiteUrl.startsWith('http')
+                    ? websiteUrl
+                    : `https://${websiteUrl}`
+                }
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-blue-600 hover:underline text-[12px] inline-flex items-center gap-1'
@@ -194,13 +229,6 @@ const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) =>
 
         {/* Actions - Right aligned in list view */}
         <div className='flex items-center gap-1 pl-4 border-l border-gray-100'>
-          <button
-            onClick={() => onView(university.slugs)}
-            title='View details'
-            className='w-9 h-9 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all'
-          >
-            <Eye size={18} />
-          </button>
           <button
             onClick={() => onEdit(university.slugs)}
             title='Edit'
@@ -225,15 +253,26 @@ const SortableCard = ({ university, onView, onEdit, onDelete, onImageClick }) =>
 const OverlayCard = ({ university }) => (
   <div className='bg-white border-2 border-[#387cae]/40 rounded-xl shadow-2xl rotate-[0.6deg] scale-[1.01]'>
     <div className='flex items-center gap-4 p-4'>
-      <GripVertical size={20} className='text-[#387cae]/50 cursor-grabbing shrink-0' />
+      <GripVertical
+        size={20}
+        className='text-[#387cae]/50 cursor-grabbing shrink-0'
+      />
       <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0'>
-        {university.logo
-          ? <img src={university.logo} alt={university.fullname} className='w-full h-full object-contain p-1.5' />
-          : <GraduationCap className='w-7 h-7 text-gray-300' />}
+        {university.logo ? (
+          <img
+            src={university.logo}
+            alt={university.fullname}
+            className='w-full h-full object-contain p-1.5'
+          />
+        ) : (
+          <GraduationCap className='w-7 h-7 text-gray-300' />
+        )}
       </div>
       <div className='flex-1 min-w-0'>
         <div className='flex items-center gap-2 flex-wrap'>
-          <h3 className='text-[16px] font-bold text-gray-900 truncate'>{university.fullname}</h3>
+          <h3 className='text-[16px] font-bold text-gray-900 truncate'>
+            {university.fullname}
+          </h3>
           <TypeBadge type={university.type_of_institute} />
           <StatusBadge status={university.status} />
         </div>
@@ -263,7 +302,9 @@ const CardSkeleton = ({ i = 0 }) => (
         </div>
       </div>
       <div className='flex gap-2 pl-4 border-l border-gray-100'>
-        {[0, 1, 2].map(j => <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />)}
+        {[0, 1, 2].map((j) => (
+          <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />
+        ))}
       </div>
     </div>
   </div>
@@ -293,10 +334,18 @@ export default function UniversityPage() {
 
   const [activeId, setActiveId] = useState(null)
   const activeUniversity = universities.find((u) => u.id === activeId)
-  const [lightbox, setLightbox] = useState({ isOpen: false, imageUrl: '', altText: '' })
+  const [lightbox, setLightbox] = useState({
+    isOpen: false,
+    imageUrl: '',
+    altText: ''
+  })
 
   const handleImageClick = (imageUrl, altText) => {
-    setLightbox({ isOpen: true, imageUrl, altText: altText || 'University Logo' })
+    setLightbox({
+      isOpen: true,
+      imageUrl,
+      altText: altText || 'University Logo'
+    })
   }
 
   const sensors = useSensors(
@@ -311,18 +360,24 @@ export default function UniversityPage() {
   }, [setHeading])
 
   useEffect(() => {
-    return () => { if (searchTimeout) clearTimeout(searchTimeout) }
+    return () => {
+      if (searchTimeout) clearTimeout(searchTimeout)
+    }
   }, [searchTimeout])
 
-  const loadUniversities = async (query = '', status = 'All', silent = false) => {
+  const loadUniversities = async (
+    query = '',
+    status = 'All',
+    silent = false
+  ) => {
     try {
       if (!silent) setLoading(true)
       let all = []
       let page = 1
       let hasMore = true
 
-      // Using a large limit (100) and loop logic to get all data and avoid multiple small API calls 
-      // but still handling pagination if it exists. 
+      // Using a large limit (100) and loop logic to get all data and avoid multiple small API calls
+      // but still handling pagination if it exists.
       // The user wants "no pagination" in dashboard, which means we show everything in one list.
       while (hasMore) {
         let url = `${process.env.baseUrl}/university?page=${page}&limit=100`
@@ -362,7 +417,10 @@ export default function UniversityPage() {
   const handleSearchInput = (value) => {
     setSearchQuery(value)
     if (searchTimeout) clearTimeout(searchTimeout)
-    const id = setTimeout(() => loadUniversities(value, statusFilter, true), 350)
+    const id = setTimeout(
+      () => loadUniversities(value, statusFilter, true),
+      350
+    )
     setSearchTimeout(id)
   }
 
@@ -391,11 +449,14 @@ export default function UniversityPage() {
   const saveOrder = async (payload) => {
     try {
       setSaving(true)
-      const res = await authFetch(`${process.env.baseUrl}/university/update-order`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ universities: payload })
-      })
+      const res = await authFetch(
+        `${process.env.baseUrl}/university/update-order`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ universities: payload })
+        }
+      )
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || 'Failed to save order')
@@ -441,10 +502,16 @@ export default function UniversityPage() {
     }
   }
 
-  const handleEdit = (slug) => { setEditSlug(slug); setIsOpen(true) }
+  const handleEdit = (slug) => {
+    setEditSlug(slug)
+    setIsOpen(true)
+  }
 
   const handleDeleteClick = (id) => {
-    requireAdmin(() => { setDeleteId(id); setIsDialogOpen(true) })
+    requireAdmin(() => {
+      setDeleteId(id)
+      setIsDialogOpen(true)
+    })
   }
 
   const handleDeleteConfirm = async () => {
@@ -479,7 +546,6 @@ export default function UniversityPage() {
   return (
     <>
       <div className='w-full'>
-
         {/* ── Sticky Header ──────────────────────────────────────────────────── */}
         <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
           <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
@@ -490,13 +556,17 @@ export default function UniversityPage() {
               <div>
                 <p className='text-sm font-bold text-gray-800'>Universities</p>
                 <p className='text-xs text-gray-400 flex items-center gap-1.5'>
-                  {loading
-                    ? <span className='inline-flex items-center gap-1'><Loader2 size={10} className='animate-spin' /> Loading…</span>
-                    : `${universities.length} total`
-                  }
+                  {loading ? (
+                    <span className='inline-flex items-center gap-1'>
+                      <Loader2 size={10} className='animate-spin' /> Loading…
+                    </span>
+                  ) : (
+                    `${universities.length} total`
+                  )}
                   {saving && (
                     <span className='inline-flex items-center gap-1 text-[#387cae]'>
-                      · <Loader2 size={10} className='animate-spin' /> Saving order…
+                      · <Loader2 size={10} className='animate-spin' /> Saving
+                      order…
                     </span>
                   )}
                 </p>
@@ -505,7 +575,10 @@ export default function UniversityPage() {
 
             <div className='flex items-center gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible pb-1 sm:pb-0'>
               <div className='relative shrink-0 sm:w-60'>
-                <Search size={13} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none' />
+                <Search
+                  size={13}
+                  className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                />
                 <input
                   type='text'
                   value={searchQuery}
@@ -520,13 +593,16 @@ export default function UniversityPage() {
                 onChange={(e) => handleStatusChange(e.target.value)}
                 className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[120px]'
               >
-                <option value="All">All Status</option>
-                <option value="Published">Published</option>
-                <option value="Draft">Draft</option>
+                <option value='All'>All Status</option>
+                <option value='Published'>Published</option>
+                <option value='Draft'>Draft</option>
               </select>
 
               <Button
-                onClick={() => { setEditSlug(''); setIsOpen(true) }}
+                onClick={() => {
+                  setEditSlug('')
+                  setIsOpen(true)
+                }}
                 className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
               >
                 <Plus size={15} />
@@ -539,17 +615,24 @@ export default function UniversityPage() {
         {/* ── Card List ─────────────────────────────────────────────────────── */}
         {loading ? (
           <div className='flex flex-col gap-3'>
-            {[...Array(6)].map((_, i) => <CardSkeleton key={i} i={i} />)}
+            {[...Array(6)].map((_, i) => (
+              <CardSkeleton key={i} i={i} />
+            ))}
           </div>
         ) : universities.length === 0 ? (
           <div className='bg-white border border-dashed border-gray-200 rounded-2xl py-20 text-center'>
             <GraduationCap className='w-10 h-10 text-gray-200 mx-auto mb-3' />
             <p className='text-gray-500 font-medium text-sm'>
-              {searchQuery ? 'No universities match your search.' : 'No universities yet.'}
+              {searchQuery
+                ? 'No universities match your search.'
+                : 'No universities yet.'}
             </p>
             {!searchQuery && (
               <Button
-                onClick={() => { setEditSlug(''); setIsOpen(true) }}
+                onClick={() => {
+                  setEditSlug('')
+                  setIsOpen(true)
+                }}
                 className='mt-4 bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 text-sm'
               >
                 <Plus size={15} /> Add First University
@@ -588,8 +671,15 @@ export default function UniversityPage() {
                 </div>
               </SortableContext>
 
-              <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-                {activeUniversity ? <OverlayCard university={activeUniversity} /> : null}
+              <DragOverlay
+                dropAnimation={{
+                  duration: 180,
+                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)'
+                }}
+              >
+                {activeUniversity ? (
+                  <OverlayCard university={activeUniversity} />
+                ) : null}
               </DragOverlay>
             </DndContext>
           </>
@@ -599,14 +689,20 @@ export default function UniversityPage() {
       {/* ── Modals ────────────────────────────────────────────────────────── */}
       <CreateUpdateUniversityModal
         isOpen={isOpen}
-        handleCloseModal={() => { setIsOpen(false); setEditSlug('') }}
+        handleCloseModal={() => {
+          setIsOpen(false)
+          setEditSlug('')
+        }}
         editSlug={editSlug}
         onSuccess={() => loadUniversities(searchQuery, statusFilter, true)}
       />
 
       <ConfirmationDialog
         open={isDialogOpen}
-        onClose={() => { setIsDialogOpen(false); setDeleteId(null) }}
+        onClose={() => {
+          setIsDialogOpen(false)
+          setDeleteId(null)
+        }}
         onConfirm={handleDeleteConfirm}
         title='Confirm Deletion'
         message='Are you sure you want to delete this university? This action cannot be undone.'
@@ -614,7 +710,10 @@ export default function UniversityPage() {
 
       <UniversityViewModal
         isOpen={viewModalOpen}
-        onClose={() => { setViewModalOpen(false); setViewUniversityData(null) }}
+        onClose={() => {
+          setViewModalOpen(false)
+          setViewUniversityData(null)
+        }}
         data={viewUniversityData}
         loading={loadingView}
       />

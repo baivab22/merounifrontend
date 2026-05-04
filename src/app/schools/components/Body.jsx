@@ -76,7 +76,12 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
           slug: school.slugs,
           collegeId: school.id,
           collegeImage: school.featured_img || school.image,
-          logo: school.logo || 'default_logo.png'
+          logo: school.logo || 'default_logo.png',
+          tags: [
+            ...(school.boards || []).map(b => b.name),
+            ...(school.streams || []).map(s => s.name)
+          ],
+          universityName: school.university?.fullname || school.university?.name
         })) || [],
       pagination: data.pagination || {
         currentPage: 1,
@@ -470,6 +475,9 @@ const SchoolFinder = () => {
                   slug={s.slug}
                   collegeImage={s.collegeImage}
                   instituteType={s.instituteType}
+                  logo={s.logo}
+                  tags={s.tags}
+                  universityName={s.universityName}
                   wishlistCollegeIds={wishlistCollegeIds}
                   onWishlistUpdate={setWishlistCollegeIds}
                 />

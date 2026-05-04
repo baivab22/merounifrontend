@@ -37,6 +37,9 @@ const CreateCredentialsModal = ({
         }
     })
 
+    const hasExistingAccount = !!selectedCollege?.account
+    const existingAccount = selectedCollege?.account
+
     useEffect(() => {
         if (selectedCollege && credentialsModalOpen) {
             let firstName = selectedCollege.name || ''
@@ -44,23 +47,32 @@ const CreateCredentialsModal = ({
             let emailName = ''
             let phoneNo = ''
 
-            // If college has members, use the first member's data for other fields
-            if (selectedCollege.members && selectedCollege.members.length > 0) {
-                const firstMember = selectedCollege.members[0]
-                const nameParts = (firstMember.name || '').split(' ')
-                lastName = nameParts.slice(1).join(' ') || nameParts[0] || ''
-                phoneNo = firstMember.contact_number || ''
-            }
+            if (hasExistingAccount) {
+                firstName = existingAccount.firstName || ''
+                lastName = existingAccount.lastName || ''
+                phoneNo = existingAccount.phoneNo || ''
+                if (existingAccount.email) {
+                    emailName = existingAccount.email.split('@')[0]
+                }
+            } else {
+                // If college has members, use the first member's data for other fields
+                if (selectedCollege.members && selectedCollege.members.length > 0) {
+                    const firstMember = selectedCollege.members[0]
+                    const nameParts = (firstMember.name || '').split(' ')
+                    lastName = nameParts.slice(1).join(' ') || nameParts[0] || ''
+                    phoneNo = firstMember.contact_number || ''
+                }
 
-            // If college has contacts, use the first contact as phone
-            if (!phoneNo && selectedCollege.contacts && selectedCollege.contacts.length > 0) {
-                phoneNo = selectedCollege.contacts[0]?.contact_number || selectedCollege.contacts[0] || ''
-            }
+                // If college has contacts, use the first contact as phone
+                if (!phoneNo && selectedCollege.contacts && selectedCollege.contacts.length > 0) {
+                    phoneNo = selectedCollege.contacts[0]?.contact_number || selectedCollege.contacts[0] || ''
+                }
 
-            // Extract email name if email exists (remove any domain)
-            if (selectedCollege.email) {
-                const emailParts = selectedCollege.email.split('@')
-                emailName = emailParts[0] || ''
+                // Extract email name if email exists (remove any domain)
+                if (selectedCollege.email) {
+                    const emailParts = selectedCollege.email.split('@')
+                    emailName = emailParts[0] || ''
+                }
             }
 
             setValue('firstName', firstName)
@@ -68,7 +80,7 @@ const CreateCredentialsModal = ({
             setValue('emailName', emailName)
             setValue('phoneNo', phoneNo.slice(0, 10))
         }
-    }, [selectedCollege, credentialsModalOpen, setValue])
+    }, [selectedCollege, credentialsModalOpen, setValue, hasExistingAccount, existingAccount])
 
     const handleCloseCredentialsModal = () => {
         setCredentialsModalOpen(false)
@@ -104,21 +116,22 @@ const CreateCredentialsModal = ({
 
             if (!response.ok) {
                 const errorData = await response.json()
-                throw new Error(errorData.message || 'Failed to create credentials')
+                throw new Error(errorData.message || 'Failed to save credentials')
             }
 
             const resData = await response.json()
             toast({
                 title: 'Success',
-                description: resData.message || 'Credentials created successfully!'
+                description: resData.message || `Credentials ${hasExistingAccount ? 'updated' : 'created'} successfully!`
             })
             handleCloseCredentialsModal()
 
             // Reload colleges to update has_account status
             setTableLoading(true)
             try {
+                const type = selectedCollege.institute_level?.includes('School') ? 'school' : 'college'
                 const response2 = await authFetch(
-                    `${process.env.baseUrl}/college?limit=10&page=${pagination.currentPage}`
+                    `${process.env.baseUrl}/${type}?limit=10&page=${pagination.currentPage}`
                 )
                 if (response2.ok) {
                     const data = await response2.json()
@@ -137,7 +150,7 @@ const CreateCredentialsModal = ({
         } catch (err) {
             toast({
                 title: 'Error',
-                description: err.message || 'Failed to create credentials',
+                description: err.message || 'Failed to save credentials',
                 variant: 'destructive'
             })
         }
@@ -150,7 +163,7 @@ const CreateCredentialsModal = ({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create College Credentials</DialogTitle>
+                    <DialogTitle>{hasExistingAccount ? 'Update' : 'Create'} College Credentials</DialogTitle>
                     <DialogClose onClick={handleCloseCredentialsModal} />
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 pt-4'>
@@ -262,7 +275,7 @@ const CreateCredentialsModal = ({
                             Cancel
                         </Button>
                         <Button type='submit' disabled={creatingCredentials}>
-                            {creatingCredentials ? 'Creating...' : 'Create Credentials'}
+                            {creatingCredentials ? 'Saving...' : (hasExistingAccount ? 'Update Credentials' : 'Create Credentials')}
                         </Button>
                     </div>
                 </form>

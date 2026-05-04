@@ -12,7 +12,7 @@ import { usePageHeading } from '../../contexts/PageHeadingContext'
 import { FaUserCircle, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { removeUser } from '../../app/utils/userSlice'
 import { ChevronDown, Search } from 'lucide-react'
-import { THEME_BLUE } from "@/constants/constants"
+import { THEME_BLUE } from '@/constants/constants'
 import SearchInput from '../molecules/SearchInput'
 import { menuItems } from '@/constants/menuList'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
@@ -38,7 +38,9 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
     if (userData?.id) {
       const getProfile = async () => {
         try {
-          const response = await authFetch(`${process.env.baseUrl}/users/profile?id=${userData.id}`)
+          const response = await authFetch(
+            `${process.env.baseUrl}/users/profile`
+          )
           const data = await response.json()
           if (data?.user) {
             setProfile(data.user)
@@ -130,13 +132,16 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
       const data = await response.json()
       toast({
         title: 'Success',
-        description: data.message || 'Agent verification request sent successfully!'
+        description:
+          data.message || 'Agent verification request sent successfully!'
       })
     } catch (error) {
       console.error('Error during agent verification:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to send verification request. Please try again.',
+        description:
+          error.message ||
+          'Failed to send verification request. Please try again.',
         variant: 'destructive'
       })
     } finally {
@@ -163,13 +168,10 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.baseUrl}/auth/logout`,
-        {
-          method: 'POST',
-          credentials: 'include'
-        }
-      )
+      const response = await fetch(`${process.env.baseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
 
       // Handle 400/401/403 gracefully - session might already be invalid
       if (!response.ok && ![400, 401, 403].includes(response.status)) {
@@ -198,23 +200,42 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
         <button
           onClick={onMenuClick}
           className='md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors'
-          aria-label="Open menu"
+          aria-label='Open menu'
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M4 6h16M4 12h16M4 18h16'
+            />
           </svg>
         </button>
         <div>
-          {heading && <h1 className='text-xl md:text-2xl font-bold whitespace-nowrap'>{heading}</h1>}
+          {heading && (
+            <h1 className='text-xl md:text-2xl font-bold whitespace-nowrap'>
+              {heading}
+            </h1>
+          )}
           {subheading && (
-            <p className='text-xs md:text-sm text-gray-500 mt-1 whitespace-nowrap'>{subheading}</p>
+            <p className='text-xs md:text-sm text-gray-500 mt-1 whitespace-nowrap'>
+              {subheading}
+            </p>
           )}
         </div>
       </div>
 
       {/* CENTERED SEARCH WITH SUGGESTIONS */}
       {userRoles?.admin && (
-        <div ref={searchRef} className='hidden lg:flex flex-1 max-w-xl mx-8 relative'>
+        <div
+          ref={searchRef}
+          className='hidden lg:flex flex-1 max-w-xl mx-8 relative'
+        >
           <div className='w-full'>
             <SearchInput
               value={inputValue}
@@ -235,14 +256,18 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                 {(() => {
                   let totalMatches = 0
                   const itemsToRender = menuItems.map((section) => {
-                    const filteredItems = section.items.filter(item => {
-                      const hasAccess = item.visible.some(r => userRoles[r])
+                    const filteredItems = section.items.filter((item) => {
+                      const hasAccess = item.visible.some((r) => userRoles[r])
                       if (!hasAccess) return false
 
                       const query = searchQuery.toLowerCase().trim()
-                      const matchesLabel = item.label.toLowerCase().includes(query)
-                      const matchesSubmenu = item.submenus?.some(sub =>
-                        sub.label.toLowerCase().includes(query) && sub.visible.some(r => userRoles[r])
+                      const matchesLabel = item.label
+                        .toLowerCase()
+                        .includes(query)
+                      const matchesSubmenu = item.submenus?.some(
+                        (sub) =>
+                          sub.label.toLowerCase().includes(query) &&
+                          sub.visible.some((r) => userRoles[r])
                       )
                       return matchesLabel || matchesSubmenu
                     })
@@ -255,15 +280,21 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                         <div className='px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest'>
                           {section.title || 'General'}
                         </div>
-                        {filteredItems.map(item => (
+                        {filteredItems.map((item) => (
                           <div key={item.label}>
                             {item.submenus ? (
                               item.submenus
-                                .filter(sub =>
-                                  (sub.label.toLowerCase().includes(searchQuery.toLowerCase()) || item.label.toLowerCase().includes(searchQuery.toLowerCase())) &&
-                                  sub.visible.some(r => userRoles[r])
+                                .filter(
+                                  (sub) =>
+                                    (sub.label
+                                      .toLowerCase()
+                                      .includes(searchQuery.toLowerCase()) ||
+                                      item.label
+                                        .toLowerCase()
+                                        .includes(searchQuery.toLowerCase())) &&
+                                    sub.visible.some((r) => userRoles[r])
                                 )
-                                .map(sub => (
+                                .map((sub) => (
                                   <Link
                                     key={sub.label}
                                     href={sub.href}
@@ -274,21 +305,27 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                                     className='group w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-md transition-colors'
                                     style={{ '--theme-blue': THEME_BLUE }}
                                     onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = `${THEME_BLUE}10`;
-                                      e.currentTarget.style.color = THEME_BLUE;
-                                      const iconDiv = e.currentTarget.querySelector('.icon-container');
+                                      e.currentTarget.style.backgroundColor = `${THEME_BLUE}10`
+                                      e.currentTarget.style.color = THEME_BLUE
+                                      const iconDiv =
+                                        e.currentTarget.querySelector(
+                                          '.icon-container'
+                                        )
                                       if (iconDiv) {
-                                        iconDiv.style.backgroundColor = `${THEME_BLUE}25`;
-                                        iconDiv.style.color = THEME_BLUE;
+                                        iconDiv.style.backgroundColor = `${THEME_BLUE}25`
+                                        iconDiv.style.color = THEME_BLUE
                                       }
                                     }}
                                     onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '';
-                                      e.currentTarget.style.color = '';
-                                      const iconDiv = e.currentTarget.querySelector('.icon-container');
+                                      e.currentTarget.style.backgroundColor = ''
+                                      e.currentTarget.style.color = ''
+                                      const iconDiv =
+                                        e.currentTarget.querySelector(
+                                          '.icon-container'
+                                        )
                                       if (iconDiv) {
-                                        iconDiv.style.backgroundColor = '';
-                                        iconDiv.style.color = '';
+                                        iconDiv.style.backgroundColor = ''
+                                        iconDiv.style.color = ''
                                       }
                                     }}
                                   >
@@ -296,8 +333,12 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                                       {item.icon}
                                     </div>
                                     <div className='flex flex-col items-start'>
-                                      <span className='font-medium'>{sub.label}</span>
-                                      <span className='text-[10px] text-gray-400'>{item.label}</span>
+                                      <span className='font-medium'>
+                                        {sub.label}
+                                      </span>
+                                      <span className='text-[10px] text-gray-400'>
+                                        {item.label}
+                                      </span>
                                     </div>
                                   </Link>
                                 ))
@@ -311,28 +352,36 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                                 className='group w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 rounded-md transition-colors'
                                 style={{ '--theme-blue': THEME_BLUE }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${THEME_BLUE}10`;
-                                  e.currentTarget.style.color = THEME_BLUE;
-                                  const iconDiv = e.currentTarget.querySelector('.icon-container');
+                                  e.currentTarget.style.backgroundColor = `${THEME_BLUE}10`
+                                  e.currentTarget.style.color = THEME_BLUE
+                                  const iconDiv =
+                                    e.currentTarget.querySelector(
+                                      '.icon-container'
+                                    )
                                   if (iconDiv) {
-                                    iconDiv.style.backgroundColor = `${THEME_BLUE}25`;
-                                    iconDiv.style.color = THEME_BLUE;
+                                    iconDiv.style.backgroundColor = `${THEME_BLUE}25`
+                                    iconDiv.style.color = THEME_BLUE
                                   }
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '';
-                                  e.currentTarget.style.color = '';
-                                  const iconDiv = e.currentTarget.querySelector('.icon-container');
+                                  e.currentTarget.style.backgroundColor = ''
+                                  e.currentTarget.style.color = ''
+                                  const iconDiv =
+                                    e.currentTarget.querySelector(
+                                      '.icon-container'
+                                    )
                                   if (iconDiv) {
-                                    iconDiv.style.backgroundColor = '';
-                                    iconDiv.style.color = '';
+                                    iconDiv.style.backgroundColor = ''
+                                    iconDiv.style.color = ''
                                   }
                                 }}
                               >
                                 <div className='icon-container w-8 h-8 flex items-center justify-center text-gray-400 bg-gray-50 rounded-md transition-colors'>
                                   {item.icon}
                                 </div>
-                                <span className='font-medium'>{item.label}</span>
+                                <span className='font-medium'>
+                                  {item.label}
+                                </span>
                               </Link>
                             )}
                           </div>
@@ -347,7 +396,9 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                         <div className='w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300'>
                           <Search className='w-6 h-6' />
                         </div>
-                        <p className='text-sm font-medium text-gray-900'>No menus found</p>
+                        <p className='text-sm font-medium text-gray-900'>
+                          No menus found
+                        </p>
                         <p className='text-xs text-gray-500 mt-1'>
                           No results for "{searchQuery}"
                         </p>
@@ -372,14 +423,16 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
           >
             <div
               className='w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow relative overflow-hidden'
-              style={{ background: `linear-gradient(to bottom right, ${THEME_BLUE}, #7c3aed)` }}
+              style={{
+                background: `linear-gradient(to bottom right, ${THEME_BLUE}, #7c3aed)`
+              }}
             >
               {currentUser?.profileImageUrl ? (
                 <Image
                   src={currentUser.profileImageUrl}
                   alt={`${currentUser.firstName} ${currentUser.lastName}`}
                   fill
-                  className="object-cover"
+                  className='object-cover'
                 />
               ) : currentUser?.firstName && currentUser?.lastName ? (
                 <span>
@@ -392,7 +445,9 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
             </div>
             <div className='flex flex-col items-start'>
               <span className='text-xs leading-3 font-medium text-gray-900'>
-                {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : ''}
+                {currentUser
+                  ? `${currentUser.firstName} ${currentUser.lastName}`
+                  : ''}
               </span>
               <span className='text-[10px] text-gray-500 text-left'>
                 {currentUser?.email ||
@@ -403,8 +458,9 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
               </span>
             </div>
             <ChevronDown
-              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
-                }`}
+              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                isDropdownOpen ? 'rotate-180' : ''
+              }`}
             />
           </button>
 
@@ -418,12 +474,8 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
                   className='group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-all duration-200'
                   style={{ '--theme-blue': THEME_BLUE }}
                 >
-                  <FaUser
-                    className='w-4 h-4 text-gray-500 group-hover:text-[var(--theme-blue)] transition-colors'
-                  />
-                  <span
-                    className='group-hover:text-[var(--theme-blue)] transition-colors'
-                  >
+                  <FaUser className='w-4 h-4 text-gray-500 group-hover:text-[var(--theme-blue)] transition-colors' />
+                  <span className='group-hover:text-[var(--theme-blue)] transition-colors'>
                     View Profile
                   </span>
                 </Link>
@@ -446,10 +498,10 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
         open={isLogoutDialogOpen}
         onClose={() => setIsLogoutDialogOpen(false)}
         onConfirm={handleLogoutConfirm}
-        title="Logout Confirmation"
-        message="Are you sure you want to logout?"
-        confirmText="Logout"
-        cancelText="Cancel"
+        title='Logout Confirmation'
+        message='Are you sure you want to logout?'
+        confirmText='Logout'
+        cancelText='Cancel'
       />
     </div>
   )

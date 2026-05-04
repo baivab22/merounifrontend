@@ -60,7 +60,9 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
           slug: college.slugs,
           collegeId: college.id,
           collegeImage: college.featured_img,
-          logo: college.college_logo
+          logo: college.college_logo || college.logo,
+          universityName: college.university?.fullname || college.university?.name,
+          degrees: college.degrees || []
         })) || [],
       pagination: data.pagination || {
         currentPage: 1,
@@ -113,8 +115,10 @@ const searchColleges = async (query) => {
         .filter(Boolean)
         .join(', '),
       description: clz.description || 'No description available.',
-      logo: clz.college_logo || 'default_logo.png',
-      instituteType: clz.institute_type || 'Unknown'
+      logo: clz.college_logo || clz.logo || 'default_logo.png',
+      instituteType: clz.institute_type || 'Unknown',
+      universityName: clz.university?.fullname || clz.university?.name,
+      degrees: clz.degrees || []
     }))
 
     return {
@@ -588,6 +592,9 @@ const CollegeFinder = () => {
                   slug={u.slug}
                   collegeImage={u.collegeImage}
                   instituteType={u.instituteType}
+                  universityName={u.universityName}
+                  logo={u.logo}
+                  degrees={u.degrees}
                   wishlistCollegeIds={wishlistCollegeIds}
                   onWishlistUpdate={setWishlistCollegeIds}
                 />

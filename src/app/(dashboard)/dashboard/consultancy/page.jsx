@@ -132,15 +132,16 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
           >
             <Eye size={18} />
           </button>
-          {!consultancy.userId && (
-            <button
-              onClick={() => onCreateCredentials(consultancy)}
-              title='Create credentials'
-              className='w-9 h-9 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-all'
-            >
-              <Key size={18} />
-            </button>
-          )}
+          <button
+            onClick={() => onCreateCredentials(consultancy)}
+            title={consultancy.has_account ? 'Update credentials' : 'Create credentials'}
+            className={cn(
+              'w-9 h-9 flex items-center justify-center rounded-lg transition-all',
+              consultancy.has_account ? 'text-green-600 hover:bg-green-50' : 'text-indigo-500 hover:bg-indigo-50'
+            )}
+          >
+            <Key size={18} />
+          </button>
           <button
             onClick={() => onEdit(consultancy)}
             title='Edit'

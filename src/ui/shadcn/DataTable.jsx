@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import SearchInput from '../molecules/SearchInput'
-import CircularLoader from '../molecules/CircularLoader'
+import Loading from '../molecules/Loading'
 import {
   Table as ShadcnTable,
   TableBody,
@@ -28,6 +28,7 @@ const Table = ({
   onSearch,
   loading = false,
   showSearch = true,
+  showPagination = true,
   emptyContent = null
 }) => {
   const [sorting, setSorting] = useState([])
@@ -99,8 +100,8 @@ const Table = ({
 
       {/* Table Container */}
       {loading ? (
-        <div className='flex justify-center items-center py-24 bg-white border rounded-md'>
-          <CircularLoader size='w-8 h-8' />
+        <div className='bg-white border rounded-md'>
+          <Loading fullPage={false} />
         </div>
       ) : (
         <div className='rounded-md border bg-white'>
@@ -112,7 +113,11 @@ const Table = ({
                     <TableHead
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+                      className={
+                        header.column.getCanSort()
+                          ? 'cursor-pointer select-none'
+                          : ''
+                      }
                     >
                       <div className='flex items-center space-x-1'>
                         <span>
@@ -166,46 +171,54 @@ const Table = ({
       )}
 
       {/* Pagination Controls */}
-      <div className='flex items-center justify-between px-4 py-2 border-t bg-white rounded-b-md'>
-        <div className='text-sm text-gray-600'>
-          Page {pagination?.currentPage} of {pagination?.totalPages}
-          {' '}({pagination?.total || 0} total items)
+      {showPagination && (
+        <div className='flex items-center justify-between px-4 py-2 border-t bg-white rounded-b-md'>
+          <div className='text-sm text-gray-600'>
+            Page {pagination?.currentPage} of {pagination?.totalPages} (
+            {pagination?.total || 0} total items)
+          </div>
+          <div className='flex items-center space-x-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onPageChange(1)}
+              disabled={pagination?.currentPage === 1 || !pagination?.total}
+            >
+              First
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onPageChange(pagination?.currentPage - 1)}
+              disabled={pagination?.currentPage === 1 || !pagination?.total}
+            >
+              Previous
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onPageChange(pagination?.currentPage + 1)}
+              disabled={
+                pagination?.currentPage === pagination?.totalPages ||
+                !pagination?.total
+              }
+            >
+              Next
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onPageChange(pagination?.totalPages)}
+              disabled={
+                pagination?.currentPage === pagination?.totalPages ||
+                !pagination?.total
+              }
+            >
+              Last
+            </Button>
+          </div>
         </div>
-        <div className='flex items-center space-x-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => onPageChange(1)}
-            disabled={pagination?.currentPage === 1 || !pagination?.total}
-          >
-            First
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => onPageChange(pagination?.currentPage - 1)}
-            disabled={pagination?.currentPage === 1 || !pagination?.total}
-          >
-            Previous
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => onPageChange(pagination?.currentPage + 1)}
-            disabled={pagination?.currentPage === pagination?.totalPages || !pagination?.total}
-          >
-            Next
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => onPageChange(pagination?.totalPages)}
-            disabled={pagination?.currentPage === pagination?.totalPages || !pagination?.total}
-          >
-            Last
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

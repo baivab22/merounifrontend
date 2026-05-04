@@ -374,7 +374,7 @@ export default function BoardDashboard() {
     // --- RENDER ---
 
     return (
-        <div className="flex flex-col h-[calc(100vh-100px)] font-[Figtree] text-gray-800 overflow-hidden bg-gradient-to-br from-[#f0f4f8] to-[#e8eef5]">
+        <div className="flex flex-col h-[calc(100vh-100px)] font-sans text-gray-800 overflow-hidden bg-gradient-to-br from-[#f0f4f8] to-[#e8eef5]">
             
             {/* Breadcrumb */}
             <div className="flex items-center justify-between px-6 py-4">

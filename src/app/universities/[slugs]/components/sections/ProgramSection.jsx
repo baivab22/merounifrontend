@@ -14,7 +14,9 @@ const ProgramSection = ({ university }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const programs = Array.isArray(university?.programs) ? university.programs : []
+  const programs = Array.isArray(university?.programs)
+    ? university.programs
+    : []
   const displayedPrograms = programs.slice(0, 4)
 
   const filteredPrograms = useMemo(() => {
@@ -43,15 +45,15 @@ const ProgramSection = ({ university }) => {
           <Link
             key={item.id || idx}
             href={`/${university.slugs}/programs/${item?.program?.slugs}`}
-            className='group flex items-center justify-between rounded-xl bg-gray-50/50 px-5 py-4 border border-transparent hover:border-[#30AD8F]/30 hover:bg-white hover:shadow-xl hover:shadow-[#30AD8F]/5 transition-all duration-300'
+            className='group flex items-center justify-between rounded-xl bg-gray-50/50 px-4 py-3.5 border border-transparent hover:border-[#30AD8F]/30 hover:bg-white hover:shadow-lg transition-all duration-300'
           >
             <div className='flex items-center gap-3'>
-              <span className='h-2 w-2 rounded-full bg-[#30AD8F] group-hover:scale-125 transition-transform' />
-              <span className='text-sm md:text-base font-bold text-gray-700 group-hover:text-gray-900 transition-colors'>
+              <span className='h-1.5 w-1.5 rounded-full bg-[#30AD8F]/60 group-hover:bg-[#30AD8F] transition-colors shadow-sm' />
+              <span className='text-sm font-bold text-gray-700 group-hover:text-[#387cae] transition-colors'>
                 {item?.program?.title || 'N/A'}
               </span>
             </div>
-            <ArrowRight className='w-4 h-4 text-[#30AD8F] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all' />
+            <ArrowRight className='w-3.5 h-3.5 text-[#30AD8F] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all' />
           </Link>
         ))}
       </div>
@@ -69,7 +71,11 @@ const ProgramSection = ({ university }) => {
       )}
 
       {/* View All Dialog */}
-      <Dialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} className='max-w-2xl'>
+      <Dialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        className='max-w-2xl'
+      >
         <DialogHeader>
           <DialogTitle className='flex items-center gap-3 text-[#30AD8F]'>
             <div className='w-1.5 h-5 bg-[#30AD8F] rounded-full' />
@@ -77,7 +83,7 @@ const ProgramSection = ({ university }) => {
           </DialogTitle>
           <DialogClose onClick={() => setIsDialogOpen(false)} />
         </DialogHeader>
-        
+
         <DialogContent className='p-6'>
           <div className='relative mb-6'>
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' />
@@ -99,7 +105,7 @@ const ProgramSection = ({ university }) => {
                 >
                   <div className='flex items-center gap-3'>
                     <span className='h-1.5 w-1.5 rounded-full bg-[#30AD8F]/60 group-hover:bg-[#30AD8F] transition-colors shadow-sm' />
-                    <span className='text-sm font-bold text-gray-700 group-hover:text-[#387cae] transition-colors line-clamp-1'>
+                    <span className='text-sm font-bold text-gray-700 group-hover:text-[#387cae] transition-colors'>
                       {item?.program?.title || 'N/A'}
                     </span>
                   </div>
@@ -108,7 +114,9 @@ const ProgramSection = ({ university }) => {
               ))
             ) : (
               <div className='col-span-full py-12 text-center'>
-                <p className='text-gray-400 text-sm font-medium'>No programs found matching your search.</p>
+                <p className='text-gray-400 text-sm font-medium'>
+                  No programs found matching your search.
+                </p>
               </div>
             )}
           </div>

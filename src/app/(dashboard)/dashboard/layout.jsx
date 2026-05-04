@@ -9,6 +9,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
 import AdminNavbar from '../../../ui/molecules/AdminNavbar'
 import Menu from '../../../ui/molecules/Menu'
+import Loading from '../../../ui/molecules/Loading'
 
 export default function DashboardLayout({ children }) {
   const { isBooted, isAuthenticated } = useAuthGuard()
@@ -36,14 +37,7 @@ export default function DashboardLayout({ children }) {
 
   // Show loading state while checking authentication
   if (!isBooted) {
-    return (
-      <div className='h-screen flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Loading...</p>
-        </div>
-      </div>
-    )
+    return <Loading />
   }
 
   // Only show dashboard content if authenticated
@@ -54,11 +48,13 @@ export default function DashboardLayout({ children }) {
   return (
     <PageHeadingProvider>
       <div className='min-h-screen bg-[#F7F8FA] flex text-black font-sans'>
-
         {/* BACKDROP for Mobile */}
         <div
-          className={`fixed inset-0 bg-black/50 z-40 transition-opacity md:hidden ${!isCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-            }`}
+          className={`fixed inset-0 bg-black/50 z-40 transition-opacity md:hidden ${
+            !isCollapsed
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none'
+          }`}
           onClick={() => setIsCollapsed(true)} // Close on click
         />
 
@@ -66,9 +62,10 @@ export default function DashboardLayout({ children }) {
         <div
           className={`
             fixed md:sticky top-0 h-screen bg-white z-50 border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out
-            ${isCollapsed
-              ? '-translate-x-full md:translate-x-0 md:w-20'
-              : 'translate-x-0 md:w-64'
+            ${
+              isCollapsed
+                ? '-translate-x-full md:translate-x-0 md:w-20'
+                : 'translate-x-0 md:w-64'
             }
           `}
         >
@@ -77,8 +74,9 @@ export default function DashboardLayout({ children }) {
             <div className='p-4 flex items-center justify-between h-[70px]'>
               <Link
                 href='/'
-                className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:justify-center w-full' : 'justify-start'
-                  }`}
+                className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${
+                  isCollapsed ? 'md:justify-center w-full' : 'justify-start'
+                }`}
               >
                 <Image
                   src='/images/logo.png'
@@ -108,7 +106,6 @@ export default function DashboardLayout({ children }) {
                 )}
               </button>
             </div>
-
           </div>
 
           {/* Scrollable Menu */}
@@ -119,9 +116,8 @@ export default function DashboardLayout({ children }) {
 
         {/* RIGHT CONTENT */}
         <div className='flex-1 flex flex-col min-w-0 transition-all duration-300'>
-
-          <AdminNavbar 
-            onMenuClick={() => setIsCollapsed(false)} 
+          <AdminNavbar
+            onMenuClick={() => setIsCollapsed(false)}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
           />

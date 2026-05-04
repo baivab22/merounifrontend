@@ -28,11 +28,6 @@ export default function SiteControlPage() {
 
     // Search State
     const [searchQuery, setSearchQuery] = useState('')
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        totalPages: 1,
-        total: 0
-    })
 
     useEffect(() => {
         setHeading('Site Control')
@@ -59,12 +54,6 @@ export default function SiteControlPage() {
             })
         }
         setFilteredConfigs(filtered)
-        setPagination(prev => ({
-            ...prev,
-            total: filtered.length,
-            totalPages: Math.ceil(filtered.length / 10) || 1
-        }))
-
     }, [configs, searchQuery])
 
 
@@ -96,7 +85,6 @@ export default function SiteControlPage() {
 
     const handleSearchInput = (value) => {
         setSearchQuery(value)
-        setPagination(prev => ({ ...prev, currentPage: 1 }))
     }
 
     const columns = useMemo(() => [
@@ -162,11 +150,6 @@ export default function SiteControlPage() {
     ], [])
 
 
-    const paginatedData = useMemo(() => {
-        const startIndex = (pagination.currentPage - 1) * 10
-        const endIndex = startIndex + 10
-        return filteredConfigs.slice(startIndex, endIndex)
-    }, [filteredConfigs, pagination.currentPage])
 
 
     if (loading) {
@@ -202,12 +185,10 @@ export default function SiteControlPage() {
             <div className="bg-white rounded-md shadow-sm border overflow-hidden">
                 <Table
                     loading={loading}
-                    data={paginatedData}
+                    data={filteredConfigs}
                     columns={columns}
-                    pagination={pagination}
-                    onPageChange={(p) => setPagination(prev => ({ ...prev, currentPage: p }))}
-                    onSearch={handleSearchInput}
                     showSearch={false}
+                    showPagination={false}
                 />
             </div>
 
