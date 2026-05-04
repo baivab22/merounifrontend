@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { debounce } from 'lodash'
-import { Search, X, Loader2, BookOpen, Clock, Building2, Filter } from 'lucide-react'
+import { Search, X, Loader2, BookOpen, Building2 } from 'lucide-react'
 import ProgramCard from '@/ui/molecules/cards/ProgramCard'
 import EmptyState from '@/ui/shadcn/EmptyState'
-import Pagination from '@/app/blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { getPrograms, getUniversities, getLevels } from '../actions'
 
 const FilterSection = React.memo(function FilterSection({
@@ -183,40 +183,40 @@ const Body = () => {
 
     return (
         <div className='max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 py-10 mb-20'>
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
-            <div className='flex-1 w-full space-y-6'>
-                <div className='flex items-center gap-4 mb-2'>
-                    <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Programs</h1>
-                    <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
-                        {pagination.totalCount || '0'} Available
-                    </span>
-                </div>
+            <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
+                <div className='flex-1 w-full space-y-6'>
+                    <div className='flex items-center gap-4 mb-2'>
+                        <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>Programs</h1>
+                        <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                            {pagination.totalCount || '0'} Available
+                        </span>
+                    </div>
 
-                <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-                    <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-                    <input
-                        type='text'
-                        value={searchInputValue}
-                        onChange={handleSearchChange}
-                        placeholder='Search programs, degrees or domains...'
-                        className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-                    />
-                    <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                        {loading && (
-                            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                        )}
-                        {searchInputValue && (
-                            <button
-                                onClick={() => { setSearchInputValue(''); updateURL({ q: '', page: 1 }) }}
-                                className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                            >
-                                <X className='w-5 h-5' />
-                            </button>
-                        )}
+                    <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+                        <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                        <input
+                            type='text'
+                            value={searchInputValue}
+                            onChange={handleSearchChange}
+                            placeholder='Search programs, degrees or domains...'
+                            className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                        />
+                        <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                            {loading && (
+                                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                            )}
+                            {searchInputValue && (
+                                <button
+                                    onClick={() => { setSearchInputValue(''); updateURL({ q: '', page: 1 }) }}
+                                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                                >
+                                    <X className='w-5 h-5' />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
             <div className='flex flex-col lg:flex-row gap-12'>
                 {/* Sidebar */}
@@ -271,11 +271,14 @@ const Body = () => {
                             </div>
 
                             {pagination.totalPages > 1 && (
-                                <div className='mt-16 flex justify-center'>
-                                    <Pagination
-                                        pagination={pagination}
-                                        onPageChange={(p) => updateURL({ page: p })}
-                                    />
+                                <div className='mt-20 flex justify-center'>
+                                    <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                                        <Pagination
+                                            currentPage={pagination.currentPage}
+                                            totalPages={pagination.totalPages}
+                                            onPageChange={(p) => updateURL({ page: p })}
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </>

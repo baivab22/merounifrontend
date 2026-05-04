@@ -8,6 +8,7 @@ import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { fetchPublicSkillCourses } from './actions'
 import { THEME_BLUE } from '@/constants/constants'
+import Pagination from '@/ui/molecules/common/Pagination'
 
 // FilterSection component for consistency
 const FilterSection = React.memo(function FilterSection({
@@ -59,6 +60,11 @@ const SkillCoursesPage = () => {
 
     const [searchTerm, setSearchTerm] = useState(q)
     const [isSearching, setIsSearching] = useState(false)
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0
+    })
 
     // Mode options
     const modeOptions = [
@@ -82,17 +88,28 @@ const SkillCoursesPage = () => {
         router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
     }, [searchParams, pathname, router])
 
+    const handlePageChange = (page) => {
+        if (page > 0 && page <= pagination.totalPages) {
+            updateURL({ page })
+        }
+    }
+
     // Fetch courses
     useEffect(() => {
         const getCourses = async () => {
+            const pg = parseInt(searchParams.get('page')) || 1
             setLoading(true)
             try {
                 const response = await fetchPublicSkillCourses({
                     q,
                     type,
-                    price
+                    price,
+                    page: pg
                 })
                 setCourses(response.items || [])
+                if (response.pagination) {
+                    setPagination(response.pagination)
+                }
             } catch (error) {
                 console.error('Error:', error)
             } finally {
@@ -100,7 +117,7 @@ const SkillCoursesPage = () => {
             }
         }
         getCourses()
-    }, [q, type, price])
+    }, [q, type, price, searchParams])
 
     // Debounce search input
     useEffect(() => {
@@ -108,7 +125,7 @@ const SkillCoursesPage = () => {
         const handler = setTimeout(() => {
             setIsSearching(false)
             if (searchTerm !== q) {
-                updateURL({ q: searchTerm })
+                updateURL({ q: searchTerm, page: 1 })
             }
         }, 500)
         return () => clearTimeout(handler)
@@ -116,13 +133,13 @@ const SkillCoursesPage = () => {
 
     const clearFilters = () => {
         setSearchTerm('')
-        updateURL({ q: '', type: '', price: '' })
+        updateURL({ q: '', type: '', price: '', page: 1 })
     }
 
     const handleFilterToggle = (key, val) => {
         const current = searchParams.get(key)
         const newVal = current === val ? '' : val
-        updateURL({ [key]: newVal })
+        updateURL({ [key]: newVal, page: 1 })
     }
 
     return (
@@ -136,8 +153,8 @@ const SkillCoursesPage = () => {
                             <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                                 Short-Term Courses
                             </h1>
-                            <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
-                                {courses.length} Results
+                            <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                                {pagination.totalCount || courses.length} Results
                             </span>
                         </div>
 
@@ -219,14 +236,28 @@ const SkillCoursesPage = () => {
                                 />
                             </div>
                         ) : (
-                            <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
-                                {courses.map((course) => (
-                                    <SkillCourseCard
-                                        key={course.id}
-                                        course={course}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
+                                    {courses.map((course) => (
+                                        <SkillCourseCard
+                                            key={course.id}
+                                            course={course}
+                                        />
+                                    ))}
+                                </div>
+
+                                {pagination.totalPages > 1 && (
+                                    <div className='mt-20 flex justify-center'>
+                                        <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                                            <Pagination
+                                                currentPage={pagination.currentPage}
+                                                totalPages={pagination.totalPages}
+                                                onPageChange={handlePageChange}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </main>
                 </div>

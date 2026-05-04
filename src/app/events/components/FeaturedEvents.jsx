@@ -2,7 +2,7 @@
 
 import React from 'react'
 import EventCard from '@/ui/molecules/cards/EventCard'
-import Pagination from '../../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { GridSkeleton } from '@/ui/shadcn/GridSkeleton'
 import EventCardSkeleton from '@/ui/shadcn/EventCardSkeleton'
 import Link from 'next/link'
@@ -66,9 +66,15 @@ const FeaturedEvents = ({ events, featuredEvents = [], loading, pagination, onPa
         />
       )}
 
-      {pagination && pagination.totalCount > 0 && (
-        <div className='flex justify-center mt-12'>
-          <Pagination pagination={pagination} onPageChange={onPageChange} />
+      {pagination && pagination.totalPages > 1 && (
+        <div className='mt-20 flex justify-center'>
+          <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -7,12 +7,16 @@ import { Search, Building2, X } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import UniversityShimmer from './UniversityShimmer'
-import Pagination from '@/app/blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import UniversityCard from './UniversityCard'
 import { authFetch } from '@/app/utils/authFetch'
 
 // Client-side fetch functions
-const fetchUniversitiesFromAPI = async (page = 1, filters = {}, searchQuery = '') => {
+const fetchUniversitiesFromAPI = async (
+  page = 1,
+  filters = {},
+  searchQuery = ''
+) => {
   try {
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -30,7 +34,7 @@ const fetchUniversitiesFromAPI = async (page = 1, filters = {}, searchQuery = ''
       // If frontend supports multiple selection, we might need to adjust backend or send one.
       // For now, let's assume single selection or send the last selected one for simplicity as per requirement "Public/Private" usually exclusive or filtered one by one.
       // Actually, my backend logic `type_of_institute = :type` implies a single value.
-      // I will take the last selected value to filter. 
+      // I will take the last selected value to filter.
       queryParams.append('type', filters.type[filters.type.length - 1])
     }
 
@@ -62,14 +66,13 @@ const fetchUniversitiesFromAPI = async (page = 1, filters = {}, searchQuery = ''
   }
 }
 
-// Memoized FilterSection 
+// Memoized FilterSection
 const FilterSection = React.memo(function FilterSection({
   title,
   options,
   selectedValues,
-  onCheckboxChange,
+  onCheckboxChange
 }) {
-
   return (
     <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
       <div className='flex justify-between items-center mb-4'>
@@ -100,7 +103,6 @@ const FilterSection = React.memo(function FilterSection({
   )
 })
 
-
 const Body = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -126,23 +128,25 @@ const Body = () => {
   })
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        if (Array.isArray(value)) {
-          if (value.length > 0) newParams.set(key, value[value.length - 1])
-          else newParams.delete(key)
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          if (Array.isArray(value)) {
+            if (value.length > 0) newParams.set(key, value[value.length - 1])
+            else newParams.delete(key)
+          } else {
+            newParams.set(key, value)
+          }
         } else {
-          newParams.set(key, value)
+          newParams.delete(key)
         }
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
-
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Sync state on URL change (e.g. Back button)
   useEffect(() => {
@@ -151,10 +155,9 @@ const Body = () => {
     const type = searchParams.get('type')
 
     setSearchQuery(q)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
-    if (type) setSelectedFilters(prev => ({ ...prev, type: [type] }))
-    else setSelectedFilters(prev => ({ ...prev, type: [] }))
-
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
+    if (type) setSelectedFilters((prev) => ({ ...prev, type: [type] }))
+    else setSelectedFilters((prev) => ({ ...prev, type: [] }))
   }, [searchParams])
 
   // Scroll to top on URL change
@@ -200,7 +203,6 @@ const Body = () => {
         setPagination(data.pagination)
 
         if (q) setIsSearching(false)
-
       } catch (err) {
         setUniversities([])
       } finally {
@@ -209,7 +211,6 @@ const Body = () => {
     }
     fetchData()
   }, [searchParams])
-
 
   const handleFilterChange = (filterType, value) => {
     setSelectedFilters((prev) => {
@@ -247,9 +248,9 @@ const Body = () => {
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>
           <div className='flex items-center gap-4 mb-2'>
-            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+            <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
               Universities
-            </h2>
+            </h1>
             <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
               {pagination.totalItems || '0'} Results
             </span>
@@ -285,7 +286,9 @@ const Body = () => {
       <div className='flex flex-col lg:flex-row gap-12'>
         <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
           <div className='flex justify-between items-center mb-[-16px] px-1'>
-            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+              Filters
+            </span>
             <button
               className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
               onClick={() => {
@@ -316,10 +319,7 @@ const Body = () => {
           ) : universities.length > 0 ? (
             <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
               {universities.map((uni, idx) => (
-                <UniversityCard
-                  key={uni.id || idx}
-                  university={uni}
-                />
+                <UniversityCard key={uni.id || idx} university={uni} />
               ))}
             </div>
           ) : (
@@ -338,19 +338,19 @@ const Body = () => {
             />
           )}
 
-          {!searchQuery &&
-            universities.length > 0 &&
-            pagination.totalPages > 1 && (
-              <div className='mt-16 flex justify-center'>
+          {pagination.totalPages > 1 && (
+            <div className='mt-20 flex justify-center'>
+              <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
                 <Pagination
-                  pagination={pagination}
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
                   onPageChange={handlePageChange}
                 />
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
-
     </div>
   )
 }

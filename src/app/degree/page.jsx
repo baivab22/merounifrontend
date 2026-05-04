@@ -6,7 +6,7 @@ import { debounce } from 'lodash'
 import { BookOpen, Search, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import Pagination from '../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { fetchDegrees, getDiscipline } from './actions'
 
 // Memoized FilterSection with local state for performant typing
@@ -61,7 +61,11 @@ const FilterSection = React.memo(function FilterSection({
         )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-36 pr-2 custom-scrollbar'>
-        {options.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : options.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>
@@ -95,7 +99,9 @@ const DegreePage = () => {
 
   // Initialization from search params
   const initialSearch = searchParams.get('q') || ''
-  const initialDisciplines = searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) || []
+  const initialDisciplines =
+    searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) ||
+    []
   const initialPage = parseInt(searchParams.get('page')) || 1
 
   const [degrees, setDegrees] = useState([])
@@ -110,34 +116,40 @@ const DegreePage = () => {
     totalCount: 0
   })
   const [isSearching, setIsSearching] = useState(false)
-  const [selectedDisciplines, setSelectedDisciplines] = useState(initialDisciplines)
+  const [selectedDisciplines, setSelectedDisciplines] =
+    useState(initialDisciplines)
   const [filteredDisciplines, setFilteredDisciplines] = useState([])
   const [isDisciplinesLoading, setIsDisciplinesLoading] = useState(false)
   const [filterInput, setFilterInput] = useState('')
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Sync state with URL
   useEffect(() => {
     const q = searchParams.get('q') || ''
-    const discs = searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) || []
+    const discs =
+      searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) ||
+      []
     const pg = parseInt(searchParams.get('page')) || 1
 
     setSearchTerm(q)
     setDebouncedSearch(q)
     setSelectedDisciplines(discs)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
   }, [searchParams])
 
   // Scroll to top on URL change
@@ -177,28 +189,33 @@ const DegreePage = () => {
     fetchDisciplinesList('')
   }, [fetchDisciplinesList])
 
-  const loadDegrees = useCallback(async (page = 1, search = '', disciplines = []) => {
-    setLoading(true)
-    try {
-      const response = await fetchDegrees(search, page, disciplines)
-      setDegrees(response.items || [])
-      setPagination((prev) => ({
-        ...prev,
-        totalPages: response.pagination?.totalPages ?? 1,
-        totalCount: response.pagination?.totalCount ?? 0
-      }))
-    } catch (error) {
-      console.error('Error:', error)
-      setDegrees([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const loadDegrees = useCallback(
+    async (page = 1, search = '', disciplines = []) => {
+      setLoading(true)
+      try {
+        const response = await fetchDegrees(search, page, disciplines)
+        setDegrees(response.items || [])
+        setPagination((prev) => ({
+          ...prev,
+          totalPages: response.pagination?.totalPages ?? 1,
+          totalCount: response.pagination?.totalCount ?? 0
+        }))
+      } catch (error) {
+        console.error('Error:', error)
+        setDegrees([])
+      } finally {
+        setLoading(false)
+      }
+    },
+    []
+  )
 
   // Fetch when searchParams change
   useEffect(() => {
     const q = searchParams.get('q') || ''
-    const discs = searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) || []
+    const discs =
+      searchParams.get('disciplines')?.split(',').map(Number).filter(Boolean) ||
+      []
     const pg = parseInt(searchParams.get('page')) || 1
     loadDegrees(pg, q, discs)
   }, [searchParams, loadDegrees])
@@ -227,22 +244,21 @@ const DegreePage = () => {
   return (
     <>
       <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
-        <div className='max-w-7xl mx-auto'>
-
+        <div className='max-w-[1600px] mx-auto'>
           {/* Search Bar Section */}
           <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
             <div className='flex-1 space-y-6 w-full'>
               <div className='flex items-center gap-4 mb-2'>
-                <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+                <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                   Degrees
-                </h2>
-                <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                </h1>
+                <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                   {pagination.totalCount || '0'} Results
                 </span>
               </div>
 
-              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A6FA7] focus-within:border-[#0A6FA7] transition-all px-5 py-2.5 relative w-full group'>
-                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
                 <input
                   type='text'
                   value={searchTerm}
@@ -252,7 +268,7 @@ const DegreePage = () => {
                 />
                 <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
                   {isSearching && (
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A6FA7]'></div>
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
                   )}
                   {searchTerm && (
                     <button
@@ -273,7 +289,9 @@ const DegreePage = () => {
             {/* Sidebar */}
             <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
               <div className='flex justify-between items-center mb-[-16px] px-1'>
-                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
                 <button
                   className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
                   onClick={clearFilters}
@@ -301,9 +319,11 @@ const DegreePage = () => {
               {!loading && !isScrolling && (
                 <div className='mb-8 px-2'>
                   <p className='text-sm text-gray-500 font-semibold'>
-                    Showing <span className='text-gray-900'>{degrees.length}</span>{' '}
-                    of{' '}
-                    <span className='text-gray-900'>{pagination.totalCount}</span>{' '}
+                    Showing{' '}
+                    <span className='text-gray-900'>{degrees.length}</span> of{' '}
+                    <span className='text-gray-900'>
+                      {pagination.totalCount}
+                    </span>{' '}
                     results
                   </p>
                 </div>
@@ -339,7 +359,10 @@ const DegreePage = () => {
                 <>
                   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                     {degrees.map((degree) => (
-                      <DegreeCard key={degree.id ?? degree.slug} degree={degree} />
+                      <DegreeCard
+                        key={degree.id ?? degree.slug}
+                        degree={degree}
+                      />
                     ))}
                   </div>
 
@@ -348,7 +371,8 @@ const DegreePage = () => {
                     <div className='mt-20 flex justify-center'>
                       <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
                         <Pagination
-                          pagination={pagination}
+                          currentPage={pagination.currentPage}
+                          totalPages={pagination.totalPages}
                           onPageChange={handlePageChange}
                         />
                       </div>

@@ -5,7 +5,7 @@ import { Search, Briefcase, X } from 'lucide-react'
 import { debounce } from 'lodash'
 import { getVacancies } from '../actions'
 import Link from 'next/link'
-import Pagination from '../../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import { formatDate } from '@/utils/date.util'
 import EmptyState from '@/ui/shadcn/EmptyState'
@@ -97,7 +97,7 @@ const VacanciesContent = () => {
                             <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                                 Vacancies
                             </h1>
-                            <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                            <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                                 {pagination.totalCount} Openings
                             </span>
                         </div>
@@ -153,7 +153,7 @@ const VacanciesContent = () => {
                                 <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
                                     {vacancies.map((vacancy) => (
                                         <Link href={`/vacancies/${vacancy.slugs}`} key={vacancy.id} className='group'>
-                                            <div className='h-full bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-[#0A6FA7]/5 hover:border-[#0A6FA7]/20 transition-all duration-500 flex flex-col overflow-hidden'>
+                                            <div className='h-full bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-[#0A70A7]/5 hover:border-[#0A70A7]/20 transition-all duration-500 flex flex-col overflow-hidden'>
                                                 <div className='relative h-48 w-full bg-gray-100'>
                                                     <img
                                                         src={vacancy?.featuredImage || '/images/job.webp'}
@@ -163,7 +163,7 @@ const VacanciesContent = () => {
                                                     <div className='absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60' />
                                                     {vacancy.associated_organization_name && (
                                                         <div className='absolute bottom-4 left-4 right-4'>
-                                                            <span className='inline-block px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-[#0A6FA7] shadow-sm'>
+                                                            <span className='inline-block px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-[#0A70A7] shadow-sm'>
                                                                 {vacancy.associated_organization_name}
                                                             </span>
                                                         </div>
@@ -171,7 +171,7 @@ const VacanciesContent = () => {
                                                 </div>
 
                                                 <div className='p-8 flex flex-col flex-1'>
-                                                    <h2 className='text-xl font-bold text-gray-900 mb-3 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 tracking-tight'>
+                                                    <h2 className='text-xl font-bold text-gray-900 mb-3 group-hover:text-[#0A70A7] transition-colors line-clamp-2 tracking-tight'>
                                                         {vacancy.title}
                                                     </h2>
                                                     <p className='text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed'>
@@ -182,8 +182,8 @@ const VacanciesContent = () => {
                                                             <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400'>Posted</span>
                                                             <span className='text-sm font-bold text-gray-700'>{formatDate(vacancy.createdAt)}</span>
                                                         </div>
-                                                        <div className='w-8 h-8 rounded-full bg-[#0A6FA7]/10 flex items-center justify-center group-hover:bg-[#0A6FA7] transition-colors duration-500'>
-                                                            <Briefcase className='w-4 h-4 text-[#0A6FA7] group-hover:text-white transition-colors duration-500' />
+                                                        <div className='w-8 h-8 rounded-full bg-[#0A70A7]/10 flex items-center justify-center group-hover:bg-[#0A70A7] transition-colors duration-500'>
+                                                            <Briefcase className='w-4 h-4 text-[#0A70A7] group-hover:text-white transition-colors duration-500' />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -194,10 +194,13 @@ const VacanciesContent = () => {
 
                                 {pagination.totalPages > 1 && (
                                     <div className='mt-20 flex justify-center'>
-                                        <Pagination
-                                            pagination={pagination}
-                                            onPageChange={handlePageChange}
-                                        />
+                                        <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                                            <Pagination
+                                                currentPage={pagination.currentPage}
+                                                totalPages={pagination.totalPages}
+                                                onPageChange={handlePageChange}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </>

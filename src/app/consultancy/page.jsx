@@ -11,7 +11,7 @@ import { IoSearch } from 'react-icons/io5'
 import Footer from '../../components/Frontpage/Footer'
 import Header from '../../components/Frontpage/Header'
 import Navbar from '../../components/Frontpage/Navbar'
-import Pagination from '../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { getConsultancies, getConsultancyLocations } from './actions'
 
 // Memoized FilterSection with local state for performant typing
@@ -21,7 +21,8 @@ const FilterSection = React.memo(function FilterSection({
   selectedValues,
   onSelect,
   onRemove,
-  placeholder = "Search..."
+  placeholder = "Search...",
+  isLoading = false
 }) {
   const [localSearch, setLocalSearch] = useState('')
 
@@ -48,9 +49,18 @@ const FilterSection = React.memo(function FilterSection({
           placeholder={placeholder}
           className='w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-[#0A70A7] focus:border-[#0A70A7] transition-all'
         />
+        {isLoading && (
+          <div className='absolute right-3'>
+            <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-36 pr-2 custom-scrollbar'>
-        {filteredOptions.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : filteredOptions.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>
@@ -103,6 +113,7 @@ export default function ConsultanciesPage() {
 
   // Filter Data
   const [locations, setLocations] = useState({ cities: [], destinations: [] })
+  const [isLocationsLoading, setIsLocationsLoading] = useState(false)
   const [selectedCity, setSelectedCity] = useState(initialCity)
   const [selectedDestination, setSelectedDestination] = useState(initialDest)
 
@@ -122,12 +133,17 @@ export default function ConsultanciesPage() {
   // Fetch Locations/Destinations
   useEffect(() => {
     async function loadLocations() {
-      const res = await getConsultancyLocations()
-      if (res?.data) {
-        setLocations({
-          cities: (res.data.cities || []).map(c => typeof c === 'string' ? c : c.city || c.name || '').filter(Boolean),
-          destinations: (res.data.destinations || []).map(d => typeof d === 'string' ? d : d.country || d.name || '').filter(Boolean)
-        })
+      setIsLocationsLoading(true)
+      try {
+        const res = await getConsultancyLocations()
+        if (res?.data) {
+          setLocations({
+            cities: (res.data.cities || []).map(c => typeof c === 'string' ? c : c.city || c.name || '').filter(Boolean),
+            destinations: (res.data.destinations || []).map(d => typeof d === 'string' ? d : d.country || d.name || '').filter(Boolean)
+          })
+        }
+      } finally {
+        setIsLocationsLoading(false)
       }
     }
     loadLocations()
@@ -212,15 +228,15 @@ export default function ConsultanciesPage() {
             <div className='flex-1 space-y-6 w-full'>
               <div className='flex items-center gap-4 mb-2'>
                 <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
-                  Explore <span className='text-[#0A6FA7]'>Consultancies</span>
+                  Explore <span className='text-[#0A70A7]'>Consultancies</span>
                 </h1>
                 <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                   {pagination.totalCount || '0'} Results
                 </span>
               </div>
 
-              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A6FA7] focus-within:border-[#0A6FA7] transition-all px-5 py-2.5 relative w-full group'>
-                <IoSearch className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+                <IoSearch className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
                 <input
                   type='text'
                   value={searchTerm}
@@ -268,6 +284,7 @@ export default function ConsultanciesPage() {
                 onSelect={(val) => updateURL({ city: val, page: 1 })}
                 onRemove={() => updateURL({ city: '', page: 1 })}
                 placeholder="Search city..."
+                isLoading={isLocationsLoading}
               />
 
               <FilterSection
@@ -277,6 +294,7 @@ export default function ConsultanciesPage() {
                 onSelect={(val) => updateURL({ destination: val, page: 1 })}
                 onRemove={() => updateURL({ destination: '', page: 1 })}
                 placeholder="Search destination..."
+                isLoading={isLocationsLoading}
               />
             </div>
 
@@ -323,13 +341,15 @@ export default function ConsultanciesPage() {
                 </div>
               )}
 
-              {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className='mt-16 flex justify-center'>
-                  <Pagination
-                    pagination={pagination}
-                    onPageChange={handlePageChange}
-                  />
+                <div className='mt-20 flex justify-center'>
+                  <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                    <Pagination
+                      currentPage={pagination.currentPage}
+                      totalPages={pagination.totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
                 </div>
               )}
             </div>

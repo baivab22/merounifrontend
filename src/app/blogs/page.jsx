@@ -114,17 +114,20 @@ const Blogs = () => {
   })
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Data Fetching Logic
   const fetchBlogsData = async (page = 1, search = '', category = '') => {
@@ -149,7 +152,7 @@ const Blogs = () => {
         }
       } else {
         setBlogs([])
-        setPagination(prev => ({ ...prev, totalCount: 0, currentPage: page }))
+        setPagination((prev) => ({ ...prev, totalCount: 0, currentPage: page }))
       }
     } catch (error) {
       console.error('Error fetching blogs:', error)
@@ -166,8 +169,8 @@ const Blogs = () => {
 
     setSearchQuery(q)
     setSelectedCategory(cat)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
-    
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
+
     fetchBlogsData(pg, q, cat)
   }, [searchParams])
 
@@ -226,9 +229,11 @@ const Blogs = () => {
     if (!q) {
       setCategories(allCategories)
     } else {
-      setCategories(allCategories.filter(cat => 
-        cat.title.toLowerCase().includes(q.toLowerCase())
-      ))
+      setCategories(
+        allCategories.filter((cat) =>
+          cat.title.toLowerCase().includes(q.toLowerCase())
+        )
+      )
     }
   }
 
@@ -240,7 +245,6 @@ const Blogs = () => {
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
       <div className='max-w-[1600px] mx-auto'>
-        
         {/* Header Section with Search (Unified Pattern) */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
           <div className='flex-1 space-y-6 w-full'>
@@ -248,13 +252,13 @@ const Blogs = () => {
               <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                 Blogs
               </h1>
-              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+              <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                 {pagination.totalCount || blogs.length} Results
               </span>
             </div>
 
             <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
               <input
                 type='text'
                 value={searchQuery}
@@ -281,11 +285,12 @@ const Blogs = () => {
 
         {/* Sidebar & Content Layout */}
         <div className='flex flex-col lg:flex-row gap-12'>
-          
           {/* Left Sidebar */}
           <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
             <div className='flex justify-between items-center mb-[-16px] px-1'>
-              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                Filters
+              </span>
               {(searchQuery || selectedCategory) && (
                 <button
                   className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'

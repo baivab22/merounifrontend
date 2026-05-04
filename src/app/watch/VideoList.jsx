@@ -10,6 +10,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchCategories } from '../(dashboard)/dashboard/category/action'
 import { fetchVideos } from '../(dashboard)/dashboard/videos/action'
+import Pagination from '@/ui/molecules/common/Pagination'
 
 // Memoized FilterSection matching Admission/DegreePage
 const FilterSection = React.memo(function FilterSection({
@@ -223,7 +224,7 @@ export default function VideoList({ initialData }) {
 
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
-      <div className='max-w-7xl mx-auto'>
+      <div className='max-w-[1600px] mx-auto'>
         {/* Header Section with Search */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
           <div className='flex-1 space-y-6 w-full'>
@@ -231,13 +232,13 @@ export default function VideoList({ initialData }) {
               <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                 Watch Videos
               </h1>
-              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+              <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                 {pagination.totalCount || '0'} Results
               </span>
             </div>
 
-            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A6FA7] focus-within:border-[#0A6FA7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
               <input
                 type='text'
                 value={searchTerm}
@@ -247,7 +248,7 @@ export default function VideoList({ initialData }) {
               />
               <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
                 {isSearching && (
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A6FA7]'></div>
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
                 )}
                 {searchTerm && (
                   <button
@@ -360,13 +361,13 @@ export default function VideoList({ initialData }) {
                           </div>
                         </div>
                         <div className='absolute bottom-4 left-4'>
-                          <span className='bg-[#0A6FA7] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-opacity-80'>
+                          <span className='bg-[#0A70A7] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-opacity-80'>
                             {video.category?.title || 'Video'}
                           </span>
                         </div>
                       </div>
                       <div className='p-6'>
-                        <h2 className='text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#0A6FA7] transition-all leading-tight'>
+                        <h2 className='text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#0A70A7] transition-all leading-tight'>
                           {video.title}
                         </h2>
                         <p className='text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed font-medium'>
@@ -384,26 +385,14 @@ export default function VideoList({ initialData }) {
                   ))}
                 </div>
 
-                {/* Load More replaced by Pagination style if desired, or keep Load More but style it premium */}
                 {pagination.totalPages > 1 && (
                   <div className='mt-20 flex justify-center'>
-                    <div className='flex gap-2'>
-                      {Array.from(
-                        { length: pagination.totalPages },
-                        (_, i) => i + 1
-                      ).map((pg) => (
-                        <button
-                          key={pg}
-                          onClick={() => handlePageChange(pg)}
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
-                            pagination.currentPage === pg
-                              ? 'bg-[#0A6FA7] text-white shadow-lg shadow-blue-200'
-                              : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
-                          }`}
-                        >
-                          {pg}
-                        </button>
-                      ))}
+                    <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={handlePageChange}
+                      />
                     </div>
                   </div>
                 )}

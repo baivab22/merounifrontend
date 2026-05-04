@@ -55,7 +55,11 @@ const FilterSection = React.memo(function FilterSection({
         )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-36 pr-2 custom-scrollbar'>
-        {options.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : options.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>

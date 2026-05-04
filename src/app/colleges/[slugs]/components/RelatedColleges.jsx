@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Loader from '@/ui/molecules/Loading'
 
 const RelatedColleges = ({ college }) => {
   const [colleges, setColleges] = useState([])
@@ -101,8 +102,8 @@ const RelatedColleges = ({ college }) => {
           className='flex overflow-x-auto gap-3 sm:gap-4 px-8 sm:px-12 scroll-smooth no-scrollbar'
         >
           {isLoading ? (
-            <div className='flex justify-center items-center w-full py-8'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
+            <div className='flex justify-center items-center w-full'>
+              <Loader fullPage={false} />
             </div>
           ) : (
             colleges.map((college, index) => (
@@ -114,7 +115,7 @@ const RelatedColleges = ({ college }) => {
                 <div className='cursor-pointer p-2 sm:p-4 w-48 sm:w-56 md:w-64'>
                   <div className='flex justify-center border-2 rounded-2xl sm:rounded-3xl items-center overflow-hidden mb-2 p-2 sm:p-4'>
                     <img
-                      src={college.logo || "/images/logo.png"}
+                      src={college.logo || '/images/logo.png'}
                       alt={college.name}
                       className='w-36 h-36 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain'
                     />

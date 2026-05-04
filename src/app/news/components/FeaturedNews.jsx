@@ -2,7 +2,7 @@
 
 import React from 'react'
 import NewsCard from './NewsCard'
-import Pagination from './Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import NewsShimmer from './NewsShimmer'
 import Link from 'next/link'
 import { Newspaper } from 'lucide-react'
@@ -48,8 +48,16 @@ const FeaturedNews = ({ news, loading, pagination, onPageChange }) => {
         />
       )}
 
-      {pagination && pagination.totalCount > 0 && (
-        <Pagination pagination={pagination} onPageChange={onPageChange} />
+      {pagination && pagination.totalPages > 1 && (
+        <div className='mt-20 flex justify-center'>
+          <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+            <Pagination 
+              currentPage={pagination.currentPage} 
+              totalPages={pagination.totalPages} 
+              onPageChange={onPageChange} 
+            />
+          </div>
+        </div>
       )}
     </div>
   )

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import Pagination from '../../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
 import { fetchCourses, getAdmission } from '../actions'
 
 // Memoized FilterSection matching DegreePage
@@ -64,7 +64,11 @@ const FilterSection = React.memo(function FilterSection({
         )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-48 pr-2 custom-scrollbar'>
-        {options.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : options.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>
@@ -217,7 +221,7 @@ const AdmissionPage = () => {
 
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
-      <div className='max-w-7xl mx-auto'>
+      <div className='max-w-[1600px] mx-auto'>
         
         {/* Header Section with Search (Degree Style) */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
@@ -226,13 +230,13 @@ const AdmissionPage = () => {
               <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                 Admissions
               </h1>
-              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+              <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                 {pagination.totalCount || '0'} Results
               </span>
             </div>
 
-            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A6FA7] focus-within:border-[#0A6FA7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
               <input
                 type='text'
                 value={searchTerm}
@@ -242,7 +246,7 @@ const AdmissionPage = () => {
               />
               <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
                 {isSearching && (
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A6FA7]'></div>
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
                 )}
                 {searchTerm && (
                   <button
@@ -340,7 +344,8 @@ const AdmissionPage = () => {
                   <div className='mt-20 flex justify-center'>
                     <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
                       <Pagination
-                        pagination={pagination}
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
                         onPageChange={handlePageChange}
                       />
                     </div>

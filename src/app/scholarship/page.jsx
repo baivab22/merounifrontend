@@ -7,6 +7,7 @@ import { Award, Search, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
+import Pagination from '@/ui/molecules/common/Pagination'
 import {
   fetchCategories,
   fetchScholarships
@@ -63,7 +64,11 @@ const FilterSection = React.memo(function FilterSection({
         )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-48 pr-2 custom-scrollbar'>
-        {options.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : options.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>
@@ -110,6 +115,11 @@ const ScholarshipPage = () => {
   const [isSearching, setIsSearching] = useState(false)
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false)
   const [filterInput, setFilterInput] = useState('')
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  })
 
   // URL Sync Helper
   const updateURL = useCallback((params) => {
@@ -124,13 +134,21 @@ const ScholarshipPage = () => {
     router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
   }, [searchParams, pathname, router])
 
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= pagination.totalPages) {
+      updateURL({ page })
+    }
+  }
+
   // Sync state with URL params
   useEffect(() => {
     const q = searchParams.get('q') || ''
     const cat = searchParams.get('category') || ''
+    const pg = parseInt(searchParams.get('page')) || 1
     setSearchTerm(q)
     setDebouncedSearch(q)
     setSelectedCategory(cat)
+    setPagination(prev => ({ ...prev, currentPage: pg }))
   }, [searchParams])
 
   // Fetch categories on mount
@@ -157,7 +175,7 @@ const ScholarshipPage = () => {
       setDebouncedSearch(searchTerm)
       setIsSearching(false)
       if (searchTerm !== initialSearch) {
-        updateURL({ q: searchTerm })
+        updateURL({ q: searchTerm, page: 1 })
       }
     }, 500)
     return () => clearTimeout(handler)
@@ -168,13 +186,18 @@ const ScholarshipPage = () => {
     const getScholarships = async () => {
       const q = searchParams.get('q') || ''
       const cat = searchParams.get('category') || ''
+      const pg = parseInt(searchParams.get('page')) || 1
       setLoading(true)
       try {
         const response = await fetchScholarships({
           q,
-          category: cat
+          category: cat,
+          page: pg
         })
         setScholarships(response.scholarships || [])
+        if (response.pagination) {
+          setPagination(response.pagination)
+        }
       } catch (error) {
         console.error('Error:', error)
       } finally {
@@ -193,13 +216,13 @@ const ScholarshipPage = () => {
     setSearchTerm('')
     setSelectedCategory('')
     setFilterInput('')
-    updateURL({ q: '', category: '' })
+    updateURL({ q: '', category: '', page: 1 })
   }
 
   const handleCategoryToggle = (catId) => {
     const newVal = selectedCategory === catId ? '' : catId
     setSelectedCategory(newVal)
-    updateURL({ category: newVal })
+    updateURL({ category: newVal, page: 1 })
   }
 
   const handleCategorySearch = (q) => {
@@ -215,7 +238,7 @@ const ScholarshipPage = () => {
 
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
-      <div className='max-w-7xl mx-auto'>
+      <div className='max-w-[1600px] mx-auto'>
         
         {/* Header Section with Search (Unified Pattern) */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
@@ -224,13 +247,13 @@ const ScholarshipPage = () => {
               <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                 Scholarships
               </h1>
-              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
-                {scholarships.length || '0'} Results
+              <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+                {pagination.totalCount || scholarships.length || '0'} Results
               </span>
             </div>
 
             <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
               <input
                 type='text'
                 value={searchTerm}
@@ -320,14 +343,28 @@ const ScholarshipPage = () => {
                 />
               </div>
             ) : (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {scholarships.map((scholarship) => (
-                  <ScholarshipCard
-                    key={scholarship.id}
-                    scholarship={scholarship}
-                  />
-                ))}
-              </div>
+              <>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                  {scholarships.map((scholarship) => (
+                    <ScholarshipCard
+                      key={scholarship.id}
+                      scholarship={scholarship}
+                    />
+                  ))}
+                </div>
+
+                {pagination.totalPages > 1 && (
+                  <div className='mt-20 flex justify-center'>
+                    <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

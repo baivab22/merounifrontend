@@ -13,7 +13,6 @@ import FilterSection from './FilterSection'
 import { ShimmerCard } from './ShimmerCard'
 import Pagination from '@/ui/molecules/common/Pagination'
 
-
 // Helper to construct School filter params
 const buildSchoolQueryParams = (page, filters = {}, q = '') => {
   const params = new URLSearchParams()
@@ -32,7 +31,6 @@ const buildSchoolQueryParams = (page, filters = {}, q = '') => {
   if (filters.stream_ids && filters.stream_ids.length > 0) {
     params.append('stream_ids', filters.stream_ids.join(','))
   }
-
 
   if (filters.type && filters.type.length > 0) {
     const typeValue = Array.isArray(filters.type)
@@ -78,8 +76,8 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
           collegeImage: school.featured_img || school.image,
           logo: school.logo || 'default_logo.png',
           tags: [
-            ...(school.boards || []).map(b => b.name),
-            ...(school.streams || []).map(s => s.name)
+            ...(school.boards || []).map((b) => b.name),
+            ...(school.streams || []).map((s) => s.name)
           ],
           universityName: school.university?.fullname || school.university?.name
         })) || [],
@@ -97,8 +95,6 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
     }
   }
 }
-
-
 
 const fetchSchoolBoardsFromAPI = async (searchQuery = '') => {
   try {
@@ -144,7 +140,6 @@ const fetchSchoolStreamsFromAPI = async (searchQuery = '') => {
   }
 }
 
-
 const SchoolFinder = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -153,10 +148,11 @@ const SchoolFinder = () => {
   // Initial values from URL
   const initialSearch = searchParams.get('q') || ''
   const initialPage = parseInt(searchParams.get('page')) || 1
-  const initialBoardIds = searchParams.get('board_ids')?.split(',').filter(Boolean) || []
-  const initialStreamIds = searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
+  const initialBoardIds =
+    searchParams.get('board_ids')?.split(',').filter(Boolean) || []
+  const initialStreamIds =
+    searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
   const initialType = searchParams.get('type')?.split(',').filter(Boolean) || []
-
 
   const [schools, setSchools] = useState([])
   const [pagination, setPagination] = useState({
@@ -187,7 +183,6 @@ const SchoolFinder = () => {
     type: initialType
   })
 
-
   const user = useSelector((state) => state.user.data)
   const [wishlistCollegeIds, setWishlistCollegeIds] = useState(new Set())
 
@@ -198,35 +193,40 @@ const SchoolFinder = () => {
       setIsStreamsLoading(true)
       const boardsData = await fetchSchoolBoardsFromAPI()
       const streamsData = await fetchSchoolStreamsFromAPI()
-      setBoards(boardsData.map(b => ({ id: String(b.id), name: b.name })))
-      setStreams(streamsData.map(s => ({ id: String(s.id), name: s.name })))
+      setBoards(boardsData.map((b) => ({ id: String(b.id), name: b.name })))
+      setStreams(streamsData.map((s) => ({ id: String(s.id), name: s.name })))
       setIsBoardsLoading(false)
       setIsStreamsLoading(false)
     }
     initFilters()
   }, [])
 
-
   // Static Filter Options
-  const staticOptions = useMemo(() => ({
-    type: [
-      { id: 'public', name: 'Public' },
-      { id: 'private', name: 'Private' },
-    ]
-  }), [])
+  const staticOptions = useMemo(
+    () => ({
+      type: [
+        { id: 'public', name: 'Public' },
+        { id: 'private', name: 'Private' }
+      ]
+    }),
+    []
+  )
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Fetch Wishlist
   useEffect(() => {
@@ -256,14 +256,14 @@ const SchoolFinder = () => {
     const q = searchParams.get('q') || ''
     const pg = parseInt(searchParams.get('page')) || 1
     const bids = searchParams.get('board_ids')?.split(',').filter(Boolean) || []
-    const sids = searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
+    const sids =
+      searchParams.get('stream_ids')?.split(',').filter(Boolean) || []
     const t = searchParams.get('type')?.split(',').filter(Boolean) || []
 
     setSearchQuery(q)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
     setSelectedFilters({ board_ids: bids, stream_ids: sids, type: t })
   }, [searchParams])
-
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
@@ -290,8 +290,10 @@ const SchoolFinder = () => {
       const q = searchParams.get('q') || ''
       const pg = parseInt(searchParams.get('page')) || 1
       const filters = {
-        board_ids: searchParams.get('board_ids')?.split(',').filter(Boolean) || [],
-        stream_ids: searchParams.get('stream_ids')?.split(',').filter(Boolean) || [],
+        board_ids:
+          searchParams.get('board_ids')?.split(',').filter(Boolean) || [],
+        stream_ids:
+          searchParams.get('stream_ids')?.split(',').filter(Boolean) || [],
         type: searchParams.get('type')?.split(',').filter(Boolean) || []
       }
 
@@ -318,18 +320,17 @@ const SchoolFinder = () => {
     if (field === 'board') {
       setIsBoardsLoading(true)
       const data = await fetchSchoolBoardsFromAPI(value)
-      setBoards(data.map(b => ({ id: String(b.id), name: b.name })))
+      setBoards(data.map((b) => ({ id: String(b.id), name: b.name })))
       setIsBoardsLoading(false)
     }
 
     if (field === 'stream') {
       setIsStreamsLoading(true)
       const data = await fetchSchoolStreamsFromAPI(value)
-      setStreams(data.map(s => ({ id: String(s.id), name: s.name })))
+      setStreams(data.map((s) => ({ id: String(s.id), name: s.name })))
       setIsStreamsLoading(false)
     }
   }
-
 
   const handleFilterChange = (filterType, value) => {
     setSelectedFilters((prev) => {
@@ -362,7 +363,6 @@ const SchoolFinder = () => {
     [filterInputs.type, staticOptions.type]
   )
 
-
   const handlePageChange = (page) => {
     if (page > 0 && page <= pagination.totalPages) {
       updateURL({ page })
@@ -374,9 +374,9 @@ const SchoolFinder = () => {
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>
           <div className='flex items-center gap-4 mb-2'>
-            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+            <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
               Schools
-            </h2>
+            </h1>
             <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
               {pagination.totalCount || '0'} Results
             </span>
@@ -412,7 +412,9 @@ const SchoolFinder = () => {
       <div className='flex flex-col lg:flex-row gap-12'>
         <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
           <div className='flex justify-between items-center mb-[-16px] px-1'>
-            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+            <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+              Filters
+            </span>
             <button
               className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
               onClick={() => {
@@ -423,7 +425,6 @@ const SchoolFinder = () => {
             >
               Clear All
             </button>
-
           </div>
           <FilterSection
             title='Board'
@@ -497,20 +498,22 @@ const SchoolFinder = () => {
                 }
               }}
             />
-
           )}
 
-          {!searchQuery && pagination.totalPages > 1 && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-            />
+          {pagination.totalPages > 1 && (
+            <div className='mt-20 flex justify-center'>
+              <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
-
     </div>
-
   )
 }
 

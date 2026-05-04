@@ -61,7 +61,8 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
           collegeId: college.id,
           collegeImage: college.featured_img,
           logo: college.college_logo || college.logo,
-          universityName: college.university?.fullname || college.university?.name,
+          universityName:
+            college.university?.fullname || college.university?.name,
           degrees: college.degrees || []
         })) || [],
       pagination: data.pagination || {
@@ -228,7 +229,11 @@ const FilterSection = React.memo(function FilterSection({
         )}
       </div>
       <div className='mt-2 space-y-2.5 overflow-y-auto h-36 pr-2 custom-scrollbar'>
-        {options.length === 0 ? (
+        {isLoading ? (
+          <div className='flex items-center justify-center h-full'>
+            <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+          </div>
+        ) : options.length === 0 ? (
           <div className='text-center py-6 text-xs text-gray-400 italic font-medium'>
             No matches found
           </div>
@@ -328,10 +333,21 @@ const CollegeFinder = () => {
   // Initial Data for Filters
   useEffect(() => {
     const initFilters = async () => {
-      const degrees = await getDegrees()
-      setFilteredDegrees(degrees.map((p) => ({ id: p.id, name: p.title })))
-      const unis = await getUniversity()
-      setFilteredAffiliations(unis.map((u) => ({ id: u.id, name: u.fullname })))
+      setIsDegreesLoading(true)
+      setIsAffiliationLoading(true)
+      try {
+        const [degrees, unis] = await Promise.all([
+          getDegrees(),
+          getUniversity()
+        ])
+        setFilteredDegrees(degrees.map((p) => ({ id: p.id, name: p.title })))
+        setFilteredAffiliations(
+          unis.map((u) => ({ id: u.id, name: u.fullname }))
+        )
+      } finally {
+        setIsDegreesLoading(false)
+        setIsAffiliationLoading(false)
+      }
     }
     initFilters()
   }, [])
@@ -479,15 +495,15 @@ const CollegeFinder = () => {
       <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
         <div className='flex-1 space-y-6 w-full'>
           <div className='flex items-center gap-4 mb-2'>
-            <h2 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
+            <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
               Colleges
-            </h2>
+            </h1>
             <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
               {pagination.totalCount || '0'} Results
             </span>
           </div>
-          <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] px-5 py-2.5 relative w-full group'>
-            <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7]' />
+          <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
+            <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
             <input
               type='text'
               value={searchInputValue}
@@ -612,11 +628,15 @@ const CollegeFinder = () => {
             />
           )}
 
-          {!q && pagination.totalPages > 1 && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-            />
+          {pagination.totalPages > 1 && (
+            <div className='mt-20 flex justify-center'>
+              <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>

@@ -13,7 +13,8 @@ import {
 } from './actions'
 import ExamShimmer from './components/ExamShimmer'
 import { formatDate } from '@/utils/date.util'
-import Pagination from '../blogs/components/Pagination'
+import Pagination from '@/ui/molecules/common/Pagination'
+import ExamCard from '@/ui/molecules/cards/ExamCard'
 
 // Memoized FilterSection component for the sidebar
 const FilterSection = React.memo(function FilterSection({
@@ -234,7 +235,7 @@ export default function ExamsPage() {
               <h1 className='text-3xl font-extrabold text-gray-900 tracking-tight'>
                 Exams
               </h1>
-              <span className='bg-blue-50 text-[#0A6FA7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
+              <span className='bg-blue-50 text-[#0A70A7] px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider'>
                 {pagination.totalCount} Results
               </span>
             </div>
@@ -346,76 +347,15 @@ export default function ExamsPage() {
               <>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
                   {exams.map((exam) => (
-                    <div
-                      key={exam.id}
-                      onClick={() => router.push(`/exams/${exam.slugs}`)}
-                      className='group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#0A6FA7]/20 transition-all duration-300 cursor-pointer flex flex-col'
-                    >
-                      <div className='flex items-start gap-3.5 mb-4'>
-                        <div className='bg-blue-50 p-3 rounded-xl group-hover:bg-[#0A6FA7] group-hover:text-white transition-all duration-300 shrink-0 mt-0.5'>
-                          <ClipboardCheck className='w-5 h-5 text-[#0A6FA7] group-hover:text-white' />
-                        </div>
-                        <h2 className='text-lg font-bold text-gray-900 group-hover:text-[#0A6FA7] transition-colors line-clamp-2 leading-snug flex-1'>
-                          {exam.title}
-                        </h2>
-                      </div>
-                      
-                      <div className='flex flex-row flex-wrap items-center gap-2 mb-4'>
-                        {exam.level?.title && (
-                          <span className='px-2.5 py-1 bg-gray-50 rounded-full text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-100'>
-                            {exam.level.title}
-                          </span>
-                        )}
-                        {exam.exam_type && (
-                          <span className='px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-600 uppercase tracking-wider'>
-                            {exam.exam_type}
-                          </span>
-                        )}
-                      </div>
-
-                      {Array.isArray(exam.affiliation) && exam.affiliation.length > 0 && (
-                        <div className='flex items-center gap-2 mb-5'>
-                          <div className='flex -space-x-2'>
-                            {exam.affiliation.slice(0, 3).map((uni, idx) => (
-                              <div key={idx} className='w-6 h-6 rounded-full border-2 border-white bg-gray-50 overflow-hidden shrink-0'>
-                                <img src={uni.logo || '/images/default-uni.png'} alt={uni.fullname} className='w-full h-full object-contain' />
-                              </div>
-                            ))}
-                          </div>
-                          <span className='text-[11px] font-bold text-gray-400 truncate'>
-                            {exam.affiliation[0]?.fullname || exam.affiliation[0]?.name || 'Affiliation'}
-                            {exam.affiliation.length > 1 && ` +${exam.affiliation.length - 1} more`}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className='mt-auto pt-5 border-t border-gray-50 space-y-4'>
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div className='flex flex-col'>
-                            <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-0.5'>Closing</span>
-                            <span className={`text-sm font-bold ${new Date(exam.closing_date) < new Date() ? 'text-red-500' : 'text-gray-700'}`}>
-                              {formatDate(exam.closing_date) || 'TBD'}
-                            </span>
-                          </div>
-                          <div className='flex flex-col text-right'>
-                            <span className='text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-0.5'>Exam Date</span>
-                            <span className='text-sm font-bold text-[#0A6FA7]'>
-                              {formatDate(exam.exam_date) || 'TBD'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <button className='w-full py-3.5 rounded-xl bg-gray-900 hover:bg-[#0A6FA7] text-white text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-[#0A6FA7]/20'>
-                          View Details
-                        </button>
-                      </div>
-                    </div>
+                    <ExamCard key={exam.id} exam={exam} />
                   ))}
                 </div>
 
                 {pagination.totalPages > 1 && (
-                  <div className='mt-12 flex justify-center'>
-                    <Pagination pagination={pagination} onPageChange={handlePageChange} />
+                  <div className='mt-20 flex justify-center'>
+                    <div className='bg-white px-8 py-4 rounded-[24px] shadow-sm border border-gray-100'>
+                      <Pagination pagination={pagination} onPageChange={handlePageChange} />
+                    </div>
                   </div>
                 )}
               </>

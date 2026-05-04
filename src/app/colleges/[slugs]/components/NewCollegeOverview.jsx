@@ -151,7 +151,7 @@ const CollegeOverview = ({ college }) => {
       )}
 
       {/* Main Content */}
-      <div className='flex-1 w-full space-y-24 md:space-y-32'>
+      <div className='flex-1 w-full space-y-10 md:space-y-16'>
         <AnimatePresence mode='wait'>
           {visibleSections?.map((section, index) => (
             <motion.div 
