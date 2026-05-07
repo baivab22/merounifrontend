@@ -47,7 +47,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
   }
 
   return (
-    <div className='py-8 md:py-10 bg-white'>
+    <div id='college-rankings' className='py-8 md:py-10 bg-white scroll-mt-20'>
       <div className='mb-6'>
         <Link
           href='/college-rankings'
@@ -113,7 +113,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                       return (
                         <li key={ranking.id}>
                           <Link
-                            href={`/colleges/${college.slugs || ''}`}
+                            href={`/colleges/${college.slugs || ''}?from=college-rankings`}
                             className='flex items-center gap-3 py-2.5 px-3 rounded-md text-left hover:bg-gray-50 transition-colors -mx-1'
                           >
                             <span className='flex-shrink-0 w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center'>

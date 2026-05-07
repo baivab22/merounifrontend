@@ -74,7 +74,7 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
           slug: school.slugs,
           collegeId: school.id,
           collegeImage: school.featured_img || school.image,
-          logo: school.logo || 'default_logo.png',
+          logo: school.college_logo || 'default_logo.png',
           tags: [
             ...(school.boards || []).map((b) => b.name),
             ...(school.streams || []).map((s) => s.name)

@@ -1,6 +1,6 @@
 'use client'
 import AdmissionCard from '@/ui/molecules/cards/AdmissionCard'
-import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
+import AdmissionCardSkeleton from './AdmissionCardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { debounce } from 'lodash'
 import {
@@ -307,11 +307,11 @@ const AdmissionPage = () => {
 
             {/* Admissions Grid */}
             {loading ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
                 {Array(6)
                   .fill('')
                   .map((_, index) => (
-                    <CardSkeleton key={index} />
+                    <AdmissionCardSkeleton key={index} />
                   ))}
               </div>
             ) : admission.length === 0 ? (
@@ -333,7 +333,7 @@ const AdmissionPage = () => {
               </div>
             ) : (
               <>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
                   {admission.map((admis) => (
                     <AdmissionCard key={admis.id} admis={admis} />
                   ))}

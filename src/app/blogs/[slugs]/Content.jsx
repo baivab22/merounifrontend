@@ -47,7 +47,7 @@ const BlogContent = ({ initialBlog, slugs }) => {
   if (error) return <div>Error: {error}</div>
 
   return (
-    <div>
+    <div className='relative min-h-screen bg-[#F8FAFC]'>
       {loading ? (
         <Loading />
       ) : (

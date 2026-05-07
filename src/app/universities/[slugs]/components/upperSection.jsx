@@ -88,12 +88,23 @@ const UpperSection = ({ university }) => {
               Website
             </p>
             <a
-              href={university?.contact?.website_url || '#'}
+              href={
+                university?.contact?.website_url
+                  ? /^https?:\/\//i.test(university.contact.website_url)
+                    ? university.contact.website_url
+                    : `https://${university.contact.website_url}`
+                  : '#'
+              }
               target='_blank'
               rel='noopener noreferrer'
               className='text-[11px] sm:text-sm text-gray-700 hover:text-[#0A6FA7] transition-colors line-clamp-1 break-all font-bold sm:font-medium'
             >
-              {university?.contact?.website_url ? university.contact.website_url.replace(/^https?:\/\/(www\.)?/, '') : 'N/A'}
+              {university?.contact?.website_url
+                ? university.contact.website_url.replace(
+                    /^https?:\/\/(www\.)?/,
+                    ''
+                  )
+                : 'N/A'}
             </a>
           </div>
 
@@ -106,7 +117,9 @@ const UpperSection = ({ university }) => {
               Address
             </p>
             <p className='text-[11px] sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2 font-bold sm:font-medium'>
-              {[university?.city, university?.country].filter(Boolean).join(', ') || 'N/A'}
+              {[university?.city, university?.country]
+                .filter(Boolean)
+                .join(', ') || 'N/A'}
             </p>
           </div>
         </div>

@@ -37,8 +37,11 @@ export async function generateMetadata({ params }) {
     }
 }
 
-export default async function CollegePage({ params }) {
+export default async function CollegePage({ params, searchParams }) {
     const { slugs } = await params
+    const qs = await Promise.resolve(searchParams ?? {})
+    const fromCollegeRankings = qs.from === 'college-rankings'
+
     let college = null
     try {
         college = await getCollegeBySlug(slugs)
@@ -50,5 +53,10 @@ export default async function CollegePage({ params }) {
         notFound()
     }
 
-    return <CollegeContent college={college} />
+    return (
+        <CollegeContent
+            college={college}
+            fromCollegeRankings={fromCollegeRankings}
+        />
+    )
 }

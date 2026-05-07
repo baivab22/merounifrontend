@@ -1,4 +1,5 @@
 import services from '@/app/apiService'
+import normalizeSchoolDetail from '../normalizeSchoolDetail'
 import SchoolContent from './Content'
 import { stripHtml } from '@/lib/string.utils'
 import { notFound } from 'next/navigation'
@@ -43,7 +44,7 @@ export default async function SchoolPage({ params }) {
     let school = null
     try {
         const data = await services.school.getBySlug(slugs)
-        school = data.item
+        school = normalizeSchoolDetail(data.item)
     } catch (error) {
         console.error('Error fetching school:', error)
     }

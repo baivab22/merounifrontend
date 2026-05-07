@@ -6,7 +6,11 @@ import { Eye } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
-const ImageSection = ({ college }) => {
+const ImageSection = ({ college, fromCollegeRankings = false }) => {
+  const backHref = fromCollegeRankings ? '/#college-rankings' : '/colleges'
+  const backLabel = fromCollegeRankings
+    ? 'Back to College Ranking'
+    : 'Back to Colleges'
   const hasAddress =
     college?.collegeAddress?.street || college?.collegeAddress?.city
   const hasContacts =
@@ -48,11 +52,11 @@ const ImageSection = ({ college }) => {
         <div className='w-full relative'>
           <div className='absolute top-6 left-6 md:left-24 z-20'>
             <Link
-              href='/colleges'
+              href={backHref}
               className='inline-flex items-center gap-2 px-4 py-2 bg-black/30 hover:bg-black/50 backdrop-blur-md text-white rounded-full text-sm font-medium transition-all shadow-lg border border-white/20 group/back'
             >
               <FaArrowLeft className='w-3 h-3 group-hover/back:-translate-x-1 transition-transform' />
-              <span>Back to Colleges</span>
+              <span>{backLabel}</span>
             </Link>
           </div>
           <motion.img

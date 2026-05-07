@@ -1,5 +1,7 @@
 'use server'
 
+import normalizeSchoolDetail from './normalizeSchoolDetail'
+
 export async function getSchools(page = 1, sort = 'ASC') {
   try {
     const response = await fetch(
@@ -124,7 +126,7 @@ export async function getSchoolBySlug(slug) {
     }
 
     const data = await response.json()
-    return data.item
+    return normalizeSchoolDetail(data.item)
   } catch (error) {
     console.error('Error fetching  school details:', error)
     throw error

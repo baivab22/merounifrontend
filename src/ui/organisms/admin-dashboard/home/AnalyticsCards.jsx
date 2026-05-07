@@ -6,11 +6,11 @@ import UserCard from '@/ui/molecules/cards/UserCard'
 const AnalyticsCards = ({ analytics, loading }) => {
   const cards = [
     { type: 'Users', value: analytics?.totalUsers },
+    { type: 'Agents', value: analytics?.totalAgents },
     { type: 'College', value: analytics?.totalColleges },
+    { type: 'Schools', value: analytics?.totalSchools },
     { type: 'University', value: analytics?.totalUniversities },
     { type: 'Consultancy', value: analytics?.totalConsultancies },
-    { type: 'Schools', value: analytics?.totalSchools },
-    { type: 'Agents', value: analytics?.totalAgents },
     { type: 'Events', value: analytics?.totalEvents },
     { type: 'Referrals', value: analytics?.totalReferrals },
     { type: 'Blogs', value: analytics?.totalBlogs },

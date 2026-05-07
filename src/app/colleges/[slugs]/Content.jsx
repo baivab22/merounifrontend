@@ -9,7 +9,7 @@ import RelatedColleges from './components/RelatedColleges'
 import ShareSection from '@/ui/organisms/common/ShareSection'
 import MobileCategoryPills from './components/MobileCategoryPills'
 
-const CollegeContent = ({ college }) => {
+const CollegeContent = ({ college, fromCollegeRankings = false }) => {
   const [isRelatedVisible, setIsRelatedVisible] = useState(false)
   const relatedRef = useRef(null)
 
@@ -40,7 +40,7 @@ const CollegeContent = ({ college }) => {
       <Header />
       <Navbar />
       <MobileCategoryPills college={college} />
-      <ImageSection college={college} />
+      <ImageSection college={college} fromCollegeRankings={fromCollegeRankings} />
       <div className='h-4 md:h-6' />
       <CollegeOverview college={college} />
 
