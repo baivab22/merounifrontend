@@ -41,19 +41,34 @@ const Banner = () => {
                     className={`w-full sm:w-[350px] lg:w-[340px] xl:w-full rounded-md overflow-hidden shadow-md ${!banner ? 'bg-gray-100' : ''}`}
                 >
                     {banner ? (
-                        <a
-                            href={banner.website_url}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='block h-full'
-                        >
-                            <img
-                                src={banner.banner_image}
-                                onError={(e) => { e.target.src = '/images/meroUniLarge.gif' }}
-                                alt={`Banner ${banner.title}`}
-                                className='w-full h-[45px] md:h-[60px] lg:h-[75px] object-cover transition-opacity hover:opacity-90'
-                            />
-                        </a>
+                        banner.website_url?.trim() ? (
+                            <a
+                                href={
+                                    /^https?:\/\//i.test(banner.website_url.trim())
+                                        ? banner.website_url.trim()
+                                        : `https://${banner.website_url.trim()}`
+                                }
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='block h-full'
+                            >
+                                <img
+                                    src={banner.banner_image}
+                                    onError={(e) => { e.target.src = '/images/meroUniLarge.gif' }}
+                                    alt={`Banner ${banner.title}`}
+                                    className='w-full h-[45px] md:h-[60px] lg:h-[75px] object-cover transition-opacity hover:opacity-90'
+                                />
+                            </a>
+                        ) : (
+                            <div className='block h-full'>
+                                <img
+                                    src={banner.banner_image}
+                                    onError={(e) => { e.target.src = '/images/meroUniLarge.gif' }}
+                                    alt={`Banner ${banner.title}`}
+                                    className='w-full h-[45px] md:h-[60px] lg:h-[75px] object-cover transition-opacity hover:opacity-90'
+                                />
+                            </div>
+                        )
                     ) : (
                         <div className='w-full h-[45px] md:h-[60px] lg:h-[75px] flex items-center justify-center text-gray-400 text-[10px] font-bold uppercase tracking-widest'>
                             Contact for Ads

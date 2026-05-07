@@ -53,27 +53,46 @@ const Sponsors = () => {
           {displayBanners.map((banner, index) =>
             banner ? (
               <div key={banner.id} className='flex-shrink-0'>
-                {' '}
-                {/* Prevent shrinking */}
-                <a
-                  href={banner.website_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='block'
-                >
-                  <img
-                    src={
-                      banner.banner_image ||
-                      '/images/meroUniLarge.gif'
+                {banner.website_url?.trim() ? (
+                  <a
+                    href={
+                      /^https?:\/\//i.test(banner.website_url.trim())
+                        ? banner.website_url.trim()
+                        : `https://${banner.website_url.trim()}`
                     }
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = '/images/meroUniLarge.gif'
-                    }}
-                    alt={`Banner position ${banner.display_position}`}
-                    className='h-16 md:h-20 lg:h-36 rounded-md shadow-lg'
-                  />
-                </a>
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block'
+                  >
+                    <img
+                      src={
+                        banner.banner_image ||
+                        '/images/meroUniLarge.gif'
+                      }
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = '/images/meroUniLarge.gif'
+                      }}
+                      alt={`Banner position ${banner.display_position}`}
+                      className='h-16 md:h-20 lg:h-36 rounded-md shadow-lg'
+                    />
+                  </a>
+                ) : (
+                  <div className='block'>
+                    <img
+                      src={
+                        banner.banner_image ||
+                        '/images/meroUniLarge.gif'
+                      }
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = '/images/meroUniLarge.gif'
+                      }}
+                      alt={`Banner position ${banner.display_position}`}
+                      className='h-16 md:h-20 lg:h-36 rounded-md shadow-lg'
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div

@@ -14,7 +14,8 @@ const FileUpload = ({
   accept = 'image/*',
   extraData = {},
   autoUpload = false,
-  authorId = '1' // Added support for dynamic authorId
+  authorId = '1', // Added support for dynamic authorId
+  showRemarksField = true
 }) => {
   const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
@@ -233,16 +234,20 @@ const FileUpload = ({
 
               {selectedFile && !autoUpload && (
                 <div className='mt-4 space-y-3'>
-                  <div className='space-y-1.5'>
-                    <Label htmlFor="file-description" className="text-xs font-medium text-gray-500">Remarks / Description</Label>
-                    <textarea
-                      id="file-description"
-                      className='w-full min-h-[80px] p-2 text-sm border rounded-md bg-white focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] outline-none transition-all'
-                      placeholder='Add some remarks about this document...'
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                  </div>
+                  {showRemarksField && (
+                    <div className='space-y-1.5'>
+                      <Label htmlFor='file-description' className='text-xs font-medium text-gray-500'>
+                        Remarks / Description
+                      </Label>
+                      <textarea
+                        id='file-description'
+                        className='w-full min-h-[80px] p-2 text-sm border rounded-md bg-white focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] outline-none transition-all'
+                        placeholder='Add some remarks about this document...'
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <button
                     onClick={handleFileUpload}
                     className='w-full py-2 bg-[#387cae] text-white rounded-md text-sm font-medium hover:bg-[#2d658e] transition-colors shadow-sm'

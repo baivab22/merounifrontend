@@ -21,22 +21,40 @@ const BannerLayout = ({ banners = [] }) => {
             }`}
         >
           {banner ? (
-            <a
-              href={banner.website_url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='block relative w-full h-full p-1'
-            >
-              <Image
-                src={banner.banner_image || '/images/meroUniLarge.gif'}
-                alt={`Banner ${banner.title}`}
-                fill
-                unoptimized
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className='object-cover'
-                priority={index === 0}
-              />
-            </a>
+            banner.website_url?.trim() ? (
+              <a
+                href={
+                  /^https?:\/\//i.test(banner.website_url.trim())
+                    ? banner.website_url.trim()
+                    : `https://${banner.website_url.trim()}`
+                }
+                target='_blank'
+                rel='noopener noreferrer'
+                className='block relative w-full h-full p-1'
+              >
+                <Image
+                  src={banner.banner_image || '/images/meroUniLarge.gif'}
+                  alt={`Banner ${banner.title}`}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className='object-cover'
+                  priority={index === 0}
+                />
+              </a>
+            ) : (
+              <div className='block relative w-full h-full p-1'>
+                <Image
+                  src={banner.banner_image || '/images/meroUniLarge.gif'}
+                  alt={`Banner ${banner.title}`}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className='object-cover'
+                  priority={index === 0}
+                />
+              </div>
+            )
           ) : (
             <div className='group relative w-full h-full flex flex-col items-center justify-center text-gray-400 p-2 cursor-pointer'>
               <div className='text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-60 group-hover:opacity-0 transition-opacity duration-200'>

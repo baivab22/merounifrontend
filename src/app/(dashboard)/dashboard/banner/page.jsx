@@ -29,9 +29,38 @@ import {
 import { Label } from '@/ui/shadcn/label'
 import { Input } from '@/ui/shadcn/input'
 
-function BannerPositionCard({ position, hasBanner, banner, status, showAlert, onEdit, onDelete }) {
+/** Today's date as YYYY-MM-DD for <input type="date" min=""> (local timezone). */
+function getLocalDateInputMin() {
+  const t = new Date()
+  const y = t.getFullYear()
+  const m = String(t.getMonth() + 1).padStart(2, '0')
+  const d = String(t.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** Parse banner date input as local calendar date (avoids UTC off-by-one). */
+function parseDateInputLocal(value) {
+  const parts = String(value).split('-').map(Number)
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null
+  return new Date(parts[0], parts[1] - 1, parts[2])
+}
+
+function BannerPositionCard({
+  position,
+  hasBanner,
+  banner,
+  status,
+  showAlert,
+  onEdit,
+  onDelete
+}) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: position })
-  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    isDragging
+  } = useDraggable({
     id: position,
     disabled: !hasBanner
   })
@@ -39,8 +68,11 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
   return (
     <div
       ref={setDropRef}
-      className={`border-2 border-dashed rounded-md p-4 min-h-[200px] flex flex-col relative transition-all duration-200 ${isOver ? 'border-[#387cae] bg-[#387cae]/5 scale-[1.01]' : 'border-gray-300'
-        } ${isDragging ? 'opacity-40' : ''}`}
+      className={`border-2 border-dashed rounded-md p-4 min-h-[200px] flex flex-col relative transition-all duration-200 ${
+        isOver
+          ? 'border-[#387cae] bg-[#387cae]/5 scale-[1.01]'
+          : 'border-gray-300'
+      } ${isDragging ? 'opacity-40' : ''}`}
     >
       {/* Header */}
       <div className='flex justify-between items-center mb-3'>
@@ -56,7 +88,9 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
               <GripVertical size={16} />
             </span>
           )}
-          <h3 className='text-base font-semibold text-gray-800'>Position {position}</h3>
+          <h3 className='text-base font-semibold text-gray-800'>
+            Position {position}
+          </h3>
         </div>
         <button
           onClick={() => onEdit(position)}
@@ -74,12 +108,13 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
             {banner.banner_image ? (
               <img
                 src={banner.banner_image}
-                alt={banner.title}
+                alt={banner.title || 'Banner'}
                 className='w-full h-32 object-cover'
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.style.display = 'none'
-                  e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
+                  e.target.nextSibling &&
+                    (e.target.nextSibling.style.display = 'flex')
                 }}
               />
             ) : null}
@@ -89,15 +124,22 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
           </div>
 
           {showAlert && (
-            <span className={`inline-block self-start text-xs font-medium px-2 py-0.5 rounded-full mb-2 ${status === 'Expired!' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+            <span
+              className={`inline-block self-start text-xs font-medium px-2 py-0.5 rounded-full mb-2 ${status === 'Expired!' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}
+            >
               {status}
             </span>
           )}
 
           <div className='mb-2'>
-            <h4 className='font-medium text-gray-800 text-sm mb-1 line-clamp-1'>{banner.title || 'Untitled Banner'}</h4>
+            <h4 className='font-medium text-gray-800 text-sm mb-1 line-clamp-1'>
+              {banner.title || 'Untitled Banner'}
+            </h4>
             {banner.website_url && (
-              <a href={banner.website_url} target='_blank' rel='noopener noreferrer'
+              <a
+                href={banner.website_url}
+                target='_blank'
+                rel='noopener noreferrer'
                 className='hover:underline text-xs block mb-1 truncate font-medium'
                 style={{ color: THEME_BLUE }}
               >
@@ -105,7 +147,9 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
               </a>
             )}
             {banner.date_of_expiry && (
-              <p className={`text-xs ${showAlert ? 'text-red-600' : 'text-gray-500'}`}>
+              <p
+                className={`text-xs ${showAlert ? 'text-red-600' : 'text-gray-500'}`}
+              >
                 Expires: {formatDate(banner.date_of_expiry)}
               </p>
             )}
@@ -124,7 +168,9 @@ function BannerPositionCard({ position, hasBanner, banner, status, showAlert, on
           <div className='w-10 h-10 rounded-full border-2 border-dashed border-gray-200 flex items-center justify-center'>
             <Edit size={14} className='text-gray-300' />
           </div>
-          <p className='text-xs text-gray-400 text-center'>No banner — drop here or click edit</p>
+          <p className='text-xs text-gray-400 text-center'>
+            No banner — drop here or click edit
+          </p>
         </div>
       )}
     </div>
@@ -216,11 +262,17 @@ export default function BannerForm() {
     setLoading(true)
     try {
       const bannerData = {
-        title: data.title,
-        website_url: data.website_url,
+        title:
+          data.title && String(data.title).trim()
+            ? String(data.title).trim()
+            : null,
+        website_url:
+          data.website_url && String(data.website_url).trim()
+            ? String(data.website_url).trim()
+            : null,
         date_of_expiry: data.date_of_expiry,
         display_position: Number(data.display_position || activePosition),
-        banner_image: data.banner_image,
+        banner_image: data.banner_image
       }
 
       const url = `${process.env.baseUrl}/banner`
@@ -234,7 +286,9 @@ export default function BannerForm() {
 
       toast({
         title: editing ? 'Banner Updated' : 'Banner Created',
-        description: editing ? 'Banner updated successfully!' : 'Banner created successfully!'
+        description: editing
+          ? 'Banner updated successfully!'
+          : 'Banner created successfully!'
       })
 
       setEditing(false)
@@ -252,7 +306,6 @@ export default function BannerForm() {
     }
   }
 
-
   const handleEdit = async (banner) => {
     try {
       setEditing(true)
@@ -263,7 +316,8 @@ export default function BannerForm() {
 
       reset({
         title: banner.title || banner.Banners?.[0]?.title || '',
-        website_url: banner.website_url || banner.Banners?.[0]?.website_url || '',
+        website_url:
+          banner.website_url || banner.Banners?.[0]?.website_url || '',
         date_of_expiry: banner.date_of_expiry
           ? new Date(banner.date_of_expiry).toISOString().split('T')[0]
           : '',
@@ -281,15 +335,13 @@ export default function BannerForm() {
     }
   }
 
-
   const handleDeleteConfirm = async () => {
     if (!deleteId) return
 
     try {
-      await authFetch(
-        `${process.env.baseUrl}/banner/${deleteId}`,
-        { method: 'DELETE' }
-      )
+      await authFetch(`${process.env.baseUrl}/banner/${deleteId}`, {
+        method: 'DELETE'
+      })
       toast({
         title: 'Banner Deleted',
         description: 'Banner deleted successfully'
@@ -415,30 +467,38 @@ export default function BannerForm() {
 
   return (
     <div className='container mx-auto p-4'>
-
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
-          {[1, 2, 3, 4, 5, 6, 7].map((position) => {
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((position) => {
             const banners = bannersByPosition[position] || []
             const hasBanner = banners.length > 0
             const banner = hasBanner ? banners[0] : null
-            const status = banner ? getExpirationStatus(banner.date_of_expiry) : null
-            const showAlert = banner ? isExpiredOrExpiringToday(banner.date_of_expiry) : false
+            const status = banner
+              ? getExpirationStatus(banner.date_of_expiry)
+              : null
+            const showAlert = banner
+              ? isExpiredOrExpiringToday(banner.date_of_expiry)
+              : false
 
-            return <BannerPositionCard
-              key={position}
-              position={position}
-              hasBanner={hasBanner}
-              banner={banner}
-              status={status}
-              showAlert={showAlert}
-              onEdit={handlePositionEdit}
-              onDelete={(id) => { setDeleteId(id); setIsDialogOpen(true) }}
-            />
+            return (
+              <BannerPositionCard
+                key={position}
+                position={position}
+                hasBanner={hasBanner}
+                banner={banner}
+                status={status}
+                showAlert={showAlert}
+                onEdit={handlePositionEdit}
+                onDelete={(id) => {
+                  setDeleteId(id)
+                  setIsDialogOpen(true)
+                }}
+              />
+            )
           })}
         </div>
 
@@ -447,10 +507,12 @@ export default function BannerForm() {
             <div className='border-2 border-[#387cae] rounded-md p-4 bg-white shadow-2xl opacity-95 w-72'>
               <img
                 src={activeDragBanner.banner_image}
-                alt={activeDragBanner.title}
+                alt={activeDragBanner.title || 'Banner'}
                 className='w-full h-28 object-cover rounded-md mb-2'
               />
-              <p className='font-medium text-gray-800 text-sm truncate'>{activeDragBanner.title}</p>
+              <p className='font-medium text-gray-800 text-sm truncate'>
+                {activeDragBanner.title || 'Untitled'}
+              </p>
             </div>
           ) : null}
         </DragOverlay>
@@ -483,17 +545,18 @@ export default function BannerForm() {
             />
           </DialogHeader>
           <div className='flex-1 overflow-y-auto p-6'>
-            <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col flex-1'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className='flex flex-col flex-1'
+            >
               <div className='flex-1 space-y-6'>
                 <div className='bg-white p-6 rounded-md shadow-md space-y-4'>
                   <div>
-                    <Label required>Banner Title</Label>
+                    <Label>Banner Title</Label>
                     <Input
-                      {...register('title', {
-                        required: 'Banner title is required'
-                      })}
+                      {...register('title')}
                       className='w-full p-2 border rounded'
-                      placeholder='Enter banner title'
+                      placeholder='Title'
                     />
                     {errors.title && (
                       <span className='text-red-500 text-sm mt-1 block'>
@@ -503,19 +566,22 @@ export default function BannerForm() {
                   </div>
 
                   <div>
-                    <Label required>Website URL</Label>
+                    <Label>Website URL</Label>
                     <Input
                       type='text'
                       {...register('website_url', {
-                        required: 'Website URL is required',
-                        pattern: {
-                          value:
-                            /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,6}\.?)(\/[\w.-]*)*\/?$/,
-                          message: 'Enter a valid URL'
+                        validate: (value) => {
+                          if (!value || !String(value).trim()) return true
+                          const v = String(value).trim()
+                          const ok =
+                            /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,6}\.?)(\/[\w.-]*)*\/?$/i.test(
+                              v
+                            )
+                          return ok || 'Enter a valid URL'
                         }
                       })}
                       className='w-full p-2 border rounded'
-                      placeholder='Enter website URL'
+                      placeholder='https://… '
                     />
                     {errors.website_url && (
                       <span className='text-red-500 text-sm mt-1 block'>
@@ -531,16 +597,19 @@ export default function BannerForm() {
                       {...register('date_of_expiry', {
                         required: 'Date of expiry is required',
                         validate: (value) => {
-                          const selectedDate = new Date(value)
+                          const selected = parseDateInputLocal(value)
+                          if (!selected) return 'Invalid date'
                           const today = new Date()
                           today.setHours(0, 0, 0, 0)
+                          selected.setHours(0, 0, 0, 0)
                           return (
-                            selectedDate >= today || 'Date must be in the future'
+                            selected >= today ||
+                            'Expiry date cannot be in the past'
                           )
                         }
                       })}
                       className='w-full p-2 border rounded'
-                      min={new Date().toISOString().split('T')[0]}
+                      min={getLocalDateInputMin()}
                     />
                     {errors.date_of_expiry && (
                       <span className='text-red-500 text-sm mt-1 block'>
@@ -553,6 +622,7 @@ export default function BannerForm() {
                     <FileUpload
                       label='Banner Image'
                       required={true}
+                      showRemarksField={false}
                       onUploadComplete={(url) => {
                         setValue('banner_image', url, { shouldValidate: true })
                       }}
@@ -560,7 +630,9 @@ export default function BannerForm() {
                     />
                     <input
                       type='hidden'
-                      {...register('banner_image', { required: 'Banner image is required' })}
+                      {...register('banner_image', {
+                        required: 'Banner image is required'
+                      })}
                     />
                     {errors.banner_image && (
                       <span className='text-red-500 text-sm mt-1 block'>
@@ -580,10 +652,7 @@ export default function BannerForm() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type='submit'
-                  disabled={loading}
-                >
+                <Button type='submit' disabled={loading}>
                   {loading
                     ? 'Processing...'
                     : editing

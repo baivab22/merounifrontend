@@ -46,21 +46,38 @@ const Banner = () => {
           className={`w-full sm:w-[350px] lg:w-[340px] xl:w-full rounded-md overflow-hidden shadow-md ${!banner ? 'bg-gray-100' : ''}`}
         >
           {banner ? (
-            <a
-              href={banner.website_url}
-              target='_blank'
-              rel=''
-              className='block h-full'
-            >
-              <img
-                src={banner.banner_image}
-                onError={(e) => {
-                  e.target.src = '/images/meroUniLarge.gif'
-                }}
-                alt={`Banner ${banner.title}`}
-                className='w-full h-[44px] md:h-[58px] lg:h-[70px] object-cover'
-              />
-            </a>
+            banner.website_url?.trim() ? (
+              <a
+                href={
+                  /^https?:\/\//i.test(banner.website_url.trim())
+                    ? banner.website_url.trim()
+                    : `https://${banner.website_url.trim()}`
+                }
+                target='_blank'
+                rel='noopener noreferrer'
+                className='block h-full'
+              >
+                <img
+                  src={banner.banner_image}
+                  onError={(e) => {
+                    e.target.src = '/images/meroUniLarge.gif'
+                  }}
+                  alt={`Banner ${banner.title}`}
+                  className='w-full h-[44px] md:h-[58px] lg:h-[70px] object-cover'
+                />
+              </a>
+            ) : (
+              <div className='block h-full'>
+                <img
+                  src={banner.banner_image}
+                  onError={(e) => {
+                    e.target.src = '/images/meroUniLarge.gif'
+                  }}
+                  alt={`Banner ${banner.title}`}
+                  className='w-full h-[44px] md:h-[58px] lg:h-[70px] object-cover'
+                />
+              </div>
+            )
           ) : (
             <div className='w-full h-[44px] md:h-[58px] lg:h-[70px] flex items-center justify-center text-gray-500'>
               Contact for Ads

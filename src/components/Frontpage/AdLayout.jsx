@@ -31,28 +31,43 @@ const AdLayout = ({ banners = [], size = '', number = 1, loading = false, positi
   return (
     <div className='mt-2 p-4'>
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-3 lg:gap-3'>
-        {displayBanners.map((banner, index) => (
-          <div
-            key={index}
-            className="w-full h-[44px] md:h-[58px] lg:h-[70px] rounded-lg overflow-hidden relative bg-white shadow-sm ring-1 ring-black/5"
-          >
-            <a
-              href={banner.website_url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='block w-full h-full relative p-0.5'
+        {displayBanners.map((banner, index) => {
+          const url = banner.website_url?.trim()
+          const href =
+            url &&
+            (/^https?:\/\//i.test(url) ? url : `https://${url}`)
+          const wrapClass =
+            'block w-full h-full relative p-0.5'
+          const img = (
+            <Image
+              src={banner.banner_image || '/images/meroUniLarge.gif'}
+              alt={`Banner ${banner.title}`}
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className='object-cover'
+            />
+          )
+          return (
+            <div
+              key={index}
+              className="w-full h-[44px] md:h-[58px] lg:h-[70px] rounded-lg overflow-hidden relative bg-white shadow-sm ring-1 ring-black/5"
             >
-              <Image
-                src={banner.banner_image || '/images/meroUniLarge.gif'}
-                alt={`Banner ${banner.title}`}
-                fill
-                unoptimized
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                className='object-cover'
-              />
-            </a>
-          </div>
-        ))}
+              {href ? (
+                <a
+                  href={href}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className={wrapClass}
+                >
+                  {img}
+                </a>
+              ) : (
+                <div className={wrapClass}>{img}</div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
