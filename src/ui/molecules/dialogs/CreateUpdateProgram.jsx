@@ -294,7 +294,7 @@ const CreateUpdateProgram = ({ isOpen, onClose, slug, onSuccess, preselectedStre
 
     const onSearchDegrees = async (q) => {
         try {
-            const res = await authFetch(`${process.env.baseUrl}/degree?${q ? `q=${encodeURIComponent(q)}&` : ''}limit=50`)
+            const res = await authFetch(`${process.env.baseUrl}/degree?${q ? `q=${encodeURIComponent(q)}&` : ''}limit=50&status=all`)
             const data = await res.json()
             return (data.items || []).map((d) => ({ id: d.id, title: d.short_name ? `${d.short_name} – ${d.title}` : d.title }))
         } catch { return [] }

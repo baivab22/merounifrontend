@@ -93,7 +93,7 @@ export const fetchExam = async (searchQuery = '') => {
 export const fetchDegrees = async (searchQuery = '') => {
   try {
     const response = await authFetch(
-      `${process.env.baseUrl}/degree${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : '?limit=100'}`
+      `${process.env.baseUrl}/degree?limit=100&status=all${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}`
     )
     if (!response.ok) throw new Error('Failed to fetch degrees')
     const data = await response.json()

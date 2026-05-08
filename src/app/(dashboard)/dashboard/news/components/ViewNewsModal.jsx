@@ -118,6 +118,20 @@ const ViewNewsModal = ({ isOpen, onClose, news, loading }) => {
                                     </div>
                                 </div>
                             )}
+
+                            {news.pdf_file && (
+                                <div>
+                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">Attachment (PDF)</h3>
+                                    <a
+                                        href={news.pdf_file}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex text-sm font-semibold text-[#387cae] hover:underline"
+                                    >
+                                        View PDF
+                                    </a>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sticky Footer Area */}

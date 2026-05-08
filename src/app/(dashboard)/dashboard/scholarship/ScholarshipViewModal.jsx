@@ -17,6 +17,18 @@ const ScholarshipViewModal = ({ isOpen, onClose, scholarship }) => {
             <DialogContent>
                 <div className="space-y-6 max-h-[70vh] pr-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {scholarship.featured_image && (
+                            <div className="space-y-1 col-span-2">
+                                <h4 className="text-sm font-medium text-gray-500">Thumbnail</h4>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-2 inline-block max-w-full">
+                                    <img
+                                        src={scholarship.featured_image}
+                                        alt=""
+                                        className="max-h-40 max-w-full rounded-md object-contain"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <div className="space-y-1 col-span-2">
                             <h4 className="text-sm font-medium text-gray-500">Scholarship Name</h4>
                             <p className="text-lg font-medium text-gray-900">{scholarship.name}</p>

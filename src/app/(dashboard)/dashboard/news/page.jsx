@@ -5,13 +5,12 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useToast } from '@/hooks/use-toast'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 import ImageLightbox from '@/ui/molecules/image-lightbox'
 import Table from '@/ui/shadcn/DataTable'
 import { Button } from '@/ui/shadcn/button'
-import { Edit2, Eye, Plus, Trash2 } from 'lucide-react'
+import { Edit2, Eye, Loader2, Newspaper, Plus, Search, Trash2 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { fetchCategories } from '../category/action.js'
 import {
@@ -49,6 +48,14 @@ export default function NewsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const searchDebounceRef = useRef(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const statusFilterRef = useRef(statusFilter)
+
+  useEffect(() => {
+    statusFilterRef.current = statusFilter
+  }, [statusFilter])
+
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewNewsData, setViewNewsData] = useState(null)
   const [loadingView, setLoadingView] = useState(false)
@@ -71,6 +78,12 @@ export default function NewsPage() {
       altText: altText || 'News Image'
     })
   }
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
 
   const columns = useMemo(
     () => [
@@ -252,14 +265,14 @@ export default function NewsPage() {
     }
   }
 
-  const loadData = async (page = 1, search = '') => {
+  const loadData = async (page = 1, search = '', status = statusFilterRef.current) => {
     try {
       const params = new URLSearchParams(searchParams.toString())
       params.set('page', page)
       router.push(`${pathname}?${params.toString()}`, { scroll: false })
 
       setLoading(true)
-      const response = await fetchNews(page, search)
+      const response = await fetchNews(page, search, status)
 
       setNews(response.items || [])
       setPagination({
@@ -281,7 +294,24 @@ export default function NewsPage() {
 
   const handleSearch = (query) => {
     setSearchQuery(query)
-    loadData(1, query)
+    loadData(1, query, statusFilterRef.current)
+  }
+
+  const handleSearchInput = (value) => {
+    setSearchQuery(value)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (value === '') {
+      loadData(1, '', statusFilterRef.current)
+      return
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      loadData(1, value, statusFilterRef.current)
+    }, 350)
+  }
+
+  const handleStatusChange = (status) => {
+    setStatusFilter(status)
+    loadData(1, searchQuery, status)
   }
 
   const handleSubmit = async (data) => {
@@ -292,6 +322,7 @@ export default function NewsPage() {
         title: data.title,
         description: data.description,
         featured_image: data.featured_image,
+        pdf_file: data.pdf_file || null,
         status: data.status,
         visibility: data.visibility || 'private',
         author: author_id,
@@ -318,7 +349,7 @@ export default function NewsPage() {
       setEditing(false)
       setEditingId(null)
       setInitialData(null)
-      loadData(pagination.currentPage, searchQuery)
+      loadData(pagination.currentPage, searchQuery, statusFilter)
     } catch (error) {
       console.error('Error saving news:', error)
       toast({
@@ -386,7 +417,7 @@ export default function NewsPage() {
         title: 'Success',
         description: 'News deleted successfully'
       })
-      loadData(pagination.currentPage, searchQuery)
+      loadData(pagination.currentPage, searchQuery, statusFilter)
     } catch (error) {
       console.error('Error deleting news:', error)
       toast({
@@ -409,28 +440,65 @@ export default function NewsPage() {
   return (
     <div className='w-full'>
 
-      {/* Sticky Header */}
-      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder='Search news...'
-            className='max-w-md w-full'
-          />
-          <Button
-            onClick={() => {
-              setIsOpen(true)
-              setEditing(false)
-              setInitialData(null)
-              fetchAllColleges()
-              fetchAllCategories()
-            }}
-            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-md shadow-[#387cae]/20 transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            Add News
-          </Button>
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <Newspaper size={17} className='text-[#387cae]' strokeWidth={2} />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>News</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {loading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' />
+                    Loading…
+                  </span>
+                ) : (
+                  `${pagination.total} total`
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search news…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[140px]'
+              aria-label='Filter by status'
+            >
+              <option value='all'>All status</option>
+              <option value='published'>Published</option>
+              <option value='draft'>Draft</option>
+            </select>
+            <Button
+              onClick={() => {
+                setIsOpen(true)
+                setEditing(false)
+                setInitialData(null)
+                fetchAllColleges()
+                fetchAllCategories()
+              }}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
+              Add News
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -440,7 +508,7 @@ export default function NewsPage() {
           data={news}
           columns={columns}
           pagination={pagination}
-          onPageChange={(newPage) => loadData(newPage, searchQuery)}
+          onPageChange={(newPage) => loadData(newPage, searchQuery, statusFilter)}
           onSearch={handleSearch}
           showSearch={false}
           loading={loading}

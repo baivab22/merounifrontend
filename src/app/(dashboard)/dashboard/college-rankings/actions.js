@@ -116,7 +116,7 @@ export async function updateDegreeDescription(degreeId, description, content) {
 export async function fetchDegrees(query = '') {
   try {
     const response = await authFetch(
-      `${BASE_URL}/degree?limit=1000${query ? `&q=${query}` : ''}`
+      `${BASE_URL}/degree?limit=1000&status=all${query ? `&q=${encodeURIComponent(query)}` : ''}`
     )
     if (!response.ok) throw new Error('Failed to fetch degrees')
     const data = await response.json()

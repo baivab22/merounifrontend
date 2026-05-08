@@ -2,7 +2,13 @@ import Link from 'next/link'
 import { IoIosMore } from 'react-icons/io'
 import { HiOutlineUsers } from 'react-icons/hi'
 import { IoSchoolSharp } from 'react-icons/io5'
-import { FaUserTie, FaFileAlt, FaUniversity, FaBuilding, FaBook } from 'react-icons/fa'
+import {
+  FaUserTie,
+  FaFileAlt,
+  FaUniversity,
+  FaBuilding,
+  FaBook
+} from 'react-icons/fa'
 import { BsCalendarEvent, BsNewspaper } from 'react-icons/bs'
 import { VscReferences } from 'react-icons/vsc'
 import { LuSchool } from 'react-icons/lu'
@@ -13,14 +19,18 @@ const UserCard = ({ type, value, loading }) => {
 
   // Get route for each card type
   const getRoute = () => {
-    switch (type?.toLowerCase()) {
+    switch (type?.toLowerCase()?.trim()) {
       case 'users':
+      case 'total users':
         return '/dashboard/users'
       case 'college':
+      case 'colleges':
         return '/dashboard/colleges'
       case 'university':
+      case 'universities':
         return '/dashboard/university'
       case 'consultancy':
+      case 'consultancies':
         return '/dashboard/consultancy'
       case 'agents':
         return '/dashboard/users?role=agent'
@@ -31,19 +41,19 @@ const UserCard = ({ type, value, loading }) => {
       case 'blogs':
         return '/dashboard/blogs'
       case 'schools':
-        return '/dashboard/school-orderings'
+        return '/dashboard/schools'
       case 'materials':
-        return '/dashboard/materials'
+        return '/dashboard/material'
       case 'applications':
         return '/dashboard/applications'
       case 'wishlist':
         return '/dashboard/wishlist'
-      case "referred students":
-        return "/dashboard/referStudent"
-      case "referred consultancies":
-        return "/dashboard/referConsultancy"
-      case "total applications":
-        return "/dashboard/applications"
+      case 'referred students':
+        return '/dashboard/referStudent'
+      case 'referred consultancies':
+        return '/dashboard/referConsultancy'
+      case 'total applications':
+        return '/dashboard/applications'
       default:
         return '/dashboard'
     }
@@ -51,8 +61,9 @@ const UserCard = ({ type, value, loading }) => {
 
   // Get icon and color scheme based on type
   const getIconConfig = () => {
-    switch (type?.toLowerCase()) {
+    switch (type?.toLowerCase()?.trim()) {
       case 'users':
+      case 'total users':
         return {
           icon: <HiOutlineUsers className='w-5 h-5' />,
           bgColor: 'bg-blue-50',
@@ -60,6 +71,7 @@ const UserCard = ({ type, value, loading }) => {
           borderColor: 'border-blue-100'
         }
       case 'college':
+      case 'colleges':
         return {
           icon: <IoSchoolSharp className='w-5 h-5' />,
           bgColor: 'bg-green-50',
@@ -102,6 +114,7 @@ const UserCard = ({ type, value, loading }) => {
           borderColor: 'border-blue-100'
         }
       case 'university':
+      case 'universities':
         return {
           icon: <FaUniversity className='w-5 h-5' />,
           bgColor: 'bg-red-50',
@@ -109,6 +122,7 @@ const UserCard = ({ type, value, loading }) => {
           borderColor: 'border-red-100'
         }
       case 'consultancy':
+      case 'consultancies':
         return {
           icon: <FaBuilding className='w-5 h-5' />,
           bgColor: 'bg-cyan-50',
@@ -163,11 +177,13 @@ const UserCard = ({ type, value, loading }) => {
     >
       <div className='flex justify-between items-start mb-3'>
         <div className='flex-1'>
-          <h1 className='text-3xl font-bold text-gray-900 tabular-nums tracking-tight'>
+          <h1 className='text-3xl font-medium text-gray-500 tabular-nums tracking-tight'>
             {displayValue}
           </h1>
         </div>
-        <div className={`flex items-center justify-center w-11 h-11 rounded-md ${bgColor} ${iconColor} transition-transform duration-200 group-hover:scale-110`}>
+        <div
+          className={`flex items-center justify-center w-11 h-11 rounded-md ${bgColor} ${iconColor} transition-transform duration-200 group-hover:scale-110`}
+        >
           {icon}
         </div>
       </div>

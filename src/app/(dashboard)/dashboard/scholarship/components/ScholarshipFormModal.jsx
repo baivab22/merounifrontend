@@ -1,6 +1,5 @@
 'use client'
 
-import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/ui/shadcn/button'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
 import { Input } from '@/ui/shadcn/input'
@@ -8,9 +7,10 @@ import { Label } from '@/ui/shadcn/label'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import { Calendar, Coins, FileText, Info, GraduationCap, Loader2, Check, Plus, MessageSquare } from 'lucide-react'
+import { Calendar, Coins, FileText, Info, GraduationCap, Loader2, Check, Plus, Image as ImageIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import FileUpload from '../../colleges/FileUpload'
 import { fetchCategories } from '../actions'
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
@@ -34,8 +34,8 @@ const ScholarshipFormModal = ({
     submitting,
     author_id
 }) => {
-    const { toast } = useToast()
     const [selectedCategory, setSelectedCategory] = useState(null)
+    const [uploadedFiles, setUploadedFiles] = useState({ featured_image: '' })
 
     const {
         register,
@@ -82,6 +82,10 @@ const ScholarshipFormModal = ({
                     status: initialData.status || 'published'
                 })
 
+                setUploadedFiles({
+                    featured_image: initialData.featured_image || ''
+                })
+
                 setSelectedCategory(initialData.scholarshipCategory ? {
                     id: initialData.scholarshipCategory.id,
                     title: initialData.scholarshipCategory.title
@@ -97,6 +101,7 @@ const ScholarshipFormModal = ({
                     meta_description: '',
                     status: 'published'
                 })
+                setUploadedFiles({ featured_image: '' })
                 setSelectedCategory(null)
             }
         }
@@ -106,6 +111,7 @@ const ScholarshipFormModal = ({
         const payload = {
             ...data,
             author: author_id,
+            featured_image: uploadedFiles.featured_image || ''
         }
         onSave(payload)
     }
@@ -202,6 +208,22 @@ const ScholarshipFormModal = ({
 
                             {/* Right Column (4/12) */}
                             <div className="lg:col-span-4 space-y-8">
+                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                                    <SectionHeader icon={ImageIcon} title="Thumbnail logo" subtitle="Shown on listings and detail views (optional)" />
+                                    <div className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'>
+                                        <Label className='text-xs font-semibold tracking-wider mb-3 block'>Logo / cover image</Label>
+                                        <FileUpload
+                                            label=''
+                                            autoUpload={true}
+                                            authorId={author_id != null ? String(author_id) : '1'}
+                                            onUploadComplete={(url) => {
+                                                setUploadedFiles((prev) => ({ ...prev, featured_image: url || '' }))
+                                            }}
+                                            defaultPreview={uploadedFiles.featured_image}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
                                     <SectionHeader icon={Calendar} title="Status & Deadline" subtitle="Availability and schedule" />
                                     <div className='space-y-4'>

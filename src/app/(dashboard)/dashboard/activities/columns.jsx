@@ -1,14 +1,17 @@
-import { formatRelativeWithTitle } from '@/utils/date.util'
+import { formatDateTime, formatTodayYesterdayOrDateTime } from '@/utils/date.util'
 
 export const createColumns = () => [
   {
     header: 'Timestamp',
     accessorKey: 'createdAt',
     cell: ({ getValue }) => {
-      const { label, title } = formatRelativeWithTitle(getValue())
+      const value = getValue()
       return (
-        <span className='text-gray-500 text-sm cursor-default' title={title}>
-          {label}
+        <span
+          className='text-gray-700 text-sm tabular-nums whitespace-nowrap'
+          title={value ? formatDateTime(value) : undefined}
+        >
+          {formatTodayYesterdayOrDateTime(value)}
         </span>
       )
     }
@@ -36,6 +39,7 @@ export const createColumns = () => [
     cell: ({ getValue }) => {
       const action = getValue() || ''
       let bgColor = 'bg-gray-100 text-gray-800'
+      if (action === 'Login' || action.includes('Login')) bgColor = 'bg-violet-100 text-violet-800'
       if (action.includes('Create') || action === 'POST') bgColor = 'bg-green-100 text-green-800'
       if (action.includes('Update') || action === 'PUT' || action === 'PATCH') bgColor = 'bg-blue-100 text-blue-800'
       if (action.includes('Delete') || action === 'DELETE') bgColor = 'bg-red-100 text-red-800'
@@ -60,11 +64,39 @@ export const createColumns = () => [
     cell: ({ getValue }) => {
       const details = getValue()
       if (!details) return <span className='text-gray-400 text-sm italic'>None</span>
-      
-      const displayStr = typeof details === 'object' 
-        ? Object.entries(details).map(([k, v]) => `${k}: ${v}`).join(', ')
-        : String(details)
-        
+
+      if (typeof details === 'string') {
+        return <span className='text-gray-600 text-xs'>{details}</span>
+      }
+
+      const summary = details.summary
+      const extraEntries = Object.entries(details).filter(([k]) => k !== 'summary')
+      const extrasLabel =
+        extraEntries.length > 0
+          ? extraEntries
+              .map(([k, v]) =>
+                `${k}: ${typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}`
+              )
+              .join(' · ')
+          : ''
+
+      if (summary) {
+        return (
+          <span
+            className='text-gray-900 text-xs font-medium leading-snug max-w-lg block'
+            title={extrasLabel || undefined}
+          >
+            {summary}
+          </span>
+        )
+      }
+
+      const displayStr = extraEntries
+        .map(([k, v]) =>
+          `${k}: ${typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}`
+        )
+        .join(', ')
+
       return <span className='text-gray-600 text-xs'>{displayStr}</span>
     }
   },

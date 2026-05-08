@@ -182,7 +182,7 @@ export const getUniversityBySlug = async (slug) => {
 
 export const fetchAllDegrees = async () => {
   try {
-    const response = await authFetch(`${process.env.baseUrl}/degree?limit=1000`)
+    const response = await authFetch(`${process.env.baseUrl}/degree?limit=1000&status=all`)
     if (!response.ok) {
       throw new Error('Failed to fetch degrees')
     }

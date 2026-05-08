@@ -81,11 +81,11 @@ export default async function CollegeRankingDetailPage({ params }) {
         <div className='bg-white border-b border-gray-200 py-8 md:py-12'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl'>
             <Link
-              href='/'
+              href='/college-rankings'
               className='inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#0A6FA7] mb-6 transition-colors'
             >
               <ArrowLeft className='w-4 h-4 mr-2' />
-              Back to Rankings
+              Back to College Rankings
             </Link>
 
             <div className='flex items-center gap-4 mb-6'>
@@ -127,10 +127,13 @@ export default async function CollegeRankingDetailPage({ params }) {
 
               const isTopThree = ranking.rank <= 3
 
+              const degreeSlugParam = encodeURIComponent(
+                degree.slug || decodedSlug
+              )
               return (
                 <Link
                   key={ranking.id}
-                  href={`/colleges/${college.slugs || ''}`}
+                  href={`/colleges/${college.slugs || ''}?from=college-ranking-detail&degreeSlug=${degreeSlugParam}`}
                   className='group block bg-white rounded-3xl p-6 transition-all duration-300 border border-gray-100 hover:border-[#0A6FA7] hover:shadow-2xl hover:shadow-[#0A6FA7]/10'
                 >
                   <div className='flex flex-col sm:flex-row items-center gap-6 md:gap-8'>

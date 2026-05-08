@@ -3,12 +3,15 @@
 
 const API_URL = `${process.env.baseUrl}/skills-based-courses`
 
-export async function fetchSkillsCourses(page = 1, limit = 10) {
+export async function fetchSkillsCourses(page = 1, limit = 10, filters = {}) {
     try {
+        const { q, status } = filters
         const queryParams = new URLSearchParams({
-            page,
-            limit
+            page: String(page),
+            limit: String(limit)
         })
+        if (q) queryParams.set('q', q)
+        if (status && status !== 'all') queryParams.set('status', status)
 
         const response = await fetch(`${API_URL}?${queryParams}`, {
             cache: 'no-store'

@@ -37,6 +37,13 @@ export default function ViewDegree({ isOpen, onClose, degree }) {
                         )}
 
                         <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Status</p>
+                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold uppercase ${degree.status === 'draft' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-700'}`}>
+                                {degree.status === 'draft' ? 'Draft' : 'Published'}
+                            </span>
+                        </div>
+
+                        <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Created At</p>
                             <p className="text-sm text-gray-600">{degree.createdAt ? formatDate(degree.createdAt) : '—'}</p>
                         </div>

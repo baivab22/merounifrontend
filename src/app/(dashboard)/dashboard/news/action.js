@@ -2,15 +2,16 @@ import { authFetch } from '@/app/utils/authFetch'
 
 const url = `${process.env.baseUrl}/news`
 
-export async function fetchNews(page = 1, search = '') {
+export async function fetchNews(page = 1, search = '', status = 'all') {
     try {
         const queryParams = new URLSearchParams({
             page: page.toString(),
             limit: '10',
             sortBy: 'createdAt',
-            order: 'DESC',
-            ...(search && { search })
+            order: 'DESC'
         })
+        if (search) queryParams.set('q', search)
+        if (status && status !== 'all') queryParams.set('status', status)
 
         const response = await authFetch(`${url}?${queryParams}`)
 

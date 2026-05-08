@@ -6,11 +6,20 @@ import { Eye } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
-const ImageSection = ({ college, fromCollegeRankings = false }) => {
-  const backHref = fromCollegeRankings ? '/#college-rankings' : '/colleges'
-  const backLabel = fromCollegeRankings
-    ? 'Back to College Ranking'
-    : 'Back to Colleges'
+const ImageSection = ({
+  college,
+  fromCollegeRankings = false,
+  collegeRankingDegreeSlug = null
+}) => {
+  const backHref = collegeRankingDegreeSlug
+    ? `/college-rankings/${encodeURIComponent(collegeRankingDegreeSlug)}`
+    : fromCollegeRankings
+      ? '/#college-rankings'
+      : '/colleges'
+  const backLabel =
+    collegeRankingDegreeSlug || fromCollegeRankings
+      ? 'Back to College Ranking'
+      : 'Back to Colleges'
   const hasAddress =
     college?.collegeAddress?.street || college?.collegeAddress?.city
   const hasContacts =

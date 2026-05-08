@@ -6,9 +6,8 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useToast } from '@/hooks/use-toast'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 import { Button } from '@/ui/shadcn/button'
-import { Loader2, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { Loader2, RefreshCw, Search, TextSearch, Trash2 } from 'lucide-react'
 
 export default function SearchTermsPage() {
   const { toast } = useToast()
@@ -82,44 +81,67 @@ export default function SearchTermsPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-        <p className='text-sm text-gray-600 max-w-xl'>
+    <div className='w-full'>
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3'>
+          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3'>
+            <div className='flex items-center gap-3 shrink-0'>
+              <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                <TextSearch size={17} className='text-[#387cae]' strokeWidth={2} />
+              </div>
+              <div>
+                <p className='text-sm font-bold text-gray-800'>Search Terms</p>
+                <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                  {loading ? (
+                    <span className='inline-flex items-center gap-1'>
+                      <Loader2 size={10} className='animate-spin' /> Loading…
+                    </span>
+                  ) : searchQuery.trim() ? (
+                    `${filtered.length} of ${items.length} shown`
+                  ) : (
+                    `${items.length} total`
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end lg:min-w-0'>
+              <div className='relative shrink-0 flex-1 min-w-[160px] sm:max-w-xs lg:max-w-[280px]'>
+                <Search
+                  size={13}
+                  className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                />
+                <input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder='Filter terms in list…'
+                  className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+                  aria-label='Filter terms'
+                />
+              </div>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => load()}
+                disabled={loading}
+                className='gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0 border-gray-200 w-full sm:w-auto'
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <p className='mt-2 px-1 text-[11px] text-slate-500 leading-relaxed max-w-3xl'>
           Terms are recorded from site search, ordered by popularity (highest
           count first). Remove entries you no longer want in analytics or
           suggestions.
         </p>
-        <div className='flex items-center gap-2 shrink-0'>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => load()}
-            disabled={loading}
-            className='gap-2'
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
       </div>
 
-      <div className='bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden'>
-        <div className='p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3'>
-          <div className='flex items-center gap-2 text-gray-700 font-medium text-sm'>
-            <Search className='w-4 h-4 text-[#387cae]' />
-            <span>Filter terms</span>
-          </div>
-          <div className='flex-1 max-w-md'>
-            <SearchInput
-              placeholder='Search in list…'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onClear={() => setSearchQuery('')}
-            />
-          </div>
-        </div>
-
+      <div className='bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden'>
         {loading ? (
           <div className='flex flex-col items-center justify-center py-20 text-gray-500 gap-3'>
             <Loader2 className='w-8 h-8 animate-spin text-[#387cae]' />

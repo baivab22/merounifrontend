@@ -37,10 +37,31 @@ export async function generateMetadata({ params }) {
     }
 }
 
+/** Safe slug for /college-rankings/[slug] return link (query param). */
+function parseRankingDegreeSlug(qs) {
+    const raw = qs?.degreeSlug
+    const s =
+        typeof raw === 'string'
+            ? raw.trim()
+            : Array.isArray(raw) && raw[0]
+              ? String(raw[0]).trim()
+              : ''
+    if (!s || /[/\\?#]/.test(s)) return null
+    try {
+        return decodeURIComponent(s)
+    } catch {
+        return s
+    }
+}
+
 export default async function CollegePage({ params, searchParams }) {
     const { slugs } = await params
     const qs = await Promise.resolve(searchParams ?? {})
     const fromCollegeRankings = qs.from === 'college-rankings'
+    const collegeRankingDegreeSlug =
+        qs.from === 'college-ranking-detail'
+            ? parseRankingDegreeSlug(qs)
+            : null
 
     let college = null
     try {
@@ -57,6 +78,7 @@ export default async function CollegePage({ params, searchParams }) {
         <CollegeContent
             college={college}
             fromCollegeRankings={fromCollegeRankings}
+            collegeRankingDegreeSlug={collegeRankingDegreeSlug}
         />
     )
 }

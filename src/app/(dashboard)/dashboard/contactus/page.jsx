@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 import Loading from '@/ui/molecules/Loading'
 import Table from '@/ui/shadcn/DataTable'
-import { Search } from 'lucide-react'
+import { Search, Loader2, MessageSquare } from 'lucide-react'
 import { getContacts, deleteContact, updateContact } from '../../../actions/contactActions'
 import { createColumns } from './columns'
 import ViewContactModal from './ViewContactModal'
@@ -14,7 +14,6 @@ import { Button } from '@/ui/shadcn/button'
 import { Label } from '@/ui/shadcn/label'
 
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function ContactUsManager() {
     const { toast } = useToast()
@@ -39,7 +38,7 @@ export default function ContactUsManager() {
     const [updatingStatusId, setUpdatingStatusId] = useState(null)
     const [statusModalOpen, setStatusModalOpen] = useState(false)
     const [selectedStatusContact, setSelectedStatusContact] = useState(null)
-    const [newStatus, setNewStatus] = useState('new')
+    const [newStatus, setNewStatus] = useState('unread')
 
     // Confirmation Dialog State
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false)
@@ -75,8 +74,7 @@ export default function ContactUsManager() {
         }
     }
 
-    const handleSearch = (e) => {
-        const query = e.target.value
+    const handleSearchInput = (query) => {
         setSearchQuery(query)
 
         if (searchTimeout) clearTimeout(searchTimeout)
@@ -96,7 +94,7 @@ export default function ContactUsManager() {
 
     const handleStatusUpdate = (contact) => {
         setSelectedStatusContact(contact)
-        setNewStatus(contact.status || 'new')
+        setNewStatus(contact.status || 'unread')
         setStatusModalOpen(true)
     }
 
@@ -106,7 +104,10 @@ export default function ContactUsManager() {
         setUpdatingStatusId(selectedStatusContact.id)
         try {
             await updateContact(selectedStatusContact.id, { status: newStatus })
-            toast.success(`Status updated to ${newStatus}`)
+            toast({
+                title: 'Success',
+                description: `Status updated to ${newStatus}`
+            })
 
             // Update local state to reflect change immediately
             setContacts(prev => prev.map(c =>
@@ -158,30 +159,58 @@ export default function ContactUsManager() {
     return (
         <div className='w-full'>
 
-            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-                {/* Search */}
-                <SearchInput
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e)}
-                    placeholder='Search messages...'
-                    className='max-w-md'
-                />
+            <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+                <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3'>
+                    <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3'>
+                        <div className='flex items-center gap-3 shrink-0'>
+                            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                                <MessageSquare size={17} className='text-[#387cae]' strokeWidth={2} />
+                            </div>
+                            <div>
+                                <p className='text-sm font-bold text-gray-800'>Messages</p>
+                                <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                                    {tableLoading ? (
+                                        <span className='inline-flex items-center gap-1'>
+                                            <Loader2 size={10} className='animate-spin' /> Loading…
+                                        </span>
+                                    ) : (
+                                        `${pagination.total} total`
+                                    )}
+                                </p>
+                            </div>
+                        </div>
 
-                {/* Filters */}
-                <div className='min-w-[180px]'>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => {
-                            setStatusFilter(e.target.value)
-                            setPagination(prev => ({ ...prev, currentPage: 1 }))
-                        }}
-                        className='w-full md:w-48 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white cursor-pointer text-sm font-medium hover:bg-gray-50 transition-all'
-                    >
-                        <option value='all'>All Status</option>
-                        <option value='unread'>UnRead</option>
-                        <option value='in_progress'>In Progress</option>
-                        <option value='resolved'>Resolved</option>
-                    </select>
+                        <div className='flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end lg:min-w-0'>
+                            <div className='relative shrink-0 flex-1 min-w-[160px] sm:max-w-xs lg:max-w-[280px]'>
+                                <Search
+                                    size={13}
+                                    className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                                />
+                                <input
+                                    type='text'
+                                    value={searchQuery}
+                                    onChange={(e) => handleSearchInput(e.target.value)}
+                                    placeholder='Search messages…'
+                                    className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+                                />
+                            </div>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => {
+                                    setStatusFilter(e.target.value)
+                                    setPagination(prev => ({ ...prev, currentPage: 1 }))
+                                }}
+                                className='h-9 w-full sm:w-auto sm:min-w-[200px] shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition cursor-pointer'
+                                aria-label='Filter by message status'
+                            >
+                                <option value='all'>All statuses</option>
+                                <option value='new'>New</option>
+                                <option value='unread'>Unread</option>
+                                <option value='in_progress'>In progress</option>
+                                <option value='resolved'>Resolved</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -228,11 +257,12 @@ export default function ContactUsManager() {
                             <select
                                 value={newStatus}
                                 onChange={(e) => setNewStatus(e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className='w-full h-9 px-3 rounded-md border border-gray-200 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40'
                             >
-                                <option value="new">New</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
+                                <option value='new'>New</option>
+                                <option value='unread'>Unread</option>
+                                <option value='in_progress'>In progress</option>
+                                <option value='resolved'>Resolved</option>
                             </select>
                         </div>
                         <div className="flex justify-end gap-2 pt-2">

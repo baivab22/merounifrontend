@@ -3,7 +3,6 @@
 import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 import { Button } from '@/ui/shadcn/button'
 import Table from '@/ui/shadcn/DataTable'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
@@ -11,8 +10,8 @@ import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import { Award, Edit2, Eye, Plus, Trash2, Info, FileText, Settings, BookOpen, Layers, Check, Loader2, Calendar, MapPin, Clock } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Award, Edit2, Eye, Plus, Trash2, Info, FileText, Settings, BookOpen, Layers, Check, Loader2, Calendar, MapPin, Clock, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
@@ -82,7 +81,8 @@ export default function SkillsCoursesManager() {
         total: 0
     })
     const [searchQuery, setSearchQuery] = useState('')
-    const [searchTimeout, setSearchTimeout] = useState(null)
+    const searchDebounceRef = useRef(null)
+    const [statusFilter, setStatusFilter] = useState('all')
     const [uploadedFiles, setUploadedFiles] = useState({
         thumbnail_image: ''
     })
@@ -90,19 +90,30 @@ export default function SkillsCoursesManager() {
     useEffect(() => {
         setHeading('Short Term Courses')
         loadCourses()
-        return () => setHeading(null)
+        return () => {
+            setHeading(null)
+            if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setHeading])
 
-    const loadCourses = async (page = 1) => {
+    const loadCourses = async (page = 1, explicitSearch, explicitStatus) => {
+        const search =
+            explicitSearch !== undefined ? explicitSearch : searchQuery
+        const status =
+            explicitStatus !== undefined ? explicitStatus : statusFilter
+        const trimmed = (search || '').trim()
         try {
             setTableLoading(true)
-            const response = await fetchSkillsCourses(page)
-            setCourses(response.items)
+            const response = await fetchSkillsCourses(page, 10, {
+                q: trimmed || undefined,
+                status: status !== 'all' ? status : undefined
+            })
+            setCourses(response.items || [])
             setPagination({
-                currentPage: response.pagination.currentPage,
-                totalPages: response.pagination.totalPages,
-                total: response.pagination.totalCount
+                currentPage: response.pagination?.currentPage ?? page,
+                totalPages: response.pagination?.totalPages ?? 1,
+                total: response.pagination?.totalCount ?? 0
             })
         } catch (err) {
             toast({
@@ -220,29 +231,22 @@ export default function SkillsCoursesManager() {
         }
     }
 
-    const handleSearch = async (query) => {
-        setTableLoading(true)
-        try {
-            const response = await authFetch(`${process.env.baseUrl}/skills-based-courses?q=${query}`)
-            const data = await response.json()
-            setCourses(data.items || [])
-            setPagination({
-                currentPage: data.pagination?.currentPage || 1,
-                totalPages: data.pagination?.totalPages || 1,
-                total: data.pagination?.totalCount || 0
-            })
-        } catch (error) {
-            setCourses([])
-        } finally {
-            setTableLoading(false)
-        }
-    }
-
     const handleSearchInput = (value) => {
         setSearchQuery(value)
-        if (searchTimeout) clearTimeout(searchTimeout)
-        const timeoutId = setTimeout(() => handleSearch(value), 300)
-        setSearchTimeout(timeoutId)
+        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+        if (value.trim() === '') {
+            loadCourses(pagination.currentPage, '')
+            return
+        }
+        searchDebounceRef.current = setTimeout(
+            () => loadCourses(1, value, undefined),
+            350
+        )
+    }
+
+    const handleStatusChange = (status) => {
+        setStatusFilter(status)
+        loadCourses(1, searchQuery, status)
     }
 
     const columns = useMemo(() => [
@@ -327,27 +331,65 @@ export default function SkillsCoursesManager() {
     return (
         <div className='w-full'>
 
-            <div className='flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-md shadow-sm border mb-4'>
-                <div className='flex flex-1 w-full max-w-md'>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={(e) => handleSearchInput(e.target.value)}
-                        placeholder='Search courses...'
-                        className='w-full'
-                    />
-                </div>
-                <Button
-                    onClick={() => {
-                        setIsOpen(true);
-                        setEditing(false);
-                        reset();
+            <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+                <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+                    <div className='flex items-center gap-3'>
+                        <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                            <BookOpen size={17} className='text-[#387cae]' strokeWidth={2} />
+                        </div>
+                        <div>
+                            <p className='text-sm font-bold text-gray-800'>Short term courses</p>
+                            <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                                {tableLoading ? (
+                                    <span className='inline-flex items-center gap-1'>
+                                        <Loader2 size={10} className='animate-spin' />
+                                        Loading…
+                                    </span>
+                                ) : (
+                                    `${pagination.total} total`
+                                )}
+                            </p>
+                        </div>
+                    </div>
 
-                    }}
-                    className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 rounded-md shadow-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add Course
-                </Button>
+                    <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+                        <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+                            <Search
+                                size={13}
+                                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                            />
+                            <input
+                                type='text'
+                                value={searchQuery}
+                                onChange={(e) => handleSearchInput(e.target.value)}
+                                placeholder='Search courses…'
+                                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+                            />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[140px]'
+                            aria-label='Filter by status'
+                        >
+                            <option value='all'>All status</option>
+                            <option value='published'>Published</option>
+                            <option value='draft'>Draft</option>
+                        </select>
+                        <Button
+                            onClick={() => {
+                                setIsOpen(true);
+                                setEditing(false);
+                                reset();
+
+                            }}
+                            className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+                        >
+                            <Plus className='w-4 h-4' />
+                            Add Course
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             <div className="bg-white rounded-md shadow-sm border overflow-hidden">
@@ -356,7 +398,9 @@ export default function SkillsCoursesManager() {
                     data={courses}
                     columns={columns}
                     pagination={pagination}
-                    onPageChange={(newPage) => loadCourses(newPage)}
+                    onPageChange={(newPage) =>
+                        loadCourses(newPage, undefined, undefined)
+                    }
                     showSearch={false}
                 />
             </div>

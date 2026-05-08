@@ -8,14 +8,20 @@ export default function ViewContactModal({ isOpen, onClose, contact }) {
 
     const getStatusColor = (currentStatus) => {
         switch (currentStatus) {
-            case 'new': return 'bg-blue-100 text-blue-800'
-            case 'in_progress': return 'bg-yellow-100 text-yellow-800'
-            case 'resolved': return 'bg-green-100 text-green-800'
-            default: return 'bg-gray-100 text-gray-800'
+            case 'new':
+                return 'bg-blue-100 text-blue-800'
+            case 'unread':
+                return 'bg-slate-100 text-slate-800'
+            case 'in_progress':
+                return 'bg-amber-100 text-amber-900'
+            case 'resolved':
+                return 'bg-emerald-100 text-emerald-800'
+            default:
+                return 'bg-gray-100 text-gray-800'
         }
     }
 
-    const status = contact.status || 'new'
+    const status = contact.status || 'unread'
 
     return (
         <Dialog
@@ -58,7 +64,7 @@ export default function ViewContactModal({ isOpen, onClose, contact }) {
                         <div>
                             <label className="text-sm font-semibold text-gray-500 mr-3">Current Status:</label>
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(status)}`}>
-                                {status.replace('_', ' ')}
+                                {status.replace(/_/g, ' ')}
                             </span>
                         </div>
                     </div>

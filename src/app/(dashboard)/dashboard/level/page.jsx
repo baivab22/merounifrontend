@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import Table from '@/ui/shadcn/DataTable'
-import { Edit2, Trash2, Plus } from 'lucide-react'
+import { Edit2, Trash2, Plus, Search, Loader2, Layers } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
 import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
@@ -14,7 +14,6 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
-import SearchInput from '@/ui/molecules/SearchInput'
 
 export default function LevelForm() {
   const { toast } = useToast()
@@ -182,15 +181,53 @@ export default function LevelForm() {
 
   return (
     <div className='w-full'>
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <Layers size={17} className='text-[#387cae]' strokeWidth={2} />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Levels</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {tableLoading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' /> Loading…
+                  </span>
+                ) : (
+                  `${pagination.total} total`
+                )}
+              </p>
+            </div>
+          </div>
 
-
-      {/* Header */}
-      <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-          <SearchInput value={searchQuery} onChange={(e) => handleSearchInput(e.target.value)} placeholder='Search levels...' className='max-w-md w-full' />
-          <Button onClick={() => { setIsOpen(true); setEditing(false); setEditingId(null); reset() }} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2">
-            <Plus className="w-4 h-4" /> Add Level
-          </Button>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-60'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search levels…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+            <Button
+              onClick={() => {
+                setIsOpen(true)
+                setEditing(false)
+                setEditingId(null)
+                reset()
+              }}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
+              Add Level
+            </Button>
+          </div>
         </div>
       </div>
 

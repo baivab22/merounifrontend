@@ -4,7 +4,7 @@ import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useToast } from '@/hooks/use-toast'
 import Table from '@/ui/shadcn/DataTable'
-import SearchInput from '@/ui/molecules/SearchInput'
+import { Loader2, ScrollText, Search } from 'lucide-react'
 import { createColumns } from './columns'
 import ActorFilter from './ActorFilter'
 
@@ -168,26 +168,55 @@ export default function ActivitiesManager() {
 
   return (
     <div className='w-full'>
-      {/* Sticky Header with Filters */}
-      <div className='sticky top-0 z-30 bg-[#F7F8FA] py-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder='Search activities, resource, or endpoints...'
-            className='max-w-md w-full'
-          />
-          <div className='flex gap-2 shrink-0 items-center justify-end w-full sm:w-auto mt-4 sm:mt-0'>
-            <ActorFilter 
-              actors={actors}
-              selectedActors={selectedActors}
-              onChange={setSelectedActors}
-            />
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3'>
+          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3'>
+            <div className='flex items-center gap-3 shrink-0'>
+              <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                <ScrollText size={17} className='text-[#387cae]' strokeWidth={2} />
+              </div>
+              <div>
+                <p className='text-sm font-bold text-gray-800'>Activity Logs</p>
+                <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                  {loading ? (
+                    <span className='inline-flex items-center gap-1'>
+                      <Loader2 size={10} className='animate-spin' /> Loading…
+                    </span>
+                  ) : (
+                    `${pagination.total} total`
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end lg:min-w-0'>
+              <div className='relative shrink-0 flex-1 min-w-[160px] sm:max-w-xs lg:max-w-[320px]'>
+                <Search
+                  size={13}
+                  className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                />
+                <input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  placeholder='Search activities, resources, endpoints…'
+                  className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+                  aria-label='Search activity logs'
+                />
+              </div>
+              <div className='shrink-0 w-full sm:w-auto'>
+                <ActorFilter
+                  actors={actors}
+                  selectedActors={selectedActors}
+                  onChange={setSelectedActors}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className='bg-white rounded-md shadow-sm border overflow-hidden mt-4'>
+      <div className='bg-white rounded-md shadow-sm border overflow-hidden'>
         <Table
           loading={loading}
           data={logs}

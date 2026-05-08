@@ -35,6 +35,18 @@ export const formatDateTime = (value) => {
 }
 
 /**
+ * Activity-log style: Today/Yesterday + time only; otherwise full date + time.
+ * Tooltip-friendly absolute form → use formatDateTime for title.
+ */
+export const formatTodayYesterdayOrDateTime = (value) => {
+  if (!value) return '—'
+  const d = dayjs(value)
+  if (d.isToday()) return `Today, ${d.format('h:mm A')}`
+  if (d.isYesterday()) return `Yesterday, ${d.format('h:mm A')}`
+  return d.format('D MMM YYYY, h:mm A')
+}
+
+/**
  * Pure relative time  →  "3 hours ago"
  */
 export const formatRelative = (value) => {

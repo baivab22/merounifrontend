@@ -32,15 +32,17 @@ export const createColumns = ({ handleView, handleDelete, handleStatusUpdate }) 
         header: 'Status',
         accessorKey: 'status',
         cell: ({ getValue }) => {
-            const status = getValue() || 'new'
+            const status = getValue() || 'unread'
             const colors = {
-                new: 'bg-blue-100 text-blue-800',
-                in_progress: 'bg-yellow-100 text-yellow-800',
-                resolved: 'bg-green-100 text-green-800'
+                new: 'bg-blue-100 text-blue-800 border border-blue-200',
+                unread: 'bg-slate-100 text-slate-800 border border-slate-200',
+                in_progress: 'bg-amber-100 text-amber-900 border border-amber-200',
+                resolved: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
             }
+            const label = String(status).replace(/_/g, ' ')
             return (
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${colors[status] || 'bg-gray-100'}`}>
-                    {status.replace('_', ' ')}
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${colors[status] || 'bg-gray-100 text-gray-800 border border-gray-200'}`}>
+                    {label}
                 </span>
             )
         }

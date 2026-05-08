@@ -43,7 +43,7 @@ export default function UserTypeFilter({ selectedTypes, onChange }) {
         variant='outline'
         type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className='gap-2 bg-white border-gray-200 h-10 w-full sm:w-auto justify-between sm:justify-start'
+        className='gap-2 bg-white border-gray-200 h-9 w-full sm:w-auto justify-between sm:justify-start'
       >
         <div className='flex items-center gap-2'>
           <Filter className='w-4 h-4 text-gray-500' />

@@ -5,12 +5,10 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import useAdminPermission from '@/hooks/useAdminPermission'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import ImageLightbox from '@/ui/molecules/image-lightbox'
-import SearchInput from '@/ui/molecules/SearchInput'
 import { Button } from '@/ui/shadcn/button'
 import Table from '@/ui/shadcn/DataTable'
-import { Select } from '@/ui/shadcn/select'
 import { formatDate } from '@/utils/date.util'
-import { Edit2, Eye, Plus, Trash2 } from 'lucide-react'
+import { Edit2, Eye, Loader2, Plus, Search, Trash2, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -48,8 +46,11 @@ export default function BlogsManager() {
   const [tagsLoading, setTagsLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [newsSearchTimeout, setNewsSearchTimeout] = useState(null)
+  const searchDebounceRef = useRef(null)
   const abortControllerRef = useRef(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  const { requireAdmin } = useAdminPermission()
 
   // View Modal State
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -231,15 +232,9 @@ export default function BlogsManager() {
 
   useEffect(() => {
     return () => {
-      if (newsSearchTimeout) {
-        clearTimeout(newsSearchTimeout)
-      }
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [newsSearchTimeout])
-
-  const { requireAdmin } = useAdminPermission()
-
-  const [statusFilter, setStatusFilter] = useState('all')
+  }, [])
 
   const loadData = async (page = 1, status = statusFilter) => {
     try {
@@ -391,19 +386,12 @@ export default function BlogsManager() {
 
   const handleSearchInput = (value) => {
     setSearchQuery(value)
-
-    if (newsSearchTimeout) {
-      clearTimeout(newsSearchTimeout)
-    }
-
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     if (value === '') {
       handleSearch('')
-    } else {
-      const timeoutId = setTimeout(() => {
-        handleSearch(value)
-      }, 300)
-      setNewsSearchTimeout(timeoutId)
+      return
     }
+    searchDebounceRef.current = setTimeout(() => handleSearch(value), 350)
   }
 
   const handleSave = async (data) => {
@@ -521,32 +509,57 @@ export default function BlogsManager() {
 
   return (
     <div className='w-full'>
-      {/* Sticky Header */}
-      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder='Search blogs...'
-            className='max-w-md w-full'
-          />
-          {/* Filters & Button */}
-          <div className='flex gap-4 items-center w-full sm:w-auto'>
-            <Select
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <BookOpen size={17} className='text-[#387cae]' strokeWidth={2} />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Blogs</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {loading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' />
+                    Loading…
+                  </span>
+                ) : (
+                  `${pagination.total} total`
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search blogs…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className='min-w-[150px] h-11'
+              className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[150px]'
+              aria-label='Filter by status'
             >
-              <option value='all'>All Status</option>
+              <option value='all'>All status</option>
               <option value='published'>Published</option>
               <option value='draft'>Draft</option>
               <option value='archived'>Archived</option>
-            </Select>
+            </select>
             <Button
               onClick={handleAddBlog}
-              className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-md shadow-[#387cae]/20 transition-all active:scale-95 whitespace-nowrap"
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0 whitespace-nowrap'
             >
-              <Plus className="w-4 h-4" />
+              <Plus className='w-4 h-4' />
               Add Blog
             </Button>
           </div>

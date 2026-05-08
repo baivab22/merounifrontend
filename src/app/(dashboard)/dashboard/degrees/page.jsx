@@ -105,6 +105,11 @@ const SortableCard = ({ degree, rank, onView, onEdit, onDelete }) => {
               {degree.title}
             </h3>
             <ShortNameBadge shortName={degree.short_name} />
+            {degree.status === 'draft' && (
+              <span className='inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 bg-amber-50 text-amber-800 border-amber-200 uppercase tracking-wide'>
+                Draft
+              </span>
+            )}
           </div>
           {disciplines.length > 0 && (
             <div className='flex items-center gap-1.5 mt-1.5'>
@@ -242,7 +247,7 @@ export default function DegreePage() {
       let hasMore = true
 
       while (hasMore) {
-        let url = `${process.env.baseUrl}/degree?page=${page}&limit=100`
+        let url = `${process.env.baseUrl}/degree?page=${page}&limit=100&status=all`
         if (query) url += `&q=${encodeURIComponent(query)}`
         const res = await authFetch(url)
         if (!res.ok) throw new Error('Failed to load degrees')

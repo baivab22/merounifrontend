@@ -1,9 +1,11 @@
 import { authFetch } from '@/app/utils/authFetch'
 
-export async function getAdmissions(page = 1, searchQuery = '') {
+export async function getAdmissions(page = 1, searchQuery = '', status = 'all') {
   try {
     const url = new URL(`${process.env.baseUrl}/college/admission`)
+    url.searchParams.set('page', String(page))
     if (searchQuery) url.searchParams.append('q', searchQuery)
+    if (status && status !== 'all') url.searchParams.append('status', status)
 
     const response = await authFetch(url.toString(), {
       method: 'GET',

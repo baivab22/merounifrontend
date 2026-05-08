@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
@@ -10,7 +10,12 @@ import {
   Plus,
   GripVertical,
   Building2,
-  GraduationCap
+  GraduationCap,
+  Loader2,
+  Search,
+  FileText,
+  Check,
+  Paperclip
 } from 'lucide-react'
 
 import { Button } from '@/ui/shadcn/button'
@@ -24,7 +29,6 @@ import {
   DialogClose
 } from '@/ui/shadcn/dialog'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 import { Textarea } from '@/ui/shadcn/textarea'
 
 import {
@@ -40,6 +44,7 @@ import {
 import AdmissionViewModal from './AdmissionViewModal'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import FileUpload from '../colleges/FileUpload'
 
 import {
   DndContext,
@@ -261,7 +266,8 @@ export default function AdmissionManager() {
       eligibility_criteria: '',
       admission_process: '',
       fee_details: '',
-      description: ''
+      description: '',
+      pdf_file: ''
     }
   })
 
@@ -269,11 +275,25 @@ export default function AdmissionManager() {
   const [editing, setEditing] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [listLoading, setListLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submittingDraft, setSubmittingDraft] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchTimeout, setSearchTimeout] = useState(null)
+  const searchDebounceRef = useRef(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const statusFilterRef = useRef(statusFilter)
   const [activeId, setActiveId] = useState(null)
+
+  useEffect(() => {
+    statusFilterRef.current = statusFilter
+  }, [statusFilter])
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
 
   const [deleteId, setDeleteId] = useState(null)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -284,6 +304,7 @@ export default function AdmissionManager() {
 
   const [selectedCollege, setSelectedCollege] = useState(null)
   const [selectedProgram, setSelectedProgram] = useState(null)
+  const [uploadedFiles, setUploadedFiles] = useState({ pdf_file: '' })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -292,19 +313,23 @@ export default function AdmissionManager() {
 
   useEffect(() => {
     setHeading('Admission Management')
-    loadAdmissions(searchQuery, false)
+    loadAdmissions(searchQuery, false, statusFilter)
     return () => setHeading(null)
   }, [setHeading])
 
-  const loadAdmissions = async (search = searchQuery, silent = true) => {
-    if (!silent) setLoading(true)
+  const loadAdmissions = async (
+    search = searchQuery,
+    silent = true,
+    status = statusFilterRef.current
+  ) => {
+    if (!silent) setListLoading(true)
     try {
       let all = []
       let page = 1
       let hasMore = true
 
       while (hasMore) {
-        const data = await getAdmissions(page, search)
+        const data = await getAdmissions(page, search, status)
         all = [...all, ...(data.items || [])]
         hasMore = page < (data.pagination?.totalPages || 1)
         page++
@@ -329,18 +354,25 @@ export default function AdmissionManager() {
         variant: 'destructive'
       })
     } finally {
-      if (!silent) setLoading(false)
+      if (!silent) setListLoading(false)
     }
   }
 
   const handleSearchInput = (value) => {
     setSearchQuery(value)
-    if (searchTimeout) clearTimeout(searchTimeout)
-
-    const timeoutId = setTimeout(() => {
-      loadAdmissions(value, false)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (value === '') {
+      loadAdmissions('', false, statusFilterRef.current)
+      return
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      loadAdmissions(value, false, statusFilterRef.current)
     }, 350)
-    setSearchTimeout(timeoutId)
+  }
+
+  const handleStatusChange = (status) => {
+    setStatusFilter(status)
+    loadAdmissions(searchQuery, false, status)
   }
 
   const handleDragStart = (event) => setActiveId(event.active.id)
@@ -397,23 +429,34 @@ export default function AdmissionManager() {
       eligibility_criteria: '',
       admission_process: '',
       fee_details: '',
-      description: ''
+      description: '',
+      pdf_file: ''
     })
+    setUploadedFiles({ pdf_file: '' })
     setIsOpen(true)
   }
 
-  const onSubmit = async (data) => {
+  const saveAdmission = async (data, asDraft) => {
     try {
-      setLoading(true)
-      const payload = { ...data }
+      if (asDraft) setSubmittingDraft(true)
+      else setSubmitting(true)
+      const payload = {
+        ...data,
+        pdf_file: uploadedFiles.pdf_file || data.pdf_file || '',
+        status: asDraft ? 'draft' : 'published'
+      }
       if (editing) payload.id = editingId
 
       await createOrUpdateAdmission(payload)
       toast({
         title: 'Success',
-        description: editing
-          ? 'Admission updated successfully'
-          : 'Admission created successfully'
+        description: asDraft
+          ? editing
+            ? 'Admission saved as draft'
+            : 'Draft admission saved'
+          : editing
+            ? 'Admission updated successfully'
+            : 'Admission created successfully'
       })
       handleCloseModal()
       loadAdmissions(searchQuery, false)
@@ -424,8 +467,17 @@ export default function AdmissionManager() {
         variant: 'destructive'
       })
     } finally {
-      setLoading(false)
+      setSubmitting(false)
+      setSubmittingDraft(false)
     }
+  }
+
+  const onSubmit = async (data) => {
+    await saveAdmission(data, false)
+  }
+
+  const onSaveDraft = () => {
+    handleSubmit((data) => saveAdmission(data, true))()
   }
 
   const handleEdit = async (item) => {
@@ -458,8 +510,10 @@ export default function AdmissionManager() {
       eligibility_criteria: item.eligibility_criteria || '',
       admission_process: item.admission_process || '',
       fee_details: item.fee_details || '',
-      description: item.description || ''
+      description: item.description || '',
+      pdf_file: item.pdf_file || ''
     })
+    setUploadedFiles({ pdf_file: item.pdf_file || '' })
 
     setIsOpen(true)
   }
@@ -509,34 +563,80 @@ export default function AdmissionManager() {
     setEditingId(null)
     setSelectedCollege(null)
     setSelectedProgram(null)
+    setUploadedFiles({ pdf_file: '' })
     reset()
   }
 
   return (
     <div className='w-full'>
-      <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200'>
-        <div className='flex items-center gap-3 w-full sm:w-auto'>
-          <div className='relative w-full sm:w-64 shrink-0'>
-            <SearchInput
-              value={searchQuery}
-              onChange={(e) => handleSearchInput(e.target.value)}
-              placeholder='Search admissions...'
-              className='w-full'
-            />
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <GraduationCap
+                size={17}
+                className='text-[#387cae]'
+                strokeWidth={2}
+              />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Admissions</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5 flex-wrap'>
+                {listLoading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' />
+                    Loading…
+                  </span>
+                ) : (
+                  `${admissions.length} total`
+                )}
+                {saving && (
+                  <span className='inline-flex items-center gap-1 text-[#387cae]'>
+                    · <Loader2 size={10} className='animate-spin' />
+                    Saving order…
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search admissions…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[140px]'
+              aria-label='Filter by status'
+            >
+              <option value='all'>All status</option>
+              <option value='published'>Published</option>
+              <option value='draft'>Draft</option>
+            </select>
+            <Button
+              onClick={handleAdd}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
+              Add Admission
+            </Button>
           </div>
         </div>
-
-        <Button
-          onClick={handleAdd}
-          className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 w-full sm:w-auto rounded-md'
-        >
-          <Plus className='w-4 h-4' />
-          Add Admission
-        </Button>
       </div>
 
       <div className='mt-2'>
-        {loading ? (
+        {listLoading ? (
           <div className='flex flex-col gap-3'>
             {[...Array(6)].map((_, i) => (
               <CardSkeleton key={i} i={i} />
@@ -621,8 +721,8 @@ export default function AdmissionManager() {
         <DialogContent className='p-0 bg-gray-50/50'>
           <form
             id='admission-form'
-            onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col max-h-[calc(100vh-160px)]'
+            onSubmit={(e) => e.preventDefault()}
           >
             <div className='flex-1 overflow-y-auto p-8'>
               <div className='grid grid-cols-1 lg:grid-cols-1 gap-8'>
@@ -820,31 +920,81 @@ export default function AdmissionManager() {
                     </div>
                   </div>
                 </div>
+
+                {/* PDF attachment — same pattern as blog form */}
+                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Paperclip}
+                    title='Attachment'
+                    subtitle='Optional PDF document for applicants'
+                  />
+                  <div className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'>
+                    <Label className='text-xs font-semibold tracking-wider mb-3 block'>
+                      Attachment (PDF)
+                    </Label>
+                    <FileUpload
+                      label=''
+                      accept='application/pdf'
+                      onUploadComplete={(url) => {
+                        setUploadedFiles((prev) => ({ ...prev, pdf_file: url }))
+                        setValue('pdf_file', url)
+                      }}
+                      defaultPreview={uploadedFiles.pdf_file}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
+            <div className='shrink-0 flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-100 z-20 sticky bottom-0'>
               <Button
                 type='button'
                 variant='outline'
                 onClick={handleCloseModal}
+                disabled={submitting || submittingDraft}
               >
-                Discard Changes
+                Cancel
               </Button>
               <Button
-                type='submit'
-                disabled={loading}
-                className='bg-[#387cae] hover:bg-[#2d658d] text-white min-w-[140px]'
+                type='button'
+                variant='secondary'
+                disabled={submitting || submittingDraft}
+                onClick={onSaveDraft}
+                className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none gap-2'
               >
-                {loading ? (
-                  <span className='flex items-center gap-2'>
-                    <span className='h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white' />
-                    Saving...
-                  </span>
-                ) : editing ? (
-                  'Update Record'
+                {submittingDraft ? (
+                  <>
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                    <span>Saving draft…</span>
+                  </>
                 ) : (
-                  'Create Admission'
+                  <>
+                    <FileText className='w-4 h-4' />
+                    <span>Save as Draft</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                type='button'
+                disabled={submitting || submittingDraft}
+                onClick={() => handleSubmit(onSubmit)()}
+                className='bg-[#387cae] hover:bg-[#2d658d] text-white min-w-[140px] gap-2'
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                    <span>Saving…</span>
+                  </>
+                ) : editing ? (
+                  <>
+                    <Check className='w-4 h-4' />
+                    <span>Update Admission</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className='w-4 h-4' />
+                    <span>Create Admission</span>
+                  </>
                 )}
               </Button>
             </div>

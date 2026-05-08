@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import Loader from '../../../../ui/molecules/Loading'
-import { Edit2, Trash2, Search } from 'lucide-react'
+import { Edit2, Trash2, Search, Tag as TagIcon, Plus, Loader2 } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
 import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
@@ -13,8 +13,6 @@ import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
-import SearchInput from '@/ui/molecules/SearchInput'
-import { THEME_BLUE } from '@/constants/constants'
 
 export default function TagForm() {
   const { toast } = useToast()
@@ -243,32 +241,58 @@ export default function TagForm() {
   }
   return (
     <>
-      <div className='p-4 w-full'>
-        <div className='flex justify-between items-center mb-4'>
-          {/* Search Bar */}
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder='Search tags...'
-            className='max-w-md'
-          />
-          {/* Button */}
-          <div className='flex gap-2'>
-            <Button
-              onClick={() => {
-                setIsOpen(true)
-                setEditing(false)
-                setEditingId(null)
-                reset()
-              }}
-            >
-              Add Tag
-            </Button>
+      <div className='w-full'>
+        <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+          <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+            <div className='flex items-center gap-3'>
+              <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                <TagIcon size={17} className='text-[#387cae]' strokeWidth={2} />
+              </div>
+              <div>
+                <p className='text-sm font-bold text-gray-800'>Tags</p>
+                <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                  {tableLoading ? (
+                    <span className='inline-flex items-center gap-1'>
+                      <Loader2 size={10} className='animate-spin' /> Loading…
+                    </span>
+                  ) : (
+                    `${pagination.total ?? tags.length} total`
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+              <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-60'>
+                <Search
+                  size={13}
+                  className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+                />
+                <input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  placeholder='Search tags…'
+                  className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  setIsOpen(true)
+                  setEditing(false)
+                  setEditingId(null)
+                  reset()
+                }}
+                className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+              >
+                <Plus size={15} />
+                Add Tag
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Badge Layout */}
-        <div className='mt-8'>
+        <div className='mt-2'>
           {tableLoading ? (
             <div className='flex justify-center p-12'>
               <Loader />
@@ -304,12 +328,24 @@ export default function TagForm() {
                 ))}
 
                 {tags.length === 0 && (
-                  <div className='w-full flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200'>
-                    <div className='bg-white p-4 rounded-full shadow-sm mb-4'>
-                      <Search className='w-8 h-8 text-gray-300' />
-                    </div>
-                    <p className='text-gray-500 font-medium'>No tags discovered yet</p>
-                    <p className='text-gray-400 text-sm'>Try a different search or add a new tag</p>
+                  <div className='w-full flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200'>
+                    <TagIcon className='w-10 h-10 text-gray-200 mx-auto mb-3' strokeWidth={1.5} />
+                    <p className='text-gray-500 font-medium text-sm'>
+                      {searchQuery ? 'No tags match your search.' : 'No tags yet.'}
+                    </p>
+                    {!searchQuery && (
+                      <Button
+                        onClick={() => {
+                          setIsOpen(true)
+                          setEditing(false)
+                          setEditingId(null)
+                          reset()
+                        }}
+                        className='mt-4 bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 text-sm'
+                      >
+                        <Plus size={15} /> Add First Tag
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -330,10 +366,7 @@ export default function TagForm() {
                       Previous
                     </button>
                     <div className='flex items-center px-4 bg-gray-50 rounded-md border border-gray-200'>
-                      <span
-                        className='text-sm font-semibold'
-                        style={{ color: THEME_BLUE }}
-                      >
+                      <span className='text-sm font-semibold text-[#387cae]'>
                         {pagination.currentPage}
                       </span>
                       <span className='text-sm text-gray-400 mx-1'>/</span>

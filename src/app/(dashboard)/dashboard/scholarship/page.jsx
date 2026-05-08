@@ -3,13 +3,12 @@ import { authFetch } from '@/app/utils/authFetch'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { useToast } from '@/hooks/use-toast'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
-import SearchInput from '@/ui/molecules/SearchInput'
 import { Button } from '@/ui/shadcn/button'
 import Table from '@/ui/shadcn/DataTable'
 import { formatDate } from '@/utils/date.util'
-import { Edit2, Eye, Plus, Trash2, Users } from 'lucide-react'
+import { Award, Edit2, Eye, Loader2, Plus, Search, Trash2, Users } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import {
   createScholarship,
@@ -42,6 +41,19 @@ export default function ScholarshipManager() {
   const [applicationsLoading, setApplicationsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const statusFilterRef = useRef(statusFilter)
+  const searchDebounceRef = useRef(null)
+
+  useEffect(() => {
+    statusFilterRef.current = statusFilter
+  }, [statusFilter])
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -106,7 +118,10 @@ export default function ScholarshipManager() {
 
   const handleSearchInput = (value) => {
     setSearchQuery(value)
-    loadScholarships(1, value, statusFilter)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      loadScholarships(1, value, statusFilterRef.current)
+    }, 350)
   }
 
   const handleStatusChange = (status) => {
@@ -208,7 +223,17 @@ export default function ScholarshipManager() {
         header: 'Scholarship',
         accessorKey: 'name',
         cell: ({ row }) => (
-          <div className='flex flex-col gap-1.5 py-1'>
+          <div className='flex items-start gap-3 py-1'>
+            {row.original.featured_image ? (
+              <img
+                src={row.original.featured_image}
+                alt=''
+                className='w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0 bg-gray-50'
+              />
+            ) : (
+              <div className='w-10 h-10 rounded-lg border border-dashed border-gray-200 shrink-0 bg-gray-50/80' aria-hidden />
+            )}
+            <div className='flex flex-col gap-1.5 min-w-0'>
             <div className='font-semibold text-gray-900 leading-none'>
               {row.original.name}
             </div>
@@ -217,6 +242,7 @@ export default function ScholarshipManager() {
                 {row.original.scholarshipCategory.title}
               </span>
             )}
+          </div>
           </div>
         )
       },
@@ -295,33 +321,60 @@ export default function ScholarshipManager() {
 
   return (
     <div className='w-full'>
-      <div className='flex flex-col mb-3 sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border'>
-        <div className='flex flex-col sm:flex-row gap-4 w-full max-w-2xl'>
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder='Search scholarships...'
-            className='flex-1'
-          />
-          <div className='w-full sm:w-48'>
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <Award size={17} className='text-[#387cae]' strokeWidth={2} />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Scholarships</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {tableLoading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' />
+                    Loading…
+                  </span>
+                ) : (
+                  `${pagination.totalCount} total`
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search scholarships…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#387cae] transition-all font-medium text-gray-700'
+              className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[140px]'
+              aria-label='Filter by status'
             >
-              <option value='all'>All Status</option>
+              <option value='all'>All status</option>
               <option value='published'>Published</option>
               <option value='draft'>Draft</option>
             </select>
+            <Button
+              onClick={handleAdd}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
+              Add Scholarship
+            </Button>
           </div>
         </div>
-        <Button
-          onClick={handleAdd}
-          className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-11 px-6 shadow-sm shrink-0 w-full sm:w-auto transition-all active:scale-95'
-        >
-          <Plus className='w-4 h-4' />
-          Add Scholarship
-        </Button>
       </div>
 
       <div className='bg-white rounded-md shadow-sm border overflow-hidden'>

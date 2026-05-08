@@ -108,7 +108,7 @@ const DegreeOrderingsPage = () => {
 
             while (hasMore) {
                 const response = await authFetch(
-                    `${process.env.baseUrl}/degree?page=${currentPage}&limit=${limit}`
+                    `${process.env.baseUrl}/degree?page=${currentPage}&limit=${limit}&status=all`
                 )
 
                 if (!response.ok) {

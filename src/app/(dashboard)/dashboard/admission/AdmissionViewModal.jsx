@@ -58,6 +58,20 @@ const AdmissionViewModal = ({ isOpen, onClose, admission }) => {
                                 {admission.fee_details || 'N/A'}
                             </div>
                         </div>
+
+                        {admission.pdf_file ? (
+                            <div className="space-y-1 col-span-2">
+                                <h4 className="text-sm font-medium text-gray-500">Attachment (PDF)</h4>
+                                <a
+                                    href={admission.pdf_file}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm font-medium text-[#387cae] hover:underline"
+                                >
+                                    View PDF
+                                </a>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
                 <div className="flex justify-end pt-4 border-t mt-6">

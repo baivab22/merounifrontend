@@ -38,7 +38,8 @@ export default function NewsForm({
   loadingCategories = false
 }) {
   const [uploadedFiles, setUploadedFiles] = useState({
-    featured_image: ''
+    featured_image: '',
+    pdf_file: ''
   })
   const [selectedCollege, setSelectedCollege] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -56,6 +57,7 @@ export default function NewsForm({
       title: '',
       description: '',
       featured_image: '',
+      pdf_file: '',
       status: 'draft',
       visibility: 'private',
       college_id: '',
@@ -118,12 +120,13 @@ export default function NewsForm({
         title: '',
         description: '',
         featured_image: '',
+        pdf_file: '',
         status: 'draft',
         college_id: '',
         category_id: '',
         meta_description: ''
       })
-      setUploadedFiles({ featured_image: '' })
+      setUploadedFiles({ featured_image: '', pdf_file: '' })
       setSelectedCollege(null)
       setSelectedCategory(null)
       setFormErrors({})
@@ -137,13 +140,15 @@ export default function NewsForm({
         title: initialData.title || '',
         description: initialData.description || '',
         featured_image: initialData.featured_image || '',
+        pdf_file: initialData.pdf_file || '',
         status: initialData.status || 'draft',
         college_id: initialData.college_id || initialData.newsCollege?.id || '',
         category_id: initialData.category_id || initialData.newsCategory?.id || '',
         meta_description: initialData.meta_description || ''
       })
       setUploadedFiles({
-        featured_image: initialData.featured_image || ''
+        featured_image: initialData.featured_image || '',
+        pdf_file: initialData.pdf_file || ''
       })
 
       // Initialize Selected College
@@ -283,8 +288,9 @@ export default function NewsForm({
               <div className="lg:col-span-4 space-y-8">
                 {/* Featured Image Section */}
                 <div className={`bg-white p-6 rounded-2xl shadow-sm border ${formErrors.featured_image ? 'border-red-300' : 'border-gray-100'}`}>
-                  <SectionHeader icon={ImageIcon} title="Featured Image" subtitle="Optional — main image for the news" />
+                  <SectionHeader icon={ImageIcon} title="Featured Media" subtitle="Image & optional PDF attachment" />
                   <div className={`p-4 bg-gray-50 rounded-md border border-dashed ${formErrors.featured_image ? 'border-red-300 bg-red-50/30' : 'border-gray-100'}`}>
+                    <Label className="text-xs font-semibold tracking-wider mb-3 block">Featured Image</Label>
                     <FileUpload
                       label=''
                       onUploadComplete={(url) => {
@@ -295,6 +301,19 @@ export default function NewsForm({
                       defaultPreview={uploadedFiles.featured_image}
                     />
                   </div>
+                  <div className="p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed mt-4">
+                    <Label className="text-xs font-semibold tracking-wider mb-3 block">Attachment (PDF)</Label>
+                    <FileUpload
+                      label=''
+                      accept='application/pdf'
+                      onUploadComplete={(url) => {
+                        setUploadedFiles(prev => ({ ...prev, pdf_file: url }))
+                        setValue('pdf_file', url || '')
+                      }}
+                      defaultPreview={uploadedFiles.pdf_file}
+                    />
+                  </div>
+                  <input type="hidden" {...register('pdf_file')} />
                   {formErrors.featured_image && (
                     <p className='text-xs text-destructive mt-1'>{formErrors.featured_image}</p>
                   )}

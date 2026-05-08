@@ -20,13 +20,12 @@ import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import useAdminPermission from '@/hooks/useAdminPermission'
-import { Eye, Edit2, Trash2, Plus } from 'lucide-react'
+import { Eye, Edit2, Trash2, Plus, Loader2, Search, Briefcase, FileText, Check } from 'lucide-react'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { Textarea } from '@/ui/shadcn/textarea'
-import SearchInput from '@/ui/molecules/SearchInput'
 
 const VacancyManager = () => {
   const { toast } = useToast()
@@ -50,8 +49,10 @@ const VacancyManager = () => {
       description: '',
       content: '',
       featuredImage: '',
+      pdf_file: '',
       associated_organization_name: '',
-      author_id
+      author_id,
+      status: 'published'
     }
   })
 
@@ -66,17 +67,23 @@ const VacancyManager = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [uploadedFiles, setUploadedFiles] = useState({ featuredImage: '' })
+  const [uploadedFiles, setUploadedFiles] = useState({
+    featuredImage: '',
+    pdf_file: ''
+  })
   const [deleteId, setDeleteId] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submittingDraft, setSubmittingDraft] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchTimeout, setSearchTimeout] = useState(null)
+  const searchDebounceRef = useRef(null)
+  const [statusFilter, setStatusFilter] = useState('all')
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewVacancyData, setViewVacancyData] = useState(null)
   const [loadingView, setLoadingView] = useState(false)
   const abortControllerRef = useRef(null)
 
-  const loadVacancies = async (page = 1) => {
+  const loadVacancies = async (page = 1, qOpt, statusOpt) => {
     try {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
@@ -91,11 +98,20 @@ const VacancyManager = () => {
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
       }
 
+      const qRaw = qOpt !== undefined ? qOpt : searchQuery
+      const status =
+        statusOpt !== undefined ? statusOpt : statusFilter
+      const q = (qRaw || '').trim()
+
       setTableLoading(true)
-      const response = await authFetch(
-        `${process.env.baseUrl}/vacancy?page=${page}`,
-        { signal: abortControllerRef.current.signal }
-      )
+      let url = `${process.env.baseUrl}/vacancy?page=${page}`
+      if (q) url += `&q=${encodeURIComponent(q)}`
+      if (status && status !== 'all')
+        url += `&status=${encodeURIComponent(status)}`
+
+      const response = await authFetch(url, {
+        signal: abortControllerRef.current.signal
+      })
       const data = await response.json()
       setVacancies(data.items || [])
       if (data.pagination) {
@@ -136,16 +152,16 @@ const VacancyManager = () => {
 
   useEffect(() => {
     return () => {
-      if (searchTimeout) clearTimeout(searchTimeout)
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchTimeout])
+  }, [])
 
   const handleCloseModal = () => {
     setIsOpen(false)
     setEditing(false)
     setEditingId(null)
     reset()
-    setUploadedFiles({ featuredImage: '' })
+    setUploadedFiles({ featuredImage: '', pdf_file: '' })
   }
 
   const handleAddClick = () => {
@@ -153,16 +169,19 @@ const VacancyManager = () => {
     setEditing(false)
     setEditingId(null)
     reset()
-    setUploadedFiles({ featuredImage: '' })
+    setUploadedFiles({ featuredImage: '', pdf_file: '' })
   }
 
-  const onSubmit = async (data) => {
-    setLoading(true)
+  const saveVacancy = async (data, asDraft) => {
     try {
+      if (asDraft) setSubmittingDraft(true)
+      else setSubmitting(true)
       const payload = {
         ...data,
         author_id,
-        featuredImage: uploadedFiles.featuredImage || data.featuredImage
+        featuredImage: uploadedFiles.featuredImage || data.featuredImage,
+        pdf_file: uploadedFiles.pdf_file || data.pdf_file || '',
+        status: asDraft ? 'draft' : 'published'
       }
 
       const method = editing ? 'PUT' : 'POST'
@@ -182,10 +201,14 @@ const VacancyManager = () => {
       }
       toast({
         title: editing ? 'Vacancy Updated' : 'Vacancy Created',
-        description: editing ? 'Vacancy updated successfully' : 'Vacancy created successfully'
+        description: asDraft
+          ? 'Vacancy saved as draft'
+          : editing
+            ? 'Vacancy updated successfully'
+            : 'Vacancy created successfully'
       })
       handleCloseModal()
-      loadVacancies(pagination.currentPage)
+      loadVacancies(pagination.currentPage, undefined, undefined)
     } catch (error) {
       toast({
         title: 'Error',
@@ -193,8 +216,17 @@ const VacancyManager = () => {
         variant: 'destructive'
       })
     } finally {
-      setLoading(false)
+      setSubmitting(false)
+      setSubmittingDraft(false)
     }
+  }
+
+  const onSubmit = async (data) => {
+    await saveVacancy(data, false)
+  }
+
+  const onSaveDraft = () => {
+    handleSubmit((data) => saveVacancy(data, true))()
   }
 
   const handleEdit = async (slugs) => {
@@ -212,8 +244,13 @@ const VacancyManager = () => {
       setValue('description', vacancy.description || '')
       setValue('content', vacancy.content || '')
       setValue('featuredImage', vacancy.featuredImage || '')
+      setValue('pdf_file', vacancy.pdf_file || '')
       setValue('associated_organization_name', vacancy.associated_organization_name || '')
-      setUploadedFiles({ featuredImage: vacancy.featuredImage || '' })
+      setValue('status', vacancy.status === 'draft' ? 'draft' : 'published')
+      setUploadedFiles({
+        featuredImage: vacancy.featuredImage || '',
+        pdf_file: vacancy.pdf_file || ''
+      })
     } catch (error) {
       toast({
         title: 'Error',
@@ -278,40 +315,22 @@ const VacancyManager = () => {
     }
   }
 
-  const handleSearch = async (query) => {
-    if (!query) {
-      loadVacancies(pagination.currentPage)
-      return
-    }
-    try {
-      const response = await authFetch(`${process.env.baseUrl}/vacancy?q=${query}`)
-      if (response.ok) {
-        const data = await response.json()
-        setVacancies(data.items || [])
-        if (data.pagination) {
-          setPagination({
-            currentPage: data.pagination.currentPage,
-            totalPages: data.pagination.totalPages,
-            total: data.pagination.totalCount
-          })
-        }
-      } else {
-        setVacancies([])
-      }
-    } catch (error) {
-      setVacancies([])
-    }
-  }
-
   const handleSearchInput = (value) => {
     setSearchQuery(value)
-    if (searchTimeout) clearTimeout(searchTimeout)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     if (value === '') {
-      handleSearch('')
-    } else {
-      const id = setTimeout(() => handleSearch(value), 300)
-      setSearchTimeout(id)
+      loadVacancies(pagination.currentPage, '', undefined)
+      return
     }
+    searchDebounceRef.current = setTimeout(
+      () => loadVacancies(1, value, undefined),
+      350
+    )
+  }
+
+  const handleStatusChange = (status) => {
+    setStatusFilter(status)
+    loadVacancies(1, undefined, status)
   }
 
   const columns = useMemo(() => [
@@ -397,22 +416,60 @@ const VacancyManager = () => {
 
   return (
     <div className="w-full">
-      {/* Sticky Header */}
-      <div className="sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md shadow-sm border">
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Search vacancies..."
-            className="max-w-md w-full"
-          />
-          <Button
-            onClick={handleAddClick}
-            className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Vacancy
-          </Button>
+      {/* Header card — aligned with consultancy dashboard */}
+      <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
+        <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-9 h-9 rounded-md bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+              <Briefcase size={17} className='text-[#387cae]' strokeWidth={2} />
+            </div>
+            <div>
+              <p className='text-sm font-bold text-gray-800'>Vacancies</p>
+              <p className='text-xs text-gray-400 flex items-center gap-1.5'>
+                {tableLoading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' />
+                    Loading…
+                  </span>
+                ) : (
+                  `${pagination.total} total`
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
+            <div className='relative shrink-0 flex-1 sm:flex-initial sm:w-64'>
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder='Search vacancies…'
+                className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className='h-9 shrink-0 rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition sm:w-[140px]'
+              aria-label='Filter by status'
+            >
+              <option value='all'>All status</option>
+              <option value='published'>Published</option>
+              <option value='draft'>Draft</option>
+            </select>
+            <Button
+              onClick={handleAddClick}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
+              Add Vacancy
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -423,7 +480,9 @@ const VacancyManager = () => {
           data={vacancies}
           columns={columns}
           pagination={pagination}
-          onPageChange={(newPage) => loadVacancies(newPage)}
+          onPageChange={(newPage) =>
+            loadVacancies(newPage, undefined, undefined)
+          }
           showSearch={false}
         />
       </div>
@@ -436,15 +495,19 @@ const VacancyManager = () => {
         className="max-w-4xl"
       >
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 py-4 border-b">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
             <DialogTitle className="text-lg font-semibold text-gray-900">
               {editing ? 'Edit Vacancy' : 'Add New Vacancy'}
             </DialogTitle>
             <DialogClose onClick={handleCloseModal} />
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6">
-            <form id="vacancy-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            id="vacancy-form"
+            className="flex flex-col flex-1 min-h-0 max-h-[calc(90vh-56px)]"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
 
               {/* Basic Information */}
               <section className="space-y-4">
@@ -504,34 +567,87 @@ const VacancyManager = () => {
               {/* Media */}
               <section className="space-y-4">
                 <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Media</h3>
-                <div className="space-y-2">
-                  <FileUpload
-                    label="Featured Image (Optional)"
-                    onUploadComplete={(url) => {
-                      setUploadedFiles((prev) => ({ ...prev, featuredImage: url }))
-                      setValue('featuredImage', url)
-                    }}
-                    defaultPreview={uploadedFiles.featuredImage}
-                  />
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <FileUpload
+                      label="Featured Image (Optional)"
+                      onUploadComplete={(url) => {
+                        setUploadedFiles((prev) => ({ ...prev, featuredImage: url }))
+                        setValue('featuredImage', url)
+                      }}
+                      defaultPreview={uploadedFiles.featuredImage}
+                    />
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed">
+                    <Label className="text-xs font-semibold tracking-wider mb-3 block">Attachment (PDF)</Label>
+                    <FileUpload
+                      label=""
+                      accept="application/pdf"
+                      onUploadComplete={(url) => {
+                        setUploadedFiles((prev) => ({ ...prev, pdf_file: url }))
+                        setValue('pdf_file', url)
+                      }}
+                      defaultPreview={uploadedFiles.pdf_file}
+                    />
+                  </div>
                 </div>
               </section>
-            </form>
-          </div>
+            </div>
 
           {/* Sticky Footer */}
-          <div className="sticky bottom-0 bg-white border-t p-4 px-6 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={handleCloseModal}>
+          <div className="shrink-0 flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-100 z-20">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseModal}
+              disabled={submitting || submittingDraft || loading}
+            >
               Cancel
             </Button>
             <Button
-              type="submit"
-              form="vacancy-form"
-              disabled={loading}
-              className="bg-[#387cae] hover:bg-[#387cae]/90 text-white"
+              type="button"
+              variant="secondary"
+              disabled={submitting || submittingDraft || loading}
+              onClick={onSaveDraft}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-none gap-2"
             >
-              {loading ? 'Saving...' : editing ? 'Update Vacancy' : 'Create Vacancy'}
+              {submittingDraft ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving draft…</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4" />
+                  <span>Save as Draft</span>
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              disabled={submitting || submittingDraft || loading}
+              onClick={() => handleSubmit(onSubmit)()}
+              className="bg-[#387cae] hover:bg-[#2d658d] text-white gap-2"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving…</span>
+                </>
+              ) : editing ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Update Vacancy</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Create Vacancy</span>
+                </>
+              )}
             </Button>
           </div>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -598,6 +714,20 @@ const VacancyManager = () => {
                       className="text-gray-700 prose prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: viewVacancyData.content }}
                     />
+                  </div>
+                )}
+
+                {viewVacancyData.pdf_file && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Attachment (PDF)</h3>
+                    <a
+                      href={viewVacancyData.pdf_file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-[#387cae] hover:underline"
+                    >
+                      View PDF
+                    </a>
                   </div>
                 )}
               </div>

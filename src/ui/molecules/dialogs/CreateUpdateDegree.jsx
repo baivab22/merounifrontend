@@ -12,6 +12,7 @@ import FileUpload from '@/app/(dashboard)/dashboard/colleges/FileUpload'
 import { authFetch } from '@/app/utils/authFetch'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import { Loader2, FileText, Check, Plus } from 'lucide-react'
 
 export default function CreateUpdateDegree({
     isOpen,
@@ -21,6 +22,7 @@ export default function CreateUpdateDegree({
 }) {
     const { toast } = useToast()
     const [submitting, setSubmitting] = useState(false)
+    const [submittingDraft, setSubmittingDraft] = useState(false)
     const [selectedDisciplines, setSelectedDisciplines] = useState([])
     const [disciplineError, setDisciplineError] = useState('')
     const [content, setContent] = useState('')
@@ -44,7 +46,6 @@ export default function CreateUpdateDegree({
 
     const coverImage = watch('featured_image')
 
-    // Search disciplines via API
     const onSearchDisciplines = async (query) => {
         try {
             const url = query
@@ -61,7 +62,6 @@ export default function CreateUpdateDegree({
 
     const handleSelectDiscipline = (discipline) => {
         setSelectedDisciplines(prev => {
-            // Avoid duplicates
             if (prev.some(d => d.id === discipline.id)) return prev
             return [...prev, discipline]
         })
@@ -72,7 +72,6 @@ export default function CreateUpdateDegree({
         setSelectedDisciplines(prev => prev.filter(d => d.id !== discipline.id))
     }
 
-    // Populate form when modal opens
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
@@ -83,7 +82,6 @@ export default function CreateUpdateDegree({
                 setContent(initialData.content || '')
                 setUploadedImage(initialData.featured_image || '')
 
-                // Resolve disciplines → prefer objects, fallback to ids
                 let existingDisciplines = []
                 if (Array.isArray(initialData.disciplines)) {
                     existingDisciplines = initialData.disciplines.map(d =>
@@ -108,23 +106,19 @@ export default function CreateUpdateDegree({
         }
     }, [isOpen, initialData, setValue, reset])
 
-    const onSubmit = async (data) => {
-        // Extra validation for disciplines (optional — remove if not required)
-        // Uncomment below if you want to require at least one discipline:
-        // if (selectedDisciplines.length === 0) {
-        //     setDisciplineError('Please select at least one discipline')
-        //     return
-        // }
-
+    const saveDegree = async (data, asDraft) => {
         try {
-            setSubmitting(true)
+            if (asDraft) setSubmittingDraft(true)
+            else setSubmitting(true)
+
             const payload = {
                 featured_image: uploadedImage?.trim() || data.featured_image?.trim() || null,
                 short_name: data.short_name.trim(),
                 title: data.title.trim(),
                 description: data.description?.trim() || null,
                 content: content?.trim() || null,
-                disciplines: selectedDisciplines.map(d => d.id)
+                disciplines: selectedDisciplines.map(d => d.id),
+                status: asDraft ? 'draft' : 'published'
             }
 
             let response
@@ -143,11 +137,13 @@ export default function CreateUpdateDegree({
             }
 
             const result = await response.json()
-            if (!response.ok) throw new Error(result.error || 'Operation failed')
+            if (!response.ok) throw new Error(result.error || result.message || 'Operation failed')
 
             toast({
                 title: 'Success',
-                description: `Degree ${initialData ? 'updated' : 'created'} successfully!`,
+                description: asDraft
+                    ? 'Degree saved as draft'
+                    : `Degree ${initialData ? 'updated' : 'created'} successfully!`,
             })
             onSuccess?.()
             onClose()
@@ -159,28 +155,40 @@ export default function CreateUpdateDegree({
             })
         } finally {
             setSubmitting(false)
+            setSubmittingDraft(false)
         }
+    }
+
+    const onSubmit = async (data) => {
+        await saveDegree(data, false)
+    }
+
+    const onSaveDraft = () => {
+        handleSubmit((data) => saveDegree(data, true))()
     }
 
     return (
         <Dialog isOpen={isOpen} onClose={onClose} className='max-w-3xl'>
             <DialogContent className='max-w-3xl max-h-[90vh] flex flex-col p-0'>
-                <DialogHeader className='px-6 py-4 border-b'>
+                <DialogHeader className='px-6 py-4 border-b shrink-0'>
                     <DialogTitle className="text-lg font-semibold text-gray-900">
                         {initialData ? 'Edit Degree' : 'Add Degree'}
                     </DialogTitle>
                     <DialogClose onClick={onClose} />
                 </DialogHeader>
 
-                <div className='flex-1 overflow-y-auto p-6'>
-                    <form id="degree-form" onSubmit={handleSubmit(onSubmit)} className='space-y-8'>
+                <form
+                    id="degree-form"
+                    className='flex flex-col flex-1 min-h-0 max-h-[calc(90vh-52px)]'
+                    onSubmit={(e) => e.preventDefault()}
+                >
+                    <div className='flex-1 overflow-y-auto p-6 space-y-8'>
 
-                        {/* ── Basic Details ─────────────────────────────── */}
                         <section className="space-y-5">
                             <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Degree Details</h3>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div className="space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Label htmlFor="deg-short_name" required>Short Name</Label>
                                     <Input
                                         id="deg-short_name"
@@ -197,7 +205,7 @@ export default function CreateUpdateDegree({
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Label htmlFor="deg-title" required>Full Title</Label>
                                     <Input
                                         id="deg-title"
@@ -213,26 +221,25 @@ export default function CreateUpdateDegree({
                                         <p className='text-xs text-destructive mt-1'>{errors.title.message}</p>
                                     )}
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="deg-desc">Description</Label>
-                                <Textarea
-                                    id="deg-desc"
-                                    placeholder='Enter a short description of this degree…'
-                                    {...register('description', {
-                                        maxLength: { value: 1000, message: 'Max 1000 characters' }
-                                    })}
-                                    rows={3}
-                                    className={`resize-none ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                                />
-                                {errors.description && (
-                                    <p className='text-xs text-destructive mt-1'>{errors.description.message}</p>
-                                )}
+                                <div className="space-y-2 sm:col-span-3">
+                                    <Label htmlFor="deg-desc">Description</Label>
+                                    <Textarea
+                                        id="deg-desc"
+                                        placeholder='Enter a short description of this degree…'
+                                        {...register('description', {
+                                            maxLength: { value: 1000, message: 'Max 1000 characters' }
+                                        })}
+                                        rows={5}
+                                        className={`min-h-[7.5rem] resize-y ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                    />
+                                    {errors.description && (
+                                        <p className='text-xs text-destructive mt-1'>{errors.description.message}</p>
+                                    )}
+                                </div>
                             </div>
                         </section>
 
-                        {/* ── Disciplines ───────────────────────────────── */}
                         <section className="space-y-3">
                             <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Disciplines</h3>
                             <p className="text-xs text-gray-400">
@@ -255,7 +262,6 @@ export default function CreateUpdateDegree({
                             )}
                         </section>
 
-                        {/* ── Detailed Content ──────────────────────────── */}
                         <section className="space-y-4">
                             <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Content</h3>
                             <div className="space-y-2">
@@ -268,7 +274,6 @@ export default function CreateUpdateDegree({
                             </div>
                         </section>
 
-                        {/* ── Media ─────────────────────────────────────── */}
                         <section className="space-y-4">
                             <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Media</h3>
                             <div className="space-y-2">
@@ -287,23 +292,61 @@ export default function CreateUpdateDegree({
                             </div>
                         </section>
 
-                    </form>
-                </div>
+                    </div>
 
-                {/* Sticky Footer */}
-                <div className='sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3'>
-                    <Button type='button' variant='outline' onClick={onClose} disabled={submitting}>
-                        Cancel
-                    </Button>
-                    <Button
-                        type='submit'
-                        form="degree-form"
-                        disabled={submitting}
-                        className='bg-[#387cae] hover:bg-[#387cae]/90 text-white'
-                    >
-                        {submitting ? 'Processing…' : initialData ? 'Update Degree' : 'Create Degree'}
-                    </Button>
-                </div>
+                    <div className='shrink-0 flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-100 z-20 sticky bottom-0'>
+                        <Button
+                            type='button'
+                            variant='outline'
+                            onClick={onClose}
+                            disabled={submitting || submittingDraft}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type='button'
+                            variant='secondary'
+                            disabled={submitting || submittingDraft}
+                            onClick={onSaveDraft}
+                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none gap-2'
+                        >
+                            {submittingDraft ? (
+                                <>
+                                    <Loader2 className='w-4 h-4 animate-spin' />
+                                    <span>Saving draft…</span>
+                                </>
+                            ) : (
+                                <>
+                                    <FileText className='w-4 h-4' />
+                                    <span>Save as Draft</span>
+                                </>
+                            )}
+                        </Button>
+                        <Button
+                            type='button'
+                            disabled={submitting || submittingDraft}
+                            onClick={() => handleSubmit(onSubmit)()}
+                            className='bg-[#387cae] hover:bg-[#2d658d] text-white gap-2'
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className='w-4 h-4 animate-spin' />
+                                    <span>Saving…</span>
+                                </>
+                            ) : initialData ? (
+                                <>
+                                    <Check className='w-4 h-4' />
+                                    <span>Update Degree</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className='w-4 h-4' />
+                                    <span>Create Degree</span>
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </form>
             </DialogContent>
         </Dialog>
     )
