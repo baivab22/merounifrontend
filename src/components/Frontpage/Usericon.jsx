@@ -20,7 +20,10 @@ export default function UserDropdown() {
   const user = useSelector((state) => state.user?.data)
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('access_token')
+        : null
     const hasUser = user !== null && user !== undefined
     setIsLoggedIn(!!(token || hasUser))
   }, [user])
@@ -58,13 +61,10 @@ export default function UserDropdown() {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.baseUrl}/auth/logout`,
-        {
-          method: 'POST',
-          credentials: 'include'
-        }
-      )
+      const response = await fetch(`${process.env.baseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
 
       if (!response.ok && ![400, 401, 403].includes(response.status)) {
         console.warn('Logout API call failed, but proceeding with logout')
@@ -82,18 +82,29 @@ export default function UserDropdown() {
     }
   }
 
-  const isApplyPage = pathname?.includes('/colleges/apply') || pathname?.includes('/schools/apply')
+  const isApplyPage =
+    pathname?.includes('/colleges/apply') ||
+    pathname?.includes('/schools/apply')
 
   if (isLoggedIn) {
     return (
       <>
-        <div className='flex items-center gap-2 mx-2 relative' ref={dropdownRef}>
+        <div
+          className='flex items-center gap-2 mx-2 relative'
+          ref={dropdownRef}
+        >
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className='flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md p-1'
           >
-            <div className='w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow'>
-              {user?.firstName && user?.lastName ? (
+            <div className='w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow overflow-hidden'>
+              {user?.profileImageUrl || user?.profile_image_url ? (
+                <img
+                  src={user.profileImageUrl || user.profile_image_url}
+                  alt='User'
+                  className='w-full h-full object-cover'
+                />
+              ) : user?.firstName && user?.lastName ? (
                 <span>
                   {user.firstName.charAt(0).toUpperCase()}
                   {user.lastName.charAt(0).toUpperCase()}
@@ -111,8 +122,9 @@ export default function UserDropdown() {
               </span>
             </div>
             <ChevronDown
-              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
-                }`}
+              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                isDropdownOpen ? 'rotate-180' : ''
+              }`}
             />
           </button>
 
@@ -124,7 +136,9 @@ export default function UserDropdown() {
                   <p className='font-medium text-sm text-gray-900'>
                     {user ? `${user.firstName} ${user.lastName}` : ''}
                   </p>
-                  <p className='text-xs text-gray-500 truncate'>{user?.email}</p>
+                  <p className='text-xs text-gray-500 truncate'>
+                    {user?.email}
+                  </p>
                 </div>
 
                 <Link
@@ -133,12 +147,8 @@ export default function UserDropdown() {
                   className='group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-all duration-200'
                   style={{ '--theme-blue': THEME_BLUE }}
                 >
-                  <FaUser
-                    className='w-4 h-4 text-gray-500 group-hover:text-[var(--theme-blue)] transition-colors'
-                  />
-                  <span
-                    className='group-hover:text-[var(--theme-blue)] transition-colors'
-                  >
+                  <FaUser className='w-4 h-4 text-gray-500 group-hover:text-[var(--theme-blue)] transition-colors' />
+                  <span className='group-hover:text-[var(--theme-blue)] transition-colors'>
                     Dashboard
                   </span>
                 </Link>
@@ -160,10 +170,10 @@ export default function UserDropdown() {
           open={isLogoutDialogOpen}
           onClose={() => setIsLogoutDialogOpen(false)}
           onConfirm={handleLogoutConfirm}
-          title="Logout Confirmation"
-          message="Are you sure you want to logout?"
-          confirmText="Logout"
-          cancelText="Cancel"
+          title='Logout Confirmation'
+          message='Are you sure you want to logout?'
+          confirmText='Logout'
+          cancelText='Cancel'
         />
       </>
     )

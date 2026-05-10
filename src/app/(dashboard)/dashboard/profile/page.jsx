@@ -15,6 +15,7 @@ import {
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import {
   FaCamera,
   FaEnvelope,
