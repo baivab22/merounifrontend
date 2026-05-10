@@ -17,8 +17,8 @@ const SideBanner = ({ banners = [] }) => {
   if (displayBanners.length === 0) return null
 
   // Same tile height as desktop sidebar on all breakpoints (matches dashboard slot preview height).
-  // Same ratio as desktop sidebar on mobile (approx 50% width -> 50% height)
-  const tileHeightClass = 'h-[74px] min-h-[74px] md:h-[148px] md:min-h-[148px]'
+  // Maintain same 400:148 ratio as desktop sidebar across all breakpoints
+  const aspectClass = 'aspect-[400/148]'
 
   return (
     <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
@@ -27,7 +27,7 @@ const SideBanner = ({ banners = [] }) => {
         const href =
           url &&
           (/^https?:\/\//i.test(url) ? url : `https://${url}`)
-        const shellClass = `group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full ${tileHeightClass} mx-auto`
+        const shellClass = `group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full ${aspectClass} mx-auto`
         const inner = (
           <>
             <Image
