@@ -3,7 +3,7 @@ import DegreeCard from '@/ui/molecules/cards/DegreeCard'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { debounce } from 'lodash'
-import { BookOpen, Search, X } from 'lucide-react'
+import { BookOpen, Search, X, SlidersHorizontal } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Pagination from '@/ui/molecules/common/Pagination'
@@ -121,6 +121,7 @@ const DegreePage = () => {
   const [filteredDisciplines, setFilteredDisciplines] = useState([])
   const [isDisciplinesLoading, setIsDisciplinesLoading] = useState(false)
   const [filterInput, setFilterInput] = useState('')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   // URL Sync Helper
   const updateURL = useCallback(
@@ -231,6 +232,7 @@ const DegreePage = () => {
     setSearchTerm('')
     setSelectedDisciplines([])
     setFilterInput('')
+    updateURL({ q: '', disciplines: '', page: 1 })
   }
 
   const handleDisciplineToggle = (disciplineId) => {
@@ -257,29 +259,38 @@ const DegreePage = () => {
                 </span>
               </div>
 
-              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-                <input
-                  type='text'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder='Degree title or short name...'
-                  className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-                />
-                <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                  {isSearching && (
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                  )}
-                  {searchTerm && (
-                    <button
-                      onClick={clearFilters}
-                      className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                      title='Clear search'
-                    >
-                      <X className='w-5 h-5' />
-                    </button>
-                  )}
+              <div className='flex items-center gap-3 w-full'>
+                <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+                  <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                  <input
+                    type='text'
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder='Degree title or short name...'
+                    className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                  />
+                  <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                    {isSearching && (
+                      <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                    )}
+                    {searchTerm && (
+                      <button
+                        onClick={clearFilters}
+                        className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                        title='Clear search'
+                      >
+                        <X className='w-5 h-5' />
+                      </button>
+                    )}
+                  </div>
                 </div>
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className='lg:hidden p-3.5 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+                  aria-label='Open Filters'
+                >
+                  <SlidersHorizontal className='w-5 h-5' />
+                </button>
               </div>
             </div>
           </div>
@@ -331,7 +342,7 @@ const DegreePage = () => {
 
               {/* Degrees Grid */}
               {loading || isScrolling ? (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'>
                   {Array(6)
                     .fill('')
                     .map((_, index) => (
@@ -357,7 +368,7 @@ const DegreePage = () => {
                 </div>
               ) : (
                 <>
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                  <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'>
                     {degrees.map((degree) => (
                       <DegreeCard
                         key={degree.id ?? degree.slug}
@@ -384,6 +395,68 @@ const DegreePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>Refine Results</h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    clearFilters()
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Discipline'
+                inputField='discipline'
+                options={filteredDisciplines}
+                selectedValues={selectedDisciplines}
+                onCheckboxChange={handleDisciplineToggle}
+                defaultValue={filterInput}
+                onSearchChange={(field, val) => {
+                  setFilterInput(val)
+                  fetchDisciplinesList(val)
+                }}
+                isLoading={isDisciplinesLoading}
+              />
+            </div>
+
+            <div className='p-5 border-t border-gray-100 bg-gray-50 sticky bottom-0'>
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className='w-full py-4 bg-[#0A70A7] text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-[#085a86] transition-all'
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

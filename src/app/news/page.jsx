@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, Globe, X } from 'lucide-react'
+import { Search, Globe, X, SlidersHorizontal } from 'lucide-react'
 import { debounce } from 'lodash'
 import FeaturedNews from './components/FeaturedNews'
 import { getNews, getCategories } from '@/app/action'
@@ -96,6 +96,7 @@ const News = () => {
   const [allCategories, setAllCategories] = useState([])
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false)
   const [filterInput, setFilterInput] = useState('')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   // Initialization from search params
   const initialSearch = searchParams.get('q') || ''
@@ -254,35 +255,44 @@ const News = () => {
               </span>
             </div>
 
-            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
-              <input
-                type='text'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='Search news by title or content...'
-                className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-              />
-              <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                {isSearching && (
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                )}
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                  >
-                    <X className='w-5 h-5' />
-                  </button>
-                )}
+            <div className='flex items-center gap-3 w-full'>
+              <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A6FA7] transition-colors' />
+                <input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder='Search news by title or content...'
+                  className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                />
+                <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                  {isSearching && (
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                  )}
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                    >
+                      <X className='w-5 h-5' />
+                    </button>
+                  )}
+                </div>
               </div>
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className='lg:hidden p-3.5 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+                aria-label='Open Filters'
+              >
+                <SlidersHorizontal className='w-5 h-5' />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Sidebar & Content Layout */}
         <div className='flex flex-col lg:flex-row gap-12'>
-          {/* Left Sidebar */}
+          {/* Left Sidebar (Desktop) */}
           <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
             <div className='flex justify-between items-center mb-[-16px] px-1'>
               <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
@@ -321,6 +331,65 @@ const News = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>Refine Results</h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    clearFilters()
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Category'
+                inputField='category'
+                options={categories}
+                selectedValues={selectedCategory ? [selectedCategory] : []}
+                onCheckboxChange={handleCategoryToggle}
+                defaultValue={filterInput}
+                onSearchChange={(field, val) => handleCategorySearch(val)}
+                isLoading={isCategoriesLoading}
+              />
+            </div>
+
+            <div className='p-5 border-t border-gray-100 bg-gray-50 sticky bottom-0'>
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className='w-full py-4 bg-[#0A70A7] text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-[#085a86] transition-all'
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

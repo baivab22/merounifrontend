@@ -3,11 +3,7 @@ import AdmissionCard from '@/ui/molecules/cards/AdmissionCard'
 import AdmissionCardSkeleton from './AdmissionCardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { debounce } from 'lodash'
-import {
-  Clipboard,
-  Search,
-  X
-} from 'lucide-react'
+import { Clipboard, Search, X, SlidersHorizontal } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Pagination from '@/ui/molecules/common/Pagination'
@@ -109,7 +105,7 @@ const AdmissionPage = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [selectedProgram, setSelectedProgram] = useState(initialProgram)
-  
+
   const [pagination, setPagination] = useState({
     currentPage: initialPage,
     totalPages: 1,
@@ -120,19 +116,23 @@ const AdmissionPage = () => {
   const [isProgramsLoading, setIsProgramsLoading] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [filterInput, setFilterInput] = useState('')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Sync state with URL
   useEffect(() => {
@@ -143,7 +143,7 @@ const AdmissionPage = () => {
     setSearchTerm(q)
     setDebouncedSearch(q)
     setSelectedProgram(prog)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
   }, [searchParams])
 
   // Debounce main search
@@ -222,8 +222,7 @@ const AdmissionPage = () => {
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
       <div className='max-w-[1600px] mx-auto'>
-        
-        {/* Header Section with Search (Degree Style) */}
+        {/* Header Section with Search */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
           <div className='flex-1 space-y-6 w-full'>
             <div className='flex items-center gap-4 mb-2'>
@@ -235,39 +234,49 @@ const AdmissionPage = () => {
               </span>
             </div>
 
-            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-              <input
-                type='text'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder='Search by college or course...'
-                className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-              />
-              <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                {isSearching && (
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                )}
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                  >
-                    <X className='w-5 h-5' />
-                  </button>
-                )}
+            <div className='flex items-center gap-3 w-full'>
+              <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                <input
+                  type='text'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder='Search by college or course...'
+                  className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                />
+                <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                  {isSearching && (
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                  )}
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                    >
+                      <X className='w-5 h-5' />
+                    </button>
+                  )}
+                </div>
               </div>
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className='lg:hidden p-3.5 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+                aria-label='Open Filters'
+              >
+                <SlidersHorizontal className='w-5 h-5' />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Sidebar & Content Section (Left Sidebar) */}
+        {/* Sidebar & Content Section */}
         <div className='flex flex-col lg:flex-row gap-12'>
-          
-          {/* Sidebar (Left Side) */}
+          {/* Sidebar (Desktop) */}
           <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
             <div className='flex justify-between items-center mb-[-16px] px-1'>
-              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                Filters
+              </span>
               {(searchTerm || selectedProgram) && (
                 <button
                   className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
@@ -297,8 +306,8 @@ const AdmissionPage = () => {
             {!loading && (
               <div className='mb-8 px-2'>
                 <p className='text-sm text-gray-500 font-semibold'>
-                  Showing <span className='text-gray-900'>{admission.length}</span>{' '}
-                  of{' '}
+                  Showing{' '}
+                  <span className='text-gray-900'>{admission.length}</span> of{' '}
                   <span className='text-gray-900'>{pagination.totalCount}</span>{' '}
                   results
                 </p>
@@ -307,7 +316,7 @@ const AdmissionPage = () => {
 
             {/* Admissions Grid */}
             {loading ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
+              <div className='grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-10'>
                 {Array(6)
                   .fill('')
                   .map((_, index) => (
@@ -333,7 +342,7 @@ const AdmissionPage = () => {
               </div>
             ) : (
               <>
-                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
+                <div className='grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-10'>
                   {admission.map((admis) => (
                     <AdmissionCard key={admis.id} admis={admis} />
                   ))}
@@ -356,6 +365,70 @@ const AdmissionPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>
+                  Refine Results
+                </h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    clearFilters()
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Program'
+                inputField='program'
+                options={programs}
+                selectedValues={selectedProgram ? [selectedProgram] : []}
+                onCheckboxChange={handleProgramToggle}
+                defaultValue={filterInput}
+                onSearchChange={(field, val) => {
+                  setFilterInput(val)
+                  fetchProgramList(val)
+                }}
+                isLoading={isProgramsLoading}
+              />
+            </div>
+
+            <div className='p-5 border-t border-gray-100 bg-gray-50 sticky bottom-0'>
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className='w-full py-4 bg-[#0A70A7] text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-[#085a86] transition-all'
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

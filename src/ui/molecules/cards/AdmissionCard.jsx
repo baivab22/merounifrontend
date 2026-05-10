@@ -3,12 +3,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from '@bprogress/next/app'
-import {
-  GraduationCap,
-  MapPin,
-  ArrowRight,
-  Building2
-} from 'lucide-react'
+import { GraduationCap, MapPin, ArrowRight, Building2 } from 'lucide-react'
 
 const AdmissionCard = ({ admis }) => {
   const router = useRouter()
@@ -76,8 +71,12 @@ const AdmissionCard = ({ admis }) => {
 
       <div className='p-5 flex flex-col flex-1 min-w-0'>
         <div className='flex items-start gap-3 mb-4'>
-          <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm'>
-            <img src={logo} alt='' className='w-full h-full object-contain p-1' />
+          <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm hidden sm:block'>
+            <img
+              src={logo}
+              alt=''
+              className='w-full h-full object-contain p-1'
+            />
           </div>
           <div className='flex-1 min-w-0'>
             <h3 className='text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-2'>
@@ -100,7 +99,9 @@ const AdmissionCard = ({ admis }) => {
               className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-colors inline-flex items-center gap-1'
             >
               <GraduationCap className='w-3 h-3 shrink-0' />
-              <span className='line-clamp-1 max-w-[220px]'>{program.title}</span>
+              <span className='line-clamp-1 max-w-[220px]'>
+                {program.title}
+              </span>
             </Link>
           </div>
         )}

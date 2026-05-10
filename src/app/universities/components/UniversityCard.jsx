@@ -55,7 +55,7 @@ const UniversityCard = ({ university }) => {
         {/* Logo and Title Header */}
         <div className='flex items-start gap-3 mb-4'>
           {logo && (
-            <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm'>
+            <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm hidden sm:block'>
               <img src={logo} alt='' className='w-full h-full object-contain p-1' />
             </div>
           )}

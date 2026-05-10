@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { debounce } from 'lodash'
-import { Search, Building2, X } from 'lucide-react'
+import { Search, Building2, X, SlidersHorizontal } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import UniversityShimmer from './UniversityShimmer'
@@ -29,12 +29,6 @@ const fetchUniversitiesFromAPI = async (
 
     // Add type filter if exists
     if (filters.type && filters.type.length > 0) {
-      // Taking the first one if multiple, or handling array if backend supports logic for IN
-      // Backend logic I added: type_of_institute = :type. So single value.
-      // If frontend supports multiple selection, we might need to adjust backend or send one.
-      // For now, let's assume single selection or send the last selected one for simplicity as per requirement "Public/Private" usually exclusive or filtered one by one.
-      // Actually, my backend logic `type_of_institute = :type` implies a single value.
-      // I will take the last selected value to filter.
       queryParams.append('type', filters.type[filters.type.length - 1])
     }
 
@@ -126,6 +120,7 @@ const Body = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     type: initialType
   })
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   // URL Sync Helper
   const updateURL = useCallback(
@@ -256,29 +251,38 @@ const Body = () => {
             </span>
           </div>
 
-          <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-            <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-            <input
-              type='text'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Search by university name...'
-              className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-            />
-            <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-              {isSearching && (
-                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-              )}
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                  title='Clear search'
-                >
-                  <X className='w-5 h-5' />
-                </button>
-              )}
+          <div className='flex items-center gap-3 w-full'>
+            <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder='Search by university name...'
+                className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+              />
+              <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                {isSearching && (
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                )}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                    title='Clear search'
+                  >
+                    <X className='w-5 h-5' />
+                  </button>
+                )}
+              </div>
             </div>
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className='lg:hidden p-3.5 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+              aria-label='Open Filters'
+            >
+              <SlidersHorizontal className='w-5 h-5' />
+            </button>
           </div>
         </div>
       </div>
@@ -311,13 +315,13 @@ const Body = () => {
 
         <div className='flex-1'>
           {isLoading ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
+            <div className='grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-10'>
               {Array.from({ length: 6 }).map((_, idx) => (
                 <UniversityShimmer key={idx} />
               ))}
             </div>
           ) : universities.length > 0 ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
+            <div className='grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-10'>
               {universities.map((uni, idx) => (
                 <UniversityCard key={uni.id || idx} university={uni} />
               ))}
@@ -351,6 +355,63 @@ const Body = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>Refine Results</h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSelectedFilters({ type: [] })
+                    updateURL({ q: '', type: [], page: 1 })
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Institute type'
+                options={instituteTypes}
+                selectedValues={selectedFilters.type}
+                onCheckboxChange={(val) => handleFilterChange('type', val)}
+              />
+            </div>
+
+            <div className='p-5 border-t border-gray-100 bg-gray-50 sticky bottom-0'>
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className='w-full py-4 bg-[#0A70A7] text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-[#085a86] transition-all'
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
