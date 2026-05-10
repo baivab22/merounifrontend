@@ -7,7 +7,7 @@ const isExpired = (banner) => {
 
 const SideBanner = ({ banners = [] }) => {
   // Positions 4–8: right column on homepage and blog article layout (matches dashboard slots)
-  const displayBanners = [4, 5, 6, 7, 8]
+  const displayBanners = [4, 5, 6, 7]
     .map((position) => {
       const banner = banners.find((b) => b.display_position === position)
       return !banner || isExpired(banner) ? null : banner
@@ -17,7 +17,8 @@ const SideBanner = ({ banners = [] }) => {
   if (displayBanners.length === 0) return null
 
   // Same tile height as desktop sidebar on all breakpoints (matches dashboard slot preview height).
-  const tileHeightClass = 'h-[148px] min-h-[148px]'
+  // Same ratio as desktop sidebar on mobile (approx 50% width -> 50% height)
+  const tileHeightClass = 'h-[74px] min-h-[74px] md:h-[148px] md:min-h-[148px]'
 
   return (
     <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>

@@ -473,7 +473,7 @@ export default function BannerForm() {
         onDragEnd={handleDragEnd}
       >
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((position) => {
+          {[1, 2, 3, 4, 5, 6, 7].map((position) => {
             const banners = bannersByPosition[position] || []
             const hasBanner = banners.length > 0
             const banner = hasBanner ? banners[0] : null
