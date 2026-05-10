@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { usePathname, useRouter } from 'next/navigation'
 import { FaUserCircle, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { ChevronDown } from 'lucide-react'
+import { authFetch } from '@/app/utils/authFetch'
 import { removeUser } from '../../app/utils/userSlice'
 import { THEME_BLUE } from '@/constants/constants'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
@@ -18,6 +19,7 @@ export default function UserDropdown() {
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user?.data)
+  const [profile, setProfile] = useState(null)
 
   useEffect(() => {
     const token =
@@ -26,7 +28,24 @@ export default function UserDropdown() {
         : null
     const hasUser = user !== null && user !== undefined
     setIsLoggedIn(!!(token || hasUser))
+
+    if ((token || hasUser) && (user?.id || profile?.id)) {
+      const fetchLatestProfile = async () => {
+        try {
+          const response = await authFetch(`${process.env.baseUrl}/users/profile`)
+          const data = await response.json()
+          if (data?.user) {
+            setProfile(data.user)
+          }
+        } catch (error) {
+          console.error('Error fetching latest profile:', error)
+        }
+      }
+      fetchLatestProfile()
+    }
   }, [user])
+
+  const currentUser = profile || user
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -98,16 +117,16 @@ export default function UserDropdown() {
             className='flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md p-1'
           >
             <div className='w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow overflow-hidden'>
-              {user?.profileImageUrl || user?.profile_image_url ? (
+              {currentUser?.profileImageUrl || currentUser?.profile_image_url ? (
                 <img
-                  src={user.profileImageUrl || user.profile_image_url}
+                  src={currentUser.profileImageUrl || currentUser.profile_image_url}
                   alt='User'
                   className='w-full h-full object-cover'
                 />
-              ) : user?.firstName && user?.lastName ? (
+              ) : currentUser?.firstName && currentUser?.lastName ? (
                 <span>
-                  {user.firstName.charAt(0).toUpperCase()}
-                  {user.lastName.charAt(0).toUpperCase()}
+                  {currentUser.firstName.charAt(0).toUpperCase()}
+                  {currentUser.lastName.charAt(0).toUpperCase()}
                 </span>
               ) : (
                 <FaUserCircle className='w-6 h-6' />
@@ -115,10 +134,10 @@ export default function UserDropdown() {
             </div>
             <div className='hidden sm:flex flex-col items-start'>
               <span className='text-xs leading-3 font-medium text-gray-900'>
-                {user ? `${user.firstName} ${user.lastName}` : ''}
+                {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : ''}
               </span>
               <span className='text-[10px] text-gray-500 text-left max-w-[150px] truncate'>
-                {user?.email}
+                {currentUser?.email}
               </span>
             </div>
             <ChevronDown
@@ -134,10 +153,10 @@ export default function UserDropdown() {
               <div className='px-1.5'>
                 <div className='sm:hidden px-3 py-2 border-b border-gray-100 mb-1'>
                   <p className='font-medium text-sm text-gray-900'>
-                    {user ? `${user.firstName} ${user.lastName}` : ''}
+                    {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : ''}
                   </p>
                   <p className='text-xs text-gray-500 truncate'>
-                    {user?.email}
+                    {currentUser?.email}
                   </p>
                 </div>
 
