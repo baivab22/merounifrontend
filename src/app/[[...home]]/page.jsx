@@ -85,8 +85,8 @@ const Page = async () => {
         </div>
       </div>
 
-      {/* Mobile Side Banner */}
-      <div className='w-full md:w-1/4 block md:hidden mt-4 px-4'>
+      {/* Mobile side banners: same 148px tile height as desktop sidebar; gutters match main container */}
+      <div className='container px-4 sm:px-6 md:px-8 mx-auto block md:hidden mt-4'>
         <SideBanner banners={banners} />
       </div>
 

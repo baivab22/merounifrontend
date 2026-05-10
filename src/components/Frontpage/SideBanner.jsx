@@ -16,15 +16,17 @@ const SideBanner = ({ banners = [] }) => {
 
   if (displayBanners.length === 0) return null
 
+  // Same tile height as desktop sidebar on all breakpoints (matches dashboard slot preview height).
+  const tileHeightClass = 'h-[148px] min-h-[148px]'
+
   return (
-    <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
+    <div className='grid grid-cols-1 gap-3 md:gap-4'>
       {displayBanners.map((banner) => {
         const url = banner.website_url?.trim()
         const href =
           url &&
           (/^https?:\/\//i.test(url) ? url : `https://${url}`)
-        const shellClass =
-          'group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full aspect-video md:h-[148px] mx-auto'
+        const shellClass = `group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full ${tileHeightClass} mx-auto`
         const inner = (
           <>
             <Image
@@ -32,7 +34,7 @@ const SideBanner = ({ banners = [] }) => {
               alt={`Banner position ${banner.display_position}`}
               fill
               unoptimized
-              sizes='(max-width: 768px) 50vw, 25vw'
+              sizes='(max-width: 768px) 100vw, 25vw'
               className='object-cover object-center'
             />
             <div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all duration-300' />

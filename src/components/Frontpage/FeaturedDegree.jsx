@@ -28,7 +28,7 @@ const FeaturedDegree = async () => {
           Degrees
         </h2>
       </div>
-      <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5'>
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5'>
         {degrees?.map((item) => (
           <Link
             key={item.id}
@@ -52,9 +52,9 @@ const FeaturedDegree = async () => {
                 </div>
               )}
             </div>
-            <div className='p-4 h-[100px] flex flex-col justify-between'>
+            <div className='p-3 md:p-4 h-[100px] flex flex-col justify-between'>
               <div>
-                <h2 className='text-sm font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[#0A6FA7] transition-colors'>
+                <h2 className='text-xs md:text-sm font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[#0A6FA7] transition-colors'>
                   {item.title}
                 </h2>
                 {item.short_name && (
@@ -68,7 +68,7 @@ const FeaturedDegree = async () => {
         ))}
         <Link
           href='/degree'
-          className='group flex flex-col rounded-md overflow-hidden transition-all duration-300 hover:shadow-xl relative min-h-[180px] justify-center items-center text-center p-6 cursor-pointer'
+          className='group flex flex-col rounded-md overflow-hidden transition-all duration-300 hover:shadow-xl relative min-h-[180px] justify-center items-center text-center p-4 md:p-6 cursor-pointer'
           style={{ background: 'linear-gradient(135deg, #0A6FA7 0%, #0e4f7a 60%, #31AD8F 100%)' }}
         >
           {/* Decorative blobs */}

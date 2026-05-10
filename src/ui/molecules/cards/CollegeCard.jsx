@@ -202,11 +202,11 @@ const CollegeCard = ({
       </div>
 
       {/* Content Section */}
-      <div className='p-5 flex flex-col flex-1 min-w-0'>
+      <div className='p-3 md:p-5 flex flex-col flex-1 min-w-0'>
         {/* Logo and Title Header */}
         <div className='flex items-start gap-3 mb-4'>
           {logo && (
-            <div className='relative w-10 h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm'>
+            <div className='hidden md:block md:relative w-8 h-8 md:w-10 md:h-10 flex-shrink-0 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shadow-sm'>
               <img
                 src={logo}
                 alt=''
@@ -215,11 +215,11 @@ const CollegeCard = ({
             </div>
           )}
           <div className='flex-1 min-w-0'>
-            <h3 className='text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-2'>
+            <h3 className='text-sm md:text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-2'>
               {name}
             </h3>
             {location && (
-              <div className='flex items-center gap-1 text-[11px] font-medium text-gray-500'>
+              <div className='flex items-center gap-1 text-[10px] md:text-[11px] font-medium text-gray-500'>
                 <MapPin className='w-3 h-3 text-[#0A70A7] flex-shrink-0' />
                 <span className='truncate'>{location}</span>
               </div>
@@ -228,7 +228,7 @@ const CollegeCard = ({
         </div>
 
         {degrees?.length > 0 && (
-          <div className='flex flex-wrap gap-1.5 mb-5'>
+          <div className='flex flex-wrap gap-1 md:gap-1.5 mb-4 md:mb-5'>
             {degrees.slice(0, 4).map((prog) => {
               const abbreviation =
                 prog.short_name ||
@@ -240,35 +240,35 @@ const CollegeCard = ({
                   key={prog.id}
                   href={`/degree/${prog.slugs || prog.slug}`}
                   onClick={(e) => e.stopPropagation()}
-                  className='text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-colors'
+                  className='text-[9px] md:text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-1.5 md:px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-colors'
                 >
                   {abbreviation}
                 </Link>
               )
             })}
             {degrees.length > 4 && (
-              <span className='text-[10px] text-gray-400 font-medium self-center ml-0.5'>
+              <span className='text-[9px] md:text-[10px] text-gray-400 font-medium self-center ml-0.5'>
                 +{degrees.length - 4} more
               </span>
             )}
           </div>
         )}
 
-        <div className='mt-auto pt-4 flex items-center gap-2 border-t border-gray-100'>
+        <div className='mt-auto pt-3 md:pt-4 flex items-center gap-1.5 md:gap-2 border-t border-gray-100'>
           <Link
             href={slug ? `/colleges/apply/${slug}` : '#'}
             onClick={(e) => e.stopPropagation()}
-            className='flex-1 py-2 px-3 bg-[#0A70A7] text-white rounded-lg hover:bg-[#085a86] transition-all text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-sm uppercase tracking-wider'
+            className='flex-1 py-1.5 md:py-2 px-2 md:px-3 bg-[#0A70A7] text-white rounded-lg hover:bg-[#085a86] transition-all text-[9px] md:text-[10px] font-bold flex items-center justify-center gap-1 md:gap-1.5 shadow-sm uppercase tracking-wider'
           >
-            <GraduationCap className='w-3.5 h-3.5' />
+            <GraduationCap className='w-3 md:w-3.5 h-3 md:h-3.5' />
             Apply
           </Link>
           <Link
             href={slug ? `/colleges/${slug}` : '#'}
             onClick={(e) => e.stopPropagation()}
-            className='flex-1 py-2 px-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-[10px] font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider border border-gray-200/50'
+            className='flex-1 py-1.5 md:py-2 px-2 md:px-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-[9px] md:text-[10px] font-bold flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-wider border border-gray-200/50'
           >
-            <Info className='w-3.5 h-3.5' />
+            <Info className='w-3 md:w-3.5 h-3 md:h-3.5' />
             Details
           </Link>
         </div>
