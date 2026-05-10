@@ -49,6 +49,7 @@ const ProfileUpdate = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [academicDocs, setAcademicDocs] = useState([])
   const [isAcademicLoading, setIsAcademicLoading] = useState(false)
+  const [showImagePreview, setShowImagePreview] = useState(false)
   const userData = useSelector((state) => state.user.data)
 
   const [nameForm, setNameForm] = useState({
@@ -283,7 +284,12 @@ const ProfileUpdate = () => {
         <div className='flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6'>
           <div className='flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left'>
             <div className='relative flex-shrink-0'>
-              <div className='w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-2xl overflow-hidden border-2 border-gray-200'>
+              <div
+                onClick={() =>
+                  nameForm.profileImageUrl && setShowImagePreview(true)
+                }
+                className={`w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-2xl overflow-hidden border-2 border-gray-200 ${nameForm.profileImageUrl ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+              >
                 {nameForm.profileImageUrl ? (
                   <img
                     src={nameForm.profileImageUrl}
@@ -863,6 +869,29 @@ const ProfileUpdate = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        isOpen={showImagePreview}
+        onClose={() => setShowImagePreview(false)}
+      >
+        <DialogContent className='max-w-2xl p-0 overflow-hidden bg-transparent border-none shadow-none'>
+          <DialogHeader className='sr-only'>
+            <DialogTitle>Profile Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className='relative flex items-center justify-center p-4 group'>
+            <button
+              onClick={() => setShowImagePreview(false)}
+              className='absolute top-6 right-6 z-50 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all'
+            >
+              <X size={20} />
+            </button>
+            <img
+              src={nameForm.profileImageUrl}
+              alt='Profile Preview'
+              className='max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200'
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
