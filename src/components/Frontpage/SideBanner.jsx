@@ -20,7 +20,7 @@ const SideBanner = ({ banners = [] }) => {
   const tileHeightClass = 'h-[148px] min-h-[148px]'
 
   return (
-    <div className='grid grid-cols-1 gap-3 md:gap-4'>
+    <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
       {displayBanners.map((banner) => {
         const url = banner.website_url?.trim()
         const href =
