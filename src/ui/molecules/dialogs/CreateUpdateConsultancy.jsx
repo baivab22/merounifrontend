@@ -345,29 +345,37 @@ export default function CreateUpdateConsultancy({
                                             <div className='grid grid-cols-2 gap-4'>
                                                 <div>
                                                     <Label>City</Label>
-                                                    <select
-                                                        id='address.city'
-                                                        {...register('address.city')}
-                                                        className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
-                                                    >
-                                                        <option value=''>Select City</option>
-                                                        {CITIES.map((city) => (
-                                                            <option key={city} value={city}>{city}</option>
-                                                        ))}
-                                                    </select>
+                                                    <SearchSelectCreate
+                                                        selectedItems={watch('address.city') ? [{ id: watch('address.city'), title: watch('address.city') }] : []}
+                                                        onSearch={async (query) => {
+                                                            const all = CITIES.map(c => ({ id: c, title: c }))
+                                                            if (!query) return all
+                                                            const lower = query.toLowerCase()
+                                                            return all.filter(c => c.title.toLowerCase().includes(lower))
+                                                        }}
+                                                        onSelect={(item) => setValue('address.city', item.id)}
+                                                        onRemove={() => setValue('address.city', '')}
+                                                        placeholder="Search city..."
+                                                        isMulti={false}
+                                                        displayKey="title"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <Label>District</Label>
-                                                    <select
-                                                        id='address.district'
-                                                        {...register('address.district')}
-                                                        className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
-                                                    >
-                                                        <option value=''>Select District</option>
-                                                        {districtsList.map((district) => (
-                                                            <option key={district} value={district}>{district}</option>
-                                                        ))}
-                                                    </select>
+                                                    <SearchSelectCreate
+                                                        selectedItems={watch('address.district') ? [{ id: watch('address.district'), title: watch('address.district') }] : []}
+                                                        onSearch={async (query) => {
+                                                            const all = districtsList.map(d => ({ id: d, title: d }))
+                                                            if (!query) return all
+                                                            const lower = query.toLowerCase()
+                                                            return all.filter(d => d.title.toLowerCase().includes(lower))
+                                                        }}
+                                                        onSelect={(item) => setValue('address.district', item.id)}
+                                                        onRemove={() => setValue('address.district', '')}
+                                                        placeholder="Search district..."
+                                                        isMulti={false}
+                                                        displayKey="title"
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
