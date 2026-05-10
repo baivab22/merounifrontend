@@ -10,7 +10,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import FilterSection from './FilterSection'
-import { UniversityCardShimmer } from './UniversityCardShimmer'
+import UniversityCardShimmer from './UniversityShimmerCard'
 import Pagination from '@/ui/molecules/common/Pagination'
 
 // Helper to construct query params
