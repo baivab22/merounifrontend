@@ -116,7 +116,7 @@ const ImageCarousel = () => {
                   </div>
 
                   <div>
-                    <Link href={`/colleges/${college.slugs}`}>
+                    <Link href={`/colleges/${college.slug}`}>
                       <button
                         type='button'
                         className='text-white py-2 px-4 rounded-md shadow-lg hover:bg-[#30AD8F] transition-all duration-200'

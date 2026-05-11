@@ -1,12 +1,27 @@
 import { authFetch } from '@/app/utils/authFetch'
 import { Button } from '@/ui/shadcn/button'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/ui/shadcn/dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/ui/shadcn/dialog'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import axios from 'axios'
-import { Image as ImageIcon, Info, Layers, Loader2, Settings, FileText, Check, Plus } from 'lucide-react'
+import {
+  Image as ImageIcon,
+  Info,
+  Layers,
+  Loader2,
+  Settings,
+  FileText,
+  Check,
+  Plus
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
@@ -15,494 +30,626 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import { Select } from '@/ui/shadcn/select'
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
-    <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20">
-            <Icon size={20} />
-        </div>
-        <div>
-            <h3 className="text-lg font-bold text-gray-900 leading-tight">{title}</h3>
-            {subtitle && <p className="text-xs text-gray-400 mt-0.5 font-medium">{subtitle}</p>}
-        </div>
+  <div className='flex items-center gap-3 mb-6'>
+    <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20'>
+      <Icon size={20} />
     </div>
+    <div>
+      <h3 className='text-lg font-bold text-gray-900 leading-tight'>{title}</h3>
+      {subtitle && (
+        <p className='text-xs text-gray-400 mt-0.5 font-medium'>{subtitle}</p>
+      )}
+    </div>
+  </div>
 )
 
 const BlogFormModal = ({
-    isOpen,
-    onClose,
-    isEditing,
-    initialData,
-    categories,
-    onSave,
-    submitting,
-    authors
+  isOpen,
+  onClose,
+  isEditing,
+  initialData,
+  categories,
+  onSave,
+  submitting,
+  authors
 }) => {
-    const { toast } = useToast()
-    const [uploadedFiles, setUploadedFiles] = useState({
-        featured_image: '',
-        pdf_file: ''
-    })
-    const [selectedTags, setSelectedTags] = useState([])
-    const [selectedCategory, setSelectedCategory] = useState(null)
-    const [featuredImageError, setFeaturedImageError] = useState('')
+  const { toast } = useToast()
+  const [uploadedFiles, setUploadedFiles] = useState({
+    featured_image: '',
+    pdf_file: ''
+  })
+  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [featuredImageError, setFeaturedImageError] = useState('')
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setValue,
-        getValues,
-        formState: { errors, submitCount }
-    } = useForm({
-        defaultValues: {
-            title: '',
-            category: '',
-            tags: [],
-            featured_image: '',
-            pdf_file: '',
-            description: '',
-            content: '',
-            status: 'draft',
-            visibility: 'private',
-            is_featured: false
-        }
-    })
-
-    // Refs for scroll-to-error
-    const titleRef = useRef(null)
-    const categoryRef = useRef(null)
-    const descriptionRef = useRef(null)
-    const contentRef = useRef(null)
-    const featuredImageRef = useRef(null)
-    const formScrollRef = useRef(null)
-
-    // Scroll to first error after submit attempt
-    useEffect(() => {
-        if (submitCount === 0) return
-        const fieldOrder = [
-            { key: 'title',       ref: titleRef },
-            { key: 'category',    ref: categoryRef },
-            { key: 'description', ref: descriptionRef },
-            { key: 'content',     ref: contentRef },
-        ]
-        for (const { key, ref } of fieldOrder) {
-            if (errors[key] && ref.current) {
-                ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                const input = ref.current.querySelector('input, textarea, [contenteditable]')
-                if (input) input.focus()
-                return
-            }
-        }
-    }, [submitCount, errors])
-    useEffect(() => {
-        if (isOpen) {
-            if (isEditing && initialData) {
-                reset({
-                    title: initialData.title || '',
-                    category: initialData.category?.id || initialData.category || '',
-                    description: initialData.description || '',
-                    content: initialData.content || '',
-                    status: initialData.status || 'draft',
-                    visibility: initialData.visibility || 'private',
-                    is_featured: initialData.is_featured || false
-                })
-                setUploadedFiles({
-                    featured_image: initialData.featured_image || '',
-                    pdf_file: initialData.pdf_file || ''
-                })
-                setValue('featured_image', initialData.featured_image || '')
-                setValue('pdf_file', initialData.pdf_file || '')
-
-                let blogTags = initialData.tags || []
-                if (typeof blogTags === 'string') {
-                    try {
-                        blogTags = JSON.parse(blogTags)
-                    } catch (e) {
-                        blogTags = []
-                    }
-                }
-
-                if (Array.isArray(blogTags)) {
-                    setSelectedTags(blogTags)
-                    setValue('tags', blogTags.map(t => typeof t === 'object' ? t.id : t))
-                } else {
-                    setSelectedTags([])
-                    setValue('tags', [])
-                }
-
-                // Handle Category Initialization
-                if (initialData.category) {
-                    const cat = typeof initialData.category === 'object'
-                        ? initialData.category
-                        : categories.find(c => c.id === initialData.category || c.id === parseInt(initialData.category))
-
-                    if (cat) {
-                        setSelectedCategory(cat)
-                        setValue('category', cat.id)
-                    }
-                } else {
-                    setSelectedCategory(null)
-                }
-
-            } else {
-                reset({
-                    title: '',
-                    category: '',
-                    tags: [],
-                    featured_image: '',
-                    pdf_file: '',
-                    description: '',
-                    content: '',
-                    status: 'draft',
-                    visibility: 'private',
-                    is_featured: false
-                })
-                setUploadedFiles({ featured_image: '', pdf_file: '' })
-                setSelectedTags([])
-                setSelectedCategory(null)
-            }
-            setFeaturedImageError('')
-        }
-    }, [isOpen, isEditing, initialData, reset, setValue])
-
-    const onSearchTags = async (query) => {
-        try {
-            const url = query ? `${process.env.baseUrl}/tag?q=${query}` : `${process.env.baseUrl}/tag`
-            const response = await authFetch(url)
-            const data = await response.json()
-            return data.items || []
-        } catch (error) {
-            console.error('Tags Search Error:', error)
-            return []
-        }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    getValues,
+    formState: { errors, submitCount }
+  } = useForm({
+    defaultValues: {
+      title: '',
+      category: '',
+      tags: [],
+      featured_image: '',
+      pdf_file: '',
+      description: '',
+      content: '',
+      status: 'draft',
+      visibility: 'private',
+      is_featured: false,
+      meta_description: '',
+      slug: ''
     }
+  })
 
-    const onCreateTag = async (title) => {
-        try {
-            const response = await authFetch(`${process.env.baseUrl}/tag`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, author: authors?.[0]?.id || 1 })
-            })
-            const data = await response.json()
-            if (response.ok) {
-                toast({
-                    title: 'Success',
-                    description: 'Tag created successfully'
-                })
-                return data.tag || data.item || data
-            }
-            throw new Error(data.message || 'Failed to create tag')
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: error.message,
-                variant: 'destructive'
-            })
-            return null
+  // Refs for scroll-to-error
+  const titleRef = useRef(null)
+  const categoryRef = useRef(null)
+  const descriptionRef = useRef(null)
+  const contentRef = useRef(null)
+  const featuredImageRef = useRef(null)
+  const formScrollRef = useRef(null)
+
+  // Scroll to first error after submit attempt
+  useEffect(() => {
+    if (submitCount === 0) return
+    const fieldOrder = [
+      { key: 'title', ref: titleRef },
+      { key: 'category', ref: categoryRef },
+      { key: 'description', ref: descriptionRef },
+      { key: 'content', ref: contentRef }
+    ]
+    for (const { key, ref } of fieldOrder) {
+      if (errors[key] && ref.current) {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const input = ref.current.querySelector(
+          'input, textarea, [contenteditable]'
+        )
+        if (input) input.focus()
+        return
+      }
+    }
+  }, [submitCount, errors])
+  useEffect(() => {
+    if (isOpen) {
+      if (isEditing && initialData) {
+        reset({
+          title: initialData.title || '',
+          category: initialData.category?.id || initialData.category || '',
+          description: initialData.description || '',
+          content: initialData.content || '',
+          status: initialData.status || 'draft',
+          visibility: initialData.visibility || 'private',
+          is_featured: initialData.is_featured || false,
+          meta_description: initialData.meta_description || '',
+          slug: initialData.slug || ''
+        })
+        setUploadedFiles({
+          featured_image: initialData.featured_image || '',
+          pdf_file: initialData.pdf_file || ''
+        })
+        setValue('featured_image', initialData.featured_image || '')
+        setValue('pdf_file', initialData.pdf_file || '')
+
+        let blogTags = initialData.tags || []
+        if (typeof blogTags === 'string') {
+          try {
+            blogTags = JSON.parse(blogTags)
+          } catch (e) {
+            blogTags = []
+          }
         }
-    }
 
-    const onSearchCategories = async (query) => {
-        try {
-            const url = query ? `${process.env.baseUrl}/category?q=${query}&type=BLOG` : `${process.env.baseUrl}/category?type=BLOG`
-            const response = await authFetch(url)
-            const data = await response.json()
-            return data.items || []
-        } catch (error) {
-            console.error('Categories Search Error:', error)
-            return []
+        if (Array.isArray(blogTags)) {
+          setSelectedTags(blogTags)
+          setValue(
+            'tags',
+            blogTags.map((t) => (typeof t === 'object' ? t.id : t))
+          )
+        } else {
+          setSelectedTags([])
+          setValue('tags', [])
         }
-    }
 
+        // Handle Category Initialization
+        if (initialData.category) {
+          const cat =
+            typeof initialData.category === 'object'
+              ? initialData.category
+              : categories.find(
+                  (c) =>
+                    c.id === initialData.category ||
+                    c.id === parseInt(initialData.category)
+                )
 
-    const handleSelectCategory = (category) => {
-        setSelectedCategory(category)
-        setValue('category', category.id, { shouldValidate: true })
-    }
-
-    const handleRemoveCategory = () => {
+          if (cat) {
+            setSelectedCategory(cat)
+            setValue('category', cat.id)
+          }
+        } else {
+          setSelectedCategory(null)
+        }
+      } else {
+        reset({
+          title: '',
+          category: '',
+          tags: [],
+          featured_image: '',
+          pdf_file: '',
+          description: '',
+          content: '',
+          status: 'draft',
+          visibility: 'private',
+          is_featured: false,
+          meta_description: '',
+          slug: ''
+        })
+        setUploadedFiles({ featured_image: '', pdf_file: '' })
+        setSelectedTags([])
         setSelectedCategory(null)
-        setValue('category', '', { shouldValidate: true })
+      }
+      setFeaturedImageError('')
     }
+  }, [isOpen, isEditing, initialData, reset, setValue])
 
-    const handleSelectTag = (tag) => {
-        const isSelected = selectedTags.some((t) => (t.id || t) === (tag.id || tag))
-        if (!isSelected) {
-            const newTags = [...selectedTags, tag]
-            setSelectedTags(newTags)
-            setValue('tags', newTags.map((t) => t.id || t))
-        }
+  const onSearchTags = async (query) => {
+    try {
+      const url = query
+        ? `${process.env.baseUrl}/tag?q=${query}`
+        : `${process.env.baseUrl}/tag`
+      const response = await authFetch(url)
+      const data = await response.json()
+      return data.items || []
+    } catch (error) {
+      console.error('Tags Search Error:', error)
+      return []
     }
+  }
 
-    const handleRemoveTag = (tag) => {
-        const newTags = selectedTags.filter((t) => (t.id || t) !== (tag.id || tag))
-        setSelectedTags(newTags)
-        setValue('tags', newTags.map((t) => t.id || t))
+  const onCreateTag = async (title) => {
+    try {
+      const response = await authFetch(`${process.env.baseUrl}/tag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author: authors?.[0]?.id || 1 })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Tag created successfully'
+        })
+        return data.tag || data.item || data
+      }
+      throw new Error(data.message || 'Failed to create tag')
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      })
+      return null
     }
+  }
 
-    const onMediaUpload = async (file) => {
-        const formData = new FormData()
-        formData.append('title', file.name)
-        formData.append('altText', file.name)
-        formData.append('description', '')
-        formData.append('file', file)
-        formData.append('authorId', '1')
-
-        try {
-            const response = await axios.post(
-                `${process.env.mediaUrl}${process.env.version}/media/upload`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-            )
-            return response.data?.media?.url
-        } catch (error) {
-            console.error('Image upload failed:', error)
-            toast({
-                title: 'Error',
-                description: 'Failed to upload image',
-                variant: 'destructive'
-            })
-            throw error
-        }
+  const onSearchCategories = async (query) => {
+    try {
+      const url = query
+        ? `${process.env.baseUrl}/category?q=${query}&type=BLOG`
+        : `${process.env.baseUrl}/category?type=BLOG`
+      const response = await authFetch(url)
+      const data = await response.json()
+      return data.items || []
+    } catch (error) {
+      console.error('Categories Search Error:', error)
+      return []
     }
+  }
 
-    const onSubmitForm = (data) => {
-        if (!uploadedFiles.featured_image) {
-            setFeaturedImageError('Featured image is required')
-            if (featuredImageRef.current) {
-                featuredImageRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }
-            return
-        }
-        const finalData = {
-            ...data,
-            tags: selectedTags,
-            featured_image: uploadedFiles.featured_image,
-            pdf_file: uploadedFiles.pdf_file
-        }
-        onSave(finalData)
+  const handleSelectCategory = (category) => {
+    setSelectedCategory(category)
+    setValue('category', category.id, { shouldValidate: true })
+  }
+
+  const handleRemoveCategory = () => {
+    setSelectedCategory(null)
+    setValue('category', '', { shouldValidate: true })
+  }
+
+  const handleSelectTag = (tag) => {
+    const isSelected = selectedTags.some((t) => (t.id || t) === (tag.id || tag))
+    if (!isSelected) {
+      const newTags = [...selectedTags, tag]
+      setSelectedTags(newTags)
+      setValue(
+        'tags',
+        newTags.map((t) => t.id || t)
+      )
     }
+  }
 
-    return (
-        <Dialog isOpen={isOpen} onClose={onClose} className='max-w-6xl'>
-            <DialogHeader className="bg-white border-b border-gray-100 p-6">
-                <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <Layers className="text-[#387cae]" size={24} />
-                    {isEditing ? 'Edit Blog' : 'Create New Blog Post'}
-                </DialogTitle>
-                <DialogClose onClick={onClose} />
-            </DialogHeader>
-            <DialogContent className="p-0 bg-gray-50/50">
-                <form
-                    onSubmit={handleSubmit(onSubmitForm)}
-                    className='flex flex-col max-h-[calc(100vh-120px)]'
-                >
-                    <div className='flex-1 p-8'>
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6">
-                            {/* Left Column - Main Content (8/12) */}
-                            <div className="lg:col-span-8 space-y-8">
-                                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={Info} title="Blog Content" subtitle="Detailed information about your post" />
-                                    <div className='space-y-6'>
-                                        <div ref={titleRef}>
-                                            <Label required={true} htmlFor='title'>Post Title</Label>
-                                            <Input
-                                                id='title'
-                                                placeholder='Enter post title...'
-                                                {...register('title', { required: 'Title is required' })}
-                                            />
-                                            {errors.title && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.title.message}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            <div ref={categoryRef}>
-                                                <Label required={true} htmlFor='category'>Category</Label>
-                                                <SearchSelectCreate
-                                                    onSearch={onSearchCategories}
-                                                    onSelect={handleSelectCategory}
-                                                    onRemove={handleRemoveCategory}
-                                                    selectedItems={selectedCategory}
-                                                    placeholder="Select or create category..."
-                                                    createLabel="Create category"
-                                                    displayKey="title"
-                                                    valueKey="id"
-                                                    isMulti={false}
-                                                    allowCreate={false}
-                                                />
-                                                <input type="hidden" {...register('category', { required: 'Category is required' })} />
-                                                {errors.category && (
-                                                    <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.category.message}</p>
-                                                )}
-                                            </div>
-
-                                            <div>
-                                                <Label className="text-gray-700 font-semibold mb-1.5 block text-sm">Tags</Label>
-                                                <SearchSelectCreate
-                                                    onSearch={onSearchTags}
-                                                    onCreate={onCreateTag}
-                                                    onSelect={handleSelectTag}
-                                                    onRemove={handleRemoveTag}
-                                                    selectedItems={selectedTags}
-                                                    placeholder="Search or create tags..."
-                                                    createLabel="Create tag"
-                                                    displayKey="title"
-                                                    valueKey="id"
-                                                    allowCreate={true}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div ref={descriptionRef}>
-                                            <Label required={true} htmlFor='description' className="text-gray-700 font-semibold mb-1.5 block text-sm">Short SEO Description</Label>
-                                            <Textarea
-                                                id='description'
-                                                placeholder='Enter a brief summary...'
-                                                {...register('description', { required: 'Short description is required' })}
-                                                className='flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all resize-none'
-                                            />
-                                            {errors.description && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.description.message}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="pt-2" ref={contentRef}>
-                                            <Label required={true} className="text-gray-700 font-semibold mb-2.5 block text-sm">Main Content Body</Label>
-                                            <TipTapEditor
-                                                onMediaUpload={onMediaUpload}
-                                                showImageUpload={true}
-                                                value={getValues('content')}
-                                                onChange={(data) => setValue('content', data, { shouldValidate: true })}
-                                                placeholder='Start writing your story here...'
-                                            />
-                                            <input type="hidden" {...register('content', { required: 'Content body is required' })} />
-                                            {errors.content && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{errors.content.message}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Column - Media & Settings (4/12) */}
-                            <div className="lg:col-span-4 space-y-8">
-
-                                {/* Featured Image Section */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={ImageIcon} title="Featured Media" subtitle="Image & PDF Uploads" />
-                                    <div className="space-y-6">
-                                        <div className="p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed" ref={featuredImageRef}>
-                                            <Label required={true} className="text-xs font-semibold tracking-wider mb-3 block">Featured Post Image</Label>
-                                            <FileUpload
-                                                label=''
-                                                autoUpload={true}
-                                                onFileSelect={() => setFeaturedImageError('')}
-                                                onUploadComplete={(url) => {
-                                                    setUploadedFiles(prev => ({ ...prev, featured_image: url }))
-                                                    if (url) setFeaturedImageError('')
-                                                }}
-                                                defaultPreview={uploadedFiles.featured_image}
-                                            />
-                                            {featuredImageError && (
-                                                <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>{featuredImageError}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed">
-                                            <Label className="text-xs font-semibold tracking-wider mb-3 block">Attachment (PDF)</Label>
-                                            <FileUpload
-                                                label=''
-                                                accept='application/pdf'
-                                                onUploadComplete={(url) => {
-                                                    setUploadedFiles(prev => ({ ...prev, pdf_file: url }))
-                                                    setValue('pdf_file', url)
-                                                }}
-                                                defaultPreview={uploadedFiles.pdf_file}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Publishing Options */}
-                                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={Settings} title="Publishing" subtitle="Visibility settings" />
-                                    <div className='space-y-6'>
-                                        <div className='hidden'>
-                                            {/* Status is managed via action buttons */}
-                                            <input type="hidden" {...register('status')} />
-                                        </div>
-
-                                        <div className="flex items-center justify-between p-4 bg-[#387cae]/5 rounded-md border border-[#387cae]/10">
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    id="is_featured"
-                                                    {...register('is_featured')}
-                                                    className="w-5 h-5 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]"
-                                                />
-                                                <Label htmlFor="is_featured" className="text-sm font-bold text-[#387cae] cursor-pointer">
-                                                    Mark as Featured
-                                                </Label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
-                        <Button
-                            type='button'
-                            onClick={onClose}
-                            variant='outline'
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            type='button' 
-                            variant='secondary'
-                            disabled={submitting} 
-                            onClick={() => {
-                                setValue('status', 'draft', { shouldDirty: true });
-                                handleSubmit(onSubmitForm)();
-                            }}
-                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
-                        >
-                            <FileText className='w-4 h-4 mr-2' />
-                            <span>Save as Draft</span>
-                        </Button>
-                        <Button 
-                            type='button' 
-                            onClick={() => {
-                                setValue('status', 'published', { shouldDirty: true });
-                                handleSubmit(onSubmitForm)();
-                            }}
-                            disabled={submitting}
-                            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
-                        >
-                            {submitting ? (
-                                <>
-                                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                                    <span>Syncing...</span>
-                                </>
-                            ) : (
-                                <>
-                                    {isEditing ? <Check className='w-4 h-4 mr-2' /> : <Plus className='w-4 h-4 mr-2' />}
-                                    <span>{isEditing ? 'Update Post' : 'Publish Post'}</span>
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
+  const handleRemoveTag = (tag) => {
+    const newTags = selectedTags.filter((t) => (t.id || t) !== (tag.id || tag))
+    setSelectedTags(newTags)
+    setValue(
+      'tags',
+      newTags.map((t) => t.id || t)
     )
+  }
+
+  const onMediaUpload = async (file) => {
+    const formData = new FormData()
+    formData.append('title', file.name)
+    formData.append('altText', file.name)
+    formData.append('description', '')
+    formData.append('file', file)
+    formData.append('authorId', '1')
+
+    try {
+      const response = await axios.post(
+        `${process.env.mediaUrl}${process.env.version}/media/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+      return response.data?.media?.url
+    } catch (error) {
+      console.error('Image upload failed:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to upload image',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
+  const onSubmitForm = (data) => {
+    if (!uploadedFiles.featured_image) {
+      setFeaturedImageError('Featured image is required')
+      if (featuredImageRef.current) {
+        featuredImageRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }
+      return
+    }
+    const finalData = {
+      ...data,
+      tags: selectedTags,
+      featured_image: uploadedFiles.featured_image,
+      pdf_file: uploadedFiles.pdf_file
+    }
+    onSave(finalData)
+  }
+
+  return (
+    <Dialog isOpen={isOpen} onClose={onClose} className='max-w-6xl'>
+      <DialogHeader className='bg-white border-b border-gray-100 p-6'>
+        <DialogTitle className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
+          <Layers className='text-[#387cae]' size={24} />
+          {isEditing ? 'Edit Blog' : 'Create New Blog Post'}
+        </DialogTitle>
+        <DialogClose onClick={onClose} />
+      </DialogHeader>
+      <DialogContent className='p-0 bg-gray-50/50'>
+        <form
+          onSubmit={handleSubmit(onSubmitForm)}
+          className='flex flex-col max-h-[calc(100vh-120px)]'
+        >
+          <div className='flex-1 p-8'>
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6'>
+              {/* Left Column - Main Content (8/12) */}
+              <div className='lg:col-span-8 space-y-8'>
+                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Info}
+                    title='Blog Content'
+                    subtitle='Detailed information about your post'
+                  />
+                  <div className='space-y-6'>
+                    <div ref={titleRef}>
+                      <Label required={true} htmlFor='title'>
+                        Post Title
+                      </Label>
+                      <Input
+                        id='title'
+                        placeholder='Enter post title...'
+                        {...register('title', {
+                          required: 'Title is required'
+                        })}
+                      />
+                      {errors.title && (
+                        <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                          {errors.title.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                      <div ref={categoryRef}>
+                        <Label required={true} htmlFor='category'>
+                          Category
+                        </Label>
+                        <SearchSelectCreate
+                          onSearch={onSearchCategories}
+                          onSelect={handleSelectCategory}
+                          onRemove={handleRemoveCategory}
+                          selectedItems={selectedCategory}
+                          placeholder='Select or create category...'
+                          createLabel='Create category'
+                          displayKey='title'
+                          valueKey='id'
+                          isMulti={false}
+                          allowCreate={false}
+                        />
+                        <input
+                          type='hidden'
+                          {...register('category', {
+                            required: 'Category is required'
+                          })}
+                        />
+                        {errors.category && (
+                          <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                            {errors.category.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                          Tags
+                        </Label>
+                        <SearchSelectCreate
+                          onSearch={onSearchTags}
+                          onCreate={onCreateTag}
+                          onSelect={handleSelectTag}
+                          onRemove={handleRemoveTag}
+                          selectedItems={selectedTags}
+                          placeholder='Search or create tags...'
+                          createLabel='Create tag'
+                          displayKey='title'
+                          valueKey='id'
+                          allowCreate={true}
+                        />
+                      </div>
+                    </div>
+
+                    <div ref={descriptionRef}>
+                      <Label
+                        required={true}
+                        htmlFor='description'
+                        className='text-gray-700 font-semibold mb-1.5 block text-sm'
+                      >
+                        Short Summary / Excerpt
+                      </Label>
+                      <Textarea
+                        id='description'
+                        placeholder='Enter a brief summary...'
+                        {...register('description', {
+                          required: 'Short description is required'
+                        })}
+                        className='flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all resize-none'
+                      />
+                      {errors.description && (
+                        <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                          {errors.description.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='pt-2' ref={contentRef}>
+                      <Label
+                        required={true}
+                        className='text-gray-700 font-semibold mb-2.5 block text-sm'
+                      >
+                        Main Content Body
+                      </Label>
+                      <TipTapEditor
+                        onMediaUpload={onMediaUpload}
+                        showImageUpload={true}
+                        value={getValues('content')}
+                        onChange={(data) =>
+                          setValue('content', data, { shouldValidate: true })
+                        }
+                        placeholder='Start writing your story here...'
+                        height='580px'
+                      />
+                      <input
+                        type='hidden'
+                        {...register('content', {
+                          required: 'Content body is required'
+                        })}
+                      />
+                      {errors.content && (
+                        <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                          {errors.content.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Media & Settings (4/12) */}
+              <div className='lg:col-span-4 space-y-8'>
+                {/* Featured Image Section */}
+                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={ImageIcon}
+                    title='Featured Media'
+                    subtitle='Image & PDF Uploads'
+                  />
+                  <div className='space-y-6'>
+                    <div
+                      className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'
+                      ref={featuredImageRef}
+                    >
+                      <Label
+                        required={true}
+                        className='text-xs font-semibold tracking-wider mb-3 block'
+                      >
+                        Featured Post Image
+                      </Label>
+                      <FileUpload
+                        label=''
+                        autoUpload={true}
+                        onFileSelect={() => setFeaturedImageError('')}
+                        onUploadComplete={(url) => {
+                          setUploadedFiles((prev) => ({
+                            ...prev,
+                            featured_image: url
+                          }))
+                          if (url) setFeaturedImageError('')
+                        }}
+                        defaultPreview={uploadedFiles.featured_image}
+                      />
+                      {featuredImageError && (
+                        <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                          {featuredImageError}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'>
+                      <Label className='text-xs font-semibold tracking-wider mb-3 block'>
+                        Attachment (PDF)
+                      </Label>
+                      <FileUpload
+                        label=''
+                        accept='application/pdf'
+                        onUploadComplete={(url) => {
+                          setUploadedFiles((prev) => ({
+                            ...prev,
+                            pdf_file: url
+                          }))
+                          setValue('pdf_file', url)
+                        }}
+                        defaultPreview={uploadedFiles.pdf_file}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Publishing Options */}
+                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='Publishing'
+                    subtitle='Visibility settings'
+                  />
+                  <div className='space-y-6'>
+                    <div className='hidden'>
+                      {/* Status is managed via action buttons */}
+                      <input type='hidden' {...register('status')} />
+                    </div>
+
+                    <div className='flex items-center justify-between p-4 bg-[#387cae]/5 rounded-md border border-[#387cae]/10'>
+                      <div className='flex items-center gap-3'>
+                        <input
+                          type='checkbox'
+                          id='is_featured'
+                          {...register('is_featured')}
+                          className='w-5 h-5 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]'
+                        />
+                        <Label
+                          htmlFor='is_featured'
+                          className='text-sm font-bold text-[#387cae] cursor-pointer'
+                        >
+                          Mark as Featured
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SEO Settings Section */}
+                <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
+                  />
+                  <div className='space-y-6'>
+                    <div className='mb-4'>
+                      <Label htmlFor='slug'>URL Slug </Label>
+                      <Input id='slug' {...register('slug')} className='mt-1' />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from title
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='Meta description for SEO...'
+                        className='min-h-[100px] resize-none'
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className='sticky bottom-0 bg-white border-t border-gray-100 p-6 flex justify-end gap-3 z-10'>
+            <Button type='button' onClick={onClose} variant='outline'>
+              Cancel
+            </Button>
+            <Button
+              type='button'
+              variant='secondary'
+              disabled={submitting}
+              onClick={() => {
+                setValue('status', 'draft', { shouldDirty: true })
+                handleSubmit(onSubmitForm)()
+              }}
+              className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+            >
+              <FileText className='w-4 h-4 mr-2' />
+              <span>Save as Draft</span>
+            </Button>
+            <Button
+              type='button'
+              onClick={() => {
+                setValue('status', 'published', { shouldDirty: true })
+                handleSubmit(onSubmitForm)()
+              }}
+              disabled={submitting}
+              className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  {isEditing ? (
+                    <Check className='w-4 h-4 mr-2' />
+                  ) : (
+                    <Plus className='w-4 h-4 mr-2' />
+                  )}
+                  <span>{isEditing ? 'Update Blog' : 'Publish Blog'}</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 export default BlogFormModal

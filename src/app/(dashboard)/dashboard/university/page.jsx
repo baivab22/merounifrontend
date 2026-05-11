@@ -169,9 +169,9 @@ const SortableCard = ({
         {/* Info */}
         <div className='flex-1 min-w-0'>
           <div className='flex items-center gap-2 flex-wrap mb-1'>
-            {university.slugs ? (
+            {university.slug ? (
               <Link
-                href={`/universities/${university.slugs}`}
+                href={`/universities/${university.slug}`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='font-bold text-gray-900 hover:text-[#387cae] hover:underline text-[16px] leading-tight truncate'
@@ -230,7 +230,7 @@ const SortableCard = ({
         {/* Actions - Right aligned in list view */}
         <div className='flex items-center gap-1 pl-4 border-l border-gray-100'>
           <button
-            onClick={() => onEdit(university.slugs)}
+            onClick={() => onEdit(university.slug)}
             title='Edit'
             className='w-9 h-9 flex items-center justify-center rounded-lg text-amber-500 hover:bg-amber-50 transition-all'
           >

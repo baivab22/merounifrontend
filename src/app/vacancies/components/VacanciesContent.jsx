@@ -152,7 +152,7 @@ const VacanciesContent = () => {
                             <>
                                 <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
                                     {vacancies.map((vacancy) => (
-                                        <Link href={`/vacancies/${vacancy.slugs}`} key={vacancy.id} className='group'>
+                                        <Link href={`/vacancies/${vacancy.slug}`} key={vacancy.id} className='group'>
                                             <div className='h-full bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-[#0A70A7]/5 hover:border-[#0A70A7]/20 transition-all duration-500 flex flex-col overflow-hidden'>
                                                 <div className='relative h-48 w-full bg-gray-100'>
                                                     <img

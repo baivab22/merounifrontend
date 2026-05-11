@@ -125,7 +125,7 @@ export default function NewsPage() {
               )}
               <div className='flex-1 overflow-hidden'>
                 <div
-                  onClick={() => handleView(row.original.slug || row.original.slugs)}
+                  onClick={() => handleView(row.original.slug || row.original.slug)}
                   className='truncate font-semibold text-slate-900 hover:text-[#387cae] hover:underline cursor-pointer block'
                 >
                   {title}

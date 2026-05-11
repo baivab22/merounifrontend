@@ -26,6 +26,7 @@ import {
   Map,
   MapPin,
   Plus,
+  Settings,
   Trash2,
   Users,
   Video
@@ -48,6 +49,7 @@ import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from './components/GallerySection'
 import { DistrictLists } from '@/constants/district'
+import { COUNTRIES } from '@/constants/countries'
 import FileUploadWithPreview from './components/MediaUploadWithBranding'
 import VideoSection from './components/VideoSection'
 
@@ -147,7 +149,9 @@ const CreateUpdateSchoolModal = ({
       contacts: [],
       members: [],
       faqs: [],
-      status: 'published'
+      status: 'published',
+      slug: '',
+      meta_description: ''
     }
   })
 
@@ -265,6 +269,11 @@ const CreateUpdateSchoolModal = ({
           setValue('content', schoolData.content)
           setValue('website_url', schoolData.website_url)
           setValue('status', schoolData.status || 'published')
+          setValue('slug', schoolData.slug || schoolData.slug || '')
+          setValue(
+            'meta_description',
+            schoolData.meta_description || schoolData.metaDescription || ''
+          )
 
           console.log('DEBUG: schoolData fetched:', schoolData)
 
@@ -491,6 +500,27 @@ const CreateUpdateSchoolModal = ({
     }
     fetchPrograms()
   }, [JSON.stringify(selectedStreamIds)])
+
+  const onSearchDistricts = async (query) => {
+    const districts = query
+      ? DistrictLists.filter((d) =>
+          d.toLowerCase().includes(query.toLowerCase())
+        )
+      : DistrictLists
+
+    return districts.map((d) => ({ title: d, id: d }))
+  }
+
+  const onSearchCountries = async (query) => {
+    const countries = query
+      ? COUNTRIES.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : COUNTRIES
+
+    return countries.map((c) => ({ title: c, id: c }))
+  }
+
+  const selectedDistrict = watch('address.district')
+  const selectedCountry = watch('address.country')
 
   const onSearchStreams = async (query) => {
     if (!boardStreams) return []
@@ -980,19 +1010,62 @@ const CreateUpdateSchoolModal = ({
                     subtitle='How to find the school'
                   />
                   <div className='space-y-6'>
-                    <div>
-                      <Label>District</Label>
-                      <select
-                        {...register('address.district')}
-                        className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                      >
-                        <option value=''>Select District</option>
-                        {DistrictLists.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                      <div>
+                        <Label htmlFor='address.country' required={true}>
+                          Country
+                        </Label>
+                        <SearchSelectCreate
+                          onSearch={onSearchCountries}
+                          selectedItems={
+                            selectedCountry
+                              ? { id: selectedCountry, title: selectedCountry }
+                              : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.country', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.country', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search Country...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor='address.district'>District</Label>
+                        <SearchSelectCreate
+                          onSearch={onSearchDistricts}
+                          selectedItems={
+                            selectedDistrict
+                              ? {
+                                  id: selectedDistrict,
+                                  title: selectedDistrict
+                                }
+                              : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.district', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.district', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search District...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
+                        />
+                      </div>
                     </div>
 
                     <div className='grid grid-cols-2 gap-4'>
@@ -1488,6 +1561,35 @@ const CreateUpdateSchoolModal = ({
                     setUploadedFiles={handleSetFiles}
                     getValues={getValues}
                   />
+                </div>
+
+                {/* SEO Settings Section */}
+                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
+                  />
+                  <div className='space-y-4'>
+                    <div className='mb-4'>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input id='slug' {...register('slug')} className='mt-1' />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from name
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='Meta description for SEO...'
+                        className='min-h-[100px] resize-none'
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

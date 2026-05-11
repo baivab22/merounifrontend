@@ -6,7 +6,16 @@ import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { Button } from '@/ui/shadcn/button'
 import Table from '@/ui/shadcn/DataTable'
 import { formatDate } from '@/utils/date.util'
-import { Award, Edit2, Eye, Loader2, Plus, Search, Trash2, Users } from 'lucide-react'
+import {
+  Award,
+  Edit2,
+  Eye,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+  Users
+} from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -231,18 +240,21 @@ export default function ScholarshipManager() {
                 className='w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0 bg-gray-50'
               />
             ) : (
-              <div className='w-10 h-10 rounded-lg border border-dashed border-gray-200 shrink-0 bg-gray-50/80' aria-hidden />
+              <div
+                className='w-10 h-10 rounded-lg border border-dashed border-gray-200 shrink-0 bg-gray-50/80'
+                aria-hidden
+              />
             )}
             <div className='flex flex-col gap-1.5 min-w-0'>
-            <div className='font-semibold text-gray-900 leading-none'>
-              {row.original.name}
+              <div className='font-semibold text-gray-900 leading-none'>
+                {row.original.name}
+              </div>
+              {row.original.scholarshipCategory?.title && (
+                <span className='w-fit px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-tight border border-purple-100/50'>
+                  {row.original.scholarshipCategory.title}
+                </span>
+              )}
             </div>
-            {row.original.scholarshipCategory?.title && (
-              <span className='w-fit px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-tight border border-purple-100/50'>
-                {row.original.scholarshipCategory.title}
-              </span>
-            )}
-          </div>
           </div>
         )
       },

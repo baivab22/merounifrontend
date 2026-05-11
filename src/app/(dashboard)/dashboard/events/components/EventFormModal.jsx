@@ -67,7 +67,8 @@ const EventFormModal = ({
             },
             is_featured: false,
             meta_description: '',
-            status: 'Published'
+            status: 'Published',
+            slug: ''
         }
     })
 
@@ -139,7 +140,8 @@ const EventFormModal = ({
                     },
                     is_featured: initialData.is_featured === 1 || initialData.is_featured === true || initialData.is_featured === '1',
                     meta_description: initialData.meta_description || '',
-                    status: initialData.status || 'Published'
+                    status: initialData.status || 'Published',
+                    slug: initialData.slug || ''
                 })
                 setUploadedImage(initialData.image || '')
 
@@ -183,7 +185,8 @@ const EventFormModal = ({
                     },
                     is_featured: false,
                     meta_description: '',
-                    status: 'Published'
+                    status: 'Published',
+                    slug: ''
                 })
                 setUploadedImage('')
                 setSelectedCategory(null)
@@ -483,17 +486,28 @@ const EventFormModal = ({
                                     </div>
                                 </div>
 
-                                {/* Settings Section */}
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={Settings} title="Settings" subtitle="Additional options" />
-                                    <div className='space-y-6'>
+                                    <SectionHeader icon={Settings} title="SEO Settings" subtitle="Search engine optimization" />
+                                    <div className='space-y-4'>
                                         <div>
-                                            <Label htmlFor='meta_description'>SEO Meta Description</Label>
+                                            <Label htmlFor='slug'>URL Slug</Label>
+                                            <Input
+                                                id='slug'
+                                                {...register('slug')}
+                                                placeholder='url-slug-here'
+                                                className='text-sm'
+                                            />
+                                            <p className='text-[10px] text-gray-400 mt-1 italic'>
+                                                Leave empty to auto-generate from title
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor='meta_description'>Meta Description</Label>
                                             <Textarea
                                                 id='meta_description'
                                                 {...register('meta_description')}
-                                                placeholder='Meta description for SEO...'
-                                                className='min-h-[100px] resize-none'
+                                                placeholder='SEO meta description...'
+                                                className='min-h-[100px] text-sm'
                                             />
                                         </div>
                                     </div>

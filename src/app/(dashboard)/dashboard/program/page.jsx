@@ -254,7 +254,7 @@ export default function ProgramForm() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleView(row.original.slugs)}
+            onClick={() => handleView(row.original.slug)}
             className='hover:bg-blue-50 text-blue-600'
             title='View'
           >
@@ -263,7 +263,7 @@ export default function ProgramForm() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleEdit(row.original.slugs)}
+            onClick={() => handleEdit(row.original.slug)}
             className='hover:bg-amber-50 text-amber-600'
             title='Edit'
           >

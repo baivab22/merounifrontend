@@ -67,7 +67,7 @@ const AdmissionContent = ({ admission }) => {
                     <div className="p-2.5 bg-gray-50 rounded-md text-gray-400"> <Building2 size={20} /> </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">College</p>
-                      <Link href={`/colleges/${admission.collegeAdmissionCollege?.slugs}`} className="text-base font-bold text-[#0A6FA7] hover:underline" >
+                      <Link href={`/colleges/${admission.collegeAdmissionCollege?.slug}`} className="text-base font-bold text-[#0A6FA7] hover:underline" >
                         {admission.collegeAdmissionCollege?.name}
                       </Link>
                     </div>
@@ -129,7 +129,7 @@ const AdmissionContent = ({ admission }) => {
                 <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:scale-110 transition-transform duration-700"> <Building2 size={180} /> </div>
                 <h3 className="text-lg font-bold mb-2">Interested in this College?</h3>
                 <p className="text-blue-100/80 text-sm mb-8 font-medium">Get in touch with the college administration for more details on this program.</p>
-                <Link href={`/colleges/${admission.collegeAdmissionCollege?.slugs}`} className="w-full bg-white text-[#0A6FA7] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors" >
+                <Link href={`/colleges/${admission.collegeAdmissionCollege?.slug}`} className="w-full bg-white text-[#0A6FA7] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors" >
                   View College Profile
                   <ChevronRight size={18} />
                 </Link>

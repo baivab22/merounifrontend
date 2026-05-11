@@ -141,7 +141,7 @@ const ViewNewsModal = ({ isOpen, onClose, news, loading }) => {
                             </span>
                             <div className="flex gap-3">
                                 <Link
-                                    href={`/news/${news.slug || news.slugs}`}
+                                    href={`/news/${news.slug || news.slug}`}
                                     target="_blank"
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-slate-100 transition-all"
                                 >

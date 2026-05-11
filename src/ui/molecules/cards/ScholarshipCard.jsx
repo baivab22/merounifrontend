@@ -40,7 +40,7 @@ const ScholarshipCard = ({ scholarship }) => {
 
   return (
     <Link 
-      href={`/scholarship/${scholarship.slugs || scholarship.id}`}
+      href={`/scholarship/${scholarship.slug || scholarship.id}`}
       className='group block h-full focus:outline-none'
     >
       <article className='bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col hover:border-gray-300 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500'>
@@ -144,7 +144,7 @@ const ScholarshipCard = ({ scholarship }) => {
                 className='px-5 py-2 rounded-lg bg-[#0A70A7] text-white text-xs font-bold hover:bg-[#085a86] transition-all shadow-md shadow-blue-900/10 active:scale-95'
                 onClick={(e) => {
                   e.preventDefault()
-                  window.location.href = `/scholarship/apply/${scholarship.slugs || scholarship.id}`
+                  window.location.href = `/scholarship/apply/${scholarship.slug || scholarship.id}`
                 }}
               >
                 Apply Now

@@ -25,8 +25,10 @@ import {
   MapPin,
   Phone,
   Plus,
+  Settings,
   Trash2,
-  Users
+  Users,
+  Video
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
@@ -39,6 +41,7 @@ import {
 } from '@/app/(dashboard)/dashboard/university/actions'
 import { cn } from '@/app/lib/utils'
 import { authFetch } from '@/app/utils/authFetch'
+import { COUNTRIES } from '@/constants/countries'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from '../college/components/GallerySection'
 import FileUploadWithPreview from '../college/components/MediaUploadWithBranding'
@@ -146,7 +149,8 @@ const CreateUpdateUniversityModal = ({
       map: '',
       gallery: [],
       status: 'Published',
-      meta_description: ''
+      meta_description: '',
+      slug: ''
     }
   })
 
@@ -158,7 +162,13 @@ const CreateUpdateUniversityModal = ({
 
   const errorSectionOrder = [
     {
-      keys: ['fullname', 'type_of_institute', 'date_of_establish', 'levels', 'meta_description'],
+      keys: [
+        'fullname',
+        'type_of_institute',
+        'date_of_establish',
+        'levels',
+        'meta_description'
+      ],
       ref: basicInfoRef
     },
     { keys: ['description'], ref: detailsRef },
@@ -178,14 +188,15 @@ const CreateUpdateUniversityModal = ({
 
     const section = errorSectionOrder.find((item) =>
       paths.some((path) =>
-        item.keys.some(
-          (key) => path === key || path.startsWith(`${key}.`)
-        )
+        item.keys.some((key) => path === key || path.startsWith(`${key}.`))
       )
     )
 
     if (section?.ref.current) {
-      section.ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      section.ref.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
       setTimeout(() => {
         const root = section.ref.current
         if (!root) return
@@ -260,6 +271,7 @@ const CreateUpdateUniversityModal = ({
           setValue('description', uniData.description || '')
           setValue('status', uniData.status || 'Published')
           setValue('meta_description', uniData.meta_description || '')
+          setValue('slug', uniData.slug || '')
 
           if (uniData.contact) {
             setValue('contact.faxes', uniData.contact.faxes || '')
@@ -343,7 +355,8 @@ const CreateUpdateUniversityModal = ({
         map: '',
         gallery: [],
         status: 'Published',
-        meta_description: ''
+        meta_description: '',
+        slug: ''
       })
       setUploadedFiles({
         logo: '',
@@ -428,11 +441,12 @@ const CreateUpdateUniversityModal = ({
 
       toast({
         title: 'Success',
-        description: status === 'Draft'
-          ? 'Draft saved successfully!'
-          : editSlug
-            ? 'University updated successfully!'
-            : 'University created successfully!'
+        description:
+          status === 'Draft'
+            ? 'Draft saved successfully!'
+            : editSlug
+              ? 'University updated successfully!'
+              : 'University created successfully!'
       })
       onSuccess?.()
       onSystemClose()
@@ -470,10 +484,22 @@ const CreateUpdateUniversityModal = ({
     if (!allLevels) return []
     return query
       ? allLevels.filter((l) =>
-        l.title?.toLowerCase().includes(query.toLowerCase())
-      )
+          l.title?.toLowerCase().includes(query.toLowerCase())
+        )
       : allLevels
   }
+
+  const onSearchCountries = async (query) => {
+    const countries = query
+      ? COUNTRIES.filter((c) =>
+          c.toLowerCase().includes(query.toLowerCase())
+        )
+      : COUNTRIES
+
+    return countries.map((c) => ({ title: c, id: c }))
+  }
+
+  const selectedCountry = watch('country')
 
   const handleSelectLevel = (level) => {
     const current = getValues('levels') || []
@@ -657,14 +683,7 @@ const CreateUpdateUniversityModal = ({
                       />
                     </div>
 
-                    <div>
-                      <Label>Meta Description</Label>
-                      <Textarea
-                        {...register('meta_description')}
-                        placeholder='SEO Meta description...'
-                        className='min-h-[100px] rounded-md border-gray-200 focus:ring-[#387cae]/20'
-                      />
-                    </div>
+                    {/* Removed Meta Description from here as it is moved to SEO Settings sidebar */}
                   </div>
                 </div>
 
@@ -724,13 +743,25 @@ const CreateUpdateUniversityModal = ({
                         <Label htmlFor='country' required={true}>
                           Country
                         </Label>
-                        <Input
-                          id='country'
-                          {...register('country', {
-                            required: 'Country is required'
-                          })}
-                          placeholder='e.g. Nepal'
-                          className='h-11 rounded-md border-gray-200'
+                        <SearchSelectCreate
+                          onSearch={onSearchCountries}
+                          selectedItems={
+                            selectedCountry ? { id: selectedCountry, title: selectedCountry } : []
+                          }
+                          onSelect={(item) =>
+                            setValue('country', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('country', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search Country...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
                         />
                         {errors.country && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
@@ -1117,6 +1148,11 @@ const CreateUpdateUniversityModal = ({
 
                 {/* Media Gallery */}
                 <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={ImageIcon}
+                    title='Image Gallery'
+                    subtitle='Visual showcase'
+                  />
                   <GallerySection
                     control={control}
                     setValue={setValue}
@@ -1128,10 +1164,48 @@ const CreateUpdateUniversityModal = ({
 
                 {/* Video Content */}
                 <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Video}
+                    title='Video Gallery'
+                    subtitle='Virtual tours & promos'
+                  />
                   <VideoSection
                     uploadedFiles={uploadedFiles}
                     setUploadedFiles={handleSetFiles}
                   />
+                </div>
+
+                {/* SEO Settings Section */}
+                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
+                  />
+                  <div className='space-y-4'>
+                    <div className='mb-4'>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input
+                        id='slug'
+                        {...register('slug')}
+                        className='mt-1'
+                      />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from name
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='Meta description for SEO...'
+                        className='min-h-[100px] resize-none'
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

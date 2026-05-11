@@ -250,12 +250,12 @@ const EditCollegePage = () => {
   }, [])
 
   // Fetch university details for programs
-  const fetchUniversityDetails = async (slugs) => {
-    if (!slugs) return
+  const fetchUniversityDetails = async (slug) => {
+    if (!slug) return
     setLoadingPrograms(true)
     setCollectUniError('')
     try {
-      const universityData = await getUniversityBySlug(slugs)
+      const universityData = await getUniversityBySlug(slug)
       const programTitles = universityData?.programs?.map((p) => p.title) || []
       setCollectUni(programTitles)
     } catch (error) {
@@ -277,7 +277,7 @@ const EditCollegePage = () => {
     const currentUniId = getValues('university_id')
     if (allUniversity.length > 0 && !currentUniId && uniSlug) {
       // Try to find by slug if we have it
-      const university = allUniversity.find((u) => u.slugs === uniSlug)
+      const university = allUniversity.find((u) => u.slug === uniSlug)
       if (university) {
         setValue('university_id', Number(university.id), {
           shouldValidate: true,
@@ -332,7 +332,7 @@ const EditCollegePage = () => {
 
       // Set university_id from university data
       if (collegeData.university) {
-        setUniSlug(collegeData.university.slugs)
+        setUniSlug(collegeData.university.slug)
         // Set university_id directly - will be set after allUniversity loads
         if (allUniversity.length > 0) {
           const universityId = allUniversity.find(
@@ -664,7 +664,7 @@ const EditCollegePage = () => {
                       (u) => u.id === selectedId
                     )
                     if (selectedUni) {
-                      setUniSlug(selectedUni.slugs)
+                      setUniSlug(selectedUni.slug)
                     }
                   }}
                 >
@@ -734,7 +734,7 @@ const EditCollegePage = () => {
                       }}
                       className='mr-2'
                     />
-                    {degree.title || degree.short_name || degree.slugs}
+                    {degree.title || degree.short_name || degree.slug}
                   </label>
                 )
               })}

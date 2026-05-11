@@ -352,10 +352,10 @@ export default function CourseForm() {
       id: 'actions',
       cell: ({ row }) => (
         <div className='flex gap-1'>
-          <Button variant="ghost" size="icon" onClick={() => handleView(row.original.slugs)} className='hover:bg-blue-50 text-blue-600' title='View'>
+          <Button variant="ghost" size="icon" onClick={() => handleView(row.original.slug)} className='hover:bg-blue-50 text-blue-600' title='View'>
             <Eye className='w-4 h-4' />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original.slugs)} className='hover:bg-amber-50 text-amber-600' title='Edit'>
+          <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original.slug)} className='hover:bg-amber-50 text-amber-600' title='Edit'>
             <Edit2 className='w-4 h-4' />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(row.original.id)} className='hover:bg-red-50 text-red-600' title='Delete'>

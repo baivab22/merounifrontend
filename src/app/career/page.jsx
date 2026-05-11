@@ -344,7 +344,7 @@ const CareerPage = () => {
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                   {careers.map((career) => (
                     <Link
-                      href={`/career/${career.slugs}`}
+                      href={`/career/${career.slug}`}
                       key={career.id}
                       className='group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1'
                     >

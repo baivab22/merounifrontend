@@ -15,10 +15,12 @@ import {
   Search,
   FileText,
   Check,
-  Paperclip
+  Paperclip,
+  Settings
 } from 'lucide-react'
 
 import { Button } from '@/ui/shadcn/button'
+import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
 import {
@@ -430,7 +432,12 @@ export default function AdmissionManager() {
       admission_process: '',
       fee_details: '',
       description: '',
-      pdf_file: ''
+      pdf_file: '',
+      associated_organization_name: '',
+      author_id: '',
+      status: 'published',
+      slug: '',
+      meta_description: ''
     })
     setUploadedFiles({ pdf_file: '' })
     setIsOpen(true)
@@ -443,7 +450,9 @@ export default function AdmissionManager() {
       const payload = {
         ...data,
         pdf_file: uploadedFiles.pdf_file || data.pdf_file || '',
-        status: asDraft ? 'draft' : 'published'
+        status: asDraft ? 'draft' : 'published',
+        slug: data.slug || data.slug,
+        meta_description: data.meta_description
       }
       if (editing) payload.id = editingId
 
@@ -511,7 +520,12 @@ export default function AdmissionManager() {
       admission_process: item.admission_process || '',
       fee_details: item.fee_details || '',
       description: item.description || '',
-      pdf_file: item.pdf_file || ''
+      pdf_file: item.pdf_file || '',
+      associated_organization_name: item.associated_organization_name || '',
+      author_id: item.author_id || '',
+      status: item.status || 'published',
+      slug: item.slug || '',
+      meta_description: item.meta_description || ''
     })
     setUploadedFiles({ pdf_file: item.pdf_file || '' })
 
@@ -708,7 +722,7 @@ export default function AdmissionManager() {
         isOpen={isOpen}
         onClose={handleCloseModal}
         closeOnOutsideClick={false}
-        className='max-w-5xl'
+        className='max-w-6xl'
       >
         <DialogHeader className='bg-white border-b border-gray-100 p-6'>
           <DialogTitle className='text-2xl font-bold text-gray-900 flex items-center gap-3'>
@@ -718,229 +732,268 @@ export default function AdmissionManager() {
           <DialogClose onClick={handleCloseModal} />
         </DialogHeader>
 
-        <DialogContent className='p-0 bg-gray-50/50'>
+        <DialogContent className='max-w-6xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-gray-50/50'>
           <form
             id='admission-form'
             className='flex flex-col max-h-[calc(100vh-160px)]'
             onSubmit={(e) => e.preventDefault()}
           >
-            <div className='flex-1 overflow-y-auto p-8'>
-              <div className='grid grid-cols-1 lg:grid-cols-1 gap-8'>
-                {/* Basic Selection Card */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                  <SectionHeader
-                    icon={Building2}
-                    title='Institution & Program'
-                    subtitle='Select the college and corresponding program'
-                  />
+            <div className='flex-1 overflow-y-auto p-8 sidebar-scrollbar'>
+              <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6'>
+                {/* Left Column (8/12) */}
+                <div className='lg:col-span-8 space-y-8'>
+                  {/* Basic Selection Card */}
+                  <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                    <SectionHeader
+                      icon={Building2}
+                      title='Institution & Program'
+                      subtitle='Select the college and corresponding program'
+                    />
 
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-                    {/* College Selection */}
-                    <div className='space-y-2.5'>
-                      <Label
-                        required
-                        className='text-gray-700 font-semibold mb-1.5 block text-sm'
-                      >
-                        Target College
-                      </Label>
-                      <SearchSelectCreate
-                        onSearch={fetchColleges}
-                        onSelect={(item) => {
-                          setSelectedCollege(item)
-                          setValue('college_id', item.id, {
-                            shouldValidate: true
-                          })
-                          setSelectedProgram(null)
-                          setValue('program_id', '', { shouldValidate: true })
-                        }}
-                        onRemove={() => {
-                          setSelectedCollege(null)
-                          setValue('college_id', '', { shouldValidate: true })
-                          setSelectedProgram(null)
-                          setValue('program_id', '', { shouldValidate: true })
-                        }}
-                        selectedItems={selectedCollege}
-                        placeholder='Search and select college...'
-                        isMulti={false}
-                        displayKey='name'
-                        renderItem={(item) => (
-                          <div className='flex items-center gap-3'>
-                            {item.college_logo ? (
-                              <img
-                                src={item.college_logo}
-                                alt={item.name}
-                                className='w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0'
-                              />
-                            ) : (
-                              <div className='w-8 h-8 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-                                <span className='text-xs font-bold text-[#387cae]'>
-                                  {item.name?.charAt(0)?.toUpperCase() || 'C'}
-                                </span>
-                              </div>
-                            )}
-                            <span className='text-sm font-medium text-gray-800 tracking-tight'>
-                              {item.name}
-                            </span>
-                          </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                      {/* College Selection */}
+                      <div className='space-y-2.5'>
+                        <Label
+                          required
+                          className='text-gray-700 font-semibold mb-1.5 block text-sm'
+                        >
+                          Target College
+                        </Label>
+                        <SearchSelectCreate
+                          onSearch={fetchColleges}
+                          onSelect={(item) => {
+                            setSelectedCollege(item)
+                            setValue('college_id', item.id, {
+                              shouldValidate: true
+                            })
+                            setSelectedProgram(null)
+                            setValue('program_id', '', { shouldValidate: true })
+                          }}
+                          onRemove={() => {
+                            setSelectedCollege(null)
+                            setValue('college_id', '', { shouldValidate: true })
+                            setSelectedProgram(null)
+                            setValue('program_id', '', { shouldValidate: true })
+                          }}
+                          selectedItems={selectedCollege}
+                          placeholder='Search and select college...'
+                          isMulti={false}
+                          displayKey='name'
+                          renderItem={(item) => (
+                            <div className='flex items-center gap-3'>
+                              {item.college_logo ? (
+                                <img
+                                  src={item.college_logo}
+                                  alt={item.name}
+                                  className='w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0'
+                                />
+                              ) : (
+                                <div className='w-8 h-8 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                                  <span className='text-xs font-bold text-[#387cae]'>
+                                    {item.name?.charAt(0)?.toUpperCase() || 'C'}
+                                  </span>
+                                </div>
+                              )}
+                              <span className='text-sm font-medium text-gray-800 tracking-tight'>
+                                {item.name}
+                              </span>
+                            </div>
+                          )}
+                          renderSelected={(item) => (
+                            <div className='flex items-center gap-3'>
+                              {item.college_logo ? (
+                                <img
+                                  src={item.college_logo}
+                                  alt={item.name}
+                                  className='w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0'
+                                />
+                              ) : (
+                                <div className='w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
+                                  <span className='text-xs font-bold text-[#387cae]'>
+                                    {item.name?.charAt(0)?.toUpperCase() || 'C'}
+                                  </span>
+                                </div>
+                              )}
+                              <span className='text-sm font-semibold text-gray-900 truncate'>
+                                {item.name}
+                              </span>
+                            </div>
+                          )}
+                        />
+                        <input
+                          type='hidden'
+                          {...register('college_id', {
+                            required: 'College is required'
+                          })}
+                        />
+                        {errors.college_id && (
+                          <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
+                            {errors.college_id.message}
+                          </p>
                         )}
-                        renderSelected={(item) => (
-                          <div className='flex items-center gap-3'>
-                            {item.college_logo ? (
-                              <img
-                                src={item.college_logo}
-                                alt={item.name}
-                                className='w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0'
-                              />
-                            ) : (
-                              <div className='w-7 h-7 rounded-full bg-[#387cae]/10 flex items-center justify-center shrink-0'>
-                                <span className='text-xs font-bold text-[#387cae]'>
-                                  {item.name?.charAt(0)?.toUpperCase() || 'C'}
-                                </span>
-                              </div>
-                            )}
-                            <span className='text-sm font-semibold text-gray-900 truncate'>
-                              {item.name}
-                            </span>
-                          </div>
-                        )}
-                      />
-                      <input
-                        type='hidden'
-                        {...register('college_id', {
-                          required: 'College is required'
-                        })}
-                      />
-                      {errors.college_id && (
-                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
-                          {errors.college_id.message}
-                        </p>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Program Selection */}
-                    <div className='space-y-2.5'>
-                      <Label
-                        required
-                        className='text-gray-700 font-semibold mb-1.5 block text-sm'
-                      >
-                        Academic Program
-                      </Label>
-                      <SearchSelectCreate
-                        onSearch={(q) =>
-                          fetchProgramsByCollege(selectedCollege?.id, q)
-                        }
-                        onSelect={(item) => {
-                          setSelectedProgram(item)
-                          setValue('program_id', item.id, {
-                            shouldValidate: true
-                          })
-                        }}
-                        onRemove={() => {
-                          setSelectedProgram(null)
-                          setValue('program_id', '', { shouldValidate: true })
-                        }}
-                        selectedItems={selectedProgram}
-                        placeholder={
-                          selectedCollege
-                            ? 'Search and select program...'
-                            : 'Select a college first'
-                        }
-                        isMulti={false}
-                        displayKey='title'
-                        isLoading={!selectedCollege}
-                      />
-                      <input
-                        type='hidden'
-                        {...register('program_id', {
-                          required: 'Program is required'
-                        })}
-                      />
-                      {errors.program_id && (
-                        <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
-                          {errors.program_id.message}
-                        </p>
-                      )}
+                      {/* Program Selection */}
+                      <div className='space-y-2.5'>
+                        <Label
+                          required
+                          className='text-gray-700 font-semibold mb-1.5 block text-sm'
+                        >
+                          Academic Program
+                        </Label>
+                        <SearchSelectCreate
+                          onSearch={(q) =>
+                            fetchProgramsByCollege(selectedCollege?.id, q)
+                          }
+                          onSelect={(item) => {
+                            setSelectedProgram(item)
+                            setValue('program_id', item.id, {
+                              shouldValidate: true
+                            })
+                          }}
+                          onRemove={() => {
+                            setSelectedProgram(null)
+                            setValue('program_id', '', { shouldValidate: true })
+                          }}
+                          selectedItems={selectedProgram}
+                          placeholder={
+                            selectedCollege
+                              ? 'Search and select program...'
+                              : 'Select a college first'
+                          }
+                          isMulti={false}
+                          displayKey='title'
+                          isLoading={!selectedCollege}
+                        />
+                        <input
+                          type='hidden'
+                          {...register('program_id', {
+                            required: 'Program is required'
+                          })}
+                        />
+                        {errors.program_id && (
+                          <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
+                            {errors.program_id.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Details Sections Card */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                  <SectionHeader
-                    icon={Edit2}
-                    title='Admission Details'
-                    subtitle='Criteria, process, and fee information'
-                  />
+                  {/* Details Sections Card */}
+                  <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
+                    <SectionHeader
+                      icon={Edit2}
+                      title='Admission Details'
+                      subtitle='Criteria, process, and fee information'
+                    />
 
-                  <div className='grid grid-cols-1 gap-8'>
-                    <div className='space-y-2.5'>
-                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
-                        Eligibility Criteria
-                      </Label>
-                      <Textarea
-                        {...register('eligibility_criteria')}
-                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                        placeholder='Describe who is eligible for this course...'
-                      />
-                    </div>
-
-                    <div className='space-y-2.5'>
-                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
-                        Admission Process
-                      </Label>
-                      <Textarea
-                        {...register('admission_process')}
-                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                        placeholder='Detail the step-by-step application and selection process...'
-                      />
-                    </div>
-
-                    <div className='space-y-2.5'>
-                      <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
-                        Fee Structure & Details
-                      </Label>
-                      <Textarea
-                        {...register('fee_details')}
-                        className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                        placeholder='Provide specific fee breakdown or important financial notes...'
-                      />
-                    </div>
-
-                    <div className='space-y-3'>
-                      <Label className='text-gray-700 font-semibold mb-1 block text-sm'>
-                        Comprehensive Description
-                      </Label>
-                      <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                        <TipTapEditor
-                          value={watch('description')}
-                          onChange={(html) => setValue('description', html)}
-                          placeholder='Enter any additional admission related information...'
+                    <div className='grid grid-cols-1 gap-8'>
+                      <div className='space-y-2.5'>
+                        <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                          Eligibility Criteria
+                        </Label>
+                        <Textarea
+                          {...register('eligibility_criteria')}
+                          className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                          placeholder='Describe who is eligible for this course...'
                         />
+                      </div>
+
+                      <div className='space-y-2.5'>
+                        <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                          Admission Process
+                        </Label>
+                        <Textarea
+                          {...register('admission_process')}
+                          className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                          placeholder='Detail the step-by-step application and selection process...'
+                        />
+                      </div>
+
+                      <div className='space-y-2.5'>
+                        <Label className='text-gray-700 font-semibold mb-1.5 block text-sm'>
+                          Fee Structure & Details
+                        </Label>
+                        <Textarea
+                          {...register('fee_details')}
+                          className='flex min-h-[100px] w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
+                          placeholder='Provide specific fee breakdown or important financial notes...'
+                        />
+                      </div>
+
+                      <div className='space-y-3'>
+                        <Label className='text-gray-700 font-semibold mb-1 block text-sm'>
+                          Comprehensive Description
+                        </Label>
+                        <div className='border border-gray-200 rounded-lg overflow-hidden'>
+                          <TipTapEditor
+                            value={watch('description')}
+                            onChange={(html) => setValue('description', html)}
+                            placeholder='Enter any additional admission related information...'
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* PDF attachment — same pattern as blog form */}
-                <div className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100'>
-                  <SectionHeader
-                    icon={Paperclip}
-                    title='Attachment'
-                    subtitle='Optional PDF document for applicants'
-                  />
-                  <div className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'>
-                    <Label className='text-xs font-semibold tracking-wider mb-3 block'>
-                      Attachment (PDF)
-                    </Label>
-                    <FileUpload
-                      label=''
-                      accept='application/pdf'
-                      onUploadComplete={(url) => {
-                        setUploadedFiles((prev) => ({ ...prev, pdf_file: url }))
-                        setValue('pdf_file', url)
-                      }}
-                      defaultPreview={uploadedFiles.pdf_file}
+                {/* Right Column (4/12) */}
+                <div className='lg:col-span-4 space-y-8'>
+                  {/* PDF attachment — same pattern as blog form */}
+                  <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                    <SectionHeader
+                      icon={Paperclip}
+                      title='Attachment'
+                      subtitle='Optional PDF document'
                     />
+                    <div className='p-4 bg-gray-50 rounded-md border border-gray-100 border-dashed'>
+                      <Label className='text-xs font-semibold tracking-wider mb-3 block'>
+                        Attachment (PDF)
+                      </Label>
+                      <FileUpload
+                        label=''
+                        accept='application/pdf'
+                        onUploadComplete={(url) => {
+                          setUploadedFiles((prev) => ({
+                            ...prev,
+                            pdf_file: url
+                          }))
+                          setValue('pdf_file', url)
+                        }}
+                        defaultPreview={uploadedFiles.pdf_file}
+                      />
+                    </div>
+                  </div>
+
+                  {/* SEO Settings */}
+                  <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4'>
+                    <SectionHeader icon={Settings} title='SEO Settings' />
+                    <div className='space-y-4'>
+                      <div className='space-y-2'>
+                        <Label htmlFor='slug'>URL Slug</Label>
+                        <Input
+                          id='slug'
+                          {...register('slug')}
+                          placeholder='url-slug-here'
+                          className='text-sm'
+                        />
+                        <p className='text-[10px] text-gray-400 mt-1 italic'>
+                          Leave empty to auto-generate from title
+                        </p>
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='meta_description'>
+                          Meta Description
+                        </Label>
+                        <Textarea
+                          id='meta_description'
+                          {...register('meta_description')}
+                          placeholder='SEO meta description...'
+                          className='min-h-[100px] text-sm'
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

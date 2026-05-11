@@ -52,7 +52,7 @@ const DegreeScroller = () => {
           {allEvents.map((field, index) => (
             <div
               key={index}
-              onClick={() => handleCardClick(field.slugs)}
+              onClick={() => handleCardClick(field.slug)}
               className='cursor-pointer flex-shrink-0 border-2 border-gray-200 h-[200px] md:h-[250px] p-6 rounded-2xl flex flex-col items-start justify-center gap-4 bg-white hover:shadow-lg transition-all transform hover:scale-105 relative overflow-hidden w-[300px]' // Fixed width here
               style={{
                 backgroundImage: `url(${field?.image ? field.image.replace(/ /g, '%20') : '/images/events.webp'})`,

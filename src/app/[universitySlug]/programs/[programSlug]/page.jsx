@@ -1,6 +1,6 @@
 import { getProgramBySlug } from '../../../programs/actions'
 import { getUniversityBySlug } from '../../../universities/actions'
-import ProgramContent from '../../../programs/[slugs]/Content'
+import ProgramContent from '../../../programs/[slug]/Content'
 import { stripHtml } from '@/lib/string.utils'
 import { slugify } from '@/lib/slugify'
 import { notFound } from 'next/navigation'

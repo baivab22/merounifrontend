@@ -23,7 +23,7 @@ export async function getSchools(page = 1, sort = 'ASC') {
         description: school.description,
         googleMapUrl: school.google_map_url,
         instituteType: school.institute_type,
-        slug: school.slugs,
+        slug: school.slug,
         collegeId: college.id
       })),
       pagination: data.pagination || {

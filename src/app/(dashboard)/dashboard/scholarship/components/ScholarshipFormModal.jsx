@@ -7,7 +7,7 @@ import { Label } from '@/ui/shadcn/label'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
-import { Calendar, Coins, FileText, Info, GraduationCap, Loader2, Check, Plus, Image as ImageIcon } from 'lucide-react'
+import { Calendar, Coins, FileText, Info, GraduationCap, Loader2, Check, Plus, Image as ImageIcon, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import FileUpload from '../../colleges/FileUpload'
@@ -53,7 +53,8 @@ const ScholarshipFormModal = ({
             applicationDeadline: '',
             contactInfo: '',
             meta_description: '',
-            status: 'published'
+            status: 'published',
+            slug: ''
         }
     })
 
@@ -79,7 +80,8 @@ const ScholarshipFormModal = ({
                     applicationDeadline: formatInputDate(initialData.applicationDeadline),
                     contactInfo: initialData.contactInfo || '',
                     meta_description: initialData.meta_description || '',
-                    status: initialData.status || 'published'
+                    status: initialData.status || 'published',
+                    slug: initialData.slug || ''
                 })
 
                 setUploadedFiles({
@@ -99,7 +101,8 @@ const ScholarshipFormModal = ({
                     applicationDeadline: '',
                     contactInfo: '',
                     meta_description: '',
-                    status: 'published'
+                    status: 'published',
+                    slug: ''
                 })
                 setUploadedFiles({ featured_image: '' })
                 setSelectedCategory(null)
@@ -241,9 +244,20 @@ const ScholarshipFormModal = ({
                                 </div>
 
                                 <div className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-                                    <SectionHeader icon={FileText} title="SEO & Meta" subtitle="Search engine optimization" />
+                                    <SectionHeader icon={Settings} title="SEO Settings" subtitle="Search engine optimization" />
                                     <div className='space-y-4'>
-                                        <input type="hidden" {...register('status')} />
+                                        <div>
+                                            <Label htmlFor='slug'>URL Slug</Label>
+                                            <Input
+                                                id='slug'
+                                                {...register('slug')}
+                                                placeholder='url-slug-here'
+                                                className='text-sm'
+                                            />
+                                            <p className='text-[10px] text-gray-400 mt-1 italic'>
+                                                Leave empty to auto-generate from name
+                                            </p>
+                                        </div>
                                         <div>
                                             <Label htmlFor='meta_description'>Meta Description</Label>
                                             <Textarea

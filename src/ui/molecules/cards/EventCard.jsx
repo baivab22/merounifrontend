@@ -43,7 +43,7 @@ const EventCard = ({ event }) => {
   const collegeName = event.college?.name || event.institution_name || ''
   const image = event?.image || '/images/events.webp'
   const title = event.title || 'Upcoming Event'
-  const slug = event.slugs || ''
+  const slug = event.slug || ''
 
   const handleShareClick = (e) => {
     e.preventDefault()

@@ -26,6 +26,7 @@ import {
   Map,
   MapPin,
   Plus,
+  Settings,
   Trash2,
   Users,
   Video
@@ -47,6 +48,7 @@ import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from './components/GallerySection'
 import { DistrictLists } from '@/constants/district'
+import { COUNTRIES } from '@/constants/countries'
 import FileUploadWithPreview from './components/MediaUploadWithBranding'
 import VideoSection from './components/VideoSection'
 
@@ -149,7 +151,9 @@ const CreateUpdateCollegeModal = ({
       contacts: [],
       members: [],
       faqs: [],
-      status: 'published'
+      status: 'published',
+      slug: '',
+      meta_description: ''
     }
   })
 
@@ -273,6 +277,11 @@ const CreateUpdateCollegeModal = ({
           setValue('content', collegeData.content)
           setValue('website_url', collegeData.website_url)
           setValue('status', collegeData.status || 'published')
+          setValue('slug', collegeData.slug || collegeData.slug || '')
+          setValue(
+            'meta_description',
+            collegeData.meta_description || collegeData.metaDescription || ''
+          )
 
           const uniList =
             collegeData.universities ||
@@ -467,6 +476,29 @@ const CreateUpdateCollegeModal = ({
     }
     fetchPrograms()
   }, [JSON.stringify(selectedDegreeIdsArray), JSON.stringify(selectedUniIds)])
+
+  const onSearchDistricts = async (query) => {
+    const districts = query
+      ? DistrictLists.filter((d) =>
+          d.toLowerCase().includes(query.toLowerCase())
+        )
+      : DistrictLists
+
+    return districts.map((d) => ({ title: d, id: d }))
+  }
+
+  const onSearchCountries = async (query) => {
+    const countries = query
+      ? COUNTRIES.filter((c) =>
+          c.toLowerCase().includes(query.toLowerCase())
+        )
+      : COUNTRIES
+
+    return countries.map((c) => ({ title: c, id: c }))
+  }
+
+  const selectedDistrict = watch('address.district')
+  const selectedCountry = watch('address.country')
 
   const onSearchPrograms = async (query) => {
     if (!universityPrograms) return []
@@ -1028,13 +1060,25 @@ const CreateUpdateCollegeModal = ({
                         <Label htmlFor='address.country' required={true}>
                           Country
                         </Label>
-                        <Input
-                          id='address.country'
-                          {...register('address.country', {
-                            required: 'Country is required'
-                          })}
-                          placeholder='e.g. Nepal'
-                          className='h-11 rounded-md border-gray-200'
+                        <SearchSelectCreate
+                          onSearch={onSearchCountries}
+                          selectedItems={
+                            selectedCountry ? { id: selectedCountry, title: selectedCountry } : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.country', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.country', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search Country...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
                         />
                         {errors.address?.country && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
@@ -1046,20 +1090,26 @@ const CreateUpdateCollegeModal = ({
                         <Label htmlFor='address.district' required={true}>
                           District
                         </Label>
-                        <select
-                          id='address.district'
-                          {...register('address.district', {
-                            required: 'District is required'
-                          })}
-                          className='flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                        >
-                          <option value=''>Select District</option>
-                          {DistrictLists.map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))}
-                        </select>
+                        <SearchSelectCreate
+                          onSearch={onSearchDistricts}
+                          selectedItems={
+                            selectedDistrict ? { id: selectedDistrict, title: selectedDistrict } : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.district', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.district', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search District...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
+                        />
                         {errors.address?.district && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
                             {errors.address.district.message}
@@ -1712,7 +1762,7 @@ const CreateUpdateCollegeModal = ({
                   <SectionHeader
                     icon={Video}
                     title='Video Gallery'
-                    subtitle='Virtual tours & promos'
+                    subtitle='Virtual tours & promo'
                   />
                   <VideoSection
                     control={control}
@@ -1721,6 +1771,35 @@ const CreateUpdateCollegeModal = ({
                     setUploadedFiles={handleSetFiles}
                     getValues={getValues}
                   />
+                </div>
+
+                {/* SEO Settings Section */}
+                <div className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
+                  />
+                  <div className='space-y-4'>
+                    <div className='mb-4'>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input id='slug' {...register('slug')} className='mt-1' />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from name
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='Meta description for SEO...'
+                        className='min-h-[100px] resize-none'
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

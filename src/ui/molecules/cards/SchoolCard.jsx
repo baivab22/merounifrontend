@@ -29,7 +29,7 @@ const SchoolCard = ({
   const user = useSelector((state) => state.user.data)
 
   const name = collegeProp?.name ?? nameProp
-  const slug = collegeProp?.slugs ?? collegeProp?.slug ?? slugProp
+  const slug = collegeProp?.slug ?? collegeProp?.slug ?? slugProp
   const collegeId = collegeProp?.id ?? collegeIdProp
   const collegeImage =
     collegeProp?.featured_img ?? collegeProp?.featuredImg ?? collegeImageProp

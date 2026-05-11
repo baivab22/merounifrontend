@@ -134,7 +134,7 @@ const [loading, setLoading] = useState(true)
                   name={college.name}
                   image={college?.featured_img}
                   key={college.id || index} // Better to use college.id if available
-                  slug={college.slugs}
+                  slug={college.slug}
                 />
               ))
               : !loading &&

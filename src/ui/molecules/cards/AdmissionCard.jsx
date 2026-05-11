@@ -38,10 +38,10 @@ const AdmissionCard = ({ admis }) => {
   }
 
   const profileHref =
-    college?.slugs != null
+    college?.slug != null
       ? isSchoolInstitute
-        ? `/schools/${college.slugs}`
-        : `/colleges/${college.slugs}`
+        ? `/schools/${college.slug}`
+        : `/colleges/${college.slug}`
       : '#'
 
   return (

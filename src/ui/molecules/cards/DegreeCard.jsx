@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 const DegreeCard = ({ degree }) => {
-  const slug = degree.slug ?? degree.slugs
+  const slug = degree.slug ?? degree.slug
   const isProgramShape = !!degree.programlevel || !!degree.programfaculty
 
   return (

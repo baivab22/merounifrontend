@@ -27,7 +27,7 @@ const ThisWeek = ({ thisWeekEvents, title, subtitle }) => {
         >
           {thisWeekEvents?.length > 0 ? (
             thisWeekEvents.map((event, index) => (
-              <Link href={`/events/${event.slugs}`} key={index}>
+              <Link href={`/events/${event.slug}`} key={index}>
                 <div
                   key={index}
                   className='transition-all duration-300 ease-in-out w-[300px]'

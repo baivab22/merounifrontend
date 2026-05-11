@@ -220,7 +220,7 @@ const AppliedConsultanciesPage = () => {
           id: 'actions',
           cell: ({ row }) => (
             <div className='flex items-center justify-center'>
-              <Link href={`/consultancy/${row.original.consultancy?.slugs || '#'}`}>
+              <Link href={`/consultancy/${row.original.consultancy?.slug || '#'}`}>
                 <Button
                   variant='ghost'
                   size='sm'

@@ -90,7 +90,7 @@ const Blogs = () => {
 
           {blogs.slice(2, 4).map((blog, index) => (
             <Link
-              href={`/blogs/${blog.slugs}`}
+              href={`/blogs/${blog.slug}`}
               key={index}
               className='w-1/2 flex items-start justify-center'
             >
@@ -121,7 +121,7 @@ const Blogs = () => {
 
       <div className='block tb:hidden'>
         {blogs.length > 0 && (
-          <Link href={`/blogs/${blogs[0]?.slugs}`}>
+          <Link href={`/blogs/${blogs[0]?.slug}`}>
             <div className='flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden mx-4 my-4 md:max-w-[600px]'>
               <Image
                 src={'/images/aiimg.png' || blogs[0]?.images} // Dynamically set image

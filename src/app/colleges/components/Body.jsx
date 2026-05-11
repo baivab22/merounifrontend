@@ -152,7 +152,7 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
           description: college.description || 'No description available.',
           googleMapUrl: college.google_map_url,
           instituteType: college.institute_type || 'Unknown',
-          slug: college.slugs,
+          slug: college.slug,
           collegeId: college.id,
           collegeImage: college.featured_img || college.image,
           logo: college.college_logo || 'default_logo.png',
@@ -160,7 +160,7 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
             id: d.id,
             title: d.title,
             short_name: d.short_name,
-            slugs: d.slugs
+            slug: d.slug
           })),
           universityName:
             college.university?.fullname || college.university?.name

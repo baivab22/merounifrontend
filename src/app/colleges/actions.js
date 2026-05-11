@@ -47,7 +47,7 @@ export async function getColleges(page = 1, filters = {}) {
         description: college.description,
         googleMapUrl: college.google_map_url,
         instituteType: college.institute_type,
-        slug: college.slugs,
+        slug: college.slug,
         collegeId: college.id,
         collegeImage: college.featured_img,
         logo: college.college_logo
@@ -98,7 +98,7 @@ export async function searchColleges(query) {
       return {
         id: clz.id,
         name: clz.name,
-        slug: clz.slugs,
+        slug: clz.slug,
         collegeImage: clz.featured_img,
         location: `${clz.address.city}, ${clz.address.district}`,
         description: clz.description || 'No description available.',
@@ -108,7 +108,7 @@ export async function searchColleges(query) {
         programmes: clz.collegeCourses.map((course) => ({
           id: course.id,
           title: course.program.title,
-          slug: course.program.slugs
+          slug: course.program.slug
         }))
       }
     })

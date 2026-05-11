@@ -63,7 +63,7 @@ const Colleges = () => {
                 address={`${college.address?.city || ''},${college.address?.country || ''}`}
                 key={college.id || index}
                 collegeId={college.id}
-                slug={college.slugs}
+                slug={college.slug}
                 universityName={universityName}
               />
             )

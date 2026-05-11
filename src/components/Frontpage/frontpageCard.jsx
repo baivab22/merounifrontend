@@ -42,7 +42,7 @@ export default function FrontPageCard({ colleges, isLoading }) {
             className='w-full rounded-2xl bg-gray-100 overflow-hidden shadow-lg'
           >
             <div className='relative'>
-              <Link href={`/colleges/${college.slugs}`}>
+              <Link href={`/colleges/${college.slug}`}>
                 <Image
                   src={college.featured_img || '/images/course_description.png'}
                   alt={college.name}
@@ -64,14 +64,14 @@ export default function FrontPageCard({ colleges, isLoading }) {
             </div>
             <div className='px-4 py-2'>
               <Link
-                href={`/colleges/${college.slugs}`}
+                href={`/colleges/${college.slug}`}
                 className='text-lg font-semibold hover:underline' // Added hover effect
               >
                 {college.name}
               </Link>
               <div className='text-xs text-gray-600 mt-1'>
                 <Link
-                  href={`/colleges/${college.slugs}`}
+                  href={`/colleges/${college.slug}`}
                   className='hover:underline'
                 >
                   {' '}
@@ -92,7 +92,7 @@ export default function FrontPageCard({ colleges, isLoading }) {
                         {' '}
                         {/* Added truncate for long program names */}
                         <Link
-                          href={`/degree/${course.program.slugs}`}
+                          href={`/degree/${course.program.slug}`}
                           className='hover:underline'
                         >
                           {' '}

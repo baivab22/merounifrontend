@@ -186,9 +186,9 @@ const AppliedCollegesPage = () => {
                         )}
                       </div>
                     </div>
-                    {app?.referralCollege?.slugs && (
+                    {app?.referralCollege?.slug && (
                       <Link
-                        href={`/colleges/${app.referralCollege.slugs}`}
+                        href={`/colleges/${app.referralCollege.slug}`}
                         className='inline-flex items-center text-sm font-medium text-blue-600 hover:underline'
                       >
                         View College

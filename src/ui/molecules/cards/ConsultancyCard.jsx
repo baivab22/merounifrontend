@@ -15,7 +15,7 @@ const ConsultancyCard = ({ consultancy }) => {
   const [isLoading, setIsLoading] = useState(false)
 
   const consultancyId = consultancy?.id
-  const slug = consultancy?.slugs
+  const slug = consultancy?.slug
   const destinations = (() => {
     try {
       return typeof consultancy.destination === 'string'

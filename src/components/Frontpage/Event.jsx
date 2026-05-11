@@ -53,7 +53,7 @@ const Event = async () => {
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 w-full'>
         {events.map((event, index) => (
           <Link
-            href={`/events/${event.slugs}`}
+            href={`/events/${event.slug}`}
             key={event.id || index}
             className='group'
           >

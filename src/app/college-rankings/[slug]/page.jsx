@@ -133,7 +133,7 @@ export default async function CollegeRankingDetailPage({ params }) {
               return (
                 <Link
                   key={ranking.id}
-                  href={`/colleges/${college.slugs || ''}?from=college-ranking-detail&degreeSlug=${degreeSlugParam}`}
+                  href={`/colleges/${college.slug || ''}?from=college-ranking-detail&degreeSlug=${degreeSlugParam}`}
                   className='group block bg-white rounded-3xl p-6 transition-all duration-300 border border-gray-100 hover:border-[#0A6FA7] hover:shadow-2xl hover:shadow-[#0A6FA7]/10'
                 >
                   <div className='flex flex-col sm:flex-row items-center gap-6 md:gap-8'>

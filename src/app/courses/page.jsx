@@ -354,7 +354,7 @@ const CoursePage = () => {
                       </div>
 
                       <Link
-                        href={`/degree/single-subject/${course?.slugs}`}
+                        href={`/degree/single-subject/${course?.slug}`}
                         className='flex gap-3'
                       >
                         <button className='flex-1 py-2 px-4 border border-gray-300 rounded-2xl text-gray-700 hover:bg-gray-50 text-sm font-medium'>

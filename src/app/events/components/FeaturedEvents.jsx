@@ -27,7 +27,7 @@ const FeaturedEvents = ({ events, featuredEvents = [], loading, pagination, onPa
       </div>
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full'>
         {eventList.map((event, index) => (
-          <Link href={`/events/${event.slugs}`} key={index} className='h-full'>
+          <Link href={`/events/${event.slug}`} key={index} className='h-full'>
             <div className='h-full transition-all duration-300 hover:scale-[1.02]'>
               <EventCard event={event} />
             </div>

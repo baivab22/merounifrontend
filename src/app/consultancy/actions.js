@@ -47,10 +47,10 @@ export async function getConsultancyLocations() {
   }
 }
 
-export async function getConsultancyBySlug(slugs) {
+export async function getConsultancyBySlug(slug) {
   try {
     const response = await fetch(
-      `${process.env.baseUrl}/consultancy/${slugs}`,
+      `${process.env.baseUrl}/consultancy/${slug}`,
       {
         method: 'GET',
         headers: {

@@ -70,7 +70,7 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
           description: school.description || 'No description available.',
           googleMapUrl: school.google_map_url,
           instituteType: school.institute_type || 'Unknown',
-          slug: school.slugs,
+          slug: school.slug,
           collegeId: school.id,
           collegeImage: school.featured_img || school.image,
           logo: school.college_logo || 'default_logo.png',

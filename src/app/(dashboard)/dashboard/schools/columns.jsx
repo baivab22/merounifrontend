@@ -37,7 +37,7 @@ export const createColumns = ({
     accessorKey: 'name',
     cell: ({ row }) => {
       const name = row.original.name
-      const slugs = row.original.slugs
+      const slug = row.original.slug
       const type = row.original.institute_type
       const websiteUrl = row.original.website_url
 
@@ -52,9 +52,9 @@ export const createColumns = ({
       return (
         <div className='flex flex-col'>
           <div className='flex items-center gap-2'>
-            {slugs ? (
+            {slug ? (
               <Link
-                href={`/schools/${slugs}`}
+                href={`/schools/${slug}`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='font-semibold text-slate-900 hover:text-[#387cae] hover:underline'
@@ -171,7 +171,7 @@ export const createColumns = ({
       return (
         <div className='flex gap-2'>
           <button
-            onClick={() => handleEdit(row.original.slugs)}
+            onClick={() => handleEdit(row.original.slug)}
             className='p-1 text-blue-600 hover:text-blue-800'
             title='Edit'
           >

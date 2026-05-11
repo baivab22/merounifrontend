@@ -78,9 +78,9 @@ export const fetchExamCategories = async () => {
   }
 }
 
-export const getExamBySlug = async (slugs) => {
+export const getExamBySlug = async (slug) => {
   try {
-    const response = await fetch(`${process.env.baseUrl}/exam/${slugs}`, {
+    const response = await fetch(`${process.env.baseUrl}/exam/${slug}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       next: { revalidate: 3600 }

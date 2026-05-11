@@ -385,14 +385,14 @@ export default function CareerForm() {
             <Users className='w-4 h-4' />
           </button>
           <button
-            onClick={() => handleView(row.original.slugs)}
+            onClick={() => handleView(row.original.slug)}
             className='p-1 text-purple-600 hover:text-purple-800'
             title='View Details'
           >
             <Eye className='w-4 h-4' />
           </button>
           <button
-            onClick={() => handleEdit(row.original.slugs)}
+            onClick={() => handleEdit(row.original.slug)}
             className='p-1 text-blue-600 hover:text-blue-800'
             title='Edit'
           >

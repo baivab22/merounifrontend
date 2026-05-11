@@ -193,7 +193,7 @@ const SearchBox = ({ onClose }) => {
             const imageUrl = item.image
             return (
               <Link
-                href={`/${path}/${item.slugs}`}
+                href={`/${path}/${item.slug}`}
                 key={index}
                 onClick={onClose}
               >

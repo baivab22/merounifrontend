@@ -76,14 +76,14 @@ export const createColumns = ({
       cell: ({ row }) => (
         <div className='flex gap-1 justify-end'>
           <button
-            onClick={() => handleView(row.original.slugs)}
+            onClick={() => handleView(row.original.slug)}
             className='w-8 h-8 flex items-center justify-center rounded-md text-blue-600 hover:bg-blue-50 transition-colors'
             title='View Details'
           >
             <Eye className='w-4 h-4' />
           </button>
           <button
-            onClick={() => handleEdit(row.original.slugs)}
+            onClick={() => handleEdit(row.original.slug)}
             className='w-8 h-8 flex items-center justify-center rounded-md text-amber-600 hover:bg-amber-50 transition-colors'
             title='Edit'
           >

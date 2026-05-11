@@ -11,7 +11,7 @@ const ExamCard = ({ exam }) => {
 
   return (
     <div
-      onClick={() => router.push(`/exams/${exam.slugs}`)}
+      onClick={() => router.push(`/exams/${exam.slug}`)}
       className='group bg-white rounded-xl border border-gray-200 overflow-hidden h-full flex flex-col hover:border-gray-300 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500 cursor-pointer'
     >
       {/* Header with stylized icon/background */}

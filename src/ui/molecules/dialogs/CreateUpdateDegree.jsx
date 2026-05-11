@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
-import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogContent,
+  DialogClose
+} from '@/ui/shadcn/dialog'
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
@@ -15,339 +21,440 @@ import SearchSelectCreate from '@/ui/shadcn/search-select-create'
 import { Loader2, FileText, Check, Plus } from 'lucide-react'
 
 export default function CreateUpdateDegree({
-    isOpen,
-    onClose,
-    onSuccess,
-    initialData = null
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData = null
 }) {
-    const { toast } = useToast()
-    const [submitting, setSubmitting] = useState(false)
-    const [submittingDraft, setSubmittingDraft] = useState(false)
-    const [selectedDisciplines, setSelectedDisciplines] = useState([])
-    const [disciplineError, setDisciplineError] = useState('')
-    const [content, setContent] = useState('')
-    const [uploadedImage, setUploadedImage] = useState('')
+  const { toast } = useToast()
+  const [submitting, setSubmitting] = useState(false)
+  const [submittingDraft, setSubmittingDraft] = useState(false)
+  const [selectedDisciplines, setSelectedDisciplines] = useState([])
+  const [disciplineError, setDisciplineError] = useState('')
+  const [content, setContent] = useState('')
+  const [uploadedImage, setUploadedImage] = useState('')
 
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        reset,
-        watch,
-        formState: { errors }
-    } = useForm({
-        defaultValues: {
-            featured_image: '',
-            short_name: '',
-            title: '',
-            description: '',
-        }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      featured_image: '',
+      short_name: '',
+      title: '',
+      description: '',
+      slug: '',
+      meta_description: ''
+    }
+  })
+
+  const coverImage = watch('featured_image')
+
+  const onSearchDisciplines = async (query) => {
+    try {
+      const url = query
+        ? `${process.env.baseUrl}/discipline?q=${encodeURIComponent(query)}`
+        : `${process.env.baseUrl}/discipline?limit=100`
+      const res = await authFetch(url)
+      const data = await res.json()
+      return data.items || []
+    } catch (err) {
+      console.error('Failed to search disciplines', err)
+      return []
+    }
+  }
+
+  const handleSelectDiscipline = (discipline) => {
+    setSelectedDisciplines((prev) => {
+      if (prev.some((d) => d.id === discipline.id)) return prev
+      return [...prev, discipline]
     })
+    setDisciplineError('')
+  }
 
-    const coverImage = watch('featured_image')
+  const handleRemoveDiscipline = (discipline) => {
+    setSelectedDisciplines((prev) => prev.filter((d) => d.id !== discipline.id))
+  }
 
-    const onSearchDisciplines = async (query) => {
-        try {
-            const url = query
-                ? `${process.env.baseUrl}/discipline?q=${encodeURIComponent(query)}`
-                : `${process.env.baseUrl}/discipline?limit=100`
-            const res = await authFetch(url)
-            const data = await res.json()
-            return data.items || []
-        } catch (err) {
-            console.error('Failed to search disciplines', err)
-            return []
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setValue('featured_image', initialData.featured_image || '')
+        setValue('short_name', initialData.short_name || '')
+        setValue('title', initialData.title || '')
+        setValue('description', initialData.description || '')
+        setValue('slug', initialData.slug || '')
+        setValue('meta_description', initialData.meta_description || '')
+        setContent(initialData.content || '')
+        setUploadedImage(initialData.featured_image || '')
+
+        let existingDisciplines = []
+        if (Array.isArray(initialData.disciplines)) {
+          existingDisciplines = initialData.disciplines.map((d) =>
+            typeof d === 'object' ? d : { id: d, title: `Discipline #${d}` }
+          )
+        } else if (typeof initialData.disciplines === 'string') {
+          try {
+            const parsed = JSON.parse(initialData.disciplines)
+            existingDisciplines = Array.isArray(parsed)
+              ? parsed.map((d) =>
+                  typeof d === 'object'
+                    ? d
+                    : { id: d, title: `Discipline #${d}` }
+                )
+              : []
+          } catch {
+            /* ignore */
+          }
         }
-    }
-
-    const handleSelectDiscipline = (discipline) => {
-        setSelectedDisciplines(prev => {
-            if (prev.some(d => d.id === discipline.id)) return prev
-            return [...prev, discipline]
+        setSelectedDisciplines(existingDisciplines)
+      } else {
+        reset({
+          featured_image: '',
+          short_name: '',
+          title: '',
+          description: '',
+          slug: '',
+          meta_description: ''
         })
-        setDisciplineError('')
+        setSelectedDisciplines([])
+        setContent('')
+        setUploadedImage('')
+      }
+      setDisciplineError('')
     }
+  }, [isOpen, initialData, setValue, reset])
 
-    const handleRemoveDiscipline = (discipline) => {
-        setSelectedDisciplines(prev => prev.filter(d => d.id !== discipline.id))
+  const saveDegree = async (data, asDraft) => {
+    try {
+      if (asDraft) setSubmittingDraft(true)
+      else setSubmitting(true)
+
+      const payload = {
+        featured_image:
+          uploadedImage?.trim() || data.featured_image?.trim() || null,
+        short_name: data.short_name.trim(),
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        content: content?.trim() || null,
+        disciplines: selectedDisciplines.map((d) => d.id),
+        status: asDraft ? 'draft' : 'published',
+        slug: data.slug,
+        meta_description: data.meta_description
+      }
+
+      let response
+      if (initialData?.id) {
+        response = await authFetch(
+          `${process.env.baseUrl}/degree/${initialData.id}`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }
+        )
+      } else {
+        response = await authFetch(`${process.env.baseUrl}/degree`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+      }
+
+      const result = await response.json()
+      if (!response.ok)
+        throw new Error(result.error || result.message || 'Operation failed')
+
+      toast({
+        title: 'Success',
+        description: asDraft
+          ? 'Degree saved as draft'
+          : `Degree ${initialData ? 'updated' : 'created'} successfully!`
+      })
+      onSuccess?.()
+      onClose()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save degree',
+        variant: 'destructive'
+      })
+    } finally {
+      setSubmitting(false)
+      setSubmittingDraft(false)
     }
+  }
 
-    useEffect(() => {
-        if (isOpen) {
-            if (initialData) {
-                setValue('featured_image', initialData.featured_image || '')
-                setValue('short_name', initialData.short_name || '')
-                setValue('title', initialData.title || '')
-                setValue('description', initialData.description || '')
-                setContent(initialData.content || '')
-                setUploadedImage(initialData.featured_image || '')
+  const onSubmit = async (data) => {
+    await saveDegree(data, false)
+  }
 
-                let existingDisciplines = []
-                if (Array.isArray(initialData.disciplines)) {
-                    existingDisciplines = initialData.disciplines.map(d =>
-                        typeof d === 'object' ? d : { id: d, title: `Discipline #${d}` }
-                    )
-                } else if (typeof initialData.disciplines === 'string') {
-                    try {
-                        const parsed = JSON.parse(initialData.disciplines)
-                        existingDisciplines = Array.isArray(parsed)
-                            ? parsed.map(d => typeof d === 'object' ? d : { id: d, title: `Discipline #${d}` })
-                            : []
-                    } catch { /* ignore */ }
-                }
-                setSelectedDisciplines(existingDisciplines)
-            } else {
-                reset({ featured_image: '', short_name: '', title: '', description: '' })
-                setSelectedDisciplines([])
-                setContent('')
-                setUploadedImage('')
-            }
-            setDisciplineError('')
-        }
-    }, [isOpen, initialData, setValue, reset])
+  const onSaveDraft = () => {
+    handleSubmit((data) => saveDegree(data, true))()
+  }
 
-    const saveDegree = async (data, asDraft) => {
-        try {
-            if (asDraft) setSubmittingDraft(true)
-            else setSubmitting(true)
+  return (
+    <Dialog isOpen={isOpen} onClose={onClose} className='max-w-6xl'>
+      <DialogContent className='max-w-6xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-gray-50/50'>
+        <DialogHeader className='px-6 py-4 border-b shrink-0 bg-white'>
+          <DialogTitle className='text-lg font-semibold text-gray-900'>
+            {initialData ? 'Edit Degree' : 'Add Degree'}
+          </DialogTitle>
+          <DialogClose onClick={onClose} />
+        </DialogHeader>
 
-            const payload = {
-                featured_image: uploadedImage?.trim() || data.featured_image?.trim() || null,
-                short_name: data.short_name.trim(),
-                title: data.title.trim(),
-                description: data.description?.trim() || null,
-                content: content?.trim() || null,
-                disciplines: selectedDisciplines.map(d => d.id),
-                status: asDraft ? 'draft' : 'published'
-            }
+        <form
+          id='degree-form'
+          className='flex flex-col flex-1 min-h-0 max-h-[calc(90vh-52px)]'
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <div className='flex-1 overflow-y-auto p-8 sidebar-scrollbar'>
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6'>
+              {/* Left Column (8/12) */}
+              <div className='lg:col-span-8 space-y-8'>
+                <section className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-5'>
+                  <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                    Degree Details
+                  </h3>
 
-            let response
-            if (initialData?.id) {
-                response = await authFetch(`${process.env.baseUrl}/degree/${initialData.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-            } else {
-                response = await authFetch(`${process.env.baseUrl}/degree`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-            }
-
-            const result = await response.json()
-            if (!response.ok) throw new Error(result.error || result.message || 'Operation failed')
-
-            toast({
-                title: 'Success',
-                description: asDraft
-                    ? 'Degree saved as draft'
-                    : `Degree ${initialData ? 'updated' : 'created'} successfully!`,
-            })
-            onSuccess?.()
-            onClose()
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to save degree',
-                variant: 'destructive'
-            })
-        } finally {
-            setSubmitting(false)
-            setSubmittingDraft(false)
-        }
-    }
-
-    const onSubmit = async (data) => {
-        await saveDegree(data, false)
-    }
-
-    const onSaveDraft = () => {
-        handleSubmit((data) => saveDegree(data, true))()
-    }
-
-    return (
-        <Dialog isOpen={isOpen} onClose={onClose} className='max-w-3xl'>
-            <DialogContent className='max-w-3xl max-h-[90vh] flex flex-col p-0'>
-                <DialogHeader className='px-6 py-4 border-b shrink-0'>
-                    <DialogTitle className="text-lg font-semibold text-gray-900">
-                        {initialData ? 'Edit Degree' : 'Add Degree'}
-                    </DialogTitle>
-                    <DialogClose onClick={onClose} />
-                </DialogHeader>
-
-                <form
-                    id="degree-form"
-                    className='flex flex-col flex-1 min-h-0 max-h-[calc(90vh-52px)]'
-                    onSubmit={(e) => e.preventDefault()}
-                >
-                    <div className='flex-1 overflow-y-auto p-6 space-y-8'>
-
-                        <section className="space-y-5">
-                            <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Degree Details</h3>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label htmlFor="deg-short_name" required>Short Name</Label>
-                                    <Input
-                                        id="deg-short_name"
-                                        placeholder='e.g. BCS, BBA, MBA'
-                                        {...register('short_name', {
-                                            required: 'Short name is required',
-                                            minLength: { value: 2, message: 'Min 2 characters' },
-                                            maxLength: { value: 20, message: 'Max 20 characters' }
-                                        })}
-                                        className={errors.short_name ? 'border-destructive focus-visible:ring-destructive' : ''}
-                                    />
-                                    {errors.short_name && (
-                                        <p className='text-xs text-destructive mt-1'>{errors.short_name.message}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label htmlFor="deg-title" required>Full Title</Label>
-                                    <Input
-                                        id="deg-title"
-                                        placeholder='e.g. Bachelor of Computer Science'
-                                        {...register('title', {
-                                            required: 'Title is required',
-                                            minLength: { value: 2, message: 'Title must be at least 2 characters' },
-                                            maxLength: { value: 200, message: 'Max 200 characters' }
-                                        })}
-                                        className={errors.title ? 'border-destructive focus-visible:ring-destructive' : ''}
-                                    />
-                                    {errors.title && (
-                                        <p className='text-xs text-destructive mt-1'>{errors.title.message}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2 sm:col-span-3">
-                                    <Label htmlFor="deg-desc">Description</Label>
-                                    <Textarea
-                                        id="deg-desc"
-                                        placeholder='Enter a short description of this degree…'
-                                        {...register('description', {
-                                            maxLength: { value: 1000, message: 'Max 1000 characters' }
-                                        })}
-                                        rows={5}
-                                        className={`min-h-[7.5rem] resize-y ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                                    />
-                                    {errors.description && (
-                                        <p className='text-xs text-destructive mt-1'>{errors.description.message}</p>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section className="space-y-3">
-                            <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Disciplines</h3>
-                            <p className="text-xs text-gray-400">
-                                Search and select the disciplines this degree belongs to. You can select multiple.
-                            </p>
-                            <SearchSelectCreate
-                                onSearch={onSearchDisciplines}
-                                onSelect={handleSelectDiscipline}
-                                onRemove={handleRemoveDiscipline}
-                                selectedItems={selectedDisciplines}
-                                placeholder="Search disciplines…"
-                                displayKey="title"
-                                valueKey="id"
-                                isMulti={true}
-                                allowCreate={false}
-                                inputSize="sm"
-                            />
-                            {disciplineError && (
-                                <p className='text-xs text-destructive mt-1'>{disciplineError}</p>
-                            )}
-                        </section>
-
-                        <section className="space-y-4">
-                            <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Content</h3>
-                            <div className="space-y-2">
-                                <Label>Detailed Content</Label>
-                                <TipTapEditor
-                                    value={content}
-                                    onChange={setContent}
-                                    placeholder='Enter detailed content for the degree…'
-                                />
-                            </div>
-                        </section>
-
-                        <section className="space-y-4">
-                            <h3 className="text-base font-semibold text-slate-800 border-b pb-2">Media</h3>
-                            <div className="space-y-2">
-                                <Label>
-                                    Cover Image{' '}
-                                    <span className='text-gray-400 font-normal text-sm'>(Optional)</span>
-                                </Label>
-                                <FileUpload
-                                    label=''
-                                    defaultPreview={uploadedImage || coverImage}
-                                    onUploadComplete={(url) => {
-                                        setUploadedImage(url || '')
-                                        setValue('featured_image', url || '')
-                                    }}
-                                />
-                            </div>
-                        </section>
-
+                  <div className='grid grid-cols-1 sm:grid-cols-4 gap-5'>
+                    <div className='space-y-2 sm:col-span-2'>
+                      <Label htmlFor='deg-short_name' required>
+                        Short Name
+                      </Label>
+                      <Input
+                        id='deg-short_name'
+                        placeholder='e.g. BCS, BBA, MBA'
+                        {...register('short_name', {
+                          required: 'Short name is required',
+                          minLength: { value: 2, message: 'Min 2 characters' },
+                          maxLength: { value: 20, message: 'Max 20 characters' }
+                        })}
+                        className={
+                          errors.short_name
+                            ? 'border-destructive focus-visible:ring-destructive'
+                            : ''
+                        }
+                      />
+                      {errors.short_name && (
+                        <p className='text-xs text-destructive mt-1'>
+                          {errors.short_name.message}
+                        </p>
+                      )}
                     </div>
 
-                    <div className='shrink-0 flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-100 z-20 sticky bottom-0'>
-                        <Button
-                            type='button'
-                            variant='outline'
-                            onClick={onClose}
-                            disabled={submitting || submittingDraft}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type='button'
-                            variant='secondary'
-                            disabled={submitting || submittingDraft}
-                            onClick={onSaveDraft}
-                            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none gap-2'
-                        >
-                            {submittingDraft ? (
-                                <>
-                                    <Loader2 className='w-4 h-4 animate-spin' />
-                                    <span>Saving draft…</span>
-                                </>
-                            ) : (
-                                <>
-                                    <FileText className='w-4 h-4' />
-                                    <span>Save as Draft</span>
-                                </>
-                            )}
-                        </Button>
-                        <Button
-                            type='button'
-                            disabled={submitting || submittingDraft}
-                            onClick={() => handleSubmit(onSubmit)()}
-                            className='bg-[#387cae] hover:bg-[#2d658d] text-white gap-2'
-                        >
-                            {submitting ? (
-                                <>
-                                    <Loader2 className='w-4 h-4 animate-spin' />
-                                    <span>Saving…</span>
-                                </>
-                            ) : initialData ? (
-                                <>
-                                    <Check className='w-4 h-4' />
-                                    <span>Update Degree</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Plus className='w-4 h-4' />
-                                    <span>Create Degree</span>
-                                </>
-                            )}
-                        </Button>
+                    <div className='space-y-2 sm:col-span-2'>
+                      <Label htmlFor='deg-title' required>
+                        Full Title
+                      </Label>
+                      <Input
+                        id='deg-title'
+                        placeholder='e.g. Bachelor of Computer Science'
+                        {...register('title', {
+                          required: 'Title is required',
+                          minLength: {
+                            value: 2,
+                            message: 'Title must be at least 2 characters'
+                          },
+                          maxLength: {
+                            value: 200,
+                            message: 'Max 200 characters'
+                          }
+                        })}
+                        className={
+                          errors.title
+                            ? 'border-destructive focus-visible:ring-destructive'
+                            : ''
+                        }
+                      />
+                      {errors.title && (
+                        <p className='text-xs text-destructive mt-1'>
+                          {errors.title.message}
+                        </p>
+                      )}
                     </div>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
+
+                    <div className='space-y-2 sm:col-span-4'>
+                      <Label htmlFor='deg-desc'>Description</Label>
+                      <Textarea
+                        id='deg-desc'
+                        placeholder='Enter a short description of this degree…'
+                        {...register('description', {
+                          maxLength: {
+                            value: 1000,
+                            message: 'Max 1000 characters'
+                          }
+                        })}
+                        rows={5}
+                        className={`min-h-[7.5rem] resize-y ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      />
+                      {errors.description && (
+                        <p className='text-xs text-destructive mt-1'>
+                          {errors.description.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-3'>
+                  <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                    Disciplines
+                  </h3>
+                  <p className='text-xs text-gray-400'>
+                    Search and select the disciplines this degree belongs to.
+                    You can select multiple.
+                  </p>
+                  <SearchSelectCreate
+                    onSearch={onSearchDisciplines}
+                    onSelect={handleSelectDiscipline}
+                    onRemove={handleRemoveDiscipline}
+                    selectedItems={selectedDisciplines}
+                    placeholder='Search disciplines…'
+                    displayKey='title'
+                    valueKey='id'
+                    isMulti={true}
+                    allowCreate={false}
+                    inputSize='sm'
+                  />
+                  {disciplineError && (
+                    <p className='text-xs text-destructive mt-1'>
+                      {disciplineError}
+                    </p>
+                  )}
+                </section>
+
+                <section className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4'>
+                  <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                    Content
+                  </h3>
+                  <div className='space-y-2'>
+                    <Label>Detailed Content</Label>
+                    <TipTapEditor
+                      value={content}
+                      onChange={setContent}
+                      placeholder='Enter detailed content for the degree…'
+                    />
+                  </div>
+                </section>
+              </div>
+
+              {/* Right Column (4/12) */}
+              <div className='lg:col-span-4 space-y-8'>
+                <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4'>
+                  <h3 className='text-base font-semibold text-slate-800 border-b pb-2 flex items-center gap-2'>
+                    <Plus size={18} className='text-[#387cae]' />
+                    Media
+                  </h3>
+                  <div className='space-y-2'>
+                    <Label>
+                      Cover Image{' '}
+                      <span className='text-gray-400 font-normal text-sm'>
+                        (Optional)
+                      </span>
+                    </Label>
+                    <FileUpload
+                      label=''
+                      defaultPreview={uploadedImage || coverImage}
+                      onUploadComplete={(url) => {
+                        setUploadedImage(url || '')
+                        setValue('featured_image', url || '')
+                      }}
+                    />
+                  </div>
+                </section>
+
+                <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4'>
+                  <h3 className='text-base font-semibold text-slate-800 border-b pb-2 flex items-center gap-2'>
+                    <FileText size={18} className='text-[#387cae]' />
+                    SEO Settings
+                  </h3>
+                  <div className='space-y-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input
+                        id='slug'
+                        {...register('slug')}
+                        placeholder='url-slug-here'
+                        className='text-sm'
+                      />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from title
+                      </p>
+                    </div>
+                    <div className='space-y-2'>
+                      <Label htmlFor='meta_description'>Meta Description</Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='SEO meta description...'
+                        className='min-h-[100px] text-sm'
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div className='shrink-0 flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-100 z-20 sticky bottom-0'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={onClose}
+              disabled={submitting || submittingDraft}
+            >
+              Cancel
+            </Button>
+            <Button
+              type='button'
+              variant='secondary'
+              disabled={submitting || submittingDraft}
+              onClick={onSaveDraft}
+              className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none gap-2'
+            >
+              {submittingDraft ? (
+                <>
+                  <Loader2 className='w-4 h-4 animate-spin' />
+                  <span>Saving draft…</span>
+                </>
+              ) : (
+                <>
+                  <FileText className='w-4 h-4' />
+                  <span>Save as Draft</span>
+                </>
+              )}
+            </Button>
+            <Button
+              type='button'
+              disabled={submitting || submittingDraft}
+              onClick={() => handleSubmit(onSubmit)()}
+              className='bg-[#387cae] hover:bg-[#2d658d] text-white gap-2'
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className='w-4 h-4 animate-spin' />
+                  <span>Saving…</span>
+                </>
+              ) : initialData ? (
+                <>
+                  <Check className='w-4 h-4' />
+                  <span>Update Degree</span>
+                </>
+              ) : (
+                <>
+                  <Plus className='w-4 h-4' />
+                  <span>Create Degree</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
 }

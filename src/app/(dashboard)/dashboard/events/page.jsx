@@ -138,9 +138,9 @@ const SortableCard = ({ event, onView, onEdit, onDelete, onImageClick }) => {
         {/* Info */}
         <div className='flex-1 min-w-0'>
           <div className='flex items-center gap-2 flex-wrap mb-1'>
-            {event.slugs ? (
+            {event.slug ? (
               <Link
-                href={`/events/${event.slugs}`}
+                href={`/events/${event.slug}`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='font-bold text-gray-900 hover:text-[#387cae] hover:underline text-[16px] leading-tight truncate'
@@ -190,7 +190,7 @@ const SortableCard = ({ event, onView, onEdit, onDelete, onImageClick }) => {
         {/* Actions */}
         <div className='flex items-center gap-1 pl-4 border-l border-gray-100'>
           <button
-            onClick={() => onView(event.slugs)}
+            onClick={() => onView(event.slug)}
             title='View details'
             className='w-9 h-9 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all'
           >
@@ -488,7 +488,7 @@ export default function EventManager() {
   const handleEdit = async (data) => {
     try {
       setLoading(true)
-      const response = await authFetch(`${process.env.baseUrl}/event/${data.slugs}`)
+      const response = await authFetch(`${process.env.baseUrl}/event/${data.slug}`)
       if (!response.ok) throw new Error('Failed to fetch event details')
       const result = await response.json()
       const eventData = result.item

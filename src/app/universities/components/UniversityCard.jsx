@@ -12,7 +12,7 @@ const UniversityCard = ({ university }) => {
     fullname,
     city,
     state,
-    slugs,
+    slug,
     featured_image,
     logo: logoProp,
     type_of_institute
@@ -27,7 +27,7 @@ const UniversityCard = ({ university }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      onClick={() => router.push(`/universities/${slugs}`)}
+      onClick={() => router.push(`/universities/${slug}`)}
       className='group bg-white rounded-xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full'
     >
       {/* Banner / Featured Image */}
@@ -77,7 +77,7 @@ const UniversityCard = ({ university }) => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              router.push(`/universities/${slugs}#programs`)
+              router.push(`/universities/${slug}#programs`)
             }}
             className='flex-1 py-2 px-3 bg-[#0A70A7] text-white rounded-lg hover:bg-[#085a86] transition-all text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-sm uppercase tracking-wider'
           >
@@ -88,7 +88,7 @@ const UniversityCard = ({ university }) => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              router.push(`/universities/${slugs}`)
+              router.push(`/universities/${slug}`)
             }}
             className='flex-1 py-2 px-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-[10px] font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider border border-gray-200/50'
           >

@@ -29,7 +29,7 @@ const CollegeCard = ({
   const user = useSelector((state) => state.user.data)
 
   const name = collegeProp?.name ?? nameProp
-  const slug = collegeProp?.slugs ?? collegeProp?.slug ?? slugProp
+  const slug = collegeProp?.slug ?? collegeProp?.slug ?? slugProp
   const collegeId = collegeProp?.id ?? collegeIdProp
   const collegeImage =
     collegeProp?.featured_img ?? collegeProp?.featuredImg ?? collegeImageProp
@@ -238,7 +238,7 @@ const CollegeCard = ({
               return (
                 <Link
                   key={prog.id}
-                  href={`/degree/${prog.slugs || prog.slug}`}
+                  href={`/degree/${prog.slug || prog.slug}`}
                   onClick={(e) => e.stopPropagation()}
                   className='text-[9px] md:text-[10px] bg-[#0A70A7]/5 text-[#0A70A7] px-1.5 md:px-2 py-0.5 rounded-md border border-[#0A70A7]/10 font-bold whitespace-nowrap hover:bg-[#0A70A7] hover:text-white transition-colors'
                 >

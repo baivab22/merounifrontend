@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { Clock, GraduationCap, Building2 } from 'lucide-react'
 
 const ProgramCard = ({ program }) => {
-    const slug = program.slugs || program.slug
+    const slug = program.slug || program.slug
     const universityNames = program.universities?.map(u => u.short_name || u.fullname).join(', ')
 
-    const universitySlug = program.universities?.[0]?.slugs || program.universities?.[0]?.slug
+    const universitySlug = program.universities?.[0]?.slug || program.universities?.[0]?.slug
     const detailHref = universitySlug ? `/${universitySlug}/programs/${slug}` : `/programs/${slug}`
 
     return (

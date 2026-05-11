@@ -2,7 +2,18 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Search, Edit2, Trash2, Eye, Key, GripVertical, Building2, Loader2, MapPin } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Eye,
+  Key,
+  GripVertical,
+  Building2,
+  Loader2,
+  MapPin
+} from 'lucide-react'
 import { FaHandshake } from 'react-icons/fa'
 
 import { Button } from '@/ui/shadcn/button'
@@ -17,6 +28,7 @@ import ImageLightbox from '@/ui/molecules/image-lightbox'
 import { authFetch } from '@/app/utils/authFetch'
 import { deleteConsultancy } from './actions'
 import { cn } from '@/app/lib/utils'
+import Link from 'next/link'
 import {
   DndContext,
   closestCenter,
@@ -35,8 +47,32 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+const StatusBadge = ({ status }) => {
+  if (!status) return null
+  const isPublished = status.toLowerCase() === 'published'
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider shrink-0',
+        isPublished
+          ? 'bg-blue-50 text-blue-600 border-blue-100'
+          : 'bg-orange-50 text-orange-600 border-orange-100'
+      )}
+    >
+      {status}
+    </span>
+  )
+}
+
 // ─── Sortable Consultancy Card ────────────────────────────────────────────────
-const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onCreateCredentials }) => {
+const SortableCard = ({
+  consultancy,
+  onView,
+  onEdit,
+  onDelete,
+  onImageClick,
+  onCreateCredentials
+}) => {
   const {
     attributes,
     listeners,
@@ -52,14 +88,21 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
     opacity: isDragging ? 0.5 : 1
   }
 
-  const address = typeof consultancy.address === 'string'
-    ? JSON.parse(consultancy.address)
-    : consultancy.address || {}
-  const location = [address.city, address.district || address.state].filter(Boolean).join(', ')
+  const address =
+    typeof consultancy.address === 'string'
+      ? JSON.parse(consultancy.address)
+      : consultancy.address || {}
+  const location = [address.city, address.district || address.state]
+    .filter(Boolean)
+    .join(', ')
 
   let destinations = consultancy.destination
   if (typeof destinations === 'string') {
-    try { destinations = JSON.parse(destinations) } catch { destinations = [] }
+    try {
+      destinations = JSON.parse(destinations)
+    } catch {
+      destinations = []
+    }
   }
   if (!Array.isArray(destinations)) destinations = []
 
@@ -89,21 +132,38 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
         <div
           role='button'
           tabIndex={0}
-          onClick={() => consultancy.logo && onImageClick(consultancy.logo, consultancy.title)}
+          onClick={() =>
+            consultancy.logo &&
+            onImageClick(consultancy.logo, consultancy.title)
+          }
           className={cn(
             'w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm',
-            consultancy.logo && 'cursor-pointer hover:opacity-90 transition-opacity'
+            consultancy.logo &&
+              'cursor-pointer hover:opacity-90 transition-opacity'
           )}
         >
-          {consultancy.logo
-            ? <img src={consultancy.logo} alt={consultancy.title} className='w-full h-full object-contain p-1.5' />
-            : <Building2 className='w-7 h-7 text-gray-300' />}
+          {consultancy.logo ? (
+            <img
+              src={consultancy.logo}
+              alt={consultancy.title}
+              className='w-full h-full object-contain p-1.5'
+            />
+          ) : (
+            <Building2 className='w-7 h-7 text-gray-300' />
+          )}
         </div>
 
         {/* Info */}
         <div className='flex-1 min-w-0'>
-          <h3 className='text-[16px] font-bold text-gray-900 truncate leading-tight mb-1'>
-            {consultancy.title}
+          <h3 className='text-[16px] font-bold text-gray-900 leading-tight mb-1 flex items-center gap-2 flex-wrap'>
+            <Link
+              href={`/consultancy/${consultancy.slug}`}
+              target='_blank'
+              className='hover:text-[#387cae] hover:underline transition-colors truncate max-w-[250px]'
+            >
+              {consultancy.title}
+            </Link>
+            <StatusBadge status={consultancy.status} />
           </h3>
           <div className='flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5'>
             {location && (
@@ -112,21 +172,13 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
                 {location}
               </span>
             )}
-            <div className="flex flex-wrap gap-1">
-              {destinations.slice(0, 3).map((d, i) => (
-                <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-tight border border-blue-100">
-                  {typeof d === 'string' ? d : d.country}
-                </span>
-              ))}
-              {destinations.length > 3 && <span className="text-[10px] text-gray-400 font-medium">+{destinations.length - 3} more</span>}
-            </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className='flex items-center gap-1 pl-4 border-l border-gray-100'>
           <button
-            onClick={() => onView(consultancy.slug || consultancy.slugs)}
+            onClick={() => onView(consultancy.slug || consultancy.slug)}
             title='View details'
             className='w-9 h-9 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all'
           >
@@ -134,10 +186,16 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
           </button>
           <button
             onClick={() => onCreateCredentials(consultancy)}
-            title={consultancy.has_account ? 'Update credentials' : 'Create credentials'}
+            title={
+              consultancy.has_account
+                ? 'Update credentials'
+                : 'Create credentials'
+            }
             className={cn(
               'w-9 h-9 flex items-center justify-center rounded-lg transition-all',
-              consultancy.has_account ? 'text-green-600 hover:bg-green-50' : 'text-indigo-500 hover:bg-indigo-50'
+              consultancy.has_account
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-indigo-500 hover:bg-indigo-50'
             )}
           >
             <Key size={18} />
@@ -166,14 +224,26 @@ const SortableCard = ({ consultancy, onView, onEdit, onDelete, onImageClick, onC
 const OverlayCard = ({ consultancy }) => (
   <div className='bg-white border-2 border-[#387cae]/40 rounded-xl shadow-2xl rotate-[0.6deg] scale-[1.01]'>
     <div className='flex items-center gap-4 p-4'>
-      <GripVertical size={20} className='text-[#387cae]/50 cursor-grabbing shrink-0' />
+      <GripVertical
+        size={20}
+        className='text-[#387cae]/50 cursor-grabbing shrink-0'
+      />
       <div className='w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0'>
-        {consultancy.logo
-          ? <img src={consultancy.logo} alt={consultancy.title} className='w-full h-full object-contain p-1.5' />
-          : <Building2 className='w-7 h-7 text-gray-300' />}
+        {consultancy.logo ? (
+          <img
+            src={consultancy.logo}
+            alt={consultancy.title}
+            className='w-full h-full object-contain p-1.5'
+          />
+        ) : (
+          <Building2 className='w-7 h-7 text-gray-300' />
+        )}
       </div>
       <div className='flex-1 min-w-0'>
-        <h3 className='text-[16px] font-bold text-gray-900 truncate'>{consultancy.title}</h3>
+        <h3 className='text-[16px] font-bold text-gray-900 truncate flex items-center gap-2'>
+          {consultancy.title}
+          <StatusBadge status={consultancy.status} />
+        </h3>
       </div>
     </div>
   </div>
@@ -196,7 +266,9 @@ const CardSkeleton = ({ i = 0 }) => (
         </div>
       </div>
       <div className='flex gap-2 pl-4 border-l border-gray-100'>
-        {[0, 1, 2, 3].map(j => <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />)}
+        {[0, 1, 2, 3].map((j) => (
+          <div key={j} className='w-9 h-9 bg-gray-200 rounded-lg' />
+        ))}
       </div>
     </div>
   </div>
@@ -228,12 +300,17 @@ export default function ConsultancyManager() {
   const [selectedConsultancy, setSelectedConsultancy] = useState(null)
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
   const [searchTimeout, setSearchTimeout] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const activeConsultancy = consultancies.find((c) => c.id === activeId)
 
   // Lightbox State
-  const [lightbox, setLightbox] = useState({ isOpen: false, imageUrl: '', altText: '' })
+  const [lightbox, setLightbox] = useState({
+    isOpen: false,
+    imageUrl: '',
+    altText: ''
+  })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -241,12 +318,16 @@ export default function ConsultancyManager() {
   )
 
   const handleImageClick = (imageUrl, altText) => {
-    setLightbox({ isOpen: true, imageUrl, altText: altText || 'Consultancy Logo' })
+    setLightbox({
+      isOpen: true,
+      imageUrl,
+      altText: altText || 'Consultancy Logo'
+    })
   }
 
   useEffect(() => {
     setHeading('Consultancy Management')
-    loadConsultancies()
+    loadConsultancies(false, searchQuery, statusFilter)
     return () => setHeading(null)
   }, [setHeading])
 
@@ -259,7 +340,11 @@ export default function ConsultancyManager() {
     }
   }, [searchParams, router])
 
-  const loadConsultancies = async (silent = false, query = searchQuery) => {
+  const loadConsultancies = async (
+    silent = false,
+    query = searchQuery,
+    status = statusFilter
+  ) => {
     if (!silent) setLoading(true)
     try {
       let all = []
@@ -269,11 +354,12 @@ export default function ConsultancyManager() {
       while (hasMore) {
         let url = `${process.env.baseUrl}/consultancy?page=${page}&limit=100`
         if (query) url += `&q=${encodeURIComponent(query)}`
-        
+        if (status && status !== 'All') url += `&status=${status.toLowerCase()}`
+
         const response = await authFetch(url)
         if (!response.ok) throw new Error('Failed to load consultancies')
         const data = await response.json()
-        
+
         all = [...all, ...(data.items || [])]
         hasMore = page < (data.pagination?.totalPages || 1)
         page++
@@ -301,8 +387,16 @@ export default function ConsultancyManager() {
   const handleSearchInput = (value) => {
     setSearchQuery(value)
     if (searchTimeout) clearTimeout(searchTimeout)
-    const id = setTimeout(() => loadConsultancies(true, value), 350)
+    const id = setTimeout(
+      () => loadConsultancies(true, value, statusFilter),
+      350
+    )
     setSearchTimeout(id)
+  }
+
+  const handleStatusChange = (status) => {
+    setStatusFilter(status)
+    loadConsultancies(true, searchQuery, status)
   }
 
   const handleAdd = () => {
@@ -328,7 +422,10 @@ export default function ConsultancyManager() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteConsultancy(deleteId)
-      toast({ title: 'Success', description: 'Consultancy deleted successfully' })
+      toast({
+        title: 'Success',
+        description: 'Consultancy deleted successfully'
+      })
       loadConsultancies(true)
     } catch (error) {
       toast({
@@ -362,13 +459,16 @@ export default function ConsultancyManager() {
   const saveOrder = async (payload) => {
     try {
       setSavingOrder(true)
-      const res = await authFetch(`${process.env.baseUrl}/consultancy/update-order`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ consultancies: payload })
-      })
+      const res = await authFetch(
+        `${process.env.baseUrl}/consultancy/update-order`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ consultancies: payload })
+        }
+      )
       if (!res.ok) throw new Error('Failed to save order')
-      
+
       toast({ title: 'Success', description: 'Order saved' })
     } catch (error) {
       toast({
@@ -389,7 +489,6 @@ export default function ConsultancyManager() {
 
   return (
     <div className='w-full'>
-
       {/* Sticky Header */}
       <div className='sticky mb-3 top-0 z-30 bg-[#F7F8FA] py-3'>
         <div className='bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
@@ -400,13 +499,17 @@ export default function ConsultancyManager() {
             <div>
               <p className='text-sm font-bold text-gray-800'>Consultancies</p>
               <p className='text-xs text-gray-400 flex items-center gap-1.5'>
-                {loading
-                  ? <span className='inline-flex items-center gap-1'><Loader2 size={10} className='animate-spin' /> Loading…</span>
-                  : `${consultancies.length} total`
-                }
+                {loading ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <Loader2 size={10} className='animate-spin' /> Loading…
+                  </span>
+                ) : (
+                  `${consultancies.length} total`
+                )}
                 {savingOrder && (
                   <span className='inline-flex items-center gap-1 text-[#387cae]'>
-                    · <Loader2 size={10} className='animate-spin' /> Saving order…
+                    · <Loader2 size={10} className='animate-spin' /> Saving
+                    order…
                   </span>
                 )}
               </p>
@@ -415,7 +518,10 @@ export default function ConsultancyManager() {
 
           <div className='flex items-center gap-2 w-full sm:w-auto'>
             <div className='relative shrink-0 sm:w-64'>
-              <Search size={13} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none' />
+              <Search
+                size={13}
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none'
+              />
               <input
                 type='text'
                 value={searchQuery}
@@ -424,8 +530,20 @@ export default function ConsultancyManager() {
                 className='w-full pl-8 pr-3 h-9 rounded-md border border-gray-200 text-sm text-gray-700 placeholder-gray-400 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 transition'
               />
             </div>
-            <Button onClick={handleAdd} className="bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0">
-              <Plus className="w-4 h-4" />
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className='h-9 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 transition-all font-medium min-w-[120px]'
+            >
+              <option value='All'>All Status</option>
+              <option value='Published'>Published</option>
+              <option value='Draft'>Draft</option>
+            </select>
+            <Button
+              onClick={handleAdd}
+              className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
+            >
+              <Plus className='w-4 h-4' />
               Add Consultancy
             </Button>
           </div>
@@ -434,16 +552,23 @@ export default function ConsultancyManager() {
 
       {loading ? (
         <div className='flex flex-col gap-3'>
-          {[...Array(6)].map((_, i) => <CardSkeleton key={i} i={i} />)}
+          {[...Array(6)].map((_, i) => (
+            <CardSkeleton key={i} i={i} />
+          ))}
         </div>
       ) : consultancies.length === 0 ? (
         <div className='bg-white border border-dashed border-gray-200 rounded-2xl py-20 text-center'>
           <FaHandshake className='w-10 h-10 text-gray-200 mx-auto mb-3' />
           <p className='text-gray-500 font-medium text-sm'>
-            {searchQuery ? 'No consultancies match your search.' : 'No consultancies yet.'}
+            {searchQuery
+              ? 'No consultancies match your search.'
+              : 'No consultancies yet.'}
           </p>
           {!searchQuery && (
-            <Button onClick={handleAdd} className='mt-4 bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 text-sm'>
+            <Button
+              onClick={handleAdd}
+              className='mt-4 bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 text-sm'
+            >
               <Plus size={15} /> Add First Consultancy
             </Button>
           )}
@@ -481,8 +606,15 @@ export default function ConsultancyManager() {
               </div>
             </SortableContext>
 
-            <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-              {activeConsultancy ? <OverlayCard consultancy={activeConsultancy} /> : null}
+            <DragOverlay
+              dropAnimation={{
+                duration: 180,
+                easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)'
+              }}
+            >
+              {activeConsultancy ? (
+                <OverlayCard consultancy={activeConsultancy} />
+              ) : null}
             </DragOverlay>
           </DndContext>
         </>
@@ -494,7 +626,7 @@ export default function ConsultancyManager() {
           setIsOpen(false)
           setEditingData(null)
         }}
-        onSuccess={() => loadConsultancies(true)}
+        onSuccess={() => loadConsultancies(true, searchQuery, statusFilter)}
         initialData={editingData}
       />
 
@@ -508,7 +640,7 @@ export default function ConsultancyManager() {
         isOpen={credentialsModalOpen}
         onClose={() => setCredentialsModalOpen(false)}
         selectedConsultancy={selectedConsultancy}
-        onSuccess={() => loadConsultancies(true)}
+        onSuccess={() => loadConsultancies(true, searchQuery, statusFilter)}
       />
 
       <ConfirmationDialog

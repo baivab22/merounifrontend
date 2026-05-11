@@ -140,7 +140,7 @@ const WishlistPage = () => {
                         className='relative border rounded-md hover:shadow-md transition-shadow hover:bg-gray-50 group'
                       >
                         <Link
-                          href={`/colleges/${item.college?.slugs || '#'}`}
+                          href={`/colleges/${item.college?.slug || '#'}`}
                           className='block p-4'
                         >
                           <div className='flex items-center gap-4'>
@@ -201,7 +201,7 @@ const WishlistPage = () => {
                         className='relative border rounded-md hover:shadow-md transition-shadow hover:bg-gray-50 group'
                       >
                         <Link
-                          href={`/consultancy/${item.consultancy?.slugs || '#'
+                          href={`/consultancy/${item.consultancy?.slug || '#'
                             }`}
                           className='block p-4'
                         >

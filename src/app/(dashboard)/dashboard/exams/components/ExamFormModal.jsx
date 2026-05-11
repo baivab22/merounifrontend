@@ -112,7 +112,8 @@ const ExamFormModal = ({
       category_id: '',
       meta_description: '',
       status: 'published',
-      conducted_by: ''
+      conducted_by: '',
+      slug: ''
     }
   })
 
@@ -168,7 +169,8 @@ const ExamFormModal = ({
             initialData.category_id || initialData.category?.id || '',
           meta_description: initialData.meta_description || '',
           status: initialData.status || 'published',
-          conducted_by: initialData.conducted_by || ''
+          conducted_by: initialData.conducted_by || '',
+          slug: initialData.slug || initialData.slug || ''
         })
 
         setSelectedLevel(initialData.level || null)
@@ -196,7 +198,8 @@ const ExamFormModal = ({
           category_id: '',
           meta_description: '',
           status: 'published',
-          conducted_by: ''
+          conducted_by: '',
+          slug: ''
         })
         setSelectedLevel(null)
         setSelectedUniversity(null)
@@ -683,28 +686,33 @@ const ExamFormModal = ({
                   </div>
                 </div>
 
-                {/* Resources & SEO */}
+                {/* SEO Settings Section */}
                 <div
                   ref={seoRef}
                   className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'
                 >
                   <SectionHeader
-                    icon={FileText}
-                    title='SEO & Resources'
-                    subtitle='Links and meta information'
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
                   />
-                  <div className='space-y-4'>
-                    <div className='hidden'>
-                      {/* Status mapping is handled via action buttons now */}
-                      <input type='hidden' {...register('status')} />
+                  <div className='space-y-6'>
+                    <div className='mb-4'>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input id='slug' {...register('slug')} className='mt-1' />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from title
+                      </p>
                     </div>
                     <div>
-                      <Label htmlFor='meta_description'>Meta Description</Label>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
                       <Textarea
                         id='meta_description'
                         {...register('meta_description')}
-                        placeholder='SEO meta description for search engines...'
-                        className='min-h-[80px] text-xs'
+                        placeholder='Meta description for SEO...'
+                        className='min-h-[100px] resize-none'
                       />
                     </div>
                   </div>

@@ -136,7 +136,7 @@ const Featured = () => {
                 name={college.name}
                 image={college?.featured_img}
                 key={college.id || index}
-                slug={college.slugs}
+                slug={college.slug}
               />
             ))}
           </div>

@@ -14,9 +14,9 @@ async function getDynamicRoutes(apiEndpoint, pathPrefix, slugField = 'slug') {
         const data = await response.json()
         const items = data?.items || []
         return items
-            .filter((item) => item[slugField] || item.slugs || item.id)
+            .filter((item) => item[slugField] || item.slug || item.id)
             .map((item) => ({
-                url: `${BASE_URL}/${pathPrefix}/${item[slugField] || item.slugs || item.id}`,
+                url: `${BASE_URL}/${pathPrefix}/${item[slugField] || item.slug || item.id}`,
                 lastModified: new Date(item.updatedAt || item.createdAt || new Date()),
                 changeFrequency: 'weekly',
                 priority: 0.6,
