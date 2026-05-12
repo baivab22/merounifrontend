@@ -21,18 +21,20 @@ const BlogContent = ({ initialBlog, slug }) => {
       try {
         const [newsData, bannerData] = await Promise.all([
           !initialBlog ? services.blogs.getBySlug(slug) : Promise.resolve(null),
-          services.banner.getAll({ type: 'FRONT_PAGE' }).catch(() => ({ items: [] }))
+          services.banner
+            .getAll({ type: 'FRONT_PAGE' })
+            .catch(() => ({ items: [] }))
         ])
 
         if (newsData) {
           setBlog(newsData.blog || null)
           setRelatedBlogs(newsData.similarBlogs || [])
         } else if (initialBlog) {
-            // If we have initialBlog, we still need similar blogs
-            const fullData = await services.blogs.getBySlug(slug)
-            setRelatedBlogs(fullData.similarBlogs || [])
+          // If we have initialBlog, we still need similar blogs
+          const fullData = await services.blogs.getBySlug(slug)
+          setRelatedBlogs(fullData.similarBlogs || [])
         }
-        
+
         setBanners(bannerData.items || [])
       } catch (err) {
         setError(err.message)
@@ -66,13 +68,27 @@ const BlogContent = ({ initialBlog, slug }) => {
                   <div className='p-6 bg-[#0A6FA7]/5 rounded-2xl border border-[#0A6FA7]/10 flex flex-col sm:flex-row items-center justify-between gap-6 hover:bg-[#0A6FA7]/10 transition-all duration-300 group'>
                     <div className='flex items-center gap-4'>
                       <div className='p-4 bg-[#0A6FA7] rounded-2xl text-white shadow-lg shadow-[#0A6FA7]/20 transition-transform group-hover:scale-110'>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        <svg
+                          className='w-6 h-6'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth='2'
+                            d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z'
+                          />
                         </svg>
                       </div>
                       <div>
-                        <h4 className='font-bold text-gray-900 text-lg'>Attached Document</h4>
-                        <p className='text-sm text-gray-500 font-medium'>Official PDF Document Available</p>
+                        <h4 className='font-bold text-gray-900 text-lg'>
+                          Attached Document
+                        </h4>
+                        <p className='text-sm text-gray-500 font-medium'>
+                          Official PDF Document Available
+                        </p>
                       </div>
                     </div>
                     <a
@@ -88,10 +104,15 @@ const BlogContent = ({ initialBlog, slug }) => {
               )}
             </div>
 
-            {/* Sidebar with ads */}
-            <div className='w-full md:w-1/4 hidden md:block'>
-                <SideBanner banners={banners} />
+            {/* Sidebar with ads (Desktop) */}
+            <div className='w-full lg:w-1/4 hidden lg:block'>
+              <SideBanner banners={banners} />
             </div>
+          </div>
+
+          {/* Sidebar with ads (Mobile) */}
+          <div className='px-6 block lg:hidden mt-8'>
+            <SideBanner banners={banners} />
           </div>
 
           <div className='max-w-[1600px] mx-auto px-6 md:px-16'>
@@ -104,7 +125,6 @@ const BlogContent = ({ initialBlog, slug }) => {
           <ShareSection title={blog?.title} />
         </>
       )}
-
     </div>
   )
 }
