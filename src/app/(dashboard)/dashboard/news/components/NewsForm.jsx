@@ -16,6 +16,7 @@ import { Textarea } from '@/ui/shadcn/textarea'
 import FileUpload from '../../colleges/FileUpload'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import axios from 'axios'
 import { authFetch } from '@/app/utils/authFetch'
 import {
   Image as ImageIcon,
@@ -263,6 +264,31 @@ export default function NewsForm({
     }
   }, [editing, initialData, isOpen, reset, colleges, categories])
 
+  const onMediaUpload = async (file) => {
+    const formData = new FormData()
+    formData.append('title', file.name)
+    formData.append('altText', file.name)
+    formData.append('description', '')
+    formData.append('file', file)
+    formData.append('authorId', '1')
+
+    try {
+      const response = await axios.post(
+        `${process.env.mediaUrl}${process.env.version}/media/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+      return response.data?.media?.url
+    } catch (error) {
+      console.error('Image upload failed:', error)
+      throw error
+    }
+  }
+
   const handleFormSubmit = (data) => {
     // Manual validation for fields not controlled by react-hook-form register
     const newErrors = {}
@@ -383,6 +409,8 @@ export default function NewsForm({
                         }
                       >
                         <TipTapEditor
+                          showImageUpload={true}
+                          onMediaUpload={onMediaUpload}
                           value={watch('description')}
                           onChange={(data) => {
                             setValue('description', data, {

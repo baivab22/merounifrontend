@@ -10,7 +10,17 @@ import {
   DialogTitle
 } from '@/ui/shadcn/dialog'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
-import { Building2, Check, FileText, Loader2, Plus, Trash2, Settings } from 'lucide-react'
+import {
+  Building2,
+  Check,
+  FileText,
+  Loader2,
+  Plus,
+  Trash2,
+  Settings,
+  Info,
+  Layers
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
@@ -21,6 +31,22 @@ import { Label } from '@/ui/shadcn/label'
 import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
+
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+  <div className='flex items-center gap-3 mb-6'>
+    <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20'>
+      <Icon size={20} />
+    </div>
+    <div>
+      <h3 className='text-lg font-bold text-gray-900 leading-tight'>{title}</h3>
+      {subtitle && (
+        <p className='text-[11px] mt-0.5 font-semibold tracking-wider text-gray-500'>
+          {subtitle}
+        </p>
+      )}
+    </div>
+  </div>
+)
 
 const CreateUpdateProgram = ({
   isOpen,
