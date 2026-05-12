@@ -95,14 +95,14 @@ export async function updateDegreeOrder(degreeOrders) {
   }
 }
 
-export async function updateDegreeDescription(degreeId, description, content) {
+export async function updateDegreeDescription(degreeId, description, content, slug) {
   try {
     const response = await authFetch(
       `${BASE_URL}/college-ranking/degree-description`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ degree_id: degreeId, description, content })
+        body: JSON.stringify({ degree_id: degreeId, description, content, slug })
       }
     )
     if (!response.ok) throw new Error('Failed to update degree description')

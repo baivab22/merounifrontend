@@ -88,7 +88,7 @@ export default async function CollegeRankingsPage() {
                     </div>
 
                     <Link
-                      href={`/college-rankings/${degree.slug || ''}`}
+                      href={`/college-rankings/${group.slug || degree.slug || ''}`}
                       className='inline-flex items-center justify-center w-full py-3 px-6 rounded-2xl bg-gray-50 text-[#0A6FA7] font-bold text-sm group-hover:bg-[#0A6FA7] group-hover:text-white transition-all duration-300'
                     >
                       View All Rankings

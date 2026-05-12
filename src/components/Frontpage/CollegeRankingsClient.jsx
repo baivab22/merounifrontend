@@ -146,7 +146,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
 
                   <div className='mt-2.5 pt-2 flex items-center justify-end'>
                     <Link
-                      href={`/college-rankings/${degreeGroup.degree.slug || ''}`}
+                      href={`/college-rankings/${degreeGroup.slug || degreeGroup.degree.slug || ''}`}
                       className='text-xs font-semibold text-[#0A6FA7] hover:text-[#064263] flex items-center transition-colors'
                     >
                       Explore All{' '}

@@ -128,7 +128,7 @@ export default async function CollegeRankingDetailPage({ params }) {
               const isTopThree = ranking.rank <= 3
 
               const degreeSlugParam = encodeURIComponent(
-                degree.slug || decodedSlug
+                rankingGroup.slug || degree.slug || decodedSlug
               )
               return (
                 <Link

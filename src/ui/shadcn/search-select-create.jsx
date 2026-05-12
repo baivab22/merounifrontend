@@ -27,252 +27,307 @@ import { cn } from '@/app/lib/utils'
  */
 
 const INPUT_SIZE = {
-    sm: 'h-10',
-    md: 'h-12',
+  sm: 'h-10',
+  md: 'h-12'
 }
 
 export default function SearchSelectCreate({
-    onSearch,
-    onCreate,
-    onSelect,
-    onRemove,
-    selectedItems = [],
-    placeholder = 'Search...',
-    createLabel = 'Create',
-    displayKey = 'title',
-    valueKey = 'id',
-    className = '',
-    isMulti = true,
-    allowCreate = false,
-    isLoading: externalLoading = false,
-    renderItem = null,
-    renderSelected = null,
-    /** 'sm' = h-10 (matches standard Input) (default, original), 'md' = h-12  */
-    inputSize = 'sm',
-    /** Extra classes forwarded directly to the <Input> element */
-    inputClassName = '',
+  onSearch,
+  onCreate,
+  onSelect,
+  onRemove,
+  selectedItems = [],
+  placeholder = 'Search...',
+  createLabel = 'Create',
+  displayKey = 'title',
+  valueKey = 'id',
+  className = '',
+  isMulti = true,
+  allowCreate = false,
+  isLoading: externalLoading = false,
+  renderItem = null,
+  renderSelected = null,
+  /** 'sm' = h-10 (matches standard Input) (default, original), 'md' = h-12  */
+  inputSize = 'sm',
+  /** Extra classes forwarded directly to the <Input> element */
+  inputClassName = ''
 }) {
-    const sizeClass = INPUT_SIZE[inputSize] ?? INPUT_SIZE.md
-    const [query, setQuery] = useState('')
-    const [results, setResults] = useState([])
-    const [isSearching, setIsSearching] = useState(false)
+  const sizeClass = INPUT_SIZE[inputSize] ?? INPUT_SIZE.md
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
 
-    const loading = isSearching || externalLoading
-    const [showDropdown, setShowDropdown] = useState(false)
-    const dropdownRef = useRef(null)
-    const searchTimeout = useRef(null)
+  const loading = isSearching || externalLoading
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef(null)
+  const searchTimeout = useRef(null)
 
-    // Normalise selectedItems into an array
-    const currentSelected = Array.isArray(selectedItems) ? selectedItems : (selectedItems ? [selectedItems] : [])
+  // Normalise selectedItems into an array
+  const currentSelected = Array.isArray(selectedItems)
+    ? selectedItems
+    : selectedItems
+      ? [selectedItems]
+      : []
 
-    // Whether the rich custom panel is visible (single-select + renderSelected + item selected + no active query)
-    const showCustomPanel = !isMulti && currentSelected.length > 0 && !!renderSelected && query.length === 0
+  // Whether the rich custom panel is visible (single-select + renderSelected + item selected + no active query)
+  const showCustomPanel =
+    !isMulti &&
+    currentSelected.length > 0 &&
+    !!renderSelected &&
+    query.length === 0
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowDropdown(false)
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
-
-    const handleSearch = async (val) => {
-        setQuery(val)
-        if (searchTimeout.current) clearTimeout(searchTimeout.current)
-
-        setShowDropdown(true)
-        setIsSearching(true)
-
-        searchTimeout.current = setTimeout(async () => {
-            try {
-                if (onSearch) {
-                    const data = await onSearch(val)
-                    setResults(data || [])
-                }
-            } catch (error) {
-                console.error('Search failed:', error)
-            } finally {
-                setIsSearching(false)
-            }
-        }, val.length === 0 ? 0 : 300)
-    }
-
-    const handleSelect = (item) => {
-        onSelect(item)
-        setQuery('')
-        setResults([])
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false)
+      }
     }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
-    const handleCreate = async () => {
-        if (!query.trim()) return
-        if (onCreate) {
-            setIsSearching(true)
-            try {
-                const newItem = await onCreate(query)
-                if (newItem) {
-                    handleSelect(newItem)
-                }
-            } catch (error) {
-                console.error('Creation failed:', error)
-            } finally {
-                setIsSearching(false)
-            }
+  const handleSearch = async (val) => {
+    setQuery(val)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+
+    setShowDropdown(true)
+    setIsSearching(true)
+
+    searchTimeout.current = setTimeout(
+      async () => {
+        try {
+          if (onSearch) {
+            const data = await onSearch(val)
+            setResults(data || [])
+          }
+        } catch (error) {
+          console.error('Search failed:', error)
+        } finally {
+          setIsSearching(false)
         }
+      },
+      val.length === 0 ? 0 : 300
+    )
+  }
+
+  const handleSelect = (item) => {
+    onSelect(item)
+    setQuery('')
+    setResults([])
+    setShowDropdown(false)
+  }
+
+  const handleCreate = async () => {
+    if (!query.trim()) return
+    if (onCreate) {
+      setIsSearching(true)
+      try {
+        const newItem = await onCreate(query)
+        if (newItem) {
+          handleSelect(newItem)
+        }
+      } catch (error) {
+        console.error('Creation failed:', error)
+      } finally {
+        setIsSearching(false)
+      }
     }
+  }
 
-    const isItemSelected = (item) => {
-        return currentSelected.some(selected => {
-            const selectedVal = selected[valueKey] || selected
-            const itemVal = item[valueKey] || item
-            return selectedVal === itemVal
-        })
-    }
+  const isItemSelected = (item) => {
+    return currentSelected.some((selected) => {
+      const selectedVal = selected[valueKey] || selected
+      const itemVal = item[valueKey] || item
+      return selectedVal === itemVal
+    })
+  }
 
-    return (
-        <div className={cn('relative w-full', className)} ref={dropdownRef}>
-            <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 z-10 pointer-events-none" />
+  return (
+    <div className={cn('relative w-full', className)} ref={dropdownRef}>
+      <div className='relative'>
+        <Search className='absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 z-10 pointer-events-none' />
 
-                {/* Text input — hidden (but in DOM) when the custom panel is rendered */}
-                <Input
-                    type="text"
-                    value={query}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    onFocus={() => handleSearch(query)}
-                    placeholder={!isMulti && currentSelected.length > 0 ? (currentSelected[0][displayKey] || currentSelected[0]) : placeholder}
-                    className={cn(
-                        "pl-10 pr-10 rounded-md border-gray-200 focus:ring-[#387cae]/20 transition-all",
-                        sizeClass,
-                        !isMulti && currentSelected.length > 0 && query.length === 0 && "placeholder:text-gray-900 placeholder:font-semibold",
-                        // When custom panel visible: hide input but keep it in DOM (to receive focus on Click)
-                        showCustomPanel && 'opacity-0 absolute inset-0 pointer-events-none',
-                        inputClassName
-                    )}
-                />
+        {/* Text input — hidden (but in DOM) when the custom panel is rendered */}
+        <Input
+          type='text'
+          value={query}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={() => handleSearch(query)}
+          placeholder={
+            !isMulti && currentSelected.length > 0
+              ? currentSelected[0][displayKey] || currentSelected[0]
+              : placeholder
+          }
+          className={cn(
+            'pl-10 pr-10 rounded-md border-gray-200 focus:ring-[#387cae]/20 transition-all',
+            sizeClass,
+            !isMulti &&
+              currentSelected.length > 0 &&
+              query.length === 0 &&
+              'placeholder:text-gray-900 placeholder:font-semibold',
+            // When custom panel visible: hide input but keep it in DOM (to receive focus on Click)
+            showCustomPanel && 'opacity-0 absolute inset-0 pointer-events-none',
+            inputClassName
+          )}
+        />
 
-                {/* ── Custom selected display (renderSelected mode) ── */}
-                {showCustomPanel && (
-                    <div
-                        className={cn(
-                            "flex items-center pl-10 pr-4 rounded-md border border-gray-200 bg-white cursor-pointer gap-2 overflow-hidden",
-                            sizeClass
-                        )}
-                        onClick={() => { setShowDropdown(true); handleSearch('') }}
-                    >
-                        <div className="flex-1 min-w-0">{renderSelected(currentSelected[0])}</div>
-                        {/* Single clear button — only one X exists here */}
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); onRemove(currentSelected[0]) }}
-                            className="text-gray-400 hover:text-red-500 transition-colors shrink-0 p-1 rounded"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-                )}
-
-                {/* ── Absolute controls (loader / X / chevron) — hidden when custom panel owns the X ── */}
-                {!showCustomPanel && (
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        {loading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-[#387cae]" />
-                        ) : !isMulti && currentSelected.length > 0 && query.length === 0 ? (
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onRemove(currentSelected[0])
-                                }}
-                                className="text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        ) : (
-                            <ChevronDown className={cn(
-                                "h-4 w-4 text-gray-400 transition-transform duration-200",
-                                showDropdown && "rotate-180"
-                            )} />
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {showDropdown && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                        {results.length > 0 ? (
-                            results.map((item, index) => {
-                                const isSelected = isItemSelected(item)
-                                return (
-                                    <div
-                                        key={item[valueKey] || index}
-                                        onClick={() => !isSelected && handleSelect(item)}
-                                        className={cn(
-                                            'px-4 py-3 flex items-center justify-between cursor-pointer transition-colors border-b border-gray-50 last:border-0',
-                                            isSelected ? 'bg-gray-50 cursor-default opacity-60' : 'hover:bg-[#387cae]/5'
-                                        )}
-                                    >
-                                        {renderItem ? (
-                                            <div className="flex-1 min-w-0">{renderItem(item)}</div>
-                                        ) : (
-                                            <span className="text-sm font-medium text-gray-700">
-                                                {typeof item === 'object' ? (item[displayKey] || item.name || item.title) : item}
-                                            </span>
-                                        )}
-                                        {isSelected && <Check className="h-4 w-4 text-[#387cae] shrink-0 ml-2" />}
-                                    </div>
-                                )
-                            })
-                        ) : !loading && query.length > 0 ? (
-                            <div className="px-4 py-3 text-sm text-gray-500 text-centerw">
-                                No results found
-                            </div>
-                        ) : null}
-                    </div>
-
-                    {allowCreate && onCreate && query.length > 0 && !results.some(r => {
-                        const rTitle = (r[displayKey] || r).toString().toLowerCase()
-                        return rTitle === query.toLowerCase()
-                    }) && (
-                            <div
-                                onClick={handleCreate}
-                                className="p-2 border-t border-gray-100 bg-gray-50/50"
-                            >
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    className="w-full justify-start gap-2 h-10 text-[#387cae] hover:text-[#387cae]/90 hover:bg-[#387cae]/5 rounded-md text-xs font-bold"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    {createLabel} "{query}"
-                                </Button>
-                            </div>
-                        )}
-                </div>
+        {/* ── Custom selected display (renderSelected mode) ── */}
+        {showCustomPanel && (
+          <div
+            className={cn(
+              'flex items-center pl-10 pr-4 rounded-md border border-gray-200 bg-white cursor-pointer gap-2 overflow-hidden',
+              sizeClass
             )}
+            onClick={() => {
+              setShowDropdown(true)
+              handleSearch('')
+            }}
+          >
+            <div className='flex-1 min-w-0'>
+              {renderSelected(currentSelected[0])}
+            </div>
+            {/* Single clear button — only one X exists here */}
+            <button
+              type='button'
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemove(currentSelected[0])
+              }}
+              className='text-gray-400 hover:text-red-500 transition-colors shrink-0 p-1 rounded'
+            >
+              <X className='h-4 w-4' />
+            </button>
+          </div>
+        )}
 
-            {isMulti && currentSelected.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                    {currentSelected.map((item, index) => (
-                        <div
-                            key={item[valueKey] || index}
-                            className="bg-[#387cae]/10 text-[#387cae] px-3 py-1.5 rounded-md text-xs font-bold border border-[#387cae]/20 flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200"
-                        >
-                            {typeof item === 'object' ? (item[displayKey] || item.name || '') : item}
-                            <button
-                                type="button"
-                                onClick={() => onRemove(item)}
-                                className="text-[#387cae]/40 hover:text-[#387cae] transition-colors"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
+        {/* ── Absolute controls (loader / X / chevron) — hidden when custom panel owns the X ── */}
+        {!showCustomPanel && (
+          <div className='absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-2'>
+            {loading ? (
+              <Loader2 className='h-4 w-4 animate-spin text-[#387cae]' />
+            ) : !isMulti && currentSelected.length > 0 && query.length === 0 ? (
+              <button
+                type='button'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemove(currentSelected[0])
+                }}
+                className='text-gray-400 hover:text-red-500 transition-colors'
+              >
+                <X className='h-4 w-4' />
+              </button>
+            ) : (
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-gray-400 transition-transform duration-200',
+                  showDropdown && 'rotate-180'
+                )}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {showDropdown && (
+        <div className='absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200'>
+          <div className='max-h-60 overflow-y-auto custom-scrollbar'>
+            {results.length > 0 ? (
+              results.map((item, index) => {
+                const isSelected = isItemSelected(item)
+                const isDisabled = item.disabled || false
+                return (
+                  <div
+                    key={item[valueKey] || index}
+                    onClick={() =>
+                      !isSelected && !isDisabled && handleSelect(item)
+                    }
+                    title={
+                      isDisabled
+                        ? item.disabledTooltip || 'This item is disabled'
+                        : ''
+                    }
+                    className={cn(
+                      'px-4 py-3 flex items-center justify-between cursor-pointer transition-colors border-b border-gray-50 last:border-0',
+                      isSelected
+                        ? 'bg-gray-50 cursor-default opacity-60'
+                        : 'hover:bg-[#387cae]/5',
+                      isDisabled && 'opacity-40 cursor-not-allowed grayscale'
+                    )}
+                  >
+                    {renderItem ? (
+                      <div className='flex-1 min-w-0'>{renderItem(item)}</div>
+                    ) : (
+                      <div className='flex flex-col flex-1 min-w-0'>
+                        <span className='text-sm font-medium text-gray-700'>
+                          {typeof item === 'object'
+                            ? item[displayKey] || item.name || item.title
+                            : item}
+                        </span>
+                        {isDisabled && item.disabledTooltip && (
+                          <span className='text-[10px] text-red-500 font-semibold'>
+                            {item.disabledTooltip}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {isSelected && (
+                      <Check className='h-4 w-4 text-[#387cae] shrink-0 ml-2' />
+                    )}
+                  </div>
+                )
+              })
+            ) : !loading && query.length > 0 ? (
+              <div className='px-4 py-3 text-sm text-gray-500 text-centerw'>
+                No results found
+              </div>
+            ) : null}
+          </div>
+
+          {allowCreate &&
+            onCreate &&
+            query.length > 0 &&
+            !results.some((r) => {
+              const rTitle = (r[displayKey] || r).toString().toLowerCase()
+              return rTitle === query.toLowerCase()
+            }) && (
+              <div
+                onClick={handleCreate}
+                className='p-2 border-t border-gray-100 bg-gray-50/50'
+              >
+                <Button
+                  type='button'
+                  variant='ghost'
+                  className='w-full justify-start gap-2 h-10 text-[#387cae] hover:text-[#387cae]/90 hover:bg-[#387cae]/5 rounded-md text-xs font-bold'
+                >
+                  <Plus className='h-4 w-4' />
+                  {createLabel} "{query}"
+                </Button>
+              </div>
             )}
         </div>
-    )
+      )}
+
+      {isMulti && currentSelected.length > 0 && (
+        <div className='mt-3 flex flex-wrap gap-2'>
+          {currentSelected.map((item, index) => (
+            <div
+              key={item[valueKey] || index}
+              className='bg-[#387cae]/10 text-[#387cae] px-3 py-1.5 rounded-md text-xs font-bold border border-[#387cae]/20 flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200'
+            >
+              {typeof item === 'object'
+                ? item[displayKey] || item.name || ''
+                : item}
+              <button
+                type='button'
+                onClick={() => onRemove(item)}
+                className='text-[#387cae]/40 hover:text-[#387cae] transition-colors'
+              >
+                <X className='h-3 w-3' />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }

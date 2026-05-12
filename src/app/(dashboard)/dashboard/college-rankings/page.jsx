@@ -29,6 +29,7 @@ import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
+import Loading from '@/ui/molecules/Loading'
 import { cn } from '@/app/lib/utils'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import axios from 'axios'
@@ -52,6 +53,7 @@ export default function CollegeRankingsPage() {
   const [selectedCollege, setSelectedCollege] = useState(null)
   const [description, setDescription] = useState('')
   const [content, setContent] = useState('')
+  const [slug, setSlug] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -283,7 +285,8 @@ export default function CollegeRankingsPage() {
       await actions.updateDegreeDescription(
         selectedDegree.id,
         description,
-        content
+        content,
+        slug
       )
       toast({
         title: 'Success',
@@ -294,6 +297,7 @@ export default function CollegeRankingsPage() {
       setSelectedDegree(null)
       setDescription('')
       setContent('')
+      setSlug('')
     } catch (error) {
       toast({
         title: 'Error',
@@ -345,7 +349,13 @@ export default function CollegeRankingsPage() {
 
   const onSearchDegrees = async (q) => {
     const degrees = await actions.fetchDegrees(q)
-    return degrees
+    const alreadyRankedDegreeIds = rankings.map((r) => r.degree?.id)
+
+    return degrees.map((degree) => ({
+      ...degree,
+      disabled: alreadyRankedDegreeIds.includes(degree.id),
+      disabledTooltip: 'Ranking already exists for this degree'
+    }))
   }
 
   const onSearchColleges = async (q) => {
@@ -362,19 +372,7 @@ export default function CollegeRankingsPage() {
   }
 
   if (loading && rankings.length === 0) {
-    return (
-      <div className='flex flex-col items-center justify-center h-[60vh] gap-4'>
-        <div className='relative'>
-          <div className='w-16 h-16 rounded-full border-4 border-[#387cae]/10 border-t-[#387cae] animate-spin'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <Trophy size={20} className='text-[#387cae] animate-pulse' />
-          </div>
-        </div>
-        <p className='text-gray-500 font-medium animate-pulse'>
-          Loading college rankings...
-        </p>
-      </div>
-    )
+    return <Loading fullPage={true} />
   }
 
   return (
@@ -445,6 +443,7 @@ export default function CollegeRankingsPage() {
                     setSelectedDegree(degreeGroup.degree)
                     setDescription(degreeGroup.description || '')
                     setContent(degreeGroup.content || '')
+                    setSlug(degreeGroup.slug || '')
                     setIsDescModalOpen(true)
                   }}
                   className='p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors'
@@ -603,10 +602,11 @@ export default function CollegeRankingsPage() {
           setSelectedCollege(null)
           setDescription('')
           setContent('')
+          setSlug('')
         }}
         closeOnOutsideClick={false}
       >
-        <DialogContent className='max-w-xl p-0 overflow-hidden bg-white'>
+        <DialogContent className='max-w-xl p-0 overflow-visible bg-white'>
           <DialogHeader className='p-6 border-b border-gray-100'>
             <DialogTitle className='text-xl font-bold text-gray-900 flex items-center gap-2'>
               <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae]'>
@@ -711,10 +711,11 @@ export default function CollegeRankingsPage() {
           setSelectedDegree(null)
           setDescription('')
           setContent('')
+          setSlug('')
         }}
         closeOnOutsideClick={false}
       >
-        <DialogContent className='max-w-xl p-0 overflow-hidden bg-white'>
+        <DialogContent className='max-w-xl p-0 overflow-visible bg-white'>
           <DialogHeader className='p-6 border-b border-gray-100'>
             <DialogTitle className='text-xl font-bold text-gray-900 flex items-center gap-2'>
               <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae]'>
@@ -739,6 +740,18 @@ export default function CollegeRankingsPage() {
                 placeholder='Enter a short description for this ranking category...'
                 className='w-full min-h-[80px] px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#387cae]/20 focus:border-[#387cae] bg-gray-50/50 focus:bg-white transition-all resize-y shadow-inner'
                 rows={3}
+              />
+            </div>
+
+            <div className='space-y-3'>
+              <Label className='text-[11px] font-bold uppercase tracking-wider text-slate-500'>
+                Custom Slug (Optional)
+              </Label>
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder='e.g., top-it-colleges-nepal'
+                className='w-full px-4 h-11 text-sm border-gray-200 rounded-xl focus:ring-[#387cae]/20 focus:border-[#387cae] bg-gray-50/50 focus:bg-white transition-all shadow-inner'
               />
             </div>
 

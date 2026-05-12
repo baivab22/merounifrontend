@@ -24,7 +24,7 @@ export async function getRankingsByDegreeSlug(slug) {
   try {
     const rankings = await getAllRankings()
     // Find the degree group that matches the slug
-    const degreeGroup = rankings.find(g => g.degree?.slug === slug)
+    const degreeGroup = rankings.find(g => g.slug === slug || g.degree?.slug === slug)
     return degreeGroup || null
   } catch (error) {
     console.error('getRankingsByDegreeSlug error:', error)
