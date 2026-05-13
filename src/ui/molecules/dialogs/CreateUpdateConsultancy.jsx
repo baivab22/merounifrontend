@@ -4,7 +4,8 @@ import {
   createOrUpdateConsultancy,
   fetchCourses,
   fetchCountries,
-  fetchDistricts
+  fetchDistricts,
+  fetchCities
 } from '@/app/(dashboard)/dashboard/consultancy/actions'
 import { Button } from '@/ui/shadcn/button'
 import { Checkbox } from '@/ui/shadcn/checkbox'
@@ -19,12 +20,10 @@ import { Input } from '@/ui/shadcn/input'
 import { Textarea } from '@/ui/shadcn/textarea'
 import { Label } from '@/ui/shadcn/label'
 import SearchSelectCreate from '@/ui/shadcn/search-select-create'
-import { Select } from '@/ui/shadcn/select'
 import TipTapEditor from '@/ui/shadcn/tiptap-editor'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useToast } from '@/hooks/use-toast'
-import { CITIES } from '@/constants/City'
 import {
   Info,
   Image as ImageIcon,
@@ -70,6 +69,8 @@ export default function CreateUpdateConsultancy({
   const [selectedDestinations, setSelectedDestinations] = useState([])
   const [formErrors, setFormErrors] = useState({})
   const [districtsList, setDistrictsList] = useState([])
+  const [citiesList, setCitiesList] = useState([])
+  const [countriesList, setCountriesList] = useState([])
 
   const {
     register,
@@ -107,8 +108,20 @@ export default function CreateUpdateConsultancy({
 
   // Initialize data
   useEffect(() => {
-    fetchDistricts().then((res) => setDistrictsList(res || []))
-  }, [])
+    const loadLocations = async () => {
+      const [dList, cList, cityList] = await Promise.all([
+        fetchDistricts(),
+        fetchCountries(),
+        fetchCities()
+      ])
+      setDistrictsList(dList || [])
+      setCountriesList(cList || [])
+      setCitiesList(cityList || [])
+    }
+    if (isOpen) {
+      loadLocations()
+    }
+  }, [isOpen])
 
   // Initialize form when opening
   useEffect(() => {
@@ -360,7 +373,7 @@ export default function CreateUpdateConsultancy({
                       <SearchSelectCreate
                         allowCreate={true}
                         onSearch={async (query) => {
-                          const all = await fetchCountries()
+                          const all = countriesList
                           if (!query)
                             return all.map((c) => ({ id: c, title: c }))
                           const lower = query.toLowerCase()
@@ -478,7 +491,10 @@ export default function CreateUpdateConsultancy({
                               : []
                           }
                           onSearch={async (query) => {
-                            const all = CITIES.map((c) => ({ id: c, title: c }))
+                            const all = citiesList.map((c) => ({
+                              id: c,
+                              title: c
+                            }))
                             if (!query) return all
                             const lower = query.toLowerCase()
                             return all.filter((c) =>

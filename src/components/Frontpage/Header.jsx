@@ -35,9 +35,9 @@ const Header = () => {
 
       {/* Main Header */}
       <div className='sticky top-0 z-[70] bg-white'>
-        <div className='flex justify-between items-center md:w-[85%] max-w-[1600px] md:mx-auto px-2 md:px-0'>
+        <div className='flex justify-between items-center lg:w-[85%] max-w-[1600px] lg:mx-auto px-2 lg:px-0'>
           {/* Desktop: logo left */}
-          <Link href='/' className='flex-shrink-0 hidden md:block'>
+          <Link href='/' className='flex-shrink-0 hidden lg:block'>
             <div className='w-[180px] h-[80px] relative'>
               <Image
                 src={'/images/logo.png'}
@@ -52,14 +52,14 @@ const Header = () => {
           <button
             type='button'
             onClick={() => window.dispatchEvent(new CustomEvent('openMobileNav'))}
-            className='flex md:hidden p-2 -ml-1 rounded-md text-gray-700 hover:bg-gray-100 transition-colors'
+            className='flex lg:hidden p-2 -ml-1 rounded-md text-gray-700 hover:bg-gray-100 transition-colors'
             aria-label='Open menu'
           >
             <IoMenu size={24} />
           </button>
 
           <div
-            className='hidden md:flex flex-1 max-w-[600px] mx-auto cursor-pointer group'
+            className='hidden lg:flex flex-1 max-w-[600px] mx-auto cursor-pointer group'
             onClick={() => setShowSearch(true)}
           >
             <div className='w-full flex items-center gap-3 px-6 py-3 rounded-md border border-gray-200 bg-gray-50/50 text-gray-400 group-hover:bg-white group-hover:border-[#0A6FA7] group-hover:shadow-sm transition-all duration-200'>
@@ -68,7 +68,7 @@ const Header = () => {
             </div>
           </div>
 
-          <Link href='/' className='flex md:hidden flex-1 justify-center min-w-0'>
+          <Link href='/' className='flex lg:hidden flex-1 justify-center min-w-0'>
             <div className='w-[160px] h-[72px] relative'>
               <Image
                 src={'/images/logo.png'}
@@ -79,7 +79,7 @@ const Header = () => {
             </div>
           </Link>
 
-          <div className='flex md:hidden w-10 shrink-0' aria-hidden />
+          <div className='flex lg:hidden w-10 shrink-0' aria-hidden />
           <Usericon />
         </div>
       </div>

@@ -37,11 +37,13 @@ import { useToast } from '@/hooks/use-toast'
 
 import {
   fetchLevel,
-  saveUniversityDraft
+  saveUniversityDraft,
+  fetchDistricts,
+  fetchCountries,
+  fetchCities
 } from '@/app/(dashboard)/dashboard/university/actions'
 import { cn } from '@/app/lib/utils'
 import { authFetch } from '@/app/utils/authFetch'
-import { COUNTRIES } from '@/constants/countries'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from '../college/components/GallerySection'
 import FileUploadWithPreview from '../college/components/MediaUploadWithBranding'
@@ -89,6 +91,9 @@ const CreateUpdateUniversityModal = ({
   const [loadingData, setLoadingData] = useState(false)
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [allLevels, setAllLevels] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [countries, setCountries] = useState([])
+  const [cities, setCities] = useState([])
   const [loadingResources, setLoadingResources] = useState(false)
   const [filesDirty, setFilesDirty] = useState(false)
 
@@ -224,13 +229,21 @@ const CreateUpdateUniversityModal = ({
     reset()
   }
 
-  // Load resources (levels)
+  // Load resources (levels and locations)
   useEffect(() => {
     const loadResources = async () => {
       try {
         setLoadingResources(true)
-        const levelsData = await fetchLevel('')
+        const [levelsData, dList, cList, cityList] = await Promise.all([
+          fetchLevel(''),
+          fetchDistricts(),
+          fetchCountries(),
+          fetchCities()
+        ])
         setAllLevels(levelsData || [])
+        setDistricts(dList)
+        setCountries(cList)
+        setCities(cityList)
       } catch (error) {
         console.error('Error fetching resources:', error)
       } finally {
@@ -490,16 +503,23 @@ const CreateUpdateUniversityModal = ({
   }
 
   const onSearchCountries = async (query) => {
-    const countries = query
-      ? COUNTRIES.filter((c) =>
-          c.toLowerCase().includes(query.toLowerCase())
-        )
-      : COUNTRIES
+    const filtered = query
+      ? countries.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : countries
 
-    return countries.map((c) => ({ title: c, id: c }))
+    return filtered.map((c) => ({ title: c, id: c }))
+  }
+
+  const onSearchCities = async (query) => {
+    const filtered = query
+      ? cities.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : cities
+
+    return filtered.map((c) => ({ title: c, id: c }))
   }
 
   const selectedCountry = watch('country')
+  const selectedCity = watch('city')
 
   const handleSelectLevel = (level) => {
     const current = getValues('levels') || []
@@ -746,7 +766,9 @@ const CreateUpdateUniversityModal = ({
                         <SearchSelectCreate
                           onSearch={onSearchCountries}
                           selectedItems={
-                            selectedCountry ? { id: selectedCountry, title: selectedCountry } : []
+                            selectedCountry
+                              ? { id: selectedCountry, title: selectedCountry }
+                              : []
                           }
                           onSelect={(item) =>
                             setValue('country', item.id, {
@@ -793,13 +815,27 @@ const CreateUpdateUniversityModal = ({
                         <Label htmlFor='city' required={true}>
                           City
                         </Label>
-                        <Input
-                          id='city'
-                          {...register('city', {
-                            required: 'City is required'
-                          })}
-                          placeholder='e.g. Kathmandu'
-                          className='h-11 rounded-md border-gray-200'
+                        <SearchSelectCreate
+                          onSearch={onSearchCities}
+                          selectedItems={
+                            selectedCity
+                              ? { id: selectedCity, title: selectedCity }
+                              : []
+                          }
+                          onSelect={(item) =>
+                            setValue('city', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('city', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search City...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
                         />
                         {errors.city && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
@@ -1185,11 +1221,7 @@ const CreateUpdateUniversityModal = ({
                   <div className='space-y-4'>
                     <div className='mb-4'>
                       <Label htmlFor='slug'>URL Slug</Label>
-                      <Input
-                        id='slug'
-                        {...register('slug')}
-                        className='mt-1'
-                      />
+                      <Input id='slug' {...register('slug')} className='mt-1' />
                       <p className='text-[10px] text-gray-400 mt-1 italic'>
                         Leave empty to auto-generate from name
                       </p>

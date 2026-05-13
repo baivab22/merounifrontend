@@ -50,12 +50,15 @@ export default function ScholarshipManager() {
   const [applicationsLoading, setApplicationsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [activeOnly, setActiveOnly] = useState(true)
   const statusFilterRef = useRef(statusFilter)
+  const activeOnlyRef = useRef(activeOnly)
   const searchDebounceRef = useRef(null)
 
   useEffect(() => {
     statusFilterRef.current = statusFilter
-  }, [statusFilter])
+    activeOnlyRef.current = activeOnly
+  }, [statusFilter, activeOnly])
 
   useEffect(() => {
     return () => {
@@ -86,13 +89,15 @@ export default function ScholarshipManager() {
   const loadScholarships = async (
     page = 1,
     query = searchQuery,
-    status = statusFilter
+    status = statusFilter,
+    active = activeOnly
   ) => {
     setTableLoading(true)
     try {
       let url = `${process.env.baseUrl}/scholarship?page=${page}`
       if (query) url += `&q=${encodeURIComponent(query)}`
       if (status && status !== 'all') url += `&status=${status}`
+      if (active) url += `&activeOnly=true`
 
       const res = await authFetch(url)
       const response = await res.json()
@@ -129,13 +134,18 @@ export default function ScholarshipManager() {
     setSearchQuery(value)
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = setTimeout(() => {
-      loadScholarships(1, value, statusFilterRef.current)
+      loadScholarships(1, value, statusFilterRef.current, activeOnlyRef.current)
     }, 350)
   }
 
   const handleStatusChange = (status) => {
     setStatusFilter(status)
-    loadScholarships(1, searchQuery, status)
+    loadScholarships(1, searchQuery, status, activeOnly)
+  }
+
+  const handleActiveToggle = (active) => {
+    setActiveOnly(active)
+    loadScholarships(1, searchQuery, statusFilter, active)
   }
 
   const handleAdd = () => {
@@ -170,7 +180,12 @@ export default function ScholarshipManager() {
         })
       }
       handleModalClose()
-      loadScholarships(pagination.currentPage)
+      loadScholarships(
+        pagination.currentPage,
+        searchQuery,
+        statusFilter,
+        activeOnly
+      )
     } catch (error) {
       console.error('Error saving scholarship:', error)
       toast({
@@ -195,7 +210,12 @@ export default function ScholarshipManager() {
         title: 'Success',
         description: 'Scholarship deleted successfully'
       })
-      loadScholarships(pagination.currentPage)
+      loadScholarships(
+        pagination.currentPage,
+        searchQuery,
+        statusFilter,
+        activeOnly
+      )
     } catch (error) {
       toast({
         title: 'Error',
@@ -378,6 +398,23 @@ export default function ScholarshipManager() {
               <option value='published'>Published</option>
               <option value='draft'>Draft</option>
             </select>
+
+            <div className='flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 h-9 rounded-md shrink-0'>
+              <input
+                type='checkbox'
+                id='active-only'
+                checked={activeOnly}
+                onChange={(e) => handleActiveToggle(e.target.checked)}
+                className='w-4 h-4 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]'
+              />
+              <label
+                htmlFor='active-only'
+                className='text-xs font-semibold text-gray-700 cursor-pointer select-none'
+              >
+                Hide Expired
+              </label>
+            </div>
+
             <Button
               onClick={handleAdd}
               className='bg-[#387cae] hover:bg-[#387cae]/90 text-white gap-2 h-9 px-4 rounded-md text-sm font-semibold shrink-0'
@@ -396,7 +433,7 @@ export default function ScholarshipManager() {
           columns={columns}
           pagination={pagination}
           onPageChange={(page) =>
-            loadScholarships(page, searchQuery, statusFilter)
+            loadScholarships(page, searchQuery, statusFilter, activeOnly)
           }
           showSearch={false}
         />

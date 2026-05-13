@@ -13,8 +13,8 @@ import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 import { fetchCourses, fetchCountries, fetchDistricts } from './actions'
-import { CITIES } from '@/constants/City'
 import { Loader2, Check, FileText } from 'lucide-react'
+import { fetchCities } from './actions'
 
 export default function EditConsultancyPage() {
   const { toast } = useToast()
@@ -27,6 +27,8 @@ export default function EditConsultancyPage() {
   const [selectedColleges, setSelectedColleges] = useState([])
   const [selectedDestinations, setSelectedDestinations] = useState([])
   const [districtsList, setDistrictsList] = useState([])
+  const [citiesList, setCitiesList] = useState([])
+  const [countriesList, setCountriesList] = useState([])
   const author_id = useSelector((state) => state.user.data?.id)
 
   const {
@@ -61,23 +63,32 @@ export default function EditConsultancyPage() {
   })
 
   useEffect(() => {
-    fetchDistricts().then(res => setDistrictsList(res || []));
+    const loadLocations = async () => {
+      const [dList, cList, cityList] = await Promise.all([
+        fetchDistricts(),
+        fetchCountries(),
+        fetchCities()
+      ])
+      setDistrictsList(dList || [])
+      setCountriesList(cList || [])
+      setCitiesList(cityList || [])
+    }
+    loadLocations()
     loadConsultancyData()
   }, [])
 
   const loadConsultancyData = async () => {
     try {
       setLoading(true)
-      const response = await authFetch(
-        `${process.env.baseUrl}/consultancy/me`
-      )
+      const response = await authFetch(`${process.env.baseUrl}/consultancy/me`)
 
       if (!response.ok) {
         throw new Error('Failed to fetch consultancy data')
       }
 
       const responseData = await response.json()
-      const consultancy = responseData.consultancy || responseData.item || responseData
+      const consultancy =
+        responseData.consultancy || responseData.item || responseData
 
       if (!consultancy) {
         toast({
@@ -99,24 +110,26 @@ export default function EditConsultancyPage() {
         ? consultancy.destination
         : typeof consultancy.destination === 'string'
           ? (() => {
-            try {
-              return JSON.parse(consultancy.destination)
-            } catch {
-              return []
-            }
-          })()
+              try {
+                return JSON.parse(consultancy.destination)
+              } catch {
+                return []
+              }
+            })()
           : []
       const destinationForForm = (
         Array.isArray(parsedDestination) ? parsedDestination : []
-      ).map((d) => {
-        const title = typeof d === 'string' ? d : (d?.country || d?.title || '')
-        return { id: title, title: title }
-      }).filter(d => d.id)
+      )
+        .map((d) => {
+          const title = typeof d === 'string' ? d : d?.country || d?.title || ''
+          return { id: title, title: title }
+        })
+        .filter((d) => d.id)
 
       setSelectedDestinations(destinationForForm)
       setValue(
         'destination',
-        destinationForForm.map(d => d.title)
+        destinationForForm.map((d) => d.title)
       )
 
       // Parse Address
@@ -125,12 +138,12 @@ export default function EditConsultancyPage() {
           typeof consultancy.address === 'string'
             ? JSON.parse(consultancy.address)
             : consultancy.address || {}
-        
+
         // Handle migration from state to district
         if (address.state && !address.district) {
-           address.district = address.state
+          address.district = address.state
         }
-        
+
         setValue('address', address)
       } catch (e) {
         setValue('address', { street: '', city: '', district: '', zip: '' })
@@ -176,7 +189,6 @@ export default function EditConsultancyPage() {
       setValue('meta_description', consultancy.meta_description || '')
       setValue('status', consultancy.status || 'published')
       setValue('id', consultancy.id) // Store ID for update
-
     } catch (error) {
       console.error('Error loading consultancy data:', error)
       toast({
@@ -192,7 +204,10 @@ export default function EditConsultancyPage() {
   const removeCollege = (collegeId) => {
     const newColleges = selectedColleges.filter((c) => c.id !== collegeId)
     setSelectedColleges(newColleges)
-    setValue('courses', newColleges.map((c) => c.id))
+    setValue(
+      'courses',
+      newColleges.map((c) => c.id)
+    )
   }
 
   const onSubmit = async (data) => {
@@ -200,7 +215,7 @@ export default function EditConsultancyPage() {
       setSubmitting(true)
       const payload = {
         title: data.title?.trim() || '',
-        destination: selectedDestinations.map(d => d.title).filter(Boolean),
+        destination: selectedDestinations.map((d) => d.title).filter(Boolean),
         address: data.address || {},
         featured_image: uploadedFiles.featured || '',
         logo:
@@ -240,10 +255,10 @@ export default function EditConsultancyPage() {
         payload.id = data.id
       }
 
-      // If no ID but we have author_id, we might need it for creation? 
+      // If no ID but we have author_id, we might need it for creation?
       // Typically backend handles this based on auth token.
 
-      // Use my-consultancy endpoint for update as well if possible, 
+      // Use my-consultancy endpoint for update as well if possible,
       // otherwise fallback to general endpoint with ID.
       // Assuming PUT to /consultancy/my-consultancy updates the user's consultancy.
 
@@ -267,7 +282,6 @@ export default function EditConsultancyPage() {
         title: 'Success',
         description: 'Consultancy info updated successfully!'
       })
-
     } catch (error) {
       console.error('Submit Error:', error)
       toast({
@@ -332,7 +346,7 @@ export default function EditConsultancyPage() {
               <TipTapEditor
                 value={watch('description') || ''}
                 onChange={(data) => setValue('description', data)}
-                placeholder="Write about your consultancy..."
+                placeholder='Write about your consultancy...'
               />
             </div>
             <div className='space-y-2'>
@@ -340,7 +354,7 @@ export default function EditConsultancyPage() {
               <Textarea
                 id='meta_description'
                 {...register('meta_description')}
-                placeholder="SEO Meta description..."
+                placeholder='SEO Meta description...'
                 className='min-h-[100px]'
               />
             </div>
@@ -355,29 +369,39 @@ export default function EditConsultancyPage() {
               <SearchSelectCreate
                 allowCreate={true}
                 onSearch={async (query) => {
-                  const all = await fetchCountries();
-                  if (!query) return all.map(c => ({ id: c, title: c }));
-                  const lower = query.toLowerCase();
-                  return all.filter(c => c.toLowerCase().includes(lower)).map(c => ({ id: c, title: c }));
+                  const all = countriesList
+                  if (!query) return all.map((c) => ({ id: c, title: c }))
+                  const lower = query.toLowerCase()
+                  return all
+                    .filter((c) => c.toLowerCase().includes(lower))
+                    .map((c) => ({ id: c, title: c }))
                 }}
                 onCreate={(query) => ({ id: query, title: query })}
                 onSelect={(item) => {
                   const current = selectedDestinations || []
-                  if (!current.some(d => d.id === item.id)) {
+                  if (!current.some((d) => d.id === item.id)) {
                     const updatedDestinations = [...current, item]
                     setSelectedDestinations(updatedDestinations)
-                    setValue('destination', updatedDestinations.map(d => d.title))
+                    setValue(
+                      'destination',
+                      updatedDestinations.map((d) => d.title)
+                    )
                   }
                 }}
                 onRemove={(item) => {
-                  const fresh = selectedDestinations.filter(d => d.id !== item.id)
+                  const fresh = selectedDestinations.filter(
+                    (d) => d.id !== item.id
+                  )
                   setSelectedDestinations(fresh)
-                  setValue('destination', fresh.map(d => d.title))
+                  setValue(
+                    'destination',
+                    fresh.map((d) => d.title)
+                  )
                 }}
                 selectedItems={selectedDestinations}
-                placeholder="Search or add countries..."
+                placeholder='Search or add countries...'
                 isMulti={true}
-                displayKey="title"
+                displayKey='title'
               />
             </div>
           </div>
@@ -404,7 +428,7 @@ export default function EditConsultancyPage() {
                   className='flex h-10 w-full rounded-md border border-gray-200 bg-background px-3 py-2 text-sm transition-colors duration-200 focus:outline-none focus:border-[#387cae]'
                 >
                   <option value=''>Select City</option>
-                  {CITIES.map((city) => (
+                  {citiesList.map((city) => (
                     <option key={city} value={city}>
                       {city}
                     </option>
@@ -448,18 +472,23 @@ export default function EditConsultancyPage() {
                 const current = watch('courses') || []
                 if (!current.includes(item.id)) {
                   setValue('courses', [...current, item.id])
-                  setSelectedColleges(prev => [...prev, item])
+                  setSelectedColleges((prev) => [...prev, item])
                 }
               }}
               onRemove={(item) => {
                 const current = watch('courses') || []
-                setValue('courses', current.filter(id => id !== item.id))
-                setSelectedColleges(prev => prev.filter(c => c.id !== item.id))
+                setValue(
+                  'courses',
+                  current.filter((id) => id !== item.id)
+                )
+                setSelectedColleges((prev) =>
+                  prev.filter((c) => c.id !== item.id)
+                )
               }}
               selectedItems={selectedColleges}
-              placeholder="Search and add courses..."
+              placeholder='Search and add courses...'
               isMulti={true}
-              displayKey="title"
+              displayKey='title'
             />
           </div>
 
@@ -539,10 +568,7 @@ export default function EditConsultancyPage() {
                   />
                 )}
               />
-              <Label
-                htmlFor='pinned'
-                className='font-normal cursor-pointer'
-              >
+              <Label htmlFor='pinned' className='font-normal cursor-pointer'>
                 Pin this consultancy
               </Label>
             </div>
@@ -579,38 +605,38 @@ export default function EditConsultancyPage() {
         </div>
 
         <div className='bg-background border-t pt-4 pb-2 mt-4 flex justify-end gap-3'>
-          <Button 
-              type='button' 
-              variant='secondary'
-              disabled={submitting} 
-              onClick={() => {
-                  setValue('status', 'draft', { shouldDirty: true });
-                  handleSubmit(onSubmit)();
-              }}
-              className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
+          <Button
+            type='button'
+            variant='secondary'
+            disabled={submitting}
+            onClick={() => {
+              setValue('status', 'draft', { shouldDirty: true })
+              handleSubmit(onSubmit)()
+            }}
+            className='bg-gray-100 hover:bg-gray-200 text-gray-700 border-none px-6'
           >
-              <FileText className='w-4 h-4 mr-2' />
-              <span>Save as Draft</span>
+            <FileText className='w-4 h-4 mr-2' />
+            <span>Save as Draft</span>
           </Button>
-          <Button 
-              type='button' 
-              onClick={() => {
-                  setValue('status', 'published', { shouldDirty: true });
-                  handleSubmit(onSubmit)();
-              }}
-              className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
-              disabled={submitting}
+          <Button
+            type='button'
+            onClick={() => {
+              setValue('status', 'published', { shouldDirty: true })
+              handleSubmit(onSubmit)()
+            }}
+            className='bg-[#387cae] hover:bg-[#2d638c] text-white px-8 shadow-md transition-all active:scale-95'
+            disabled={submitting}
           >
             {submitting ? (
-                <>
-                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                    <span>Saving...</span>
-                </>
+              <>
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                <span>Saving...</span>
+              </>
             ) : (
-                <>
-                    <Check className='w-4 h-4 mr-2' />
-                    <span>Save Changes</span>
-                </>
+              <>
+                <Check className='w-4 h-4 mr-2' />
+                <span>Save Changes</span>
+              </>
             )}
           </Button>
         </div>

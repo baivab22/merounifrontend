@@ -41,14 +41,14 @@ import {
   fetchUniversities,
   getProgramsByDegreeIds,
   getDegreesByUniversity,
-  saveDraft
+  saveDraft,
+  fetchDistricts,
+  fetchCountries,
+  fetchCities
 } from '@/app/(dashboard)/dashboard/colleges/actions'
-import { cn } from '@/app/lib/utils'
 import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from './components/GallerySection'
-import { DistrictLists } from '@/constants/district'
-import { COUNTRIES } from '@/constants/countries'
 import FileUploadWithPreview from './components/MediaUploadWithBranding'
 import VideoSection from './components/VideoSection'
 
@@ -99,6 +99,9 @@ const CreateUpdateCollegeModal = ({
   })
   const [selectedUniversities, setSelectedUniversities] = useState([])
   const [openEmojiPickerIndex, setOpenEmojiPickerIndex] = useState(null)
+  const [districts, setDistricts] = useState([])
+  const [countries, setCountries] = useState([])
+  const [cities, setCities] = useState([])
 
   // Section Refs for scroll-to-error
   const firstErrorRef = useRef(null)
@@ -248,6 +251,22 @@ const CreateUpdateCollegeModal = ({
       setValue('faqs', [], { shouldDirty: false })
     }
   }, [isOpen, editSlug, setValue])
+
+  useEffect(() => {
+    const loadLocations = async () => {
+      const [dList, cList, cityList] = await Promise.all([
+        fetchDistricts(),
+        fetchCountries(),
+        fetchCities()
+      ])
+      setDistricts(dList)
+      setCountries(cList)
+      setCities(cityList)
+    }
+    if (isOpen) {
+      loadLocations()
+    }
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen && editSlug) {
@@ -478,27 +497,32 @@ const CreateUpdateCollegeModal = ({
   }, [JSON.stringify(selectedDegreeIdsArray), JSON.stringify(selectedUniIds)])
 
   const onSearchDistricts = async (query) => {
-    const districts = query
-      ? DistrictLists.filter((d) =>
-          d.toLowerCase().includes(query.toLowerCase())
-        )
-      : DistrictLists
+    const filtered = query
+      ? districts.filter((d) => d.toLowerCase().includes(query.toLowerCase()))
+      : districts
 
-    return districts.map((d) => ({ title: d, id: d }))
+    return filtered.map((d) => ({ title: d, id: d }))
   }
 
   const onSearchCountries = async (query) => {
-    const countries = query
-      ? COUNTRIES.filter((c) =>
-          c.toLowerCase().includes(query.toLowerCase())
-        )
-      : COUNTRIES
+    const filtered = query
+      ? countries.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : countries
 
-    return countries.map((c) => ({ title: c, id: c }))
+    return filtered.map((c) => ({ title: c, id: c }))
+  }
+
+  const onSearchCities = async (query) => {
+    const filtered = query
+      ? cities.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : cities
+
+    return filtered.map((c) => ({ title: c, id: c }))
   }
 
   const selectedDistrict = watch('address.district')
   const selectedCountry = watch('address.country')
+  const selectedCity = watch('address.city')
 
   const onSearchPrograms = async (query) => {
     if (!universityPrograms) return []
@@ -1063,7 +1087,9 @@ const CreateUpdateCollegeModal = ({
                         <SearchSelectCreate
                           onSearch={onSearchCountries}
                           selectedItems={
-                            selectedCountry ? { id: selectedCountry, title: selectedCountry } : []
+                            selectedCountry
+                              ? { id: selectedCountry, title: selectedCountry }
+                              : []
                           }
                           onSelect={(item) =>
                             setValue('address.country', item.id, {
@@ -1093,7 +1119,12 @@ const CreateUpdateCollegeModal = ({
                         <SearchSelectCreate
                           onSearch={onSearchDistricts}
                           selectedItems={
-                            selectedDistrict ? { id: selectedDistrict, title: selectedDistrict } : []
+                            selectedDistrict
+                              ? {
+                                  id: selectedDistrict,
+                                  title: selectedDistrict
+                                }
+                              : []
                           }
                           onSelect={(item) =>
                             setValue('address.district', item.id, {
@@ -1122,13 +1153,27 @@ const CreateUpdateCollegeModal = ({
                         <Label htmlFor='address.city' required={true}>
                           City
                         </Label>
-                        <Input
-                          id='address.city'
-                          {...register('address.city', {
-                            required: 'City is required'
-                          })}
-                          placeholder='e.g. Kathmandu'
-                          className='h-11 rounded-md border-gray-200'
+                        <SearchSelectCreate
+                          onSearch={onSearchCities}
+                          selectedItems={
+                            selectedCity
+                              ? { id: selectedCity, title: selectedCity }
+                              : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.city', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.city', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search City...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
                         />
                         {errors.address?.city && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>

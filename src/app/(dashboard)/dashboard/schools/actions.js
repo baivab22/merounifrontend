@@ -139,3 +139,39 @@ export const getProgramsByStreams = async (streamIds) => {
   }
 }
 
+
+export const fetchDistricts = async () => {
+  try {
+    const response = await authFetch(`${process.env.baseUrl}/location/districts`)
+    if (!response.ok) throw new Error('Failed to fetch districts')
+    const data = await response.json()
+    return data.data || []
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
+export const fetchCountries = async () => {
+  try {
+    const response = await authFetch(`${process.env.baseUrl}/location/countries`)
+    if (!response.ok) throw new Error('Failed to fetch countries')
+    const data = await response.json()
+    return data.data || []
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
+export const fetchCities = async () => {
+  try {
+    const response = await authFetch(`${process.env.baseUrl}/location/cities`)
+    if (!response.ok) throw new Error('Failed to fetch cities')
+    const data = await response.json()
+    return data.data || []
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}

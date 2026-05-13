@@ -3,15 +3,12 @@ import ScholarshipCard from '@/ui/molecules/cards/ScholarshipCard'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { debounce } from 'lodash'
-import { Award, Search, X } from 'lucide-react'
+import { Award, Search, X, SlidersHorizontal } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import Pagination from '@/ui/molecules/common/Pagination'
-import {
-  fetchCategories,
-  fetchScholarships
-} from './actions'
+import { fetchCategories, fetchScholarships } from './actions'
 
 // Memoized FilterSection matching Degree/Admission Page
 const FilterSection = React.memo(function FilterSection({
@@ -111,10 +108,14 @@ const ScholarshipPage = () => {
   const [categories, setCategories] = useState([])
   const [allCategories, setAllCategories] = useState([]) // For local filtering
   const [selectedCategory, setSelectedCategory] = useState(initialCategory)
-  
-  const [isSearching, setIsSearching] = useState(false)
+
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false)
   const [filterInput, setFilterInput] = useState('')
+  const [activeOnly, setActiveOnly] = useState(
+    searchParams.get('activeOnly') !== 'false'
+  )
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -122,17 +123,20 @@ const ScholarshipPage = () => {
   })
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= pagination.totalPages) {
@@ -144,11 +148,13 @@ const ScholarshipPage = () => {
   useEffect(() => {
     const q = searchParams.get('q') || ''
     const cat = searchParams.get('category') || ''
+    const active = searchParams.get('activeOnly') !== 'false'
     const pg = parseInt(searchParams.get('page')) || 1
     setSearchTerm(q)
     setDebouncedSearch(q)
     setSelectedCategory(cat)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
+    setActiveOnly(active)
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
   }, [searchParams])
 
   // Fetch categories on mount
@@ -183,28 +189,33 @@ const ScholarshipPage = () => {
 
   // Fetch Scholarships when URL changes
   useEffect(() => {
-    const getScholarships = async () => {
+    const fetchData = async () => {
       const q = searchParams.get('q') || ''
       const cat = searchParams.get('category') || ''
       const pg = parseInt(searchParams.get('page')) || 1
+      const active = searchParams.get('activeOnly') !== 'false'
+
       setLoading(true)
       try {
+        if (q) setIsSearching(true)
         const response = await fetchScholarships({
           q,
           category: cat,
+          activeOnly: active,
           page: pg
         })
         setScholarships(response.scholarships || [])
         if (response.pagination) {
           setPagination(response.pagination)
         }
+        if (q) setIsSearching(false)
       } catch (error) {
         console.error('Error:', error)
       } finally {
         setLoading(false)
       }
     }
-    getScholarships()
+    fetchData()
   }, [searchParams])
 
   // Scroll to top on URL change
@@ -216,7 +227,8 @@ const ScholarshipPage = () => {
     setSearchTerm('')
     setSelectedCategory('')
     setFilterInput('')
-    updateURL({ q: '', category: '', page: 1 })
+    setActiveOnly(true)
+    updateURL({ q: '', category: '', activeOnly: '', page: 1 })
   }
 
   const handleCategoryToggle = (catId) => {
@@ -230,16 +242,17 @@ const ScholarshipPage = () => {
     if (!q) {
       setCategories(allCategories)
     } else {
-      setCategories(allCategories.filter(cat => 
-        cat.title.toLowerCase().includes(q.toLowerCase())
-      ))
+      setCategories(
+        allCategories.filter((cat) =>
+          cat.title.toLowerCase().includes(q.toLowerCase())
+        )
+      )
     }
   }
 
   return (
     <div className='min-h-screen bg-gray-50/50 py-12 px-6 font-sans'>
       <div className='max-w-[1600px] mx-auto'>
-        
         {/* Header Section with Search (Unified Pattern) */}
         <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8 border-b border-gray-100 pb-12'>
           <div className='flex-1 space-y-6 w-full'>
@@ -252,39 +265,50 @@ const ScholarshipPage = () => {
               </span>
             </div>
 
-            <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-              <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-              <input
-                type='text'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder='Search scholarships by name...'
-                className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-              />
-              <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                {isSearching && (
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                )}
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                  >
-                    <X className='w-5 h-5' />
-                  </button>
-                )}
+            <div className='flex items-stretch gap-3 w-full'>
+              <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+                <Search className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                <input
+                  type='text'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder='Search scholarships by name...'
+                  className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                />
+                <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                  {isSearching && (
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                  )}
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                    >
+                      <X className='w-5 h-5' />
+                    </button>
+                  )}
+                </div>
               </div>
+
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className='lg:hidden px-4 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+                aria-label='Open Filters'
+              >
+                <SlidersHorizontal className='w-5 h-5' />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Sidebar & Content Section (Left Sidebar) */}
         <div className='flex flex-col lg:flex-row gap-12'>
-          
           {/* Sidebar */}
           <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
             <div className='flex justify-between items-center mb-[-16px] px-1'>
-              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+              <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                Filters
+              </span>
               {(searchTerm || selectedCategory) && (
                 <button
                   className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
@@ -304,6 +328,27 @@ const ScholarshipPage = () => {
               onSearchChange={(field, val) => handleCategorySearch(val)}
               isLoading={isCategoriesLoading}
             />
+
+            <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+              <h3 className='text-gray-800 font-bold text-xs md:text-sm uppercase tracking-wider mb-4'>
+                Options
+              </h3>
+              <label className='flex items-center gap-3 group cursor-pointer'>
+                <input
+                  type='checkbox'
+                  checked={activeOnly}
+                  onChange={(e) => {
+                    const val = e.target.checked
+                    setActiveOnly(val)
+                    updateURL({ activeOnly: val ? '' : 'false', page: 1 })
+                  }}
+                  className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
+                />
+                <span className='text-gray-600 group-hover:text-gray-900 text-sm font-medium transition-colors'>
+                  Hide Expired Scholarships
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Main Content */}
@@ -311,7 +356,9 @@ const ScholarshipPage = () => {
             {!loading && (
               <div className='mb-8 px-2'>
                 <p className='text-sm text-gray-500 font-semibold'>
-                  Showing <span className='text-gray-900'>{scholarships.length}</span> results
+                  Showing{' '}
+                  <span className='text-gray-900'>{scholarships.length}</span>{' '}
+                  results
                 </p>
               </div>
             )}
@@ -369,6 +416,79 @@ const ScholarshipPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>
+                  Refine Results
+                </h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    clearFilters()
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Category'
+                inputField='category'
+                options={categories}
+                selectedValues={selectedCategory ? [selectedCategory] : []}
+                onCheckboxChange={handleCategoryToggle}
+                defaultValue={filterInput}
+                onSearchChange={(field, val) => handleCategorySearch(val)}
+                isLoading={isCategoriesLoading}
+              />
+
+              <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+                <h3 className='text-gray-800 font-bold text-xs md:text-sm uppercase tracking-wider mb-4'>
+                  Options
+                </h3>
+                <label className='flex items-center gap-3 group cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    checked={activeOnly}
+                    onChange={(e) => {
+                      const val = e.target.checked
+                      setActiveOnly(val)
+                      updateURL({ activeOnly: val ? '' : 'false', page: 1 })
+                    }}
+                    className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
+                  />
+                  <span className='text-gray-600 group-hover:text-gray-900 text-sm font-medium transition-colors'>
+                    Hide Expired Scholarships
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -10,6 +10,8 @@ export const fetchScholarships = async (filters = {}) => {
     if (filters.minAmount) queryParams.append('minAmount', filters.minAmount)
     if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount)
     if (filters.category) queryParams.append('category', filters.category)
+    if (filters.activeOnly) queryParams.append('activeOnly', filters.activeOnly)
+    if (filters.page) queryParams.append('page', filters.page)
 
     const response = await fetch(
       `${process.env.baseUrl}/scholarship?${queryParams.toString()}`

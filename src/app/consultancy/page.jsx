@@ -4,7 +4,7 @@ import ConsultancyCard from '@/ui/molecules/cards/ConsultancyCard'
 import { CardSkeleton } from '@/ui/shadcn/CardSkeleton'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { debounce } from 'lodash'
-import { Search, X } from 'lucide-react'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { IoSearch } from 'react-icons/io5'
@@ -21,14 +21,14 @@ const FilterSection = React.memo(function FilterSection({
   selectedValues,
   onSelect,
   onRemove,
-  placeholder = "Search...",
+  placeholder = 'Search...',
   isLoading = false
 }) {
   const [localSearch, setLocalSearch] = useState('')
 
   const filteredOptions = useMemo(() => {
     if (!localSearch) return options
-    return options.filter(opt =>
+    return options.filter((opt) =>
       opt.toLowerCase().includes(localSearch.toLowerCase())
     )
   }, [options, localSearch])
@@ -75,7 +75,7 @@ const FilterSection = React.memo(function FilterSection({
                 <input
                   type='checkbox'
                   checked={isSelected}
-                  onChange={() => isSelected ? onRemove(opt) : onSelect(opt)}
+                  onChange={() => (isSelected ? onRemove(opt) : onSelect(opt))}
                   className='w-4 h-4 rounded border-gray-300 text-[#0A70A7] focus:ring-[#0A70A7] transition-all cursor-pointer'
                 />
                 <span className='text-gray-600 group-hover:text-gray-900 text-sm font-medium transition-colors'>
@@ -110,6 +110,7 @@ export default function ConsultanciesPage() {
   })
   const [loading, setLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   // Filter Data
   const [locations, setLocations] = useState({ cities: [], destinations: [] })
@@ -118,17 +119,20 @@ export default function ConsultanciesPage() {
   const [selectedDestination, setSelectedDestination] = useState(initialDest)
 
   // URL Sync Helper
-  const updateURL = useCallback((params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newParams.set(key, value)
-      } else {
-        newParams.delete(key)
-      }
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
+  const updateURL = useCallback(
+    (params) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value)
+        } else {
+          newParams.delete(key)
+        }
+      })
+      router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
 
   // Fetch Locations/Destinations
   useEffect(() => {
@@ -138,8 +142,14 @@ export default function ConsultanciesPage() {
         const res = await getConsultancyLocations()
         if (res?.data) {
           setLocations({
-            cities: (res.data.cities || []).map(c => typeof c === 'string' ? c : c.city || c.name || '').filter(Boolean),
-            destinations: (res.data.destinations || []).map(d => typeof d === 'string' ? d : d.country || d.name || '').filter(Boolean)
+            cities: (res.data.cities || [])
+              .map((c) => (typeof c === 'string' ? c : c.city || c.name || ''))
+              .filter(Boolean),
+            destinations: (res.data.destinations || [])
+              .map((d) =>
+                typeof d === 'string' ? d : d.country || d.name || ''
+              )
+              .filter(Boolean)
           })
         }
       } finally {
@@ -159,7 +169,7 @@ export default function ConsultanciesPage() {
     setSearchTerm(q)
     setSelectedCity(city)
     setSelectedDestination(dest)
-    setPagination(prev => ({ ...prev, currentPage: pg }))
+    setPagination((prev) => ({ ...prev, currentPage: pg }))
   }, [searchParams])
 
   // Scroll to top on URL change
@@ -235,29 +245,38 @@ export default function ConsultanciesPage() {
                 </span>
               </div>
 
-              <div className='flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative w-full group'>
-                <IoSearch className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-                <input
-                  type='text'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder='Search consultancies by name...'
-                  className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
-                />
-                <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
-                  {isSearching && (
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
-                  )}
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
-                      title='Clear search'
-                    >
-                      <X className='w-5 h-5' />
-                    </button>
-                  )}
+              <div className='flex items-center gap-3 w-full'>
+                <div className='flex-1 flex bg-white items-center rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-[#0A70A7] focus-within:border-[#0A70A7] transition-all px-5 py-2.5 relative group'>
+                  <IoSearch className='w-5 h-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
+                  <input
+                    type='text'
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder='Search consultancies by name...'
+                    className='w-full px-4 py-2 bg-transparent text-base font-medium outline-none placeholder:text-gray-400'
+                  />
+                  <div className='absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3'>
+                    {isSearching && (
+                      <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-[#0A70A7]'></div>
+                    )}
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className='p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-all'
+                        title='Clear search'
+                      >
+                        <X className='w-5 h-5' />
+                      </button>
+                    )}
+                  </div>
                 </div>
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className='lg:hidden p-3.5 bg-white border border-gray-300 rounded-2xl shadow-sm text-gray-600 hover:text-[#0A70A7] hover:border-[#0A70A7] transition-all flex items-center justify-center shrink-0'
+                  aria-label='Open Filters'
+                >
+                  <SlidersHorizontal className='w-5 h-5' />
+                </button>
               </div>
             </div>
           </div>
@@ -266,7 +285,9 @@ export default function ConsultanciesPage() {
             {/* Sidebar Filters */}
             <div className='lg:w-[320px] space-y-8 shrink-0 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-160px)] overflow-y-auto pr-2 sidebar-scrollbar'>
               <div className='flex justify-between items-center mb-[-16px] px-1'>
-                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Filters</span>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
                 {(searchTerm || selectedCity || selectedDestination) && (
                   <button
                     className='text-gray-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider transition-colors'
@@ -283,17 +304,19 @@ export default function ConsultanciesPage() {
                 selectedValues={selectedCity ? [selectedCity] : []}
                 onSelect={(val) => updateURL({ city: val, page: 1 })}
                 onRemove={() => updateURL({ city: '', page: 1 })}
-                placeholder="Search city..."
+                placeholder='Search city...'
                 isLoading={isLocationsLoading}
               />
 
               <FilterSection
                 title='Student Destination'
                 options={locations.destinations}
-                selectedValues={selectedDestination ? [selectedDestination] : []}
+                selectedValues={
+                  selectedDestination ? [selectedDestination] : []
+                }
                 onSelect={(val) => updateURL({ destination: val, page: 1 })}
                 onRemove={() => updateURL({ destination: '', page: 1 })}
-                placeholder="Search destination..."
+                placeholder='Search destination...'
                 isLoading={isLocationsLoading}
               />
             </div>
@@ -302,9 +325,11 @@ export default function ConsultanciesPage() {
             <div className='flex-1'>
               {loading ? (
                 <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
-                  {Array(6).fill('').map((_, idx) => (
-                    <CardSkeleton key={idx} />
-                  ))}
+                  {Array(6)
+                    .fill('')
+                    .map((_, idx) => (
+                      <CardSkeleton key={idx} />
+                    ))}
                 </div>
               ) : consultancyData.length === 0 ? (
                 <div className='bg-white rounded-[32px] border border-gray-100 border-dashed py-20'>
@@ -314,16 +339,16 @@ export default function ConsultanciesPage() {
                     description={
                       searchTerm
                         ? `No consultancies match your search "${searchTerm}"`
-                        : (selectedCity || selectedDestination)
-                          ? "No consultancies match the selected filters."
+                        : selectedCity || selectedDestination
+                          ? 'No consultancies match the selected filters.'
                           : 'No consultancies are currently available'
                     }
                     action={
-                      (searchTerm || selectedCity || selectedDestination)
+                      searchTerm || selectedCity || selectedDestination
                         ? {
-                          label: 'Clear All Filters',
-                          onClick: clearFilters
-                        }
+                            label: 'Clear All Filters',
+                            onClick: clearFilters
+                          }
                         : null
                     }
                   />
@@ -331,7 +356,10 @@ export default function ConsultanciesPage() {
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10'>
                   {[...consultancyData]
-                    .sort((a, b) => (b.pinned === 1 ? 1 : 0) - (a.pinned === 1 ? 1 : 0))
+                    .sort(
+                      (a, b) =>
+                        (b.pinned === 1 ? 1 : 0) - (a.pinned === 1 ? 1 : 0)
+                    )
                     .map((consultancy) => (
                       <ConsultancyCard
                         key={consultancy.id}
@@ -356,6 +384,69 @@ export default function ConsultanciesPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-[100] lg:hidden'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
+            onClick={() => setShowMobileFilters(false)}
+          />
+          <div className='absolute right-0 top-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10'>
+              <div className='flex flex-col'>
+                <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                  Filters
+                </span>
+                <h2 className='text-lg font-bold text-gray-900'>
+                  Refine Results
+                </h2>
+              </div>
+              <div className='flex items-center gap-4'>
+                <button
+                  className='text-[#0A70A7] font-bold text-xs uppercase tracking-wider'
+                  onClick={() => {
+                    clearFilters()
+                    setShowMobileFilters(false)
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className='p-2 hover:bg-gray-100 rounded-full text-gray-500'
+                >
+                  <X className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto p-5 space-y-6 sidebar-scrollbar'>
+              <FilterSection
+                title='Location'
+                options={locations.cities}
+                selectedValues={selectedCity ? [selectedCity] : []}
+                onSelect={(val) => updateURL({ city: val, page: 1 })}
+                onRemove={() => updateURL({ city: '', page: 1 })}
+                placeholder='Search city...'
+                isLoading={isLocationsLoading}
+              />
+
+              <FilterSection
+                title='Student Destination'
+                options={locations.destinations}
+                selectedValues={
+                  selectedDestination ? [selectedDestination] : []
+                }
+                onSelect={(val) => updateURL({ destination: val, page: 1 })}
+                onRemove={() => updateURL({ destination: '', page: 1 })}
+                placeholder='Search destination...'
+                isLoading={isLocationsLoading}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

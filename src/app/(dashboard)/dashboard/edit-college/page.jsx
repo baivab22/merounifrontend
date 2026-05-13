@@ -13,12 +13,14 @@ import {
   fetchAllCourse,
   fetchAllUniversity,
   getUniversityBySlug,
-  fetchAllDegrees
+  fetchAllDegrees,
+  fetchDistricts,
+  fetchCountries,
+  fetchCities
 } from '../colleges/actions'
 import { Upload } from 'lucide-react'
 import GallerySection from '@/ui/molecules/dialogs/college/components/GallerySection'
 import VideoSection from '@/ui/molecules/dialogs/college/components/VideoSection'
-import { DistrictLists } from '@/constants/district'
 
 const FileUploadWithPreview = ({
   onUploadComplete,
@@ -172,6 +174,9 @@ const EditCollegePage = () => {
   const [uniSlug, setUniSlug] = useState('')
   const [collectUni, setCollectUni] = useState([])
   const [collectUniError, setCollectUniError] = useState('')
+  const [districts, setDistricts] = useState([])
+  const [countries, setCountries] = useState([])
+  const [cities, setCities] = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
   const [courseSearch, setCourseSearch] = useState('')
   const [contentValue, setContentValue] = useState('')
@@ -243,6 +248,21 @@ const EditCollegePage = () => {
 
   useEffect(() => {
     setHeading('Edit College Information')
+    const loadInitialResources = async () => {
+      try {
+        const [dList, cList, cityList] = await Promise.all([
+          fetchDistricts(),
+          fetchCountries(),
+          fetchCities()
+        ])
+        setDistricts(dList || [])
+        setCountries(cList || [])
+        setCities(cityList || [])
+      } catch (err) {
+        console.error('Error loading location resources:', err)
+      }
+    }
+    loadInitialResources()
     loadCollegeData()
     loadCourses()
     loadUniversities()
@@ -1054,9 +1074,9 @@ const EditCollegePage = () => {
                         className='w-full p-2 border rounded bg-white'
                       >
                         <option value=''>Select District</option>
-                        {DistrictLists.map((district) => (
-                          <option key={district.name} value={district.name}>
-                            {district.name}
+                        {districts.map((district) => (
+                          <option key={district} value={district}>
+                            {district}
                           </option>
                         ))}
                       </select>

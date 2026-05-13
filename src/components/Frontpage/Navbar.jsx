@@ -164,12 +164,12 @@ const Navbar = () => {
         className={`
           w-full bg-white border-b border-gray-200/80
           transition-all duration-300
-          ${isScrolled ? 'fixed top-[72px] md:top-[80px] left-0 right-0 z-[60] shadow-sm' : 'sticky top-[72px] md:top-[80px] z-[60]'}
+          ${isScrolled ? 'fixed top-[72px] lg:top-[80px] left-0 right-0 z-[60] shadow-sm' : 'sticky top-[72px] lg:top-[80px] z-[60]'}
         `}
       >
         <div className='max-w-7xl mx-auto px-4 sm:px-6'>
           {/* Desktop: horizontal links */}
-          <div className='hidden md:flex items-center justify-center gap-1 sm:gap-2 lg:gap-4 xl:gap-6 py-0'>
+          <div className='hidden lg:flex items-center justify-center gap-1 sm:gap-2 lg:gap-4 xl:gap-6 py-0'>
             {navLinks.map(({ href, label }) => (
               <NavLink
                 key={href}
@@ -205,7 +205,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile: full-width search bar only (menu icon is in header) */}
-          <div className='w-full md:hidden px-4 pb-3 pt-0'>
+          <div className='w-full lg:hidden px-4 pb-3 pt-0'>
             <button
               type='button'
               onClick={openSearch}
@@ -224,7 +224,7 @@ const Navbar = () => {
       {/* Mobile menu drawer */}
       <div
         className={`
-          fixed inset-0 z-[100] transition-opacity duration-300 md:hidden
+          fixed inset-0 z-[100] transition-opacity duration-300 lg:hidden
           ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
         `}
       >

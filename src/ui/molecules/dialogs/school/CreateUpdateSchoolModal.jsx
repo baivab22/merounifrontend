@@ -41,15 +41,16 @@ import {
   fetchBoards,
   getStreamsByBoards,
   getProgramsByStreams,
-  saveDraft
+  saveDraft,
+  fetchDistricts,
+  fetchCountries,
+  fetchCities
 } from '@/app/(dashboard)/dashboard/schools/actions'
 
 import { cn } from '@/app/lib/utils'
 import { authFetch } from '@/app/utils/authFetch'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import GallerySection from './components/GallerySection'
-import { DistrictLists } from '@/constants/district'
-import { COUNTRIES } from '@/constants/countries'
 import FileUploadWithPreview from './components/MediaUploadWithBranding'
 import VideoSection from './components/VideoSection'
 
@@ -97,6 +98,9 @@ const CreateUpdateSchoolModal = ({
   const [selectedPrograms, setSelectedPrograms] = useState([])
 
   const [openEmojiPickerIndex, setOpenEmojiPickerIndex] = useState(null)
+  const [districts, setDistricts] = useState([])
+  const [countries, setCountries] = useState([])
+  const [cities, setCities] = useState([])
 
   // Section Refs for scroll-to-error
   const basicInfoRef = useRef(null)
@@ -240,6 +244,22 @@ const CreateUpdateSchoolModal = ({
       setOpenEmojiPickerIndex(null)
     }
   }, [isOpen, reset])
+
+  useEffect(() => {
+    const loadLocations = async () => {
+      const [dList, cList, cityList] = await Promise.all([
+        fetchDistricts(),
+        fetchCountries(),
+        fetchCities()
+      ])
+      setDistricts(dList)
+      setCountries(cList)
+      setCities(cityList)
+    }
+    if (isOpen) {
+      loadLocations()
+    }
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen && editSlug) {
@@ -502,25 +522,32 @@ const CreateUpdateSchoolModal = ({
   }, [JSON.stringify(selectedStreamIds)])
 
   const onSearchDistricts = async (query) => {
-    const districts = query
-      ? DistrictLists.filter((d) =>
-          d.toLowerCase().includes(query.toLowerCase())
-        )
-      : DistrictLists
+    const filtered = query
+      ? districts.filter((d) => d.toLowerCase().includes(query.toLowerCase()))
+      : districts
 
-    return districts.map((d) => ({ title: d, id: d }))
+    return filtered.map((d) => ({ title: d, id: d }))
   }
 
   const onSearchCountries = async (query) => {
-    const countries = query
-      ? COUNTRIES.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
-      : COUNTRIES
+    const filtered = query
+      ? countries.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : countries
 
-    return countries.map((c) => ({ title: c, id: c }))
+    return filtered.map((c) => ({ title: c, id: c }))
+  }
+
+  const onSearchCities = async (query) => {
+    const filtered = query
+      ? cities.filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      : cities
+
+    return filtered.map((c) => ({ title: c, id: c }))
   }
 
   const selectedDistrict = watch('address.district')
   const selectedCountry = watch('address.country')
+  const selectedCity = watch('address.city')
 
   const onSearchStreams = async (query) => {
     if (!boardStreams) return []
@@ -1071,10 +1098,27 @@ const CreateUpdateSchoolModal = ({
                     <div className='grid grid-cols-2 gap-4'>
                       <div>
                         <Label>City</Label>
-                        <Input
-                          {...register('address.city')}
-                          placeholder='City'
-                          className='h-10'
+                        <SearchSelectCreate
+                          onSearch={onSearchCities}
+                          selectedItems={
+                            selectedCity
+                              ? { id: selectedCity, title: selectedCity }
+                              : []
+                          }
+                          onSelect={(item) =>
+                            setValue('address.city', item.id, {
+                              shouldDirty: true
+                            })
+                          }
+                          onRemove={() =>
+                            setValue('address.city', '', {
+                              shouldDirty: true
+                            })
+                          }
+                          placeholder='Search City...'
+                          isMulti={false}
+                          className='w-full'
+                          inputSize='sm'
                         />
                       </div>
                       <div>
