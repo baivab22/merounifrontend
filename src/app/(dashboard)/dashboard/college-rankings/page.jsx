@@ -254,7 +254,7 @@ export default function CollegeRankingsPage() {
 
     try {
       setSubmitting(true)
-      await actions.addRanking(selectedDegree.id, selectedCollege.id)
+      await actions.addRanking(selectedDegree.id, selectedCollege.id, slug)
       toast({
         title: 'Success',
         description: 'College added to ranking'
@@ -621,26 +621,43 @@ export default function CollegeRankingsPage() {
           </DialogHeader>
 
           <div className='p-8 space-y-8'>
-            {/* Degree Selection */}
-            <div className='space-y-3'>
-              <Label required className='text-[11px] '>
-                Search Degree
-              </Label>
-              <SearchSelectCreate
-                onSearch={onSearchDegrees}
-                onSelect={setSelectedDegree}
-                onRemove={() => {
-                  setSelectedDegree(null)
-                  setSelectedCollege(null)
-                }}
-                selectedItems={selectedDegree}
-                placeholder='Search or select a degree...'
-                displayKey='title'
-                valueKey='id'
-                isMulti={false}
-                allowCreate={false}
-              />
-            </div>
+            {/* Degree Selection - Only show if not ranking more colleges */}
+            {!selectedDegree?.id && (
+              <div className='space-y-3'>
+                <Label required className='text-[11px] '>
+                  Search Degree
+                </Label>
+                <SearchSelectCreate
+                  onSearch={onSearchDegrees}
+                  onSelect={setSelectedDegree}
+                  onRemove={() => {
+                    setSelectedDegree(null)
+                    setSelectedCollege(null)
+                  }}
+                  selectedItems={selectedDegree}
+                  placeholder='Search or select a degree...'
+                  displayKey='title'
+                  valueKey='id'
+                  isMulti={false}
+                  allowCreate={false}
+                />
+              </div>
+            )}
+
+            {/* Slug Selection - Only show when adding a NEW ranking group */}
+            {!selectedDegree?.id && (
+              <div className='space-y-3'>
+                <Label className='text-[11px] font-bold uppercase tracking-wider text-slate-500'>
+                  Custom Slug
+                </Label>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder='e.g., top-it-colleges-nepal'
+                  className='w-full px-4 h-11 text-sm border-gray-200 rounded-xl focus:ring-[#387cae]/20 focus:border-[#387cae] bg-gray-50/50 focus:bg-white transition-all shadow-inner'
+                />
+              </div>
+            )}
 
             {/* College Selection */}
             <div

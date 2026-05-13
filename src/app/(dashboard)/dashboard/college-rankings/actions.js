@@ -16,12 +16,16 @@ export async function fetchRankings() {
   }
 }
 
-export async function addRanking(degreeId, collegeId) {
+export async function addRanking(degreeId, collegeId, slug) {
   try {
     const response = await authFetch(`${BASE_URL}/college-ranking`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ degree_id: degreeId, college_id: collegeId })
+      body: JSON.stringify({
+        degree_id: degreeId,
+        college_id: collegeId,
+        slug: slug
+      })
     })
     if (!response.ok) {
       const errData = await response.json()
