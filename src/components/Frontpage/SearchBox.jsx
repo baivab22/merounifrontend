@@ -393,7 +393,7 @@ const SearchBox = ({ onClose }) => {
                     title='Skills'
                     items={searchResults.skills}
                     icon={Lightbulb}
-                    path='skills-based-courses'
+                    path='short-term-courses'
                   />
                   <ResultSection
                     title='Videos'

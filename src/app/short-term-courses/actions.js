@@ -1,7 +1,7 @@
 'use server'
 
 
-const API_URL = `${process.env.baseUrl}/skills-based-courses`
+const API_URL = `${process.env.baseUrl}/short-term-courses`
 
 export async function fetchPublicSkillCourses({ q = '', page = 1, limit = 20, price = '', duration = '', location = '', type = '' } = {}) {
     try {

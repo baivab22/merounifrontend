@@ -171,7 +171,7 @@ export default function SkillsCoursesManager() {
     try {
       if (editingId) {
         const res = await authFetch(
-          `${process.env.baseUrl}/skills-based-courses/${editingId}`,
+          `${process.env.baseUrl}/short-term-courses/${editingId}`,
           {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -185,7 +185,7 @@ export default function SkillsCoursesManager() {
         })
       } else {
         const res = await authFetch(
-          `${process.env.baseUrl}/skills-based-courses`,
+          `${process.env.baseUrl}/short-term-courses`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -249,7 +249,7 @@ export default function SkillsCoursesManager() {
   const handleDeleteConfirm = async () => {
     try {
       await authFetch(
-        `${process.env.baseUrl}/skills-based-courses/${deleteId}`,
+        `${process.env.baseUrl}/short-term-courses/${deleteId}`,
         { method: 'DELETE' }
       )
       toast({

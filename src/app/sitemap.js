@@ -91,7 +91,7 @@ export default async function sitemap() {
         getDynamicRoutes('course', 'degree/single-subject', 'slug'),
         getDynamicRoutes('degree', 'degree', 'slug'),
         getDynamicRoutes('career', 'career', 'slug'),
-        getDynamicRoutes('skills-based-courses', 'short-term-courses', 'slug'),
+        getDynamicRoutes('short-term-courses', 'short-term-courses', 'slug'),
         getDynamicRoutes('category', 'materials/category', 'id'),
     ])
 

@@ -263,7 +263,7 @@ export default function AdmissionManager() {
     formState: { errors }
   } = useForm({
     defaultValues: {
-      college_id: '',
+      school_college_id: '',
       program_id: '',
       eligibility_criteria: '',
       admission_process: '',
@@ -304,7 +304,7 @@ export default function AdmissionManager() {
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewData, setViewData] = useState(null)
 
-  const [selectedCollege, setSelectedCollege] = useState(null)
+  const [selectedInstitution, setSelectedInstitution] = useState(null)
   const [selectedProgram, setSelectedProgram] = useState(null)
   const [uploadedFiles, setUploadedFiles] = useState({ pdf_file: '' })
 
@@ -423,10 +423,10 @@ export default function AdmissionManager() {
   const handleAdd = () => {
     setEditing(false)
     setEditingId(null)
-    setSelectedCollege(null)
+    setSelectedInstitution(null)
     setSelectedProgram(null)
     reset({
-      college_id: '',
+      school_college_id: '',
       program_id: '',
       eligibility_criteria: '',
       admission_process: '',
@@ -494,7 +494,7 @@ export default function AdmissionManager() {
     setEditingId(item.id)
 
     // Set selected objects for SearchSelectCreate
-    setSelectedCollege(
+    setSelectedInstitution(
       item.collegeAdmissionCollege
         ? {
             id: item.collegeAdmissionCollege.id,
@@ -514,7 +514,7 @@ export default function AdmissionManager() {
     )
 
     reset({
-      college_id: item.collegeAdmissionCollege?.id || '',
+      school_college_id: item.collegeAdmissionCollege?.id || '',
       program_id: item.program?.id || '',
       eligibility_criteria: item.eligibility_criteria || '',
       admission_process: item.admission_process || '',
@@ -575,7 +575,7 @@ export default function AdmissionManager() {
     setIsOpen(false)
     setEditing(false)
     setEditingId(null)
-    setSelectedCollege(null)
+    setSelectedInstitution(null)
     setSelectedProgram(null)
     setUploadedFiles({ pdf_file: '' })
     reset()
@@ -757,26 +757,26 @@ export default function AdmissionManager() {
                           required
                           className='text-gray-700 font-semibold mb-1.5 block text-sm'
                         >
-                          Target College
+                          Target School/College
                         </Label>
                         <SearchSelectCreate
                           onSearch={fetchColleges}
                           onSelect={(item) => {
-                            setSelectedCollege(item)
-                            setValue('college_id', item.id, {
+                            setSelectedInstitution(item)
+                            setValue('school_college_id', item.id, {
                               shouldValidate: true
                             })
                             setSelectedProgram(null)
                             setValue('program_id', '', { shouldValidate: true })
                           }}
                           onRemove={() => {
-                            setSelectedCollege(null)
-                            setValue('college_id', '', { shouldValidate: true })
+                            setSelectedInstitution(null)
+                            setValue('school_college_id', '', { shouldValidate: true })
                             setSelectedProgram(null)
                             setValue('program_id', '', { shouldValidate: true })
                           }}
-                          selectedItems={selectedCollege}
-                          placeholder='Search and select college...'
+                          selectedItems={selectedInstitution}
+                          placeholder='Search and select school/college...'
                           isMulti={false}
                           displayKey='name'
                           renderItem={(item) => (
@@ -822,13 +822,13 @@ export default function AdmissionManager() {
                         />
                         <input
                           type='hidden'
-                          {...register('college_id', {
-                            required: 'College is required'
+                          {...register('school_college_id', {
+                            required: 'Institution is required'
                           })}
                         />
-                        {errors.college_id && (
+                        {errors.school_college_id && (
                           <p className='text-xs font-bold text-red-500 mt-2 ml-1'>
-                            {errors.college_id.message}
+                            {errors.school_college_id.message}
                           </p>
                         )}
                       </div>
@@ -843,7 +843,7 @@ export default function AdmissionManager() {
                         </Label>
                         <SearchSelectCreate
                           onSearch={(q) =>
-                            fetchProgramsByCollege(selectedCollege?.id, q)
+                            fetchProgramsByCollege(selectedInstitution?.id, q)
                           }
                           onSelect={(item) => {
                             setSelectedProgram(item)
@@ -857,13 +857,13 @@ export default function AdmissionManager() {
                           }}
                           selectedItems={selectedProgram}
                           placeholder={
-                            selectedCollege
+                            selectedInstitution
                               ? 'Search and select program...'
-                              : 'Select a college first'
+                              : 'Select a school/college first'
                           }
                           isMulti={false}
                           displayKey='title'
-                          isLoading={!selectedCollege}
+                          isLoading={!selectedInstitution}
                         />
                         <input
                           type='hidden'

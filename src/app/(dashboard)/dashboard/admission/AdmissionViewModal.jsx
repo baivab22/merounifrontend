@@ -22,7 +22,7 @@ const AdmissionViewModal = ({ isOpen, onClose, admission }) => {
                 <div className="space-y-6 max-h-[70vh] pr-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
-                            <h4 className="text-sm font-medium text-gray-500">College</h4>
+                            <h4 className="text-sm font-medium text-gray-500">School/College</h4>
                             <p className="text-lg font-medium text-gray-900">{college.name || 'N/A'}</p>
                         </div>
 
