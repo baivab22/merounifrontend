@@ -189,9 +189,7 @@ const ConsultancyCard = ({ consultancy }) => {
             </div>
           </div>
 
-          <p className='text-gray-600 text-sm mb-4 line-clamp-3 flex-grow'>
-            {description}
-          </p>
+
 
           <div className='mt-auto pt-4'>
             {destinations.length > 0 && (
