@@ -120,12 +120,18 @@ export async function updateAdmissionOrder(data) {
 
 export async function fetchColleges(searchQuery = '') {
   try {
-    const response = await authFetch(`${process.env.baseUrl}/college?limit=100&q=${encodeURIComponent(searchQuery)}`)
-    if (!response.ok) throw new Error('Failed to fetch colleges')
+    const url = new URL(
+      `${process.env.baseUrl}/college/institutions-for-admission`
+    )
+    if (searchQuery) {
+      url.searchParams.set('q', searchQuery)
+    }
+    const response = await authFetch(url.toString())
+    if (!response.ok) throw new Error('Failed to fetch schools/colleges')
     const data = await response.json()
-    return data.items
+    return data.items || []
   } catch (error) {
-    console.error('Error fetching colleges:', error)
+    console.error('Error fetching schools/colleges:', error)
     return []
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, Heart } from 'lucide-react'
@@ -39,6 +39,17 @@ const ConsultancyCard = ({ consultancy }) => {
   const logo = consultancy?.logo
   const image = consultancy?.featured_image || ''
   const isPinned = consultancy?.pinned === 1
+
+  const isStudent = useMemo(() => {
+    if (!user?.role) return false
+    try {
+      const roles =
+        typeof user.role === 'string' ? JSON.parse(user.role) : user.role
+      return !!roles?.student
+    } catch {
+      return false
+    }
+  }, [user?.role])
 
   useEffect(() => {
     if (user?.id && consultancyId) {
@@ -191,7 +202,7 @@ const ConsultancyCard = ({ consultancy }) => {
 
 
 
-          <div className='mt-auto pt-4'>
+          <div className='mt-auto pt-4 space-y-4'>
             {destinations.length > 0 && (
               <div className='pt-4 border-t border-gray-100 flex flex-wrap gap-1.5'>
                 {destinations.slice(0, 3).map((d, i) => (
@@ -208,6 +219,15 @@ const ConsultancyCard = ({ consultancy }) => {
                   </span>
                 )}
               </div>
+            )}
+            {isStudent && slug && (
+              <Link
+                href={`/consultancy/apply/${slug}`}
+                onClick={(e) => e.stopPropagation()}
+                className='block w-full py-2.5 px-4 bg-[#0A70A7] text-white text-center text-sm font-bold rounded-lg hover:bg-[#085a86] transition-all shadow-sm'
+              >
+                Apply Now
+              </Link>
             )}
           </div>
         </div>

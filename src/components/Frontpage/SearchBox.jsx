@@ -399,7 +399,7 @@ const SearchBox = ({ onClose }) => {
                     title='Videos'
                     items={searchResults.videos}
                     icon={PlayCircle}
-                    path='video'
+                    path='watch'
                   />
                   <ResultSection
                     title='Exams'

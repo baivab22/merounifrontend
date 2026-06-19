@@ -306,7 +306,7 @@ export const menuItems = [
       {
         icon: <FaHandshake className='text-xl' />,
         label: 'Edit Consultancy Info',
-        href: '/dashboard/consultancy',
+        href: '/dashboard/edit-consultancy',
         visible: ['consultancy']
       },
 

@@ -11,7 +11,10 @@ export async function generateMetadata({ params }) {
         if (!video) return { title: 'Video | MeroUni' }
 
         const title = video.title
-        const description = stripHtml(video.description || '').substring(0, 160)
+        const description = (
+            video.meta_description?.trim() ||
+            stripHtml(video.description || '')
+        ).substring(0, 160)
         
         // Extract video ID for thumbnail if possible, or use a default
         let ogImage = null

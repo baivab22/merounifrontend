@@ -49,7 +49,7 @@ const TopAgentsTable = ({ topAgents, loading, onViewAll }) => {
             <tbody>
               {topAgents.map((item, index) => (
                 <tr
-                  key={item.agent_id}
+                  key={item.referring_agent_id}
                   className='border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group'
                 >
                   <td className='py-4'>

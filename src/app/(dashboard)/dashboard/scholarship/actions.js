@@ -47,6 +47,23 @@ export async function updateScholarship(id, data) {
   }
 }
 
+export async function updateScholarshipOrder(scholarships) {
+  try {
+    const response = await authFetch(`${url}/update-order`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scholarships })
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.error || err.message || 'Failed to save order')
+    }
+    return await response.json()
+  } catch (error) {
+    throw error
+  }
+}
+
 export async function deleteScholarship(id) {
   try {
     const response = await authFetch(`${url}?scholarship_id=${id}`, {

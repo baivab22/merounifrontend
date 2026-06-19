@@ -215,7 +215,7 @@ const ApplicationsPage = () => {
         accessorKey: 'course.title',
         cell: ({ row }) => (
           <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-[10px] font-bold uppercase tracking-wider">
-            {row.original?.course?.title || 'N/A'}
+            {row.original?.program?.title || row.original?.course?.title || 'N/A'}
           </span>
         )
       })

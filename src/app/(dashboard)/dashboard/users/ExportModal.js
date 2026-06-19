@@ -11,11 +11,22 @@ import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { Download } from 'lucide-react'
+import { authFetch } from '@/app/utils/authFetch'
+
+const ROLE_OPTIONS = [
+  { value: 'all', label: 'All Roles' },
+  { value: 'student', label: 'Student' },
+  { value: 'agent', label: 'Partner (Agent)' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'institution', label: 'Institution' },
+  { value: 'consultancy', label: 'Consultancy' },
+]
 
 export default function ExportModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     limit: '',
-    role: 'All',
+    role: 'all',
     startDate: '',
     endDate: ''
   })
@@ -39,22 +50,27 @@ export default function ExportModal({ isOpen, onClose }) {
     setLoading(true)
     try {
       const queryParams = new URLSearchParams({
-        limit: formData.limit || 100,
-        startDate: formData.startDate,
-        endDate: formData.endDate
+        limit: String(formData.limit || 100),
       })
 
-      if (formData.role !== 'All') {
+      if (formData.startDate) {
+        queryParams.set('start_date', formData.startDate)
+      }
+      if (formData.endDate) {
+        queryParams.set('end_date', formData.endDate)
+      }
+      if (formData.role && formData.role !== 'all') {
         queryParams.set('role', formData.role)
       }
 
-      const response = await fetch(
-        `${process.env.baseUrl}/users/export?${queryParams}`,
+      const response = await authFetch(
+        `${process.env.baseUrl}/users/export?${queryParams.toString()}`,
         { method: 'GET' }
       )
 
       if (!response.ok) {
-        throw new Error('Failed to export users. Please try again.')
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error(errBody.message || 'Failed to export users. Please try again.')
       }
 
       const responseText = await response.text()
@@ -126,9 +142,11 @@ export default function ExportModal({ isOpen, onClose }) {
                   onChange={handleChange}
                   className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#387cae] focus-visible:ring-offset-2'
                 >
-                  <option value='All'>All Roles</option>
-                  <option value='Agent'>Agent</option>
-                  <option value='Student'>Student</option>
+                  {ROLE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </section>

@@ -1,23 +1,22 @@
-'use server'
+import { authFetch } from '@/app/utils/authFetch'
 
-
-
-let url = `${process.env.baseUrl}/video`
+const url = `${process.env.baseUrl}/video`
 
 export async function fetchVideos(page = 1, limit = 1000, search = '', category_id = '') {
   try {
-    const urlWithParams = new URL(url)
-    urlWithParams.searchParams.append('page', page)
-    urlWithParams.searchParams.append('limit', limit)
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    })
     if (search) {
-      urlWithParams.searchParams.append('q', search)
+      params.set('q', search)
     }
     if (category_id) {
-      urlWithParams.searchParams.append('category_id', category_id)
+      params.set('category_id', category_id)
     }
 
-    const response = await fetch(urlWithParams.toString(), {
-      cache: 'no-store'
+    const response = await authFetch(`${url}?${params.toString()}`, {
+      cache: 'no-store',
     })
 
     if (!response.ok) {
@@ -31,20 +30,19 @@ export async function fetchVideos(page = 1, limit = 1000, search = '', category_
   }
 }
 
-
-
 export async function getVideoBySlug(slug) {
   try {
-    const response = await fetch(`${url}?slug=${slug}`, {
-      cache: 'no-store'
-    })
+    const response = await fetch(
+      `${url}/slug/${encodeURIComponent(slug)}`,
+      { cache: 'no-store' }
+    )
 
     if (!response.ok) {
-      throw new Error('Failed to fetch video details')
+      return null
     }
 
     const data = await response.json()
-    return data.items ? data.items[0] : data
+    return data.item || data.video || data
   } catch (error) {
     console.error('Error fetching video details:', error)
     return null
@@ -53,12 +51,12 @@ export async function getVideoBySlug(slug) {
 
 export async function createVideo(data) {
   try {
-    const response = await fetch(`${url}`, {
+    const response = await authFetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
 
     if (!response.ok) {
@@ -74,12 +72,12 @@ export async function createVideo(data) {
 
 export async function updateVideo(videoId, data) {
   try {
-    const response = await fetch(`${url}?video_id=${videoId}`, {
+    const response = await authFetch(`${url}/${videoId}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
 
     if (!response.ok) {
@@ -95,15 +93,14 @@ export async function updateVideo(videoId, data) {
 
 export async function deleteVideo(videoId) {
   try {
-    const response = await fetch(`${url}?video_id=${videoId}`, {
-      method: 'DELETE'
+    const response = await authFetch(`${url}/${videoId}`, {
+      method: 'DELETE',
     })
 
     if (!response.ok) {
       throw new Error('Failed to delete video')
     }
-    const res = await response.json()
-    return res
+    return await response.json()
   } catch (error) {
     console.error('Error deleting video:', error)
     throw error

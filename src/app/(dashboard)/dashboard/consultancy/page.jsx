@@ -18,12 +18,10 @@ import { FaHandshake } from 'react-icons/fa'
 
 import { Button } from '@/ui/shadcn/button'
 import { usePageHeading } from '@/contexts/PageHeadingContext'
-import useAdminPermission from '@/hooks/useAdminPermission'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import CreateUpdateConsultancy from '@/ui/molecules/dialogs/CreateUpdateConsultancy'
 import ViewConsultancy from '@/ui/molecules/dialogs/ViewConsultancy'
 import CreateConsultencyUser from '@/ui/molecules/dialogs/CreateConsultencyUser'
-import EditConsultancyPage from './EditConsultancyPage'
 import ImageLightbox from '@/ui/molecules/image-lightbox'
 import { authFetch } from '@/app/utils/authFetch'
 import { deleteConsultancy } from './actions'
@@ -275,13 +273,6 @@ const CardSkeleton = ({ i = 0 }) => (
 )
 
 export default function ConsultancyManager() {
-  const { role } = useAdminPermission()
-
-  // If user is consultancy, show the edit page
-  if (role.consultancy) {
-    return <EditConsultancyPage />
-  }
-
   const { toast } = useToast()
   const { setHeading } = usePageHeading()
   const searchParams = useSearchParams()

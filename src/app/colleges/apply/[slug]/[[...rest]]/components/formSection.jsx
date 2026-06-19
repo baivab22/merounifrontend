@@ -95,7 +95,6 @@ const FormSection = ({ id, college }) => {
     try {
       const payload = isStudent
         ? {
-          student_id: user?.id,
           referral_type: 'self',
           college_id: formData.college_id,
           program_id: formData.program_id || null,

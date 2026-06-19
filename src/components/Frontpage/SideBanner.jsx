@@ -24,9 +24,7 @@ const SideBanner = ({ banners = [] }) => {
     <div className='grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4'>
       {displayBanners.map((banner) => {
         const url = banner.website_url?.trim()
-        const href =
-          url &&
-          (/^https?:\/\//i.test(url) ? url : `https://${url}`)
+        const href = url && (/^https?:\/\//i.test(url) ? url : `https://${url}`)
         const shellClass = `group relative block overflow-hidden rounded-lg shadow-sm border border-gray-100 bg-gray-50 w-full ${aspectClass} mx-auto`
         const inner = (
           <>

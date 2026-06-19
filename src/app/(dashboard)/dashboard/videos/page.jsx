@@ -9,7 +9,17 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
 import { formatDate } from '@/utils/date.util'
-import { Edit2, ExternalLink, Eye, Plus, Trash2, Search, Loader2, Video } from 'lucide-react'
+import {
+  Edit2,
+  ExternalLink,
+  Eye,
+  Plus,
+  Trash2,
+  Search,
+  Loader2,
+  Video,
+  Settings
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
@@ -18,6 +28,22 @@ import Loader from '../../../../ui/molecules/Loading'
 import FileUpload from '../colleges/FileUpload'
 import { fetchVideos } from './action'
 import { Textarea } from '@/ui/shadcn/textarea'
+
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+  <div className='flex items-center gap-3 mb-6'>
+    <div className='w-10 h-10 rounded-md bg-[#387cae]/10 flex items-center justify-center text-[#387cae] shadow-sm border border-[#387cae]/20'>
+      <Icon size={20} />
+    </div>
+    <div>
+      <h3 className='text-lg font-bold text-gray-900 leading-tight'>{title}</h3>
+      {subtitle && (
+        <p className='text-[11px] text-slate-500 mt-0.5 font-semibold leading-relaxed uppercase tracking-wider'>
+          {subtitle}
+        </p>
+      )}
+    </div>
+  </div>
+)
 
 export default function VideoManager() {
   const { toast } = useToast()
@@ -36,6 +62,8 @@ export default function VideoManager() {
       yt_video_link: '',
       description: '',
       featured_image: '',
+      slug: '',
+      meta_description: '',
       author: author_id
     }
   })
@@ -66,8 +94,27 @@ export default function VideoManager() {
   const columns = useMemo(
     () => [
       {
-        header: 'Title',
-        accessorKey: 'title'
+        header: '',
+        accessorKey: 'title',
+        cell: ({ row }) => {
+          const { title, featured_image } = row.original
+          return (
+            <div className='flex items-center gap-3 min-w-0'>
+              {featured_image ? (
+                <img
+                  src={featured_image}
+                  alt={title}
+                  className='w-10 h-10 object-cover rounded-md shrink-0'
+                />
+              ) : (
+                <div className='w-10 h-10 rounded-md bg-gray-100 shrink-0 flex items-center justify-center'>
+                  <Video className='w-4 h-4 text-gray-400' />
+                </div>
+              )}
+              <span className='font-medium text-gray-900 truncate'>{title}</span>
+            </div>
+          )
+        }
       },
       {
         header: 'Youtube Link',
@@ -88,19 +135,6 @@ export default function VideoManager() {
         header: 'Created At',
         accessorKey: 'createdAt',
         cell: ({ getValue }) => formatDate(getValue())
-      },
-      {
-        header: 'Featured Image',
-        accessorKey: 'featured_image',
-        cell: ({ getValue }) => (
-          getValue() ? (
-            <img
-              src={getValue()}
-              alt='Video'
-              className='w-10 h-10 object-cover rounded-md'
-            />
-          ) : 'N/A'
-        )
       },
       {
         header: 'Actions',
@@ -266,6 +300,8 @@ export default function VideoManager() {
     setValue('yt_video_link', video.yt_video_link || '')
     setValue('description', video.description || '')
     setValue('featured_image', video.featured_image || '')
+    setValue('slug', video.slug || '')
+    setValue('meta_description', video.meta_description || '')
     setUploadedFiles({ featured_image: video.featured_image || '' })
   }
 
@@ -513,6 +549,40 @@ export default function VideoManager() {
                     </div>
                   </div>
                 </div>
+
+                <div className='bg-white p-6 rounded-md shadow-md'>
+                  <SectionHeader
+                    icon={Settings}
+                    title='SEO Settings'
+                    subtitle='Optimize for search engines'
+                  />
+                  <div className='space-y-4'>
+                    <div>
+                      <Label htmlFor='slug'>URL Slug</Label>
+                      <Input
+                        id='slug'
+                        {...register('slug')}
+                        placeholder='my-video-title'
+                        className='mt-1'
+                      />
+                      <p className='text-[10px] text-gray-400 mt-1 italic'>
+                        Leave empty to auto-generate from title
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor='meta_description'>
+                        SEO Meta Description
+                      </Label>
+                      <Textarea
+                        id='meta_description'
+                        {...register('meta_description')}
+                        placeholder='Meta description for SEO...'
+                        className='mt-1 min-h-[100px] resize-none'
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Submit Button - Sticky Footer */}
@@ -601,6 +671,27 @@ export default function VideoManager() {
                   {viewingVideo?.description || "No description provided."}
                 </div>
               </div>
+
+              {viewingVideo?.slug && (
+                <div className="md:col-span-2">
+                  <h3 className="text-sm font-medium text-gray-500">URL Slug</h3>
+                  <a
+                    href={`/watch/${viewingVideo.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    /watch/{viewingVideo.slug} <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              {viewingVideo?.meta_description && (
+                <div className="md:col-span-2">
+                  <h3 className="text-sm font-medium text-gray-500">SEO Meta Description</h3>
+                  <p className="mt-1 text-gray-700">{viewingVideo.meta_description}</p>
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <h3 className="text-sm font-medium text-gray-500">Created At</h3>

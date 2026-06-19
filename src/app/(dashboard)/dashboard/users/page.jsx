@@ -646,10 +646,7 @@ export default function UsersManager() {
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
-      >
-        <h2 className='text-xl font-bold mb-4'>Export Users</h2>
-        <p>This is the modal content. You can add any form or content here.</p>
-      </ExportModal>
+      />
 
       {/* Student Details View Modal */}
       <StudentDetailsModal

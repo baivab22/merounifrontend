@@ -339,7 +339,11 @@ export default function VideoList({ initialData }) {
                 <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
                   {videos.map((video) => (
                     <Link
-                      href={`/watch/${video.slug}`}
+                      href={
+                        video.slug
+                          ? `/watch/${encodeURIComponent(video.slug)}`
+                          : '/watch'
+                      }
                       key={video.id}
                       className='group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 select-none'
                     >
@@ -370,9 +374,11 @@ export default function VideoList({ initialData }) {
                         <h2 className='text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#0A70A7] transition-all leading-tight'>
                           {video.title}
                         </h2>
-                        <p className='text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed font-medium'>
-                          {video.description}
-                        </p>
+                        {video.description && (
+                          <p className='text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed font-medium'>
+                            {video.description}
+                          </p>
+                        )}
                         <div className='flex items-center justify-between text-[11px] text-gray-400 font-bold pt-4 border-t border-gray-50 uppercase tracking-widest'>
                           <div className='flex items-center gap-2'>
                             <div className='w-1.5 h-1.5 rounded-full bg-green-500'></div>

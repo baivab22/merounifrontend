@@ -98,45 +98,51 @@ export default function SchoolManagement() {
     }
   }, [])
 
+  const fetchSchools = async ({
+    page = 1,
+    statusFilter = status,
+    query = searchQuery
+  } = {}) => {
+    try {
+      setTableLoading(true)
+      let url = `${process.env.baseUrl}/school?limit=10&page=${page}`
+      if (query) url += `&q=${encodeURIComponent(query)}`
+      if (statusFilter && statusFilter !== 'all') {
+        url += `&status=${statusFilter}`
+      }
+      const response = await authFetch(url)
+      if (!response.ok) throw new Error('Failed to fetch schools')
+      const data = await response.json()
+      setSchools(data.items || [])
+      setPagination({
+        currentPage: data.pagination?.currentPage || page,
+        totalPages: data.pagination?.totalPages || 1,
+        total: data.pagination?.totalCount || 0
+      })
+    } catch (err) {
+      console.error('Error loading schools:', err)
+      setSchools([])
+      setPagination({
+        currentPage: 1,
+        totalPages: 1,
+        total: 0
+      })
+    } finally {
+      setTableLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    setStatus(searchParams.get('status') || 'all')
+  }, [searchParams])
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     setHeading('School Management')
-    const loadInitialSchools = async () => {
-      const page = parseInt(searchParams.get('page')) || 1
-      try {
-        const statusParam = searchParams.get('status')
-        let url = `${process.env.baseUrl}/school?limit=10&page=${page}`
-        if (statusParam && statusParam !== 'all') {
-          url += `&status=${statusParam}`
-        }
-        const response = await authFetch(url)
-        if (response.ok) {
-          const data = await response.json()
-          if (data && data.items) {
-            setSchools(data.items)
-            setPagination({
-              currentPage: data.pagination?.currentPage || 1,
-              totalPages: data.pagination?.totalPages || 1,
-              total: data.pagination?.totalCount || 0
-            })
-          }
-        } else {
-          throw new Error('Failed to fetch schools')
-        }
-      } catch (err) {
-        console.error('Error loading schools:', err)
-        setSchools([])
-        setPagination({
-          currentPage: 1,
-          totalPages: 1,
-          total: 0
-        })
-      } finally {
-        setTableLoading(false)
-      }
-    }
-    loadInitialSchools()
+    const page = parseInt(searchParams.get('page')) || 1
+    const statusParam = searchParams.get('status') || 'all'
+    fetchSchools({ page, statusFilter: statusParam })
     return () => setHeading(null)
   }, [setHeading, searchParams])
 
@@ -204,71 +210,19 @@ export default function SchoolManagement() {
   }
 
   const loadSchools = async (page = 1) => {
-    try {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('page', page)
-      if (status !== 'all') {
-        params.set('status', status)
-      } else {
-        params.delete('status')
-      }
-      router.push(`${pathname}?${params.toString()}`, { scroll: false })
-
-      let url = `${process.env.baseUrl}/school?limit=10&page=${page}`
-      if (status !== 'all') {
-        url += `&status=${status}`
-      }
-      const response = await authFetch(url)
-
-      if (response.ok) {
-        const data = await response.json()
-        setSchools(data.items || [])
-        setPagination({
-          currentPage: data.pagination?.currentPage || page,
-          totalPages: data.pagination?.totalPages || 1,
-          total: data.pagination?.totalCount || 0
-        })
-      } else {
-        throw new Error('Failed to fetch schools')
-      }
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load schools',
-        variant: 'destructive'
-      })
-      console.error('Error loading schools:', err)
-    } finally {
-      setTableLoading(false)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('page', page)
+    if (status !== 'all') {
+      params.set('status', status)
+    } else {
+      params.delete('status')
     }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    await fetchSchools({ page, statusFilter: status, query: searchQuery })
   }
 
   const handleSearch = async (query) => {
-    try {
-      let url = `${process.env.baseUrl}/school?limit=10&page=1`
-      if (query) url += `&q=${query}`
-      if (status !== 'all') url += `&status=${status}`
-
-      const response = await authFetch(url)
-      if (response.ok) {
-        const data = await response.json()
-        setSchools(data.items)
-
-        if (data.pagination) {
-          setPagination({
-            currentPage: data.pagination.currentPage,
-            totalPages: data.pagination.totalPages,
-            total: data.pagination.totalCount
-          })
-        }
-      } else {
-        console.error('Error fetching results:', response.statusText)
-        setSchools([])
-      }
-    } catch (error) {
-      console.error('Error fetching school search results:', error.message)
-      setSchools([])
-    }
+    await fetchSchools({ page: 1, statusFilter: status, query })
   }
 
   const handleSearchInput = (value) => {
