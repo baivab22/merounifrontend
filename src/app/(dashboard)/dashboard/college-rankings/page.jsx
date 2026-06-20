@@ -683,7 +683,7 @@ export default function CollegeRankingsPage() {
                 selectedItems={selectedCollege}
                 placeholder={
                   selectedDegree
-                    ? 'Search colleges...'
+                    ? 'Search colleges.....'
                     : 'Please select a degree first'
                 }
                 displayKey='name'
