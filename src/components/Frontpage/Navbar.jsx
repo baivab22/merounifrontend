@@ -10,6 +10,7 @@ import { THEME_BLUE } from '@/constants/constants'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/colleges', label: 'Colleges' },
+  { href: '/college-rankings', label: 'College Rankings' },
   { href: '/schools', label: 'Schools' },
   { href: '/universities', label: 'Universities' },
   { href: '/degree', label: 'Degrees' },
@@ -17,7 +18,6 @@ const navLinks = [
   { href: '/scholarship', label: 'Scholarship' },
   { href: '/consultancy', label: 'Consultancy' },
   { href: '/materials', label: 'Materials' },
-  { href: '/events', label: 'Events' },
   { href: '/blogs', label: 'Blogs' }
 ]
 
@@ -29,6 +29,7 @@ const moreLinks = [
   { href: '/career', label: 'Careers at MeroUni' },
   { href: '/watch', label: 'Videos' },
   { href: '/short-term-courses', label: 'Short Term Courses' },
+  { href: '/events', label: 'Events' },
   { href: '/contact', label: 'Contact Us' }
 ]
 
