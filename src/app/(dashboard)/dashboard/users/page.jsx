@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 import ExportModal from './ExportModal'
 import UserTypeFilter from './UserTypeFilter'
+import EducationLevelFilter from './EducationLevelFilter'
 import StudentDetailsModal from './StudentDetailsModal'
 import {
   Dialog,
@@ -50,6 +51,7 @@ export default function UsersManager() {
   const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUserTypes, setSelectedUserTypes] = useState([])
+  const [selectedEducationLevels, setSelectedEducationLevels] = useState([])
   const [searchTimeout, setSearchTimeout] = useState(null)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
@@ -91,7 +93,7 @@ export default function UsersManager() {
     setHeading('User Management')
     loadUsers()
     return () => setHeading(null)
-  }, [setHeading, selectedUserTypes])
+  }, [setHeading, selectedUserTypes, selectedEducationLevels])
 
   useEffect(() => {
     return () => {
@@ -108,6 +110,9 @@ export default function UsersManager() {
       let url = `${process.env.baseUrl}/users?page=${page}`
       if (selectedUserTypes.length > 0) {
         url += `&role=${selectedUserTypes.join(',')}`
+      }
+      if (selectedEducationLevels.length > 0) {
+        url += `&education_level=${selectedEducationLevels.join(',')}`
       }
 
       const response = await authFetch(url, {
@@ -149,6 +154,9 @@ export default function UsersManager() {
       let url = `${process.env.baseUrl}/users?q=${query}`
       if (selectedUserTypes.length > 0) {
         url += `&role=${selectedUserTypes.join(',')}`
+      }
+      if (selectedEducationLevels.length > 0) {
+        url += `&education_level=${selectedEducationLevels.join(',')}`
       }
 
       const response = await authFetch(url, {
@@ -407,6 +415,12 @@ export default function UsersManager() {
                 <UserTypeFilter
                   selectedTypes={selectedUserTypes}
                   onChange={setSelectedUserTypes}
+                />
+              </div>
+              <div className='shrink-0 w-full sm:w-auto'>
+                <EducationLevelFilter
+                  selectedLevels={selectedEducationLevels}
+                  onChange={setSelectedEducationLevels}
                 />
               </div>
               <Button

@@ -6,9 +6,17 @@ import {
   DialogTitle,
   DialogClose
 } from '@/ui/shadcn/dialog'
-import { FileText, Mail, Phone, User, Calendar } from 'lucide-react'
+import { FileText, Mail, Phone, User, Calendar, GraduationCap, BookOpen } from 'lucide-react'
 import { formatRelativeWithTitle } from '@/utils/date.util'
 import { Button } from '@/ui/shadcn/button'
+
+const EDUCATION_LEVEL_LABELS = {
+  upto_class_10: 'Upto Class 10',
+  plus_two_running: '+2 Running',
+  plus_two_graduate: '+2 Graduate',
+  bachelors: 'Bachelors',
+  masters: 'Masters'
+}
 
 export default function StudentDetailsModal({ isOpen, onClose, student }) {
   if (!student) return null
@@ -57,6 +65,18 @@ export default function StudentDetailsModal({ isOpen, onClose, student }) {
             <div className='flex items-center gap-3 text-gray-600'>
               <Calendar className='w-4 h-4 text-gray-400 shrink-0' />
               <span className='text-sm font-medium'>Joined {joinedDate}</span>
+            </div>
+            <div className='flex items-center gap-3 text-gray-600'>
+              <GraduationCap className='w-4 h-4 text-gray-400 shrink-0' />
+              <span className='text-sm font-medium'>
+                {student.educationLevel ? EDUCATION_LEVEL_LABELS[student.educationLevel] || student.educationLevel : 'N/A'}
+              </span>
+            </div>
+            <div className='flex items-center gap-3 text-gray-600'>
+              <BookOpen className='w-4 h-4 text-gray-400 shrink-0' />
+              <span className='text-sm font-medium'>
+                {student.furtherEducationPlan || 'N/A'}
+              </span>
             </div>
           </div>
 

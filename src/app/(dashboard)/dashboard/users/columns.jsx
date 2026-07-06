@@ -4,6 +4,14 @@ import { formatRelativeWithTitle } from '@/utils/date.util'
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogClose } from '@/ui/shadcn/dialog'
 
+const EDUCATION_LEVEL_LABELS = {
+  upto_class_10: 'Upto Class 10',
+  plus_two_running: '+2 Running',
+  plus_two_graduate: '+2 Graduate',
+  bachelors: 'Bachelors',
+  masters: 'Masters'
+}
+
 const UserAvatar = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false)
   const imageUrl = user.profileImageUrl || user.profile_image_url || user.image
@@ -116,6 +124,25 @@ export const createColumns = ({ handleEdit, handleDelete, handleView }) => [
         </span>
       )
     }
+  },
+  {
+    header: 'Education Level',
+    accessorKey: 'educationLevel',
+    cell: ({ getValue }) => {
+      const value = getValue()
+      return (
+        <span className='text-gray-600 text-sm'>
+          {value ? EDUCATION_LEVEL_LABELS[value] || value : 'N/A'}
+        </span>
+      )
+    }
+  },
+  {
+    header: 'Future Plan',
+    accessorKey: 'furtherEducationPlan',
+    cell: ({ getValue }) => (
+      <span className='text-gray-600 text-sm'>{getValue() || 'N/A'}</span>
+    )
   },
   {
     header: 'Actions',
