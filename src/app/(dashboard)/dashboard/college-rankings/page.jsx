@@ -74,7 +74,7 @@ export default function CollegeRankingsPage() {
   }, [])
 
   useEffect(() => {
-    setHeading('College Rankings')
+    setHeading('Top Colleges')
     loadRankings()
     return () => setHeading(null)
   }, [setHeading, loadRankings])

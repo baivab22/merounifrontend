@@ -41,7 +41,7 @@ export const metadata = {
     images: ['https://merouni.com/images/logo.png'],
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: '/faviconnew.png',
   },
 }
 

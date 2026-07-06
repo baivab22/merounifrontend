@@ -8,22 +8,22 @@ import { getAllRankings } from './actions'
 import { Trophy, ChevronRight, GraduationCap, Building2 } from 'lucide-react'
 
 export const metadata = {
-  title: 'College Rankings in Nepal | Compare Top Colleges',
+  title: 'Top Colleges in Nepal | Compare Top Colleges',
   description:
-    'Explore and compare top-ranked colleges in Nepal across various courses including BBA, MBA, Engineering, Medical, and more. Make informed decisions with MeroUni rankings.',
+    'Find the Top colleges for Bachelor\u2019s, +2, Diploma & more. Compare courses, fees, rankings and admission process and find the best college for your future.',
   openGraph: {
-    title: 'College Rankings in Nepal | Compare Top Colleges',
+    title: 'Top Colleges in Nepal | Compare Top Colleges',
     description:
-      'Explore and compare top-ranked colleges in Nepal across various courses including BBA, MBA, Engineering, Medical, and more.',
+      'Find the Top colleges for Bachelor\u2019s, +2, Diploma & more. Compare courses, fees, rankings and admission process and find the best college for your future.',
     url: 'https://merouni.com/college-rankings',
     type: 'website',
     siteName: 'MeroUni'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'College Rankings in Nepal | Compare Top Colleges',
+    title: 'Top Colleges in Nepal | Compare Top Colleges',
     description:
-      'Explore and compare top-ranked colleges in Nepal across various courses including BBA, MBA, Engineering, Medical, and more.'
+      'Find the Top colleges for Bachelor\u2019s, +2, Diploma & more. Compare courses, fees, rankings and admission process and find the best college for your future.'
   }
 }
 

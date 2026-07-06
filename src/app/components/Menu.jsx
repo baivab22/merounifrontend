@@ -159,7 +159,7 @@ const menuItems = [
       },
       {
         icon: <MdEmojiEvents className='text-xl' />,
-        label: 'College Rankings',
+        label: 'Top Colleges',
         href: '/dashboard/college-rankings',
         visible: ['admin']
       }

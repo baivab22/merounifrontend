@@ -54,7 +54,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
           className='group/title inline-flex items-center gap-2'
         >
           <h2 className='text-lg md:text-xl font-bold text-gray-900 group-hover/title:text-[#0A6FA7] transition-colors'>
-            College Rankings
+            Top Colleges
           </h2>
           <ExternalLink className='w-4 h-4 text-[#0A6FA7] opacity-0 group-hover/title:opacity-100 transition-all transform translate-y-0.5' />
         </Link>

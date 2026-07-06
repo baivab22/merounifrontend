@@ -41,7 +41,7 @@ export async function generateMetadata({ params }) {
       }
     }
   } catch (error) {
-    return { title: 'College Rankings' }
+    return { title: 'Top Colleges' }
   }
 }
 
@@ -60,7 +60,7 @@ export default async function CollegeRankingDetailPage({ params }) {
           <EmptyState
             icon={Trophy}
             title='Rankings Not Found'
-            description='We could not find college rankings for this degree.'
+            description='We could not find top colleges for this degree.'
             action={{ label: 'Go Back Home', onClick: '/' }}
           />
         </main>
@@ -85,7 +85,7 @@ export default async function CollegeRankingDetailPage({ params }) {
               className='inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#0A6FA7] mb-6 transition-colors'
             >
               <ArrowLeft className='w-4 h-4 mr-2' />
-              Back to College Rankings
+              Back to Top Colleges
             </Link>
 
             <div className='flex items-center gap-4 mb-6'>
