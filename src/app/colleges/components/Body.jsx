@@ -106,11 +106,11 @@ const buildQueryParams = (page, filters = {}, q = '') => {
   if (filters.degree_ids && filters.degree_ids.length > 0) {
     params.append('degree_ids', filters.degree_ids.join(','))
   }
-  if (filters.district_ids && filters.district_ids.length > 0) {
-    params.append('district_ids', filters.district_ids.join(','))
+  if (filters.districts && filters.districts.length > 0) {
+    params.append('districts', filters.districts.join(','))
   }
-  if (filters.affiliation_ids && filters.affiliation_ids.length > 0) {
-    params.append('affiliation_ids', filters.affiliation_ids.join(','))
+  if (filters.university_ids && filters.university_ids.length > 0) {
+    params.append('university_ids', filters.university_ids.join(','))
   }
   if (filters.type && filters.type.length > 0) {
     params.append('type', filters.type.join(','))
@@ -232,12 +232,17 @@ const fetchDistrictsFromAPI = async (searchQuery = '') => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data = await response.json()
-    return data.items || []
+    const json = await response.json()
+    return json.data || []
   } catch (error) {
     console.error('Failed to fetch districts:', error)
     return []
   }
+}
+
+const toDistrictOption = (d) => {
+  if (typeof d === 'string') return { id: d, name: d }
+  return { id: String(d.id), name: d.name }
 }
 
 const fetchAffiliationsFromAPI = async (searchQuery = '') => {
@@ -246,7 +251,7 @@ const fetchAffiliationsFromAPI = async (searchQuery = '') => {
     if (searchQuery) {
       queryParams.append('q', searchQuery)
     }
-    const url = `${process.env.baseUrl}/affiliation?${queryParams.toString()}`
+    const url = `${process.env.baseUrl}/university?${queryParams.toString()}`
 
     const response = await fetch(url, {
       method: 'GET',
@@ -279,9 +284,9 @@ const Body = () => {
   const initialDegreeIds =
     searchParams.get('degree_ids')?.split(',').filter(Boolean) || []
   const initialDistrictIds =
-    searchParams.get('district_ids')?.split(',').filter(Boolean) || []
+    searchParams.get('districts')?.split(',').filter(Boolean) || []
   const initialAffiliationIds =
-    searchParams.get('affiliation_ids')?.split(',').filter(Boolean) || []
+    searchParams.get('university_ids')?.split(',').filter(Boolean) || []
   const initialType = searchParams.get('type')?.split(',').filter(Boolean) || []
 
   const [colleges, setColleges] = useState([])
@@ -333,8 +338,8 @@ const Body = () => {
         fetchAffiliationsFromAPI()
       ])
       setDegrees(degs.map((d) => ({ id: String(d.id), name: d.title })))
-      setDistricts(dists.map((d) => ({ id: String(d.id), name: d.name })))
-      setAffiliations(affs.map((a) => ({ id: String(a.id), name: a.name })))
+      setDistricts(dists.map(toDistrictOption))
+      setAffiliations(affs.map((a) => ({ id: String(a.id), name: a.fullname })))
       setIsDegreesLoading(false)
       setIsDistrictsLoading(false)
       setIsAffiliationsLoading(false)
@@ -391,9 +396,9 @@ const Body = () => {
     const degs =
       searchParams.get('degree_ids')?.split(',').filter(Boolean) || []
     const dists =
-      searchParams.get('district_ids')?.split(',').filter(Boolean) || []
+      searchParams.get('districts')?.split(',').filter(Boolean) || []
     const affs =
-      searchParams.get('affiliation_ids')?.split(',').filter(Boolean) || []
+      searchParams.get('university_ids')?.split(',').filter(Boolean) || []
     const t = searchParams.get('type')?.split(',').filter(Boolean) || []
 
     setSearchQuery(q)
@@ -433,10 +438,10 @@ const Body = () => {
       const filters = {
         degree_ids:
           searchParams.get('degree_ids')?.split(',').filter(Boolean) || [],
-        district_ids:
-          searchParams.get('district_ids')?.split(',').filter(Boolean) || [],
-        affiliation_ids:
-          searchParams.get('affiliation_ids')?.split(',').filter(Boolean) || [],
+        districts:
+          searchParams.get('districts')?.split(',').filter(Boolean) || [],
+        university_ids:
+          searchParams.get('university_ids')?.split(',').filter(Boolean) || [],
         type: searchParams.get('type')?.split(',').filter(Boolean) || []
       }
 
@@ -472,14 +477,14 @@ const Body = () => {
     if (field === 'district') {
       setIsDistrictsLoading(true)
       const data = await fetchDistrictsFromAPI(value)
-      setDistricts(data.map((d) => ({ id: String(d.id), name: d.name })))
+      setDistricts(data.map(toDistrictOption))
       setIsDistrictsLoading(false)
     }
 
     if (field === 'affiliation') {
       setIsAffiliationsLoading(true)
       const data = await fetchAffiliationsFromAPI(value)
-      setAffiliations(data.map((a) => ({ id: String(a.id), name: a.name })))
+      setAffiliations(data.map((a) => ({ id: String(a.id), name: a.fullname })))
       setIsAffiliationsLoading(false)
     }
   }
@@ -499,13 +504,13 @@ const Body = () => {
         ? selectedDistricts.filter((v) => v !== value)
         : [...selectedDistricts, value]
       setSelectedDistricts(nextState)
-      paramKey = 'district_ids'
+      paramKey = 'districts'
     } else if (filterType === 'affiliation') {
       nextState = selectedAffiliations.includes(value)
         ? selectedAffiliations.filter((v) => v !== value)
         : [...selectedAffiliations, value]
       setSelectedAffiliations(nextState)
-      paramKey = 'affiliation_ids'
+      paramKey = 'university_ids'
     } else if (filterType === 'type') {
       nextState = selectedTypes.includes(value)
         ? selectedTypes.filter((v) => v !== value)
