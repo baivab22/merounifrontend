@@ -30,7 +30,7 @@ export async function generateMetadata({ params }) {
       openGraph: {
         title: title,
         description: description,
-        url: `https://merouni.com/college-rankings/${slug}`,
+        url: `https://merouni.com/top-colleges/${slug}`,
         type: 'website',
         siteName: 'MeroUni'
       },
@@ -81,7 +81,7 @@ export default async function CollegeRankingDetailPage({ params }) {
         <div className='bg-white border-b border-gray-200 py-8 md:py-12'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl'>
             <Link
-              href='/college-rankings'
+              href='/top-colleges'
               className='inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#0A6FA7] mb-6 transition-colors'
             >
               <ArrowLeft className='w-4 h-4 mr-2' />

@@ -311,6 +311,7 @@ const ConsultancyApplicationsPage = () => {
               <TableHead className='w-[60px] text-gray-600'>S.N.</TableHead>
               <TableHead className='text-gray-600'>Student Details</TableHead>
               <TableHead className='text-gray-600'>Consultancy</TableHead>
+              <TableHead className='text-gray-600'>Applied At</TableHead>
               <TableHead className='text-gray-600'>Status</TableHead>
               <TableHead className='text-gray-600'>Remarks</TableHead>
               <TableHead className='text-center text-gray-600'>Actions</TableHead>
@@ -320,7 +321,7 @@ const ConsultancyApplicationsPage = () => {
             {applications.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className='text-center py-8 text-muted-foreground'
                 >
                   No applications found
@@ -345,6 +346,13 @@ const ConsultancyApplicationsPage = () => {
                   </TableCell>
                   <TableCell>
                     {app.consultancy?.title || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <span className='text-xs text-muted-foreground whitespace-nowrap'>
+                      {app.createdAt
+                        ? new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : 'N/A'}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span

@@ -10,7 +10,7 @@ import { THEME_BLUE } from '@/constants/constants'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/colleges', label: 'Colleges' },
-  { href: '/college-rankings', label: 'Top Colleges' },
+  { href: '/top-colleges', label: 'Top Colleges' },
   { href: '/schools', label: 'Schools' },
   { href: '/universities', label: 'Universities' },
   { href: '/degree', label: 'Degrees' },

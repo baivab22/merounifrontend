@@ -57,7 +57,7 @@ function parseRankingDegreeSlug(qs) {
 export default async function CollegePage({ params, searchParams }) {
     const { slug } = await params
     const qs = await Promise.resolve(searchParams ?? {})
-    const fromCollegeRankings = qs.from === 'college-rankings'
+    const fromCollegeRankings = qs.from === 'top-colleges'
     const collegeRankingDegreeSlug =
         qs.from === 'college-ranking-detail'
             ? parseRankingDegreeSlug(qs)

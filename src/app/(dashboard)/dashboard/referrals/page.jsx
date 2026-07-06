@@ -375,6 +375,19 @@ const ReferralsPage = () => {
 
     cols.push(
       {
+        header: 'Applied At',
+        accessorKey: 'createdAt',
+        cell: ({ row }) => {
+          const date = row.original.createdAt
+          if (!date) return <span className="text-slate-400 text-xs">-</span>
+          return (
+            <span className="text-xs text-slate-600 whitespace-nowrap">
+              {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )
+        }
+      },
+      {
         header: 'Status',
         accessorKey: 'status',
         cell: ({ row }) => {

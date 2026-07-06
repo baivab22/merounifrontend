@@ -15,7 +15,7 @@ export const metadata = {
     title: 'Top Colleges in Nepal | Compare Top Colleges',
     description:
       'Find the Top colleges for Bachelor\u2019s, +2, Diploma & more. Compare courses, fees, rankings and admission process and find the best college for your future.',
-    url: 'https://merouni.com/college-rankings',
+    url: 'https://merouni.com/top-colleges',
     type: 'website',
     siteName: 'MeroUni'
   },
@@ -88,7 +88,7 @@ export default async function CollegeRankingsPage() {
                     </div>
 
                     <Link
-                      href={`/college-rankings/${group.slug || degree.slug || ''}`}
+                      href={`/top-colleges/${group.slug || degree.slug || ''}`}
                       className='inline-flex items-center justify-center w-full py-3 px-6 rounded-2xl bg-gray-50 text-[#0A6FA7] font-bold text-sm group-hover:bg-[#0A6FA7] group-hover:text-white transition-all duration-300'
                     >
                       View All Rankings

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Footer from '../../components/Frontpage/Footer'
 import Header from '../../components/Frontpage/Header'
 import Navbar from '../../components/Frontpage/Navbar'
@@ -14,7 +15,9 @@ const Page = () => {
       <Header />
       <Navbar />
       {/* <Featured /> */}
-      <Body />
+      <Suspense fallback={null}>
+        <Body />
+      </Suspense>
       <Footer />
     </>
   )

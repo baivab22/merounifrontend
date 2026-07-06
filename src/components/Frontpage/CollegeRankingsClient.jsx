@@ -50,7 +50,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
     <div id='college-rankings' className='py-8 md:py-10 bg-white scroll-mt-20'>
       <div className='mb-6'>
         <Link
-          href='/college-rankings'
+          href='/top-colleges'
           className='group/title inline-flex items-center gap-2'
         >
           <h2 className='text-lg md:text-xl font-bold text-gray-900 group-hover/title:text-[#0A6FA7] transition-colors'>
@@ -113,7 +113,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
                       return (
                         <li key={ranking.id}>
                           <Link
-                            href={`/colleges/${college.slug || ''}?from=college-rankings`}
+                            href={`/colleges/${college.slug || ''}?from=top-colleges`}
                             className='flex items-center gap-3 py-2.5 px-3 rounded-md text-left hover:bg-gray-50 transition-colors -mx-1'
                           >
                             <span className='flex-shrink-0 w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center'>
@@ -146,7 +146,7 @@ const CollegeRankingsClient = ({ rankings = [] }) => {
 
                   <div className='mt-2.5 pt-2 flex items-center justify-end'>
                     <Link
-                      href={`/college-rankings/${degreeGroup.slug || degreeGroup.degree.slug || ''}`}
+                      href={`/top-colleges/${degreeGroup.slug || degreeGroup.degree.slug || ''}`}
                       className='text-xs font-semibold text-[#0A6FA7] hover:text-[#064263] flex items-center transition-colors'
                     >
                       Explore All{' '}

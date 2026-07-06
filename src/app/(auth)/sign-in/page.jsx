@@ -34,7 +34,9 @@ const SignInPage = ({ defaultMode = 'login' }) => {
     phoneNo: '',
     password: '',
     role: 'student',
-    agent_experience: ''
+    agent_experience: '',
+    education_level: '',
+    further_education_plan: ''
   })
   const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
@@ -91,6 +93,8 @@ const SignInPage = ({ defaultMode = 'login' }) => {
           phoneNo: formData.phoneNo,
           password: formData.password,
           role: formData.role,
+          education_level: formData.education_level || undefined,
+          further_education_plan: formData.further_education_plan || undefined,
           ...(formData.role === 'agent' && { agent_experience: formData.agent_experience })
         }
 
@@ -150,7 +154,9 @@ const SignInPage = ({ defaultMode = 'login' }) => {
           phoneNo: '',
           password: '',
           role: 'student',
-          agent_experience: ''
+          agent_experience: '',
+          education_level: '',
+          further_education_plan: ''
         })
       }
     },
@@ -297,6 +303,39 @@ const SignInPage = ({ defaultMode = 'login' }) => {
                 className={`w-full px-4 py-3 rounded-md border ${errors.agent_experience ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none`}
               />
               {errors.agent_experience && <p className='text-red-500 text-[10px] ml-1'>{errors.agent_experience}</p>}
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className='space-y-1.5'>
+              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Education Level</label>
+              <select
+                name='education_level'
+                value={formData.education_level}
+                onChange={handleChange}
+                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm bg-white'
+              >
+                <option value=''>Select Education Level</option>
+                <option value='upto_class_10'>Upto Class 10</option>
+                <option value='plus_two_running'>+2 Running</option>
+                <option value='plus_two_graduate'>+2 Graduate</option>
+                <option value='bachelors'>Bachelors</option>
+                <option value='masters'>Masters</option>
+              </select>
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className='space-y-1.5'>
+              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Further Education Plan</label>
+              <textarea
+                name='further_education_plan'
+                placeholder='Tell us about your further education plans...'
+                value={formData.further_education_plan}
+                onChange={handleChange}
+                rows={3}
+                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none'
+              />
             </div>
           )}
 

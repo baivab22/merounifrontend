@@ -12,7 +12,7 @@ const ImageSection = ({
   collegeRankingDegreeSlug = null
 }) => {
   const backHref = collegeRankingDegreeSlug
-    ? `/college-rankings/${encodeURIComponent(collegeRankingDegreeSlug)}`
+    ? `/top-colleges/${encodeURIComponent(collegeRankingDegreeSlug)}`
     : fromCollegeRankings
       ? '/#college-rankings'
       : '/colleges'

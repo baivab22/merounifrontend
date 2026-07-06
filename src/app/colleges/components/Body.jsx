@@ -7,7 +7,7 @@ import { useRouter } from '@bprogress/next/app'
 import { debounce } from 'lodash'
 import { Building2, Search, X, SlidersHorizontal } from 'lucide-react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 // Local FilterSection component
 const FilterSection = React.memo(function FilterSection({
@@ -298,6 +298,7 @@ const Body = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [isSearching, setIsSearching] = useState(false)
+  const filterFetchRef = useRef(false)
 
   // Filter Input States (for search within filters)
   const [filterSearchInputs, setFilterSearchInputs] = useState({
@@ -432,6 +433,11 @@ const Body = () => {
 
   // Main Data Fetch
   useEffect(() => {
+    if (filterFetchRef.current) {
+      filterFetchRef.current = false
+      return
+    }
+
     const fetchData = async () => {
       const q = searchParams.get('q') || ''
       const pg = parseInt(searchParams.get('page')) || 1
@@ -489,7 +495,7 @@ const Body = () => {
     }
   }
 
-  const handleFilterChange = (filterType, value) => {
+  const handleFilterChange = async (filterType, value) => {
     let nextState
     let paramKey
 
@@ -522,8 +528,34 @@ const Body = () => {
     // Update URL with all current filters
     updateURL({
       [paramKey]: nextState.join(','),
-      page: 1 // Reset to first page on filter change
+      page: 1
     })
+
+    filterFetchRef.current = true
+    setIsLoading(true)
+    if (searchParams.get('q')) setIsSearching(true)
+
+    const q = searchParams.get('q') || ''
+    const currentFilters = {
+      degree_ids: filterType === 'degree'
+        ? nextState
+        : (searchParams.get('degree_ids')?.split(',').filter(Boolean) || []),
+      districts: filterType === 'district'
+        ? nextState
+        : (searchParams.get('districts')?.split(',').filter(Boolean) || []),
+      university_ids: filterType === 'affiliation'
+        ? nextState
+        : (searchParams.get('university_ids')?.split(',').filter(Boolean) || []),
+      type: filterType === 'type'
+        ? nextState
+        : (searchParams.get('type')?.split(',').filter(Boolean) || [])
+    }
+
+    const data = await fetchCollegesFromAPI(1, currentFilters, q)
+    setColleges(data.colleges)
+    setPagination(data.pagination)
+    setIsLoading(false)
+    setIsSearching(false)
   }
 
   const handlePageChange = (page) => {
