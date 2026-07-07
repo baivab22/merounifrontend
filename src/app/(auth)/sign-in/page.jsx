@@ -28,8 +28,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
   })
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     phoneNo: '',
     password: '',
@@ -46,8 +45,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
   const validateForm = () => {
     const newErrors = {}
     if (!isLogin) {
-      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
+      if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required'
       if (!formData.phoneNo.trim()) {
         newErrors.phoneNo = 'Phone number is required'
       } else if (!/^\d{10}$/.test(formData.phoneNo)) {
@@ -87,8 +85,8 @@ const SignInPage = ({ defaultMode = 'login' }) => {
           deviceName: typeof navigator !== 'undefined' ? navigator.userAgent : 'Server'
         }
         : {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          firstName: formData.fullName.trim().split(' ')[0] || '',
+          lastName: formData.fullName.trim().split(' ').slice(1).join(' ') || '',
           email: formData.email,
           phoneNo: formData.phoneNo,
           password: formData.password,
@@ -148,8 +146,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
         })
         setIsLogin(true)
         setFormData({
-          firstName: '',
-          lastName: '',
+          fullName: '',
           email: formData.email,
           phoneNo: '',
           password: '',
@@ -199,34 +196,73 @@ const SignInPage = ({ defaultMode = 'login' }) => {
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           {!isLogin && (
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <>
+              {/* 1. I want to join as */}
               <div className='space-y-1.5'>
-                <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>First Name</label>
+                <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>I want to join as</label>
+                <div className='flex flex-wrap gap-4'>
+                  <label className='flex items-center gap-2 cursor-pointer'>
+                    <input
+                      type='radio'
+                      name='role'
+                      value='student'
+                      checked={formData.role === 'student'}
+                      onChange={handleChange}
+                      className='w-4 h-4 text-[#0A6FA7] border-gray-300 focus:ring-[#0A6FA7]'
+                    />
+                    <span className='text-sm font-medium text-gray-700'>Student</span>
+                  </label>
+                  <label className='flex items-center gap-2 cursor-pointer'>
+                    <input
+                      type='radio'
+                      name='role'
+                      value='agent'
+                      checked={formData.role === 'agent'}
+                      onChange={handleChange}
+                      className='w-4 h-4 text-[#0A6FA7] border-gray-300 focus:ring-[#0A6FA7]'
+                    />
+                    <span className='text-sm font-medium text-gray-700'>Partner</span>
+                  </label>
+                </div>
+                <p className='text-[10px] text-gray-500 ml-1'>
+                  {formData.role === 'student' ? 'Auto-approved. You can start right away.' : 'Requires admin approval.'}
+                </p>
+              </div>
+
+              {formData.role === 'agent' && (
+                <div className='space-y-1.5'>
+                  <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>
+                    Tell us about yourself and your experiences <span className='text-red-500'>*</span>
+                  </label>
+                  <textarea
+                    name='agent_experience'
+                    placeholder='Describe your background, experience in education consulting, and why you want to become an agent...'
+                    value={formData.agent_experience}
+                    onChange={handleChange}
+                    rows={4}
+                    className={`w-full px-4 py-3 rounded-md border ${errors.agent_experience ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none`}
+                  />
+                  {errors.agent_experience && <p className='text-red-500 text-[10px] ml-1'>{errors.agent_experience}</p>}
+                </div>
+              )}
+
+              {/* 2. Full Name */}
+              <div className='space-y-1.5'>
+                <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Full Name</label>
                 <input
                   type='text'
-                  name='firstName'
-                  placeholder='First Name'
-                  value={formData.firstName}
+                  name='fullName'
+                  placeholder='Full Name'
+                  value={formData.fullName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded-md border ${errors.firstName ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm`}
+                  className={`w-full px-4 py-3 rounded-md border ${errors.fullName ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm`}
                 />
-                {errors.firstName && <p className='text-red-500 text-[10px] ml-1'>{errors.firstName}</p>}
+                {errors.fullName && <p className='text-red-500 text-[10px] ml-1'>{errors.fullName}</p>}
               </div>
-              <div className='space-y-1.5'>
-                <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Last Name</label>
-                <input
-                  type='text'
-                  name='lastName'
-                  placeholder='Last Name'
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded-md border ${errors.lastName ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm`}
-                />
-                {errors.lastName && <p className='text-red-500 text-[10px] ml-1'>{errors.lastName}</p>}
-              </div>
-            </div>
+            </>
           )}
 
+          {/* 3. Email */}
           <div className='space-y-1.5'>
             <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Email</label>
             <input
@@ -240,6 +276,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
             {errors.email && <p className='text-red-500 text-[10px] ml-1'>{errors.email}</p>}
           </div>
 
+          {/* 4. Phone */}
           {!isLogin && (
             <div className='space-y-1.5'>
               <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Phone</label>
@@ -256,89 +293,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
             </div>
           )}
 
-          {!isLogin && (
-            <div className='space-y-1.5'>
-              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>I want to join as</label>
-              <div className='flex flex-wrap gap-4'>
-                <label className='flex items-center gap-2 cursor-pointer'>
-                  <input
-                    type='radio'
-                    name='role'
-                    value='student'
-                    checked={formData.role === 'student'}
-                    onChange={handleChange}
-                    className='w-4 h-4 text-[#0A6FA7] border-gray-300 focus:ring-[#0A6FA7]'
-                  />
-                  <span className='text-sm font-medium text-gray-700'>Student</span>
-                </label>
-                <label className='flex items-center gap-2 cursor-pointer'>
-                  <input
-                    type='radio'
-                    name='role'
-                    value='agent'
-                    checked={formData.role === 'agent'}
-                    onChange={handleChange}
-                    className='w-4 h-4 text-[#0A6FA7] border-gray-300 focus:ring-[#0A6FA7]'
-                  />
-                  <span className='text-sm font-medium text-gray-700'>Partner</span>
-                </label>
-              </div>
-              <p className='text-[10px] text-gray-500 ml-1'>
-                {formData.role === 'student' ? 'Auto-approved. You can start right away.' : 'Requires admin approval.'}
-              </p>
-            </div>
-          )}
-
-          {!isLogin && formData.role === 'agent' && (
-            <div className='space-y-1.5'>
-              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>
-                Tell us about yourself and your experiences <span className='text-red-500'>*</span>
-              </label>
-              <textarea
-                name='agent_experience'
-                placeholder='Describe your background, experience in education consulting, and why you want to become an agent...'
-                value={formData.agent_experience}
-                onChange={handleChange}
-                rows={4}
-                className={`w-full px-4 py-3 rounded-md border ${errors.agent_experience ? 'border-red-500 bg-red-50/20' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none`}
-              />
-              {errors.agent_experience && <p className='text-red-500 text-[10px] ml-1'>{errors.agent_experience}</p>}
-            </div>
-          )}
-
-          {!isLogin && (
-            <div className='space-y-1.5'>
-              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Education Level</label>
-              <select
-                name='education_level'
-                value={formData.education_level}
-                onChange={handleChange}
-                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm bg-white'
-              >
-                <option value=''>Select Education Level</option>
-                <option value='upto_class_10'>Upto Class 10</option>
-                <option value='plus_two_running'>+2 Running</option>
-                <option value='plus_two_graduate'>+2 Graduate</option>
-                <option value='bachelors'>Bachelors</option>
-                <option value='masters'>Masters</option>
-              </select>
-            </div>
-          )}
-
-          {!isLogin && (
-            <div className='space-y-1.5'>
-              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Further Education Plan</label>
-              <textarea
-                name='further_education_plan'
-                placeholder='Tell us about your further education plans...'
-                value={formData.further_education_plan}
-                onChange={handleChange}
-                rows={3}
-                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none'
-              />
-            </div>
-          )}
-
+          {/* 5. Password */}
           <div className='space-y-1.5'>
             <div className='flex justify-between items-center ml-1'>
               <label className='text-xs font-bold text-gray-700 uppercase tracking-widest'>Password</label>
@@ -370,6 +325,41 @@ const SignInPage = ({ defaultMode = 'login' }) => {
             </div>
             {errors.password && <p className='text-red-500 text-[10px] ml-1'>{errors.password}</p>}
           </div>
+
+          {/* 6. Education Level */}
+          {!isLogin && (
+            <div className='space-y-1.5'>
+              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Education Level</label>
+              <select
+                name='education_level'
+                value={formData.education_level}
+                onChange={handleChange}
+                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm bg-white'
+              >
+                <option value=''>Select Education Level</option>
+                <option value='upto_class_10'>Upto Class 10</option>
+                <option value='plus_two_running'>+2 Running</option>
+                <option value='plus_two_graduate'>+2 Graduate</option>
+                <option value='bachelors'>Bachelors</option>
+                <option value='masters'>Masters</option>
+              </select>
+            </div>
+          )}
+
+          {/* 7. Further Education Plan */}
+          {!isLogin && (
+            <div className='space-y-1.5'>
+              <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Further Education Plan</label>
+              <textarea
+                name='further_education_plan'
+                placeholder='Tell us about your further education plans...'
+                value={formData.further_education_plan}
+                onChange={handleChange}
+                rows={3}
+                className='w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A6FA7] transition-all text-sm resize-none'
+              />
+            </div>
+          )}
 
           <button
             type='submit'

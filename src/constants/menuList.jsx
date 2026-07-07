@@ -158,7 +158,7 @@ export const menuItems = [
           {
             icon: <MdEmojiEvents className='text-lg' />,
             label: 'Top Colleges',
-            href: '/dashboard/top-colleges',
+            href: '/dashboard/college-rankings',
             visible: ['admin', 'editor']
           },
           {
