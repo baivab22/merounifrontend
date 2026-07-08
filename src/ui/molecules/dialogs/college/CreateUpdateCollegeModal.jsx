@@ -1495,18 +1495,13 @@ const CreateUpdateCollegeModal = ({
                                 <Label className='text-[10px] font-bold text-slate-500 uppercase mb-1 block'>
                                   Role
                                 </Label>
-                                <select
+                                <Input
                                   {...register(`members[${index}].role`, {
                                     required: 'Role is required'
                                   })}
-                                  className='flex h-10 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#387cae]/5 focus:border-[#387cae] transition-all'
-                                >
-                                  <option value=''>Select Role</option>
-                                  <option value='Principal'>Principal</option>
-                                  <option value='Professor'>Professor</option>
-                                  <option value='Lecturer'>Lecturer</option>
-                                  <option value='Admin'>Admin</option>
-                                </select>
+                                  placeholder='e.g. Principal, Professor'
+                                  className='h-10 rounded-md'
+                                />
                                 {errors?.members?.[index]?.role && (
                                   <p className='text-[10px] font-semibold text-red-500 mt-1 ml-1'>
                                     {errors.members[index].role.message}
