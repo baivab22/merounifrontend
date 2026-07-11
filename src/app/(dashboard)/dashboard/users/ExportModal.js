@@ -10,7 +10,7 @@ import {
 import { Button } from '@/ui/shadcn/button'
 import { Input } from '@/ui/shadcn/input'
 import { Label } from '@/ui/shadcn/label'
-import { Download } from 'lucide-react'
+import { Download, Check } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
 
 const ROLE_OPTIONS = [
@@ -23,12 +23,21 @@ const ROLE_OPTIONS = [
   { value: 'consultancy', label: 'Consultancy' },
 ]
 
+const EDUCATION_LEVEL_OPTIONS = [
+  { value: 'upto_class_10', label: 'Upto Class 10' },
+  { value: 'plus_two_running', label: '+2 Running' },
+  { value: 'plus_two_graduate', label: '+2 Graduate' },
+  { value: 'bachelors', label: 'Bachelors' },
+  { value: 'masters', label: 'Masters' },
+]
+
 export default function ExportModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     limit: '',
     role: 'all',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    educationLevels: []
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -36,6 +45,15 @@ export default function ExportModal({ isOpen, onClose }) {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
+  }
+
+  const toggleEducationLevel = (level) => {
+    setFormData((prev) => {
+      const levels = prev.educationLevels.includes(level)
+        ? prev.educationLevels.filter((l) => l !== level)
+        : [...prev.educationLevels, level]
+      return { ...prev, educationLevels: levels }
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -61,6 +79,9 @@ export default function ExportModal({ isOpen, onClose }) {
       }
       if (formData.role && formData.role !== 'all') {
         queryParams.set('role', formData.role)
+      }
+      if (formData.educationLevels.length > 0) {
+        queryParams.set('education_level', formData.educationLevels.join(','))
       }
 
       const response = await authFetch(
@@ -148,6 +169,44 @@ export default function ExportModal({ isOpen, onClose }) {
                     </option>
                   ))}
                 </select>
+              </div>
+            </section>
+
+            {/* Education Level */}
+            <section className='space-y-5'>
+              <h3 className='text-base font-semibold text-slate-800 border-b pb-2'>
+                Education Level
+              </h3>
+              <div className='space-y-1.5'>
+                <Label>Filter by Education Level</Label>
+                <div className='grid grid-cols-1 gap-1.5'>
+                  {EDUCATION_LEVEL_OPTIONS.map((level) => {
+                    const isSelected = formData.educationLevels.includes(level.value)
+                    return (
+                      <button
+                        key={level.value}
+                        type='button'
+                        onClick={() => toggleEducationLevel(level.value)}
+                        className={`flex items-center w-full px-3 py-2 text-sm rounded-md border transition-colors ${
+                          isSelected
+                            ? 'bg-[#387cae]/5 text-[#387cae] border-[#387cae]/30'
+                            : 'text-gray-700 hover:bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div
+                          className={`mr-3 flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+                            isSelected
+                              ? 'bg-[#387cae] border-[#387cae]'
+                              : 'border-gray-300 bg-white'
+                          }`}
+                        >
+                          {isSelected && <Check className='h-3 w-3 text-white' />}
+                        </div>
+                        <span>{level.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </section>
 
