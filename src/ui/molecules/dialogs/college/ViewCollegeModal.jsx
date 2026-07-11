@@ -257,9 +257,15 @@ const ViewCollegeModal = ({
                                         <div className="space-y-6">
                                             {college.collegeMembers.map((member, idx) => (
                                                 <div key={idx} className="flex items-start gap-4">
-                                                    <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 flex-shrink-0">
-                                                        <Users size={20} />
-                                                    </div>
+                                                    {member.image_url ? (
+                                                        <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+                                                            <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 flex-shrink-0">
+                                                            <Users size={24} />
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <p className="font-bold text-slate-800 text-sm">{member.name}</p>
                                                         <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">{member.role}</p>

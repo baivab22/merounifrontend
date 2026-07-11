@@ -18,8 +18,8 @@ const MemberSection = ({ validMembers }) => {
             {/* Member Name */}
             {member.image_url ? (
               <div className='flex items-center gap-4 mb-5 pb-4 border-b border-gray-200'>
-                <div className='flex-shrink-0 w-12 h-12 rounded-2xl bg-white flex items-center justify-center transition-colors border border-gray-100'>
-                  <img src={member.image_url} alt={member.name} className='w-full h-full object-cover rounded-2xl' width={48} height={48} />
+                <div className='flex-shrink-0 w-20 h-20 rounded-2xl bg-white flex items-center justify-center transition-colors border border-gray-100'>
+                  <img src={member.image_url} alt={member.name} className='w-full h-full object-cover rounded-2xl' width={80} height={80} />
                 </div>
                 {member.name?.trim() && (
                   <h3 className='text-base font-semibold text-gray-900 leading-tight'>
@@ -29,8 +29,8 @@ const MemberSection = ({ validMembers }) => {
               </div>
             ) : (
               <div className='flex items-center gap-4 mb-5 pb-4 border-b border-gray-200'>
-                <div className='flex-shrink-0 w-12 h-12 rounded-2xl bg-white flex items-center justify-center group-hover:bg-[#30AD8F]/20 transition-colors border border-gray-100'>
-                  <FaUser className='w-5 h-5 text-[#30AD8F]' />
+                <div className='flex-shrink-0 w-20 h-20 rounded-2xl bg-white flex items-center justify-center group-hover:bg-[#30AD8F]/20 transition-colors border border-gray-100'>
+                  <FaUser className='w-8 h-8 text-[#30AD8F]' />
                 </div>
                 {member.name?.trim() && (
                   <h3 className='text-base font-semibold text-gray-900 leading-tight'>

@@ -7,8 +7,8 @@ const FileUploadWithPreview = ({
   defaultPreview = null,
   accept = "image/*",
   onClear,
-  widthClass = "w-20",
-  heightClass = "h-20",
+  widthClass = "w-24",
+  heightClass = "h-24",
 }) => {
   const fileInputRef = useRef(null)
 
