@@ -61,14 +61,5 @@ export default async function ProgramPage({ params }) {
     notFound()
   }
 
-  if (program && program.universities && program.universities.length > 0) {
-    const universitySlug =
-      program.universities[0].slug || program.universities[0].slug
-    if (universitySlug) {
-      const { redirect } = await import('next/navigation')
-      redirect(`/${universitySlug}/programs/${slug}`)
-    }
-  }
-
   return <ProgramContent program={program} error={error} />
 }

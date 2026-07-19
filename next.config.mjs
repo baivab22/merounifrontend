@@ -15,7 +15,14 @@ const nextConfig = {
         hostname: '**'
       }
     ]
-  }
+  },
+  redirects: async () => [
+    {
+      source: '/:universitySlug/programs/:programSlug',
+      destination: '/programs/:programSlug',
+      permanent: true,
+    },
+  ],
 }
 
 export default nextConfig

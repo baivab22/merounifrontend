@@ -7,8 +7,7 @@ const ProgramCard = ({ program }) => {
     const slug = program.slug || program.slug
     const universityNames = program.universities?.map(u => u.short_name || u.fullname).join(', ')
 
-    const universitySlug = program.universities?.[0]?.slug || program.universities?.[0]?.slug
-    const detailHref = universitySlug ? `/${universitySlug}/programs/${slug}` : `/programs/${slug}`
+    const detailHref = `/programs/${slug}`
 
     return (
         <Link href={detailHref} className='group'>

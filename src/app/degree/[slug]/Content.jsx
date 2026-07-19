@@ -27,8 +27,7 @@ const ProgramCard = ({ program }) => {
 
   const universityName = program.university_programs?.[0]?.university?.fullname;
 
-  const universitySlug = program.university_programs?.[0]?.university?.slug || program.university_programs?.[0]?.university?.slug;
-  const detailHref = universitySlug ? `/${universitySlug}/programs/${program.slug}` : `/programs/${program.slug}`;
+  const detailHref = `/programs/${program.slug}`;
 
   return (
     <Link

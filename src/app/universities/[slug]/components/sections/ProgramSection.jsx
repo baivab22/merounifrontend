@@ -44,7 +44,7 @@ const ProgramSection = ({ university }) => {
         {displayedPrograms.map((item, idx) => (
           <Link
             key={item.id || idx}
-            href={`/${university.slug}/programs/${item?.program?.slug}`}
+            href={`/programs/${item?.program?.slug}`}
             className='group flex items-center justify-between rounded-xl bg-gray-50/50 px-4 py-3.5 border border-transparent hover:border-[#30AD8F]/30 hover:bg-white hover:shadow-lg transition-all duration-300'
           >
             <div className='flex items-center gap-3'>
@@ -100,7 +100,7 @@ const ProgramSection = ({ university }) => {
               filteredPrograms?.map((item, idx) => (
                 <Link
                   key={item.id || idx}
-                  href={`/${university.slug}/programs/${item?.program?.slug}`}
+                  href={`/programs/${item?.program?.slug}`}
                   className='group flex items-center justify-between rounded-xl bg-gray-50/50 px-4 py-3 border border-transparent hover:border-[#30AD8F]/30 hover:bg-white hover:shadow-md transition-all duration-200'
                 >
                   <div className='flex items-center gap-3'>
