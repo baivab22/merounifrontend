@@ -46,7 +46,7 @@ export default function StickyBottomAd() {
   return (
     <div className='fixed bottom-0 left-1/2 -translate-x-1/2 z-50 pointer-events-auto pb-3 px-4 w-[95%] flex justify-center md:w-[40%]'>
       <div className='relative w-full'>
-        <a href='https://merouni.com' target='_blank' rel='noopener noreferrer'>
+        <a href='https://www.padmashreecollege.edu.np/' target='_blank' rel='noopener noreferrer'>
           <Image
             src='/images/bottomcentralad.gif'
             alt='Advertisement'
