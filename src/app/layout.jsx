@@ -5,6 +5,7 @@ import { Toaster } from '@/ui/shadcn/toaster'
 import ReduxProvider from '../ui/molecules/ReduxProvider'
 import ReactQueryContainer from '@/container/HOC/ReactQueryContainer'
 import BProgressProvider from '../ui/molecules/BProgressProvider'
+import StickyBottomAd from '@/components/Frontpage/StickyBottomAd'
 
 const poppins = Poppins({
   variable: '--font-poppins',
@@ -55,6 +56,7 @@ export default function RootLayout({ children }) {
               <main>{children}</main>
             </BProgressProvider>
             <Toaster />
+            <StickyBottomAd />
           </ReactQueryContainer>
         </ReduxProvider>
         <Script
