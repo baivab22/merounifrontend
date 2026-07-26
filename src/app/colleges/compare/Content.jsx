@@ -1,31 +1,92 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
 import {
-  ArrowLeft, Plus, GitCompareArrows,
-  Trash2, Share2, ChevronLeft, ChevronRight
+  Trash2, Share2, ChevronDown, X
 } from 'lucide-react'
 import Header from '@/components/Frontpage/Header'
 import Navbar from '@/components/Frontpage/Navbar'
 import Footer from '@/components/Frontpage/Footer'
-import ComparisonCard from './components/ComparisonCard'
-import EmptySlots from './components/EmptySlots'
 import SearchCollegeModal from './components/SearchCollegeModal'
 import { getCollegeBySlug } from '../actions'
 import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
 import { stripHtml } from '@/lib/string.utils'
 
-const DEFAULT_SLOTS = 2
 const MAX_COMPARE = 4
+
+const CHECKPOINTS = [
+  {
+    tag: 'Checkpoint 1',
+    title: 'Overview',
+    rows: [
+      { key: 'university', label: 'University' },
+      { key: 'location', label: 'Location' },
+      { key: 'website', label: 'Website' },
+      { key: 'email', label: 'Email' },
+    ]
+  },
+  {
+    tag: 'Checkpoint 2',
+    title: 'Fees & Duration',
+    rows: [
+      { key: 'fee', label: 'Fee Structure' },
+      { key: 'scholarship', label: 'Scholarship' },
+    ]
+  },
+  {
+    tag: 'Checkpoint 3',
+    title: 'Programs & Facilities',
+    rows: [
+      { key: 'program', label: 'Program' },
+      { key: 'facilities', label: 'Facilities' },
+    ]
+  },
+  {
+    tag: 'Checkpoint 4',
+    title: 'Outcomes & Contact',
+    rows: [
+      { key: 'placement', label: 'Placement' },
+      { key: 'contact', label: 'Contact' },
+    ]
+  },
+]
+
+const buildEmptyCollege = (college) => ({
+  id: college.collegeId || college.id,
+  name: college.name,
+  slug: college.slug,
+  featured_img: college.collegeImage || null,
+  college_logo: college.logo || null,
+  collegeAddress: college.location
+    ? { city: college.location.split(',')[0]?.trim(), country: 'Nepal' }
+    : {},
+  collegeContacts: [],
+  collegePrograms: [],
+  degrees: [],
+  universities: [],
+  collegeMembers: [],
+  facilities: [],
+  website_url: null,
+  email: null,
+  fee_structure: null,
+  placement: null,
+  scholarship: null
+})
 
 const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug = '' }) => {
   const router = useRouter()
+  const isInitialMount = useRef(true)
+
   const [colleges, setColleges] = useState(initialColleges)
   const [copied, setCopied] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [openLayers, setOpenLayers] = useState(() => {
+    const init = {}
+    CHECKPOINTS.forEach((_, i) => { init[i] = true })
+    return init
+  })
 
   const [selectedPrograms, setSelectedPrograms] = useState(() => {
     const init = {}
@@ -42,85 +103,95 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
     return init
   })
 
-  const currentSlugs = colleges.map((c) => c.slug)
-  const slots = Math.max(DEFAULT_SLOTS, colleges.length + (colleges.length < DEFAULT_SLOTS ? DEFAULT_SLOTS - colleges.length : 0))
-  const emptySlots = Math.min(MAX_COMPARE, slots) - colleges.length
+  const [removePending, setRemovePending] = useState(null)
 
-  const syncUrl = useCallback(
-    (newColleges) => {
-      const slugs = newColleges.map((c) => c.slug).join(',')
-      const url = slugs ? `/colleges/compare?slugs=${slugs}` : '/colleges/compare'
-      router.replace(url, { scroll: false })
-    },
-    [router]
-  )
+  const currentSlugs = colleges.map((c) => c.slug)
+
+  // URL sync via useEffect — avoids router.replace inside callbacks
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    const slugs = colleges.map((c) => c.slug).join(',')
+    const url = slugs ? `/colleges/compare?slugs=${slugs}` : '/colleges/compare'
+    router.replace(url, { scroll: false })
+  }, [colleges, router])
+
+  // Handle removal with a micro-delay to avoid concurrent update issues
+  useEffect(() => {
+    if (removePending === null) return
+    setColleges((prev) => {
+      const updated = prev.filter((c) => c.slug !== removePending)
+      return updated
+    })
+    setRemovePending(null)
+  }, [removePending])
 
   const handleAddCollege = useCallback(
     async (college) => {
-      if (colleges.length >= MAX_COMPARE) return
-      if (colleges.some((c) => c.slug === college.slug)) return
+      if (!college?.slug) return
 
+      let currentCount = 0
+      setColleges((prev) => {
+        currentCount = prev.length
+        return prev
+      })
+
+      if (currentCount >= MAX_COMPARE) return
+
+      let fullCollege = null
       try {
-        const fullCollege = await getCollegeBySlug(college.slug)
-        if (fullCollege) {
-          const updated = [...colleges, fullCollege]
-          setColleges(updated)
-          syncUrl(updated)
-          setSearchOpen(false)
-          return
-        }
-      } catch (err) {
+        fullCollege = await getCollegeBySlug(college.slug)
+      } catch {
         // fallback to search result data
       }
 
-      const newCollege = {
-        id: college.collegeId || college.id,
-        name: college.name,
-        slug: college.slug,
-        featured_img: college.collegeImage || null,
-        college_logo: college.logo || null,
-        collegeAddress: college.location
-          ? { city: college.location.split(',')[0]?.trim(), country: 'Nepal' }
-          : {},
-        collegeContacts: [],
-        collegePrograms: [],
-        degrees: [],
-        universities: [],
-        collegeMembers: [],
-        facilities: [],
-        website_url: null,
-        email: null,
-        fee_structure: null,
-        placement: null,
-        scholarship: null
-      }
+      const collegeData = fullCollege || buildEmptyCollege(college)
 
-      const updated = [...colleges, newCollege]
-      setColleges(updated)
-      syncUrl(updated)
+      setSelectedPrograms((prev) => {
+        const progs = collegeData.collegePrograms || []
+        return {
+          ...prev,
+          [collegeData.slug]: progs.length > 0 ? progs[0]?.program?.slug || '' : ''
+        }
+      })
+
+      setColleges((prev) => {
+        if (prev.some((c) => c.slug === collegeData.slug)) return prev
+        if (prev.length >= MAX_COMPARE) return prev
+        return [...prev, collegeData]
+      })
+
       setSearchOpen(false)
     },
-    [colleges, syncUrl]
+    []
   )
 
-  const handleRemoveCollege = useCallback(
-    (slug) => {
-      const updated = colleges.filter((c) => c.slug !== slug)
-      setColleges(updated)
-      syncUrl(updated)
-    },
-    [colleges, syncUrl]
-  )
+  const handleRemoveCollege = useCallback((slug) => {
+    setRemovePending(slug)
+  }, [])
 
   const handleClearAll = useCallback(() => {
     setColleges([])
-    syncUrl([])
-  }, [syncUrl])
+    setSelectedPrograms({})
+  }, [])
 
   const handleShare = useCallback(async () => {
     const url = window.location.href
     try {
-      await navigator.clipboard.writeText(url)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = url
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -128,331 +199,354 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
     }
   }, [])
 
-  const scrollContainer = (direction) => {
-    const container = document.getElementById('compare-scroll-container')
-    if (container) {
-      container.scrollBy({
-        left: direction === 'left' ? -320 : 320,
-        behavior: 'smooth'
-      })
-    }
-  }
+  const toggleLayer = useCallback((idx) => {
+    setOpenLayers((prev) => ({ ...prev, [idx]: !prev[idx] }))
+  }, [])
 
-  const getCollegeField = (c, field) => {
-    const selectedSlug = selectedPrograms[c.slug] || ''
-    const programs = c.collegePrograms || []
+  const getCollegeField = useCallback((c, field) => {
+    const selectedSlug = selectedPrograms[c?.slug] || ''
+    const programs = c?.collegePrograms || []
     const selectedProg = programs.find((p) => p?.program?.slug === selectedSlug)
 
     switch (field) {
       case 'university':
-        return c.universities?.map((u) => u.fullname).join(', ') || null
+        return c?.universities?.map((u) => u?.fullname).filter(Boolean).join(', ') || null
       case 'location': {
-        const addr = c.collegeAddress || {}
+        const addr = c?.collegeAddress || {}
         return [addr.street, addr.city, addr.district].filter(Boolean).join(', ') || null
       }
       case 'fee': {
         const progFee = stripHtml(selectedProg?.fee) || null
-        const collFee = stripHtml(c.fee_structure) || null
+        const collFee = stripHtml(c?.fee_structure) || null
         return progFee || collFee
       }
       case 'placement': {
         const progPlacement = stripHtml(selectedProg?.placement) || null
-        const collPlacement = stripHtml(c.placement) || null
+        const collPlacement = stripHtml(c?.placement) || null
         return progPlacement || collPlacement
       }
       case 'scholarship': {
         const progScholarship = stripHtml(selectedProg?.scholarship) || null
-        const collScholarship = stripHtml(c.scholarship) || null
+        const collScholarship = stripHtml(c?.scholarship) || null
         return progScholarship || collScholarship
       }
       case 'facilities':
-        return c.facilities?.map((f) => f.name || f.title).join(', ') || null
+        return c?.facilities?.map((f) => f?.title).filter(Boolean).join(', ') || null
+      case 'contact':
+        return c?.collegeContacts?.map((ct) => ct?.contact_number).filter(Boolean).join(', ') || null
+      case 'website':
+        return c?.website_url || null
+      case 'email':
+        return c?.email || null
+      case 'program':
+        return selectedProg?.program?.title || null
       default:
         return null
     }
-  }
+  }, [selectedPrograms])
 
-  const comparisonFields = [
-    { key: 'university', label: 'University' },
-    { key: 'location', label: 'Location' },
-    { key: 'fee_structure', label: 'Fee Structure' },
-    { key: 'facilities', label: 'Facilities' },
-    { key: 'placement', label: 'Placement' },
-    { key: 'scholarship', label: 'Scholarship' }
-  ]
+  const renderCellValue = useCallback((c, field) => {
+    const val = getCollegeField(c, field)
+    if (field === 'website') {
+      return val
+        ? <a href={val} target='_blank' rel='noopener noreferrer' className='text-[#0A6FA7] hover:underline break-all line-clamp-2' title={val}>{val.replace(/^https?:\/\/(www\.)?/, '')}</a>
+        : <span className='text-gray-300'>—</span>
+    }
+    if (field === 'email') {
+      return val
+        ? <a href={`mailto:${val}`} className='text-[#0A6FA7] hover:underline break-all line-clamp-2' title={val}>{val}</a>
+        : <span className='text-gray-300'>—</span>
+    }
+    if (field === 'contact') {
+      return val
+        ? <a href={`tel:${val}`} className='text-[#0A6FA7] hover:underline'>{val}</a>
+        : <span className='text-gray-300'>—</span>
+    }
+    if (val) {
+      return <span title={val}>{val.length > 80 ? val.substring(0, 80) + '...' : val}</span>
+    }
+    return <span className='text-gray-300'>Not Available</span>
+  }, [getCollegeField])
 
   return (
     <div className='min-h-screen bg-[#F8FAFC]'>
       <Header />
       <Navbar />
 
-      {/* Hero */}
-      <div className='bg-gradient-to-br from-[#0A6FA7] via-[#085e8a] to-[#064a6e] relative overflow-hidden'>
-        <div className='absolute inset-0'>
-          <div className='absolute top-10 left-10 w-32 h-32 rounded-full bg-white/5 blur-xl' />
-          <div className='absolute bottom-10 right-20 w-48 h-48 rounded-full bg-[#30AD8F]/10 blur-2xl' />
+      <div className='max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-20 py-6 sm:py-8 md:py-12'>
+
+        {/* ── Masthead ── */}
+        <div className='mb-2'>
+          <p className='text-[11px] font-bold uppercase tracking-widest text-[#0A6FA7] mb-2 font-mono'>
+            MeroUni — comparison tool
+          </p>
+          <h1 className='text-xl sm:text-2xl md:text-[2rem] font-bold text-gray-900 leading-tight mb-2'>
+            Compare your education path
+          </h1>
+          <p className='text-xs sm:text-sm text-gray-500 max-w-xl leading-relaxed'>
+            Pick 2–4 programs — across any colleges, any affiliation — and walk through each checkpoint from overview to outcomes.
+          </p>
         </div>
 
-        <div className='max-w-[1600px] mx-auto px-4 sm:px-6 md:px-12 lg:px-24 py-6 sm:py-8 md:py-12 relative z-10'>
-          <Link
-            href='/colleges'
-            className='inline-flex items-center gap-2 text-white/70 hover:text-white text-xs font-bold mb-4 sm:mb-6 transition-colors group'
-          >
-            <ArrowLeft className='w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform' />
-            Back to Colleges
-          </Link>
+        {/* ── Picker Bar ── */}
+        <div className='mt-5 mb-6 sm:mb-8 bg-white rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-3 items-start sm:items-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
+          <p className='hidden sm:block w-full text-[11px] font-bold uppercase tracking-widest text-[#0A6FA7] font-mono mb-0.5'>
+            Programs being compared
+          </p>
 
-          <div className='flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4'>
-            <div>
-              <div className='flex items-center gap-3 mb-2 sm:mb-3'>
-                <div className='w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10'>
-                  <GitCompareArrows className='w-4 h-4 sm:w-5 sm:h-5 text-white' />
-                </div>
-                <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-white'>Compare Colleges</h1>
-              </div>
-              <p className='text-xs sm:text-sm text-white/60 font-medium max-w-md'>
-                Compare colleges side by side — programs, fees, placements, and more.
-              </p>
-            </div>
-
-            <div className='flex items-center gap-2 flex-wrap'>
-              {colleges.length > 0 && (
-                <>
-                  <button
-                    onClick={handleShare}
-                    className='flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all border border-white/10'
-                  >
-                    <Share2 className='w-3.5 h-3.5' />
-                    {copied ? 'Copied!' : 'Share'}
-                  </button>
-                  <button
-                    onClick={handleClearAll}
-                    className='flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition-all border border-red-400/10'
-                  >
-                    <Trash2 className='w-3.5 h-3.5' />
-                    Clear
-                  </button>
-                </>
-              )}
-              {colleges.length < MAX_COMPARE && (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  className='flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white text-[#0A6FA7] text-xs font-bold shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all active:scale-95'
-                >
-                  <Plus className='w-4 h-4' />
-                  Add College
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className='flex items-center gap-2 mt-4 sm:mt-5'>
-            {Array.from({ length: MAX_COMPARE }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  i < colleges.length ? 'bg-[#30AD8F] w-8' : 'bg-white/20 w-4'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Comparison Cards */}
-      <div className='max-w-[1600px] mx-auto px-4 sm:px-6 md:px-12 lg:px-24 py-6 sm:py-8 md:py-12'>
-        <div className='relative'>
-          {colleges.length + emptySlots > 2 && (
-            <>
-              <button
-                onClick={() => scrollContainer('left')}
-                className='absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-colors hidden md:flex -ml-5'
-              >
-                <ChevronLeft className='w-5 h-5 text-gray-600' />
-              </button>
-              <button
-                onClick={() => scrollContainer('right')}
-                className='absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-colors hidden md:flex -mr-5'
-              >
-                <ChevronRight className='w-5 h-5 text-gray-600' />
-              </button>
-            </>
-          )}
-
-          <div
-            id='compare-scroll-container'
-            className='flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory sidebar-scrollbar -mx-4 px-4 sm:-mx-0 sm:px-0'
-          >
+          <div className='flex flex-wrap gap-2 sm:gap-2.5 w-full sm:w-auto'>
             <AnimatePresence mode='popLayout'>
-              {colleges.map((college, index) => (
-                <ComparisonCard
-                  key={college.slug}
-                  college={college}
-                  index={index}
-                  onRemove={handleRemoveCollege}
-                  selectedProgramSlug={selectedPrograms[college.slug] || ''}
-                />
+              {colleges.map((c) => (
+                <motion.div
+                  key={c.slug}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className='flex items-center gap-2 bg-[#F8FAFC] rounded-lg py-1.5 pl-1.5 pr-1.5 border border-gray-100'
+                >
+                  <div className='w-6 h-6 rounded-md bg-gray-100 overflow-hidden flex-shrink-0'>
+                    {c.college_logo ? (
+                      <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
+                    ) : (
+                      <div className='w-full h-full flex items-center justify-center text-[9px] font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
+                        {c.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <span className='text-[11px] sm:text-xs font-semibold text-gray-700 truncate max-w-[100px] sm:max-w-[180px]'>
+                    {c.name}
+                  </span>
+                  {(c.collegePrograms || []).length > 0 && (
+                    <ThemeSelect
+                      compact
+                      value={selectedPrograms[c.slug] || ''}
+                      options={(c.collegePrograms || []).map((p) => ({
+                        value: p?.program?.slug || '',
+                        label: p?.program?.title || 'N/A'
+                      }))}
+                      onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
+                      triggerClassName='!border-gray-200 !text-gray-600 !h-6 sm:!h-7 !text-[10px] sm:!text-[11px] !px-1.5 sm:!px-2 !rounded-md !bg-white'
+                    />
+                  )}
+                  <button
+                    onClick={() => handleRemoveCollege(c.slug)}
+                    className='w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors group'
+                    aria-label={`Remove ${c.name}`}
+                  >
+                    <X className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 group-hover:text-red-500 transition-colors' />
+                  </button>
+                </motion.div>
               ))}
             </AnimatePresence>
+          </div>
 
-            {emptySlots > 0 && (
-              <EmptySlots count={emptySlots} onAdd={() => setSearchOpen(true)} />
+          <div className='flex items-center gap-2 w-full sm:w-auto sm:ml-auto'>
+            <button
+              onClick={() => setSearchOpen(true)}
+              disabled={colleges.length >= MAX_COMPARE}
+              className='border border-dashed border-[#0A6FA7]/40 bg-transparent text-[#0A6FA7] rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-[#0A6FA7]/5 disabled:opacity-35 disabled:cursor-not-allowed transition-colors'
+            >
+              + Add
+            </button>
+
+            {colleges.length > 0 && (
+              <>
+                <button
+                  onClick={handleShare}
+                  className='flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors'
+                >
+                  <Share2 className='w-3.5 h-3.5' />
+                  <span className='hidden sm:inline'>{copied ? 'Copied!' : 'Share'}</span>
+                </button>
+                <button
+                  onClick={handleClearAll}
+                  className='flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-50 transition-colors'
+                >
+                  <Trash2 className='w-3.5 h-3.5' />
+                  <span className='hidden sm:inline'>Clear</span>
+                </button>
+              </>
             )}
           </div>
         </div>
 
-        {/* Comparison Table - Desktop */}
-        {colleges.length >= 2 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className='mt-10 sm:mt-12 md:mt-16'
-          >
-            <div className='flex items-center gap-3 mb-4 sm:mb-6'>
-              <div className='w-1.5 h-6 bg-gradient-to-b from-[#0A6FA7] to-[#30AD8F] rounded-full' />
-              <h2 className='text-base sm:text-lg font-bold text-gray-900'>Quick Comparison</h2>
-            </div>
+        {/* ── Checkpoints ── */}
+        {colleges.length >= 2 ? (
+          <div className='space-y-2.5 sm:space-y-3'>
+            {CHECKPOINTS.map((layer, li) => {
+              const isOpen = openLayers[li]
+              return (
+                <div key={li}>
+                  <button
+                    onClick={() => toggleLayer(li)}
+                    className='w-full flex items-center justify-between gap-3 bg-white rounded-xl py-3 px-3.5 sm:px-5 cursor-pointer select-none hover:bg-gray-50 transition-colors shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'
+                  >
+                    <div className='flex items-center gap-3'>
+                      <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0A6FA7]/10 flex items-center justify-center flex-shrink-0'>
+                        <span className='text-xs font-bold text-[#0A6FA7]'>{li + 1}</span>
+                      </div>
+                      <div className='flex flex-col items-start gap-0'>
+                        <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#0A6FA7]/60 font-mono'>
+                          {layer.tag}
+                        </span>
+                        <span className='text-sm sm:text-base font-bold text-gray-900 text-left'>
+                          {layer.title}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#0A6FA7] transition-transform duration-200 shrink-0 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
 
-            {/* Desktop Table */}
-            <div className='hidden md:block bg-white rounded-2xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] overflow-hidden'>
-              <div className='overflow-x-auto'>
-                <table className='w-full'>
-                  <thead>
-                    <tr className='border-b border-gray-100'>
-                      <th className='text-left px-5 py-4 text-[11px] uppercase tracking-wider text-gray-400 font-bold w-44'>
-                        Feature
-                      </th>
-                      {colleges.map((c) => (
-                        <th key={c.slug} className='text-center px-4 py-4 text-[11px] uppercase tracking-wider text-gray-400 font-bold'>
-                          <div className='flex flex-col items-center gap-2'>
-                            <div className='w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0'>
-                              {c.college_logo ? (
-                                <img src={c.college_logo} alt={c.name} className='w-full h-full object-cover' />
-                              ) : (
-                                <div className='w-full h-full flex items-center justify-center text-xs font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
-                                  {c.name?.charAt(0)}
-                                </div>
-                              )}
-                            </div>
-                            <span className='text-xs font-bold text-gray-700 line-clamp-1 max-w-[140px]'>{c.name}</span>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        className='overflow-hidden'
+                      >
+                        {/* Desktop Table */}
+                        <div className='hidden md:block mt-2 rounded-xl bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
+                          <div className='overflow-x-auto'>
+                            <table className='w-full' style={{ minWidth: `${140 + colleges.length * 200}px` }}>
+                              <colgroup>
+                                <col style={{ width: '140px' }} />
+                                {colleges.map((_, ci) => <col key={ci} />)}
+                              </colgroup>
+                              <thead>
+                                <tr>
+                                  <th className='text-left px-4 py-3.5 text-[10px] uppercase tracking-wider text-gray-400 font-bold bg-[#0A6FA7]/[0.03]'>
+                                    Field
+                                  </th>
+                                  {colleges.map((c) => (
+                                    <th key={c.slug} className='text-center px-4 py-3.5 bg-[#0A6FA7]/[0.03]'>
+                                      <div className='flex flex-col items-center gap-1.5'>
+                                        <div className='w-9 h-9 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 shadow-sm'>
+                                          {c.college_logo ? (
+                                            <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
+                                          ) : (
+                                            <div className='w-full h-full flex items-center justify-center text-xs font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
+                                              {c.name?.charAt(0) || '?'}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className='text-[11px] font-bold text-gray-900 leading-tight'>{c.name}</div>
+                                        {(c.universities || []).length > 0 && (
+                                          <div className='text-[9px] text-gray-400 font-medium'>
+                                            {c.universities.map((u) => u?.fullname).filter(Boolean).join(', ')}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {layer.rows.map((row) => (
+                                  <tr key={row.key} className='last:border-0 hover:bg-[#0A6FA7]/[0.01] transition-colors'>
+                                    <td className='px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/40'>
+                                      {row.label}
+                                    </td>
+                                    {colleges.map((c) => (
+                                      <td key={c.slug} className='px-4 py-3 text-center text-xs font-semibold text-gray-700'>
+                                        {row.key === 'program' ? (
+                                          (c.collegePrograms || []).length > 0 ? (
+                                            <ThemeSelect
+                                              compact
+                                              value={selectedPrograms[c.slug] || ''}
+                                              options={(c.collegePrograms || []).map((p) => ({
+                                                value: p?.program?.slug || '',
+                                                label: p?.program?.title || 'N/A'
+                                              }))}
+                                              onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
+                                            />
+                                          ) : (
+                                            <span className='text-gray-300'>—</span>
+                                          )
+                                        ) : (
+                                          renderCellValue(c, row.key)
+                                        )}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <CompareRow
-                      label='University'
-                      values={colleges.map((c) => getCollegeField(c, 'university') || '—')}
-                    />
-                    <CompareRow
-                      label='Location'
-                      values={colleges.map((c) => getCollegeField(c, 'location') || '—')}
-                    />
-                    <CompareRow
-                      label='Fee Structure'
-                      values={colleges.map((c) => {
-                        const val = getCollegeField(c, 'fee')
-                        return val ? <span title={val}>{val.length > 60 ? val.substring(0, 60) + '...' : val}</span> : <span className='text-gray-300'>Not Available</span>
-                      })}
-                      isRich
-                    />
-                    <tr className='border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors'>
-                      <td className='px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider'>Programs</td>
-                      {colleges.map((c) => {
-                        const progs = c.collegePrograms || []
-                        const currentSlug = selectedPrograms[c.slug] || ''
-                        return (
-                          <td key={c.slug} className='px-4 py-3.5 text-center'>
-                            {progs.length > 0 ? (
-                              <ThemeSelect
-                                compact
-                                value={currentSlug}
-                                options={progs.map((p) => ({
-                                  value: p?.program?.slug || '',
-                                  label: p?.program?.title || 'N/A'
-                                }))}
-                                onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
-                              />
-                            ) : (
-                              <span className='text-xs font-semibold text-gray-400'>—</span>
-                            )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                    <CompareRow
-                      label='Facilities'
-                      values={colleges.map((c) => getCollegeField(c, 'facilities') || '—')}
-                    />
-                    <CompareRow
-                      label='Placement'
-                      values={colleges.map((c) => {
-                        const val = getCollegeField(c, 'placement')
-                        return val ? <span title={val}>{val.length > 60 ? val.substring(0, 60) + '...' : val}</span> : <span className='text-gray-300'>Not Available</span>
-                      })}
-                      isRich
-                    />
-                    <CompareRow
-                      label='Scholarship'
-                      values={colleges.map((c) => {
-                        const val = getCollegeField(c, 'scholarship')
-                        return val ? <span title={val}>{val.length > 60 ? val.substring(0, 60) + '...' : val}</span> : <span className='text-gray-300'>Not Available</span>
-                      })}
-                      isRich
-                    />
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Mobile Card Layout */}
-            <div className='md:hidden space-y-4'>
-              {colleges.map((c) => (
-                <div key={c.slug} className='bg-white rounded-2xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] overflow-hidden'>
-                  <div className='flex items-center gap-3 px-4 py-3 border-b border-gray-50 bg-gray-50/50'>
-                    <div className='w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0'>
-                      {c.college_logo ? (
-                        <img src={c.college_logo} alt={c.name} className='w-full h-full object-cover' />
-                      ) : (
-                        <div className='w-full h-full flex items-center justify-center text-xs font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
-                          {c.name?.charAt(0)}
                         </div>
-                      )}
-                    </div>
-                    <span className='text-xs font-bold text-gray-700 line-clamp-1'>{c.name}</span>
-                  </div>
 
-                  <div className='divide-y divide-gray-50'>
-                    <MobileCompareRow label='University' value={getCollegeField(c, 'university') || '—'} />
-                    <MobileCompareRow label='Location' value={getCollegeField(c, 'location') || '—'} />
-                    <MobileCompareRow label='Fee Structure' value={getCollegeField(c, 'fee')} />
-                    <div className='px-4 py-3'>
-                      <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1.5'>Programs</p>
-                      {(c.collegePrograms || []).length > 0 ? (
-                        <ThemeSelect
-                          compact
-                          value={selectedPrograms[c.slug] || ''}
-                          options={(c.collegePrograms || []).map((p) => ({
-                            value: p?.program?.slug || '',
-                            label: p?.program?.title || 'N/A'
-                          }))}
-                          onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
-                        />
-                      ) : (
-                        <p className='text-xs font-semibold text-gray-300'>Not Available</p>
-                      )}
-                    </div>
-                    <MobileCompareRow label='Facilities' value={getCollegeField(c, 'facilities') || '—'} />
-                    <MobileCompareRow label='Placement' value={getCollegeField(c, 'placement')} />
-                    <MobileCompareRow label='Scholarship' value={getCollegeField(c, 'scholarship')} />
-                  </div>
+                        {/* Mobile Cards */}
+                        <div className='md:hidden mt-2 space-y-2'>
+                          {colleges.map((c) => (
+                            <div key={c.slug} className='rounded-xl bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
+                              <div className='flex items-center gap-2.5 px-3 py-2.5 bg-[#0A6FA7]/[0.03] border-b border-gray-100/60'>
+                                <div className='w-7 h-7 rounded-md bg-gray-100 overflow-hidden flex-shrink-0'>
+                                  {c.college_logo ? (
+                                    <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
+                                  ) : (
+                                    <div className='w-full h-full flex items-center justify-center text-[9px] font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
+                                      {c.name?.charAt(0) || '?'}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className='text-[11px] font-bold text-gray-900 truncate'>{c.name}</span>
+                              </div>
+                              <div>
+                                {layer.rows.map((row) => (
+                                  <div key={row.key} className='px-3 py-2.5 border-b border-gray-50 last:border-0'>
+                                    <p className='text-[9px] uppercase tracking-wider text-[#0A6FA7]/50 font-bold mb-1'>{row.label}</p>
+                                    {row.key === 'program' ? (
+                                      (c.collegePrograms || []).length > 0 ? (
+                                        <ThemeSelect
+                                          compact
+                                          value={selectedPrograms[c.slug] || ''}
+                                          options={(c.collegePrograms || []).map((p) => ({
+                                            value: p?.program?.slug || '',
+                                            label: p?.program?.title || 'N/A'
+                                          }))}
+                                          onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
+                                        />
+                                      ) : (
+                                        <p className='text-xs text-gray-300'>—</p>
+                                      )
+                                    ) : (
+                                      <div className='text-xs font-semibold text-gray-700 break-words'>
+                                        {renderCellValue(c, row.key)}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              )
+            })}
+          </div>
+        ) : colleges.length === 1 ? (
+          <div className='text-center py-12 text-gray-400 text-sm font-medium'>
+            Add at least one more college to start comparing.
+          </div>
+        ) : (
+          <div className='text-center py-12 text-gray-400 text-sm font-medium'>
+            Add 2 or more colleges to begin comparing.
+          </div>
         )}
+
+        {/* ── Note ── */}
+        <div className='mt-6 sm:mt-8 p-3 sm:p-4 rounded-xl bg-[#0A6FA7]/[0.03] text-[11px] sm:text-xs text-gray-500 leading-relaxed shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+          <strong className='text-gray-700'>Data sourced from college submissions</strong> — fees, placements, and scholarship details may vary. Verify directly with the college before making decisions.
+        </div>
       </div>
 
       <Footer />
@@ -466,27 +560,5 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
     </div>
   )
 }
-
-const CompareRow = ({ label, values, isRich }) => (
-  <tr className='border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors'>
-    <td className='px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider'>{label}</td>
-    {values.map((val, i) => (
-      <td key={i} className='px-4 py-3.5 text-center text-xs font-semibold text-gray-700'>
-        {isRich ? val : val}
-      </td>
-    ))}
-  </tr>
-)
-
-const MobileCompareRow = ({ label, value }) => (
-  <div className='px-4 py-3'>
-    <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5'>{label}</p>
-    {value ? (
-      <p className='text-xs font-semibold text-gray-700 line-clamp-3 break-words'>{value}</p>
-    ) : (
-      <p className='text-xs font-semibold text-gray-300'>Not Available</p>
-    )}
-  </div>
-)
 
 export default CompareContent

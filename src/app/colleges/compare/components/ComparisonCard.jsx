@@ -4,19 +4,17 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import {
-  X, MapPin, Phone, Globe, GraduationCap, BookOpen,
-  Users, Award, Building, Mail, ExternalLink,
+  X, MapPin, Globe, BookOpen,
+  Award, Building, Mail, ExternalLink,
   IndianRupee, Briefcase, Sparkles
 } from 'lucide-react'
 import { stripHtml } from '@/lib/string.utils'
+import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
 
-const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) => {
+const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', onProgramChange }) => {
   const address = college?.collegeAddress || {}
-  const contacts = college?.collegeContacts || []
   const programs = college?.collegePrograms || []
-  const degrees = college?.degrees || []
   const universities = college?.universities || []
-  const members = college?.collegeMembers || []
   const facilities = college?.facilities || []
 
   const selectedProgram = programs.find(
@@ -77,7 +75,7 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) 
             <img
               src={college.college_logo}
               alt={college.name}
-              className='w-full h-full object-cover'
+              className='w-full h-full object-contain p-0.5'
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
             />
             <div className='hidden w-full h-full items-center justify-center text-lg font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
@@ -87,7 +85,7 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) 
         )}
 
         <Link href={`/colleges/${college.slug}`}>
-          <h3 className='font-bold text-sm text-gray-900 hover:text-[#0A6FA7] transition-colors line-clamp-2 leading-snug'>
+          <h3 className='font-bold text-sm text-gray-900 hover:text-[#0A6FA7] transition-colors leading-snug'>
             {college.name}
           </h3>
         </Link>
@@ -109,15 +107,6 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) 
           />
         )}
 
-        {contacts.length > 0 && (
-          <DetailRow
-            icon={<Phone className='w-3.5 h-3.5 text-orange-500' />}
-            label='Contact'
-            value={contacts[0]?.contact_number}
-            href={`tel:${contacts[0]?.contact_number}`}
-          />
-        )}
-
         {college?.website_url && (
           <DetailRow
             icon={<Globe className='w-3.5 h-3.5 text-sky-500' />}
@@ -135,29 +124,24 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) 
                 <BookOpen className='w-3.5 h-3.5 text-purple-500' />
               </div>
               <div className='flex-1 min-w-0'>
-                <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>Programs</p>
-                <div className='mt-1 flex flex-wrap gap-1'>
-                  {programs.slice(0, 4).map((p, i) => (
-                    <span key={i} className='text-[10px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-md truncate max-w-full'>
-                      {p?.program?.title || p?.title}
-                    </span>
-                  ))}
-                  {programs.length > 4 && (
-                    <span className='text-[10px] font-semibold text-gray-400'>+{programs.length - 4} more</span>
-                  )}
+                <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>Program</p>
+                <div className='mt-1'>
+                  <ThemeSelect
+                    compact
+                    value={selectedProgramSlug}
+                    options={programs.map((p) => ({
+                      value: p?.program?.slug || '',
+                      label: p?.program?.title || 'N/A'
+                    }))}
+                    onChange={(slug) => onProgramChange?.(college.slug, slug)}
+                  />
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {degrees.length > 0 && (
-          <DetailRow
-            icon={<GraduationCap className='w-3.5 h-3.5 text-emerald-500' />}
-            label='Degrees'
-            value={degrees.map((d) => d.short_name || d.title).join(', ')}
-          />
-        )}
+
 
         {fee ? (
           <DetailRow
@@ -205,20 +189,29 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '' }) 
         )}
 
         {facilities.length > 0 && (
-          <DetailRow
-            icon={<Award className='w-3.5 h-3.5 text-pink-500' />}
-            label='Facilities'
-            value={`${facilities.length} facilities`}
-          />
+          <div className='px-1'>
+            <div className='flex items-start gap-2.5'>
+              <div className='w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5'>
+                <Award className='w-3.5 h-3.5 text-pink-500' />
+              </div>
+              <div className='flex-1 min-w-0'>
+                <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>Facilities</p>
+                <div className='mt-1 flex flex-wrap gap-1'>
+                  {facilities.slice(0, 4).map((f, i) => (
+                    <span key={i} className='text-[10px] font-semibold text-pink-700 bg-pink-50 px-1.5 py-0.5 rounded-md truncate max-w-full'>
+                      {f.icon} {f.title}
+                    </span>
+                  ))}
+                  {facilities.length > 4 && (
+                    <span className='text-[10px] font-semibold text-gray-400'>+{facilities.length - 4} more</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
-        {members.length > 0 && (
-          <DetailRow
-            icon={<Users className='w-3.5 h-3.5 text-indigo-500' />}
-            label='Team Members'
-            value={`${members.length} members`}
-          />
-        )}
+
 
         {college?.email && (
           <DetailRow
