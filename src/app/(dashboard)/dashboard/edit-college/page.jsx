@@ -154,7 +154,10 @@ const EditCollegePage = () => {
       contacts: ['', ''],
       members: [],
       faqs: [],
-      status: 'published'
+      status: 'published',
+      fee_structure: '',
+      placement: '',
+      scholarship: ''
     }
   })
 
@@ -283,6 +286,10 @@ const EditCollegePage = () => {
       setValue('content', collegeData.content || '')
       setValue('website_url', collegeData.website_url)
 
+      setValue('fee_structure', collegeData.fee_structure || '')
+      setValue('placement', collegeData.placement || '')
+      setValue('scholarship', collegeData.scholarship || '')
+
       // Affiliated Universities hydration
       const uniList =
         collegeData.universities ||
@@ -310,11 +317,28 @@ const EditCollegePage = () => {
       // Available Programs hydration
       const collegePrograms =
         collegeData.collegePrograms || collegeData.collegeCourses || []
-      const programIds = collegePrograms
-        .map((program) => program.program_id || program.program?.id)
-        .filter((id) => id !== undefined)
+      const programObjects = collegePrograms
+        .map((program) => {
+          const pid = program.program_id || program.program?.id
+          if (!pid) return null
+          return {
+            program_id: pid,
+            fee: program.fee || '',
+            placement: program.placement || '',
+            scholarship: program.scholarship || ''
+          }
+        })
+        .filter(Boolean)
 
-      setValue('programs', [...new Set(programIds)])
+      const uniquePrograms = []
+      const seenIds = new Set()
+      for (const p of programObjects) {
+        if (!seenIds.has(String(p.program_id))) {
+          seenIds.add(String(p.program_id))
+          uniquePrograms.push(p)
+        }
+      }
+      setValue('programs', uniquePrograms)
 
       // Pre-populate university programs
       const initialPrograms = collegePrograms
@@ -560,10 +584,15 @@ const EditCollegePage = () => {
   const handleSelectProgram = (program) => {
     const currentPrograms = getValues('programs') || []
     const programId = program.id || program
-    if (!currentPrograms.includes(programId)) {
-      setValue('programs', [...currentPrograms, programId], {
-        shouldDirty: true
-      })
+    const alreadyExists = currentPrograms.some(
+      (p) => String(p.program_id) === String(programId)
+    )
+    if (!alreadyExists) {
+      setValue(
+        'programs',
+        [...currentPrograms, { program_id: programId, fee: '', placement: '', scholarship: '' }],
+        { shouldDirty: true }
+      )
     }
   }
 
@@ -572,17 +601,29 @@ const EditCollegePage = () => {
     const programId = program.id || program
     setValue(
       'programs',
-      currentPrograms.filter((id) => id !== programId),
+      currentPrograms.filter((p) => String(p.program_id) !== String(programId)),
       { shouldDirty: true }
     )
   }
 
-  const selectedProgramIds = watch('programs') || []
+  const handleProgramDetailChange = (programId, field, value) => {
+    const currentPrograms = getValues('programs') || []
+    const updated = currentPrograms.map((p) =>
+      String(p.program_id) === String(programId) ? { ...p, [field]: value } : p
+    )
+    setValue('programs', updated, { shouldDirty: true })
+  }
+
+  const selectedProgramIds = (watch('programs') || []).map((p) =>
+    typeof p === 'object' ? p.program_id : p
+  )
   const selectedPrograms = Array.isArray(universityPrograms)
     ? universityPrograms
         .filter((p) => selectedProgramIds.map(String).includes(String(p.id)))
         .map((p) => ({ id: p.id, title: p.title }))
     : []
+
+  const programsWatched = watch('programs') || []
 
   const onSearchDegrees = async (query) => {
     const degreesToFilter =
@@ -705,8 +746,14 @@ const EditCollegePage = () => {
 
       // Map programs
       const programsArray = (data.programs || [])
-        .map((c) => parseInt(c))
-        .filter((c) => !isNaN(c) && c > 0)
+        .filter((p) => p && p.program_id)
+        .map((p) => ({
+          program_id: parseInt(p.program_id),
+          fee: p.fee || null,
+          placement: p.placement || null,
+          scholarship: p.scholarship || null
+        }))
+        .filter((p) => !isNaN(p.program_id) && p.program_id > 0)
       if (programsArray.length > 0) data.programs = programsArray
       else delete data.programs
 
@@ -1088,6 +1135,123 @@ const EditCollegePage = () => {
                         )
                       )}
                     </div>
+
+                    <div className='mt-6 space-y-4'>
+                      <div className='flex items-center gap-2 mb-3'>
+                        <div className='w-1.5 h-4 bg-gradient-to-b from-[#387cae] to-[#30AD8F] rounded-full' />
+                        <Label className='text-sm font-bold text-gray-700'>
+                          College Overview
+                        </Label>
+                      </div>
+                      <p className='text-[11px] text-gray-400 -mt-2 mb-2 font-medium'>
+                        General fee, placement, and scholarship info for this college.
+                      </p>
+                      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+                        <div>
+                          <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                            Fee Structure
+                          </Label>
+                          <Textarea
+                            placeholder='e.g. Tuition: NPR 50,000/year, Admission: NPR 5,000'
+                            {...register('fee_structure')}
+                            className='mt-1 text-xs min-h-[80px]'
+                          />
+                        </div>
+                        <div>
+                          <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                            Placement
+                          </Label>
+                          <Textarea
+                            placeholder='e.g. 85% placement rate, top recruiters include...'
+                            {...register('placement')}
+                            className='mt-1 text-xs min-h-[80px]'
+                          />
+                        </div>
+                        <div>
+                          <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                            Scholarship
+                          </Label>
+                          <Textarea
+                            placeholder='e.g. Merit-based, need-based, government scholarships available'
+                            {...register('scholarship')}
+                            className='mt-1 text-xs min-h-[80px]'
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {programsWatched.length > 0 && (
+                      <div className='mt-6 space-y-4'>
+                        <div className='flex items-center gap-2 mb-3'>
+                          <div className='w-1.5 h-4 bg-gradient-to-b from-[#387cae] to-[#30AD8F] rounded-full' />
+                          <Label className='text-sm font-bold text-gray-700'>
+                            Program Details (Optional)
+                          </Label>
+                        </div>
+                        <p className='text-[11px] text-gray-400 -mt-2 mb-2 font-medium'>
+                          Set fee, placement, and scholarship info for each selected program.
+                        </p>
+                        {programsWatched.map((prog) => {
+                          const progId = typeof prog === 'object' ? prog.program_id : prog
+                          const progInfo = universityPrograms.find(
+                            (p) => String(p.id) === String(progId)
+                          )
+                          const progTitle = progInfo?.title || `Program #${progId}`
+                          return (
+                            <div
+                              key={progId}
+                              className='bg-gray-50/80 rounded-xl border border-gray-200 p-4 space-y-3'
+                            >
+                              <p className='text-xs font-bold text-gray-700 flex items-center gap-2'>
+                                <GraduationCap size={14} className='text-[#387cae]' />
+                                {progTitle}
+                              </p>
+                              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                                <div>
+                                  <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                                    Fee Structure
+                                  </Label>
+                                  <Input
+                                    placeholder='e.g. NPR 50,000/year'
+                                    value={prog.fee || ''}
+                                    onChange={(e) =>
+                                      handleProgramDetailChange(progId, 'fee', e.target.value)
+                                    }
+                                    className='mt-1 text-xs'
+                                  />
+                                </div>
+                                <div>
+                                  <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                                    Placement
+                                  </Label>
+                                  <Input
+                                    placeholder='e.g. 80% placement rate'
+                                    value={prog.placement || ''}
+                                    onChange={(e) =>
+                                      handleProgramDetailChange(progId, 'placement', e.target.value)
+                                    }
+                                    className='mt-1 text-xs'
+                                  />
+                                </div>
+                                <div>
+                                  <Label className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>
+                                    Scholarship
+                                  </Label>
+                                  <Input
+                                    placeholder='e.g. Merit-based available'
+                                    value={prog.scholarship || ''}
+                                    onChange={(e) =>
+                                      handleProgramDetailChange(progId, 'scholarship', e.target.value)
+                                    }
+                                    className='mt-1 text-xs'
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

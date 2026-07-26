@@ -74,7 +74,7 @@ export async function getColleges(page = 1, filters = {}) {
 export async function searchColleges(query) {
   try {
     const response = await fetch(
-      `${process.env.baseUrl}/college?q=${query}`,
+      `${process.env.baseUrl}/college?page=1&limit=1000&q=${query}`,
       {
         cache: 'no-store'
       }
@@ -216,6 +216,29 @@ export async function getUniversity(searchQuery = '') {
     return []
   }
 }
+export async function getCollegesBySlugs(slugs = []) {
+  if (!slugs.length) return []
+  try {
+    const promises = slugs.map((slug) =>
+      fetch(`${process.env.baseUrl}/college/${encodeURIComponent(slug)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      }).then((res) => {
+        if (!res.ok) return null
+        return res.json().then((d) => d.item || null)
+      })
+    )
+    const results = await Promise.allSettled(promises)
+    return results
+      .map((r) => (r.status === 'fulfilled' ? r.value : null))
+      .filter(Boolean)
+  } catch (error) {
+    console.error('Error fetching colleges by slugs:', error)
+    return []
+  }
+}
+
 // check if already applied
 export async function checkIfApplied(collegeId, token) {
   try {

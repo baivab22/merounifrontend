@@ -1,16 +1,22 @@
+'use client'
+
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { IoIosGlobe } from 'react-icons/io'
 import { FaUniversity, FaPhoneAlt, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa'
 import { BsGlobe2 } from 'react-icons/bs'
-import { Eye } from 'lucide-react'
+import { Eye, GitCompareArrows } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
 
 const ImageSection = ({
   college,
   fromCollegeRankings = false,
   collegeRankingDegreeSlug = null
 }) => {
+  const router = useRouter()
+  const programs = Array.isArray(college?.collegePrograms) ? college.collegePrograms : []
   const backHref = collegeRankingDegreeSlug
     ? `/top-colleges/${encodeURIComponent(collegeRankingDegreeSlug)}`
     : fromCollegeRankings
@@ -144,6 +150,27 @@ const ImageSection = ({
                 <span className='sm:hidden'>Brochure</span>
               </a>
             </motion.div>
+          )}
+
+          {/* Compare Program Select */}
+          {programs.length > 0 && (
+            <div className='flex-shrink-0'>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <ThemeSelect
+                  icon={GitCompareArrows}
+                  placeholder='Compare Program'
+                  options={programs.map((item) => ({
+                    value: item?.program?.slug || '',
+                    label: item?.program?.title || 'N/A'
+                  }))}
+                  onChange={(slug) => {
+                    if (slug) {
+                      router.push(`/colleges/compare?slugs=${college?.slug}&program=${slug}`)
+                    }
+                  }}
+                />
+              </motion.div>
+            </div>
           )}
         </motion.div>
       </div>
