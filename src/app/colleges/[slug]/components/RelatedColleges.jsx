@@ -125,7 +125,7 @@ const RelatedColleges = ({ college }) => {
                     <h3 className='text-sm font-medium text-center line-clamp-2 text-gray-900 flex items-center justify-center gap-1'>
                       {college.name}
                       {college.is_verified && (
-                        <BadgeCheck className='w-3.5 h-3.5 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+                        <BadgeCheck className='w-3.5 h-3.5 text-[#1A8CFF] fill-[#1A8CFF] stroke-white flex-shrink-0 drop-shadow-sm' />
                       )}
                     </h3>
                     <p className='text-xs text-gray-500 text-center line-clamp-1 mt-1'>

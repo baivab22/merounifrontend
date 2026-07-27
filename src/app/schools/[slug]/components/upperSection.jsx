@@ -114,7 +114,7 @@ const ImageSection = ({ college }) => {
             <h1 className='font-bold text-xl md:text-3xl text-gray-900 truncate leading-tight flex items-center gap-2'>
               {college?.name}
               {college?.is_verified && (
-                <BadgeCheck className='w-5 h-5 md:w-6 md:h-6 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+                <BadgeCheck className='w-5 h-5 md:w-7 md:h-7 text-[#1A8CFF] fill-[#1A8CFF] stroke-white flex-shrink-0 drop-shadow' />
               )}
             </h1>
             {hasAddress && (

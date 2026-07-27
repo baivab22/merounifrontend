@@ -191,7 +191,7 @@ const ConsultancyCard = ({ consultancy }) => {
               <h2 className='text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A6FA7] transition-colors mb-1 flex items-center gap-1.5'>
                 {consultancy?.title || 'Consultancy'}
                 {consultancy?.is_verified && (
-                  <BadgeCheck className='w-4 h-4 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+                  <BadgeCheck className='w-4 h-4 md:w-5 md:h-5 text-[#1A8CFF] fill-[#1A8CFF] stroke-white flex-shrink-0 drop-shadow-sm' />
                 )}
               </h2>
               {locationText && (
