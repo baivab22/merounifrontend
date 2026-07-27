@@ -21,6 +21,7 @@ const CollegeCard = ({
   universityName: universityNameProp,
   logo: logoProp,
   degrees: degreesProp,
+  isVerified: isVerifiedProp,
   wishlistCollegeIds,
   onWishlistUpdate
 }) => {
@@ -47,7 +48,7 @@ const CollegeCard = ({
     collegeProp?.logo ??
     '/images/logo.png'
   const degrees = degreesProp ?? collegeProp?.degrees ?? []
-  const isVerified = collegeProp?.is_verified
+  const isVerified = isVerifiedProp ?? collegeProp?.is_verified
 
   const addressObj = collegeProp?.collegeAddress || collegeProp?.address
   const location =

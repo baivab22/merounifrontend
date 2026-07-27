@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { IoIosGlobe } from 'react-icons/io'
 import { FaUniversity, FaPhoneAlt, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa'
 import { BsGlobe2 } from 'react-icons/bs'
-import { Eye, GitCompareArrows } from 'lucide-react'
+import { Eye, GitCompareArrows, BadgeCheck } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
@@ -115,8 +115,11 @@ const ImageSection = ({
 
           {/* Name & Basic Info */}
           <div className='flex-1 min-w-0 -mt-2'>
-            <h1 className='font-bold text-xl md:text-3xl text-gray-900 truncate leading-tight'>
+            <h1 className='font-bold text-xl md:text-3xl text-gray-900 truncate leading-tight flex items-center gap-2'>
               {college?.name}
+              {college?.is_verified && (
+                <BadgeCheck className='w-5 h-5 md:w-6 md:h-6 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+              )}
             </h1>
             {hasAddress && (
               <div className='flex flex-row items-center gap-1.5 mt-1 text-gray-600'>

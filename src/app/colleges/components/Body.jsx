@@ -163,7 +163,8 @@ const fetchCollegesFromAPI = async (page = 1, filters = {}, q = '') => {
             slug: d.slug
           })),
           universityName:
-            college.university?.fullname || college.university?.name
+            college.university?.fullname || college.university?.name,
+          is_verified: college.is_verified
         })) || [],
       pagination: data.pagination || {
         currentPage: 1,
@@ -720,6 +721,7 @@ const Body = () => {
                   universityName={u.universityName}
                   logo={u.logo}
                   degrees={u.degrees}
+                  isVerified={u.is_verified}
                   wishlistCollegeIds={wishlistCollegeIds}
                   onWishlistUpdate={setWishlistCollegeIds}
                 />

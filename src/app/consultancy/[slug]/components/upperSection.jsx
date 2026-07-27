@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { MapPin, Phone, Globe, MapPinned } from 'lucide-react'
+import { MapPin, Phone, Globe, MapPinned, BadgeCheck } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaArrowLeft } from 'react-icons/fa'
@@ -84,8 +84,11 @@ const ImageSection = ({ consultancy }) => {
             )}
           </div>
           <div className='flex-1 min-w-0 -mt-2'>
-            <h1 className='font-semibold text-xl md:text-2xl text-gray-900 truncate'>
+            <h1 className='font-semibold text-xl md:text-2xl text-gray-900 truncate flex items-center gap-2'>
               {consultancy?.title || 'Consultancy'}
+              {consultancy?.is_verified && (
+                <BadgeCheck className='w-5 h-5 md:w-6 md:h-6 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+              )}
             </h1>
             {addressString && (
               <div className='flex flex-row items-center gap-1.5 mt-1 text-gray-600'>

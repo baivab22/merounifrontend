@@ -78,7 +78,8 @@ const fetchSchoolsFromAPI = async (page = 1, filters = {}, q = '') => {
             ...(school.boards || []).map((b) => b.name),
             ...(school.streams || []).map((s) => s.name)
           ],
-          universityName: school.university?.fullname || school.university?.name
+          universityName: school.university?.fullname || school.university?.name,
+          is_verified: school.is_verified
         })) || [],
       pagination: data.pagination || {
         currentPage: 1,
@@ -488,6 +489,7 @@ const SchoolFinder = () => {
                   logo={s.logo}
                   tags={s.tags}
                   universityName={s.universityName}
+                  isVerified={s.is_verified}
                   wishlistCollegeIds={wishlistCollegeIds}
                   onWishlistUpdate={setWishlistCollegeIds}
                 />

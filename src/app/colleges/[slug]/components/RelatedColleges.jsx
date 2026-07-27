@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react'
 import Loader from '@/ui/molecules/Loading'
 
 const RelatedColleges = ({ college }) => {
@@ -43,7 +43,8 @@ const RelatedColleges = ({ college }) => {
             slug: collegeItem.slug,
             collegeId: collegeItem.id,
             collegeImage: collegeItem.featured_img,
-            logo: collegeItem.college_logo
+            logo: collegeItem.college_logo,
+            is_verified: collegeItem.is_verified
           })) || []
 
         // Filter out the current college
@@ -121,8 +122,11 @@ const RelatedColleges = ({ college }) => {
                     />
                   </div>
                   <div className='px-2 sm:px-4 pb-2 sm:pb-4 flex flex-col'>
-                    <h3 className='text-sm font-medium text-center line-clamp-2 text-gray-900'>
+                    <h3 className='text-sm font-medium text-center line-clamp-2 text-gray-900 flex items-center justify-center gap-1'>
                       {college.name}
+                      {college.is_verified && (
+                        <BadgeCheck className='w-3.5 h-3.5 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+                      )}
                     </h3>
                     <p className='text-xs text-gray-500 text-center line-clamp-1 mt-1'>
                       {college.location}
