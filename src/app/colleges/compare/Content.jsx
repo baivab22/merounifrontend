@@ -277,9 +277,6 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
 
         {/* ── Masthead ── */}
         <div className='mb-2'>
-          <p className='text-[11px] font-bold uppercase tracking-widest text-[#0A6FA7] mb-2 font-mono'>
-            MeroUni — comparison tool
-          </p>
           <h1 className='text-xl sm:text-2xl md:text-[2rem] font-bold text-gray-900 leading-tight mb-2'>
             Compare your education path
           </h1>
@@ -422,7 +419,6 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               <thead>
                                 <tr>
                                   <th className='text-left px-4 py-3.5 text-[10px] uppercase tracking-wider text-gray-400 font-bold bg-[#0A6FA7]/[0.03]'>
-                                    Field
                                   </th>
                                   {colleges.map((c) => (
                                     <th key={c.slug} className='text-center px-4 py-3.5 bg-[#0A6FA7]/[0.03]'>
@@ -450,7 +446,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               <tbody>
                                 {layer.rows.map((row) => (
                                   <tr key={row.key} className='last:border-0 hover:bg-[#0A6FA7]/[0.01] transition-colors'>
-                                    <td className='px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/40'>
+                                    <td className='px-4 py-3 text-[11px] font-extrabold text-gray-700 uppercase tracking-wider bg-gray-50/40'>
                                       {row.label}
                                     </td>
                                     {colleges.map((c) => (
@@ -500,18 +496,20 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               <div>
                                 {layer.rows.map((row) => (
                                   <div key={row.key} className='px-3 py-2.5 border-b border-gray-50 last:border-0'>
-                                    <p className='text-[9px] uppercase tracking-wider text-[#0A6FA7]/50 font-bold mb-1'>{row.label}</p>
+                                    <p className='text-[10px] uppercase tracking-wider text-gray-600 font-extrabold mb-1'>{row.label}</p>
                                     {row.key === 'program' ? (
                                       (c.collegePrograms || []).length > 0 ? (
-                                        <ThemeSelect
-                                          compact
-                                          value={selectedPrograms[c.slug] || ''}
-                                          options={(c.collegePrograms || []).map((p) => ({
-                                            value: p?.program?.slug || '',
-                                            label: p?.program?.title || 'N/A'
-                                          }))}
-                                          onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
-                                        />
+                                        <div className='max-w-full overflow-hidden'>
+                                          <ThemeSelect
+                                            compact
+                                            value={selectedPrograms[c.slug] || ''}
+                                            options={(c.collegePrograms || []).map((p) => ({
+                                              value: p?.program?.slug || '',
+                                              label: p?.program?.title || 'N/A'
+                                            }))}
+                                            onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
+                                          />
+                                        </div>
                                       ) : (
                                         <p className='text-xs text-gray-300'>—</p>
                                       )

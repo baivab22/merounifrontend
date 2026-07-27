@@ -38,7 +38,7 @@ const ReferConsultancyPage = () => {
     const fetchConsultancies = async () => {
         try {
             setFetchingConsultancies(true)
-            const response = await authFetch(`${process.env.baseUrl}/consultancy?limit=1000`)
+            const response = await authFetch(`${process.env.baseUrl}/consultancy?limit=1000&is_referable=true`)
             const data = await response.json()
             setAllConsultancies(data.items || [])
         } catch (error) {

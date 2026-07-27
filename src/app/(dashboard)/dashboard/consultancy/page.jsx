@@ -69,7 +69,9 @@ const SortableCard = ({
   onEdit,
   onDelete,
   onImageClick,
-  onCreateCredentials
+  onCreateCredentials,
+  onToggleVerified,
+  onToggleReferable
 }) => {
   const {
     attributes,
@@ -162,6 +164,24 @@ const SortableCard = ({
               {consultancy.title}
             </Link>
             <StatusBadge status={consultancy.status} />
+            <label className='inline-flex items-center gap-1 cursor-pointer' title={consultancy.is_verified ? 'Verified' : 'Not Verified'}>
+              <input
+                type='checkbox'
+                checked={!!consultancy.is_verified}
+                onChange={(e) => onToggleVerified(consultancy.id, e.target.checked)}
+                className='w-3.5 h-3.5 accent-green-600 cursor-pointer'
+              />
+              <span className='text-[10px] font-semibold text-green-700 uppercase'>Verified</span>
+            </label>
+            <label className='inline-flex items-center gap-1 cursor-pointer' title={consultancy.is_referable ? 'Referrable' : 'Not Referrable'}>
+              <input
+                type='checkbox'
+                checked={!!consultancy.is_referable}
+                onChange={(e) => onToggleReferable(consultancy.id, e.target.checked)}
+                className='w-3.5 h-3.5 accent-[#387cae] cursor-pointer'
+              />
+              <span className='text-[10px] font-semibold text-[#387cae] uppercase'>Refer</span>
+            </label>
           </h3>
           <div className='flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5'>
             {location && (
@@ -430,6 +450,42 @@ export default function ConsultancyManager() {
     }
   }
 
+  const handleToggleVerified = async (id, value) => {
+    setConsultancies(prev =>
+      prev.map(c => c.id === id ? { ...c, is_verified: value } : c)
+    )
+    try {
+      await authFetch(`${process.env.baseUrl}/consultancy/${id}/verified`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_verified: value })
+      })
+    } catch (err) {
+      setConsultancies(prev =>
+        prev.map(c => c.id === id ? { ...c, is_verified: !value } : c)
+      )
+      toast({ title: 'Error', description: 'Failed to update verified status', variant: 'destructive' })
+    }
+  }
+
+  const handleToggleReferable = async (id, value) => {
+    setConsultancies(prev =>
+      prev.map(c => c.id === id ? { ...c, is_referable: value } : c)
+    )
+    try {
+      await authFetch(`${process.env.baseUrl}/consultancy/${id}/referable`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_referable: value })
+      })
+    } catch (err) {
+      setConsultancies(prev =>
+        prev.map(c => c.id === id ? { ...c, is_referable: !value } : c)
+      )
+      toast({ title: 'Error', description: 'Failed to update referable status', variant: 'destructive' })
+    }
+  }
+
   const handleDragStart = (event) => setActiveId(event.active.id)
   const handleDragCancel = () => setActiveId(null)
 
@@ -592,6 +648,8 @@ export default function ConsultancyManager() {
                     onDelete={handleDeleteClick}
                     onImageClick={handleImageClick}
                     onCreateCredentials={handleOpenCredentialsModal}
+                    onToggleVerified={handleToggleVerified}
+                    onToggleReferable={handleToggleReferable}
                   />
                 ))}
               </div>

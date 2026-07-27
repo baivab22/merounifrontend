@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { MapPin, Heart } from 'lucide-react'
+import { MapPin, Heart, BadgeCheck } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
 import { authFetch } from '@/app/utils/authFetch'
@@ -188,8 +188,11 @@ const ConsultancyCard = ({ consultancy }) => {
               </div>
             )}
             <div className='flex-1 min-w-0'>
-              <h2 className='text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A6FA7] transition-colors mb-1'>
+              <h2 className='text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A6FA7] transition-colors mb-1 flex items-center gap-1.5'>
                 {consultancy?.title || 'Consultancy'}
+                {consultancy?.is_verified && (
+                  <BadgeCheck className='w-4 h-4 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+                )}
               </h2>
               {locationText && (
                 <div className='flex items-center gap-1.5 text-sm text-gray-500 min-w-0'>

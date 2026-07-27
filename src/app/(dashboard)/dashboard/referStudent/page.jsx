@@ -241,6 +241,9 @@ const ReferStudentPage = () => {
               ) : filteredColleges.length > 0 ? (
                 filteredColleges.map(c => {
                   const isSelected = formData.some(item => item.college_id === c.id)
+                  const programs = (c.collegePrograms || [])
+                    .map(cp => cp.program?.title)
+                    .filter(Boolean)
                   return (
                     <div
                       key={c.id}
@@ -250,13 +253,27 @@ const ReferStudentPage = () => {
                         isSelected && 'bg-blue-50'
                       )}
                     >
-                      <div className='flex items-center gap-3'>
-                        <div className='w-8 h-8 rounded bg-slate-100 flex items-center justify-center'>
+                      <div className='flex items-center gap-3 min-w-0'>
+                        <div className='w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0'>
                           <Building2 size={16} className='text-slate-400' />
                         </div>
-                        <span className='text-sm font-medium text-slate-700'>{c.name}</span>
+                        <div className='min-w-0'>
+                          <span className='text-sm font-medium text-slate-700 block'>{c.name}</span>
+                          {programs.length > 0 && (
+                            <div className='flex flex-wrap gap-1 mt-1'>
+                              {programs.slice(0, 3).map((p, i) => (
+                                <span key={i} className='text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded'>
+                                  {p}
+                                </span>
+                              ))}
+                              {programs.length > 3 && (
+                                <span className='text-[10px] text-slate-400'>+{programs.length - 3} more</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {isSelected && <Check size={16} className='text-blue-600' />}
+                      {isSelected && <Check size={16} className='text-blue-600 shrink-0' />}
                     </div>
                   )
                 })

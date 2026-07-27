@@ -8,7 +8,8 @@ export const createColumns = ({
   handleOpenCredentialsModal,
   handleDeleteClick,
   handleImageClick,
-  handleReferable
+  handleReferable,
+  handleVerified
 }) => [
   {
     header: '',
@@ -157,6 +158,25 @@ export const createColumns = ({
             onChange={(e) => handleReferable(id, e.target.checked)}
             className='w-4 h-4 accent-[#387cae] cursor-pointer'
             title={isReferable ? 'Referrable' : 'Not Referrable'}
+          />
+        </div>
+      )
+    }
+  },
+  {
+    header: 'Is Verified',
+    accessorKey: 'is_verified',
+    cell: ({ row }) => {
+      const isVerified = row.original.is_verified
+      const id = row.original.id
+      return (
+        <div className='flex items-center justify-center'>
+          <input
+            type='checkbox'
+            checked={!!isVerified}
+            onChange={(e) => handleVerified(id, e.target.checked)}
+            className='w-4 h-4 accent-green-600 cursor-pointer'
+            title={isVerified ? 'Verified' : 'Not Verified'}
           />
         </div>
       )

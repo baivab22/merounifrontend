@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart, Info, GraduationCap, MapPin } from 'lucide-react'
+import { Heart, Info, GraduationCap, MapPin, BadgeCheck } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useSelector } from 'react-redux'
 import { authFetch } from '@/app/utils/authFetch'
@@ -47,6 +47,7 @@ const CollegeCard = ({
     collegeProp?.logo ??
     '/images/logo.png'
   const degrees = degreesProp ?? collegeProp?.degrees ?? []
+  const isVerified = collegeProp?.is_verified
 
   const addressObj = collegeProp?.collegeAddress || collegeProp?.address
   const location =
@@ -215,8 +216,11 @@ const CollegeCard = ({
             </div>
           )}
           <div className='flex-1 min-w-0'>
-            <h3 className='text-sm md:text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-2'>
+            <h3 className='text-sm md:text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-2 flex items-center gap-1.5'>
               {name}
+              {isVerified && (
+                <BadgeCheck className='w-4 h-4 text-blue-500 fill-blue-500/20 flex-shrink-0' />
+              )}
             </h3>
             {location && (
               <div className='flex items-center gap-1 text-[10px] md:text-[11px] font-medium text-gray-500'>

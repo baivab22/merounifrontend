@@ -373,13 +373,32 @@ export default function CollegeForm() {
     }
   }
 
+  const handleVerified = async (id, value) => {
+    setColleges(prev =>
+      prev.map(c => c.id === id ? { ...c, is_verified: value } : c)
+    )
+    try {
+      await authFetch(`${process.env.baseUrl}/college/${id}/verified`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_verified: value })
+      })
+    } catch (err) {
+      setColleges(prev =>
+        prev.map(c => c.id === id ? { ...c, is_verified: !value } : c)
+      )
+      toast({ title: 'Error', description: 'Failed to update verified status', variant: 'destructive' })
+    }
+  }
+
   const columns = createColumns({
     handleView,
     handleEdit,
     handleOpenCredentialsModal,
     handleDeleteClick,
     handleImageClick,
-    handleReferable
+    handleReferable,
+    handleVerified
   })
 
   return (

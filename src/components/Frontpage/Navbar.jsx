@@ -12,7 +12,6 @@ const navLinks = [
   { href: '/colleges', label: 'Colleges' },
   { href: '/top-colleges', label: 'Top Colleges' },
   { href: '/schools', label: 'Schools' },
-  { href: '/universities', label: 'Universities' },
   { href: '/degree', label: 'Degrees' },
   { href: '/admission', label: 'Admission' },
   { href: '/scholarship', label: 'Scholarship' },
@@ -22,6 +21,7 @@ const navLinks = [
 ]
 
 const moreLinks = [
+  { href: '/universities', label: 'Universities' },
   { href: '/exams', label: 'Exams' },
   { href: '/programs', label: 'Programs' },
   { href: '/vacancies', label: 'Vacancies' },
