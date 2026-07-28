@@ -16,6 +16,14 @@ import { stripHtml } from '@/lib/string.utils'
 
 const MAX_COMPARE = 4
 
+const getProgramShortcut = (program, degrees = []) => {
+  if (!program) return 'N/A'
+  const title = program.title || ''
+  const normalised = title.replace(/\./g, '').toLowerCase()
+  const matched = degrees.find((d) => d.title?.toLowerCase() === normalised)
+  return matched?.short_name || title
+}
+
 const CHECKPOINTS = [
   {
     tag: 'Checkpoint 1',
@@ -320,7 +328,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                       value={selectedPrograms[c.slug] || ''}
                       options={(c.collegePrograms || []).map((p) => ({
                         value: p?.program?.slug || '',
-                        label: p?.program?.title || 'N/A'
+                        label: getProgramShortcut(p?.program, c.degrees)
                       }))}
                       onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
                       triggerClassName='!border-gray-200 !text-gray-600 !h-6 sm:!h-7 !text-[10px] sm:!text-[11px] !px-1.5 sm:!px-2 !rounded-md !bg-white'
@@ -408,12 +416,12 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                         transition={{ duration: 0.25, ease: 'easeInOut' }}
                         className='overflow-hidden'
                       >
-                        {/* Desktop Table */}
-                        <div className='hidden md:block mt-2 rounded-xl bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
-                          <div className='overflow-x-auto'>
-                            <table className='w-full' style={{ minWidth: `${140 + colleges.length * 200}px` }}>
+                        {/* Comparison Table (all screen sizes) */}
+                        <div className='mt-2 rounded-xl bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
+                          <div className='overflow-x-auto scrollbar-hide'>
+                            <table className='w-full' style={{ minWidth: `${120 + colleges.length * 200}px` }}>
                               <colgroup>
-                                <col style={{ width: '140px' }} />
+                                <col style={{ width: '120px' }} />
                                 {colleges.map((_, ci) => <col key={ci} />)}
                               </colgroup>
                               <thead>
@@ -458,7 +466,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                                               value={selectedPrograms[c.slug] || ''}
                                               options={(c.collegePrograms || []).map((p) => ({
                                                 value: p?.program?.slug || '',
-                                                label: p?.program?.title || 'N/A'
+                                                label: getProgramShortcut(p?.program, c.degrees)
                                               }))}
                                               onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
                                             />
@@ -475,54 +483,6 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               </tbody>
                             </table>
                           </div>
-                        </div>
-
-                        {/* Mobile Cards */}
-                        <div className='md:hidden mt-2 space-y-2'>
-                          {colleges.map((c) => (
-                            <div key={c.slug} className='rounded-xl bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]'>
-                              <div className='flex items-center gap-2.5 px-3 py-2.5 bg-[#0A6FA7]/[0.03] border-b border-gray-100/60'>
-                                <div className='w-7 h-7 rounded-md bg-gray-100 overflow-hidden flex-shrink-0'>
-                                  {c.college_logo ? (
-                                    <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
-                                  ) : (
-                                    <div className='w-full h-full flex items-center justify-center text-[9px] font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
-                                      {c.name?.charAt(0) || '?'}
-                                    </div>
-                                  )}
-                                </div>
-                                <span className='text-[11px] font-bold text-gray-900 truncate'>{c.name}</span>
-                              </div>
-                              <div>
-                                {layer.rows.map((row) => (
-                                  <div key={row.key} className='px-3 py-2.5 border-b border-gray-50 last:border-0'>
-                                    <p className='text-[10px] uppercase tracking-wider text-gray-600 font-extrabold mb-1'>{row.label}</p>
-                                    {row.key === 'program' ? (
-                                      (c.collegePrograms || []).length > 0 ? (
-                                        <div className='max-w-full overflow-hidden'>
-                                          <ThemeSelect
-                                            compact
-                                            value={selectedPrograms[c.slug] || ''}
-                                            options={(c.collegePrograms || []).map((p) => ({
-                                              value: p?.program?.slug || '',
-                                              label: p?.program?.title || 'N/A'
-                                            }))}
-                                            onChange={(slug) => setSelectedPrograms((prev) => ({ ...prev, [c.slug]: slug }))}
-                                          />
-                                        </div>
-                                      ) : (
-                                        <p className='text-xs text-gray-300'>—</p>
-                                      )
-                                    ) : (
-                                      <div className='text-xs font-semibold text-gray-700 break-words'>
-                                        {renderCellValue(c, row.key)}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
                         </div>
                       </motion.div>
                     )}
