@@ -299,7 +299,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
             Programs being compared
           </p>
 
-          <div className='flex flex-wrap gap-2 sm:gap-2.5 w-full sm:w-auto'>
+          <div className='flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-2.5 w-full sm:w-auto'>
             <AnimatePresence mode='popLayout'>
               {colleges.map((c) => (
                 <motion.div
@@ -308,20 +308,29 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className='flex items-center gap-2 bg-[#F8FAFC] rounded-lg py-1.5 pl-1.5 pr-1.5 border border-gray-100'
+                  className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 bg-[#F8FAFC] rounded-lg py-1.5 pl-1.5 pr-1.5 border border-gray-100'
                 >
-                  <div className='w-6 h-6 rounded-md bg-gray-100 overflow-hidden flex-shrink-0'>
-                    {c.college_logo ? (
-                      <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
-                    ) : (
-                      <div className='w-full h-full flex items-center justify-center text-[9px] font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
-                        {c.name?.charAt(0) || '?'}
-                      </div>
-                    )}
+                  <div className='flex items-center gap-2'>
+                    <div className='w-6 h-6 rounded-md bg-gray-100 overflow-hidden flex-shrink-0'>
+                      {c.college_logo ? (
+                        <img src={c.college_logo} alt={c.name} className='w-full h-full object-contain p-0.5' />
+                      ) : (
+                        <div className='w-full h-full flex items-center justify-center text-[9px] font-bold bg-[#0A6FA7]/10 text-[#0A6FA7]'>
+                          {c.name?.charAt(0) || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <span className='text-[11px] sm:text-xs font-semibold text-gray-700 truncate max-w-[100px] sm:max-w-[180px]'>
+                      {c.name}
+                    </span>
+                    <button
+                      onClick={() => handleRemoveCollege(c.slug)}
+                      className='w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors group ml-auto sm:ml-0'
+                      aria-label={`Remove ${c.name}`}
+                    >
+                      <X className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 group-hover:text-red-500 transition-colors' />
+                    </button>
                   </div>
-                  <span className='text-[11px] sm:text-xs font-semibold text-gray-700 truncate max-w-[100px] sm:max-w-[180px]'>
-                    {c.name}
-                  </span>
                   {(c.collegePrograms || []).length > 0 && (
                     <ThemeSelect
                       compact
@@ -334,13 +343,6 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                       triggerClassName='!border-gray-200 !text-gray-600 !h-6 sm:!h-7 !text-[10px] sm:!text-[11px] !px-1.5 sm:!px-2 !rounded-md !bg-white'
                     />
                   )}
-                  <button
-                    onClick={() => handleRemoveCollege(c.slug)}
-                    className='w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors group'
-                    aria-label={`Remove ${c.name}`}
-                  >
-                    <X className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 group-hover:text-red-500 transition-colors' />
-                  </button>
                 </motion.div>
               ))}
             </AnimatePresence>
