@@ -88,7 +88,7 @@ const ImageSection = ({
         {/* Info Bar with Popping Logo */}
         <motion.div 
           variants={itemVariants}
-          className='flex flex-row min-h-[80px] md:h-[100px] bg-white items-center p-4 px-4 sm:px-8 md:px-14 lg:px-24 gap-4 sm:gap-6 shadow-sm relative z-10'
+          className='flex flex-row flex-wrap min-h-[80px] md:h-[100px] bg-white items-center p-4 px-4 sm:px-8 md:px-14 lg:px-24 gap-4 sm:gap-6 shadow-sm relative z-10'
         >
           {/* Popping Logo */}
           <motion.div 
@@ -135,46 +135,49 @@ const ImageSection = ({
             )}
           </div>
 
-          {/* View Brochure Button */}
-          {college?.college_broucher && (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className='flex-shrink-0'
-            >
-              <a
-                href={college.college_broucher}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md hover:shadow-lg text-sm font-bold active:scale-95'
+          {/* Action Buttons */}
+          <div className='flex flex-row flex-wrap items-center gap-3 w-full sm:w-auto sm:justify-end'>
+            {/* View Brochure Button */}
+            {college?.college_broucher && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className='flex-shrink-0'
               >
-                <Eye className='w-4 h-4' />
-                <span className='hidden sm:inline'>View Brochure</span>
-                <span className='sm:hidden'>Brochure</span>
-              </a>
-            </motion.div>
-          )}
-
-          {/* Compare Program Select */}
-          {programs.length > 0 && (
-            <div className='flex-shrink-0'>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <ThemeSelect
-                  icon={GitCompareArrows}
-                  placeholder='Compare Program'
-                  options={programs.map((item) => ({
-                    value: item?.program?.slug || '',
-                    label: item?.program?.title || 'N/A'
-                  }))}
-                  onChange={(slug) => {
-                    if (slug) {
-                      router.push(`/colleges/compare?slugs=${college?.slug}&program=${slug}`)
-                    }
-                  }}
-                />
+                <a
+                  href={college.college_broucher}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='bg-[#0A6FA7] hover:bg-[#085e8a] text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md hover:shadow-lg text-sm font-bold active:scale-95'
+                >
+                  <Eye className='w-4 h-4' />
+                  <span className='hidden sm:inline'>View Brochure</span>
+                  <span className='sm:hidden'>Brochure</span>
+                </a>
               </motion.div>
-            </div>
-          )}
+            )}
+
+            {/* Compare Program Select */}
+            {programs.length > 0 && (
+              <div className='flex-shrink-0'>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <ThemeSelect
+                    icon={GitCompareArrows}
+                    placeholder='Compare Program'
+                    options={programs.map((item) => ({
+                      value: item?.program?.slug || '',
+                      label: item?.program?.title || 'N/A'
+                    }))}
+                    onChange={(slug) => {
+                      if (slug) {
+                        router.push(`/colleges/compare?slugs=${college?.slug}&program=${slug}`)
+                      }
+                    }}
+                  />
+                </motion.div>
+              </div>
+            )}
+          </div>
         </motion.div>
       </div>
 
