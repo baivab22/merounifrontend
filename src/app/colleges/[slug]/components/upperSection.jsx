@@ -136,7 +136,7 @@ const ImageSection = ({
           </div>
 
           {/* Action Buttons */}
-          <div className='flex flex-row flex-wrap items-center gap-3 w-full sm:w-auto sm:justify-end'>
+          <div className='flex flex-row flex-wrap items-center gap-x-3 w-full sm:w-auto sm:justify-end'>
             {/* View Brochure Button */}
             {college?.college_broucher && (
               <motion.div
@@ -157,27 +157,28 @@ const ImageSection = ({
               </motion.div>
             )}
 
-          {/* Compare Program Select */}
-          {programs.length > 0 && (
-            <div className='flex-shrink-0 basis-full md:basis-auto'>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <ThemeSelect
-                  icon={GitCompareArrows}
-                  placeholder='Compare Program'
-                  dropdownClassName='left-0 right-0 w-full min-w-0 md:min-w-[200px] md:left-auto md:right-0 md:w-auto'
-                  options={programs.map((item) => ({
-                    value: item?.program?.slug || '',
-                    label: item?.program?.title || 'N/A'
-                  }))}
-                  onChange={(slug) => {
-                    if (slug) {
-                      router.push(`/colleges/compare?slugs=${college?.slug}&program=${slug}`)
-                    }
-                  }}
-                />
-              </motion.div>
-            </div>
-          )}
+            {/* Compare Program Select */}
+            {programs.length > 0 && (
+              <div className='flex-shrink-0 basis-full md:basis-auto'>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <ThemeSelect
+                    icon={GitCompareArrows}
+                    placeholder='Compare Program'
+                    dropdownClassName='left-0 right-0 w-full min-w-0 md:min-w-[200px] md:left-auto md:right-0 md:w-auto'
+                    options={programs.map((item) => ({
+                      value: item?.program?.slug || '',
+                      label: item?.program?.title || 'N/A'
+                    }))}
+                    onChange={(slug) => {
+                      if (slug) {
+                        router.push(`/colleges/compare?slugs=${college?.slug}&program=${slug}`)
+                      }
+                    }}
+                  />
+                </motion.div>
+              </div>
+            )}
+          </div>
         </motion.div>
       </div>
 
