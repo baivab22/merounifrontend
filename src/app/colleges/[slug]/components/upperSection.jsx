@@ -88,7 +88,7 @@ const ImageSection = ({
         {/* Info Bar with Popping Logo */}
         <motion.div 
           variants={itemVariants}
-          className='flex flex-row min-h-[80px] md:h-[100px] bg-white items-center p-4 px-4 sm:px-8 md:px-14 lg:px-24 gap-4 sm:gap-6 shadow-sm relative z-10'
+          className='flex flex-row flex-wrap md:flex-nowrap min-h-[80px] md:h-[100px] bg-white items-center p-4 px-4 sm:px-8 md:px-14 lg:px-24 gap-x-4 sm:gap-x-6 shadow-sm relative z-10'
         >
           {/* Popping Logo */}
           <motion.div 
@@ -157,11 +157,12 @@ const ImageSection = ({
 
           {/* Compare Program Select */}
           {programs.length > 0 && (
-            <div className='flex-shrink-0'>
+            <div className='flex-shrink-0 basis-full md:basis-auto'>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <ThemeSelect
                   icon={GitCompareArrows}
                   placeholder='Compare Program'
+                  dropdownClassName='left-0 right-0 w-full min-w-0 md:min-w-[200px] md:left-auto md:right-0 md:w-auto'
                   options={programs.map((item) => ({
                     value: item?.program?.slug || '',
                     label: item?.program?.title || 'N/A'
