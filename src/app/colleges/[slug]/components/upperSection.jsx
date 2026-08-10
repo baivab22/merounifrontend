@@ -159,7 +159,7 @@ const ImageSection = ({
 
             {/* Compare Program Select */}
             {programs.length > 0 && (
-              <div className='flex-shrink-0 basis-full md:basis-auto'>
+              <div className='flex-shrink-0 basis-full md:basis-auto mt-2 md:mt-0'>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <ThemeSelect
                     icon={GitCompareArrows}
