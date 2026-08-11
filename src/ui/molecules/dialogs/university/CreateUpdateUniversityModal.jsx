@@ -23,6 +23,7 @@ import {
   Loader2,
   Mail,
   MapPin,
+  Medal,
   Phone,
   Plus,
   Settings,
@@ -133,6 +134,8 @@ const CreateUpdateUniversityModal = ({
       postal_code: '',
       date_of_establish: '',
       type_of_institute: 'Public',
+      qs_ranking: '',
+      the_ranking: '',
       logo: '',
       description: '',
       contact: {
@@ -171,6 +174,8 @@ const CreateUpdateUniversityModal = ({
         'fullname',
         'type_of_institute',
         'date_of_establish',
+        'qs_ranking',
+        'the_ranking',
         'levels',
         'meta_description'
       ],
@@ -280,6 +285,8 @@ const CreateUpdateUniversityModal = ({
           setValue('postal_code', uniData.postal_code)
           setValue('date_of_establish', uniData.date_of_establish ?? '')
           setValue('type_of_institute', uniData.type_of_institute || 'Public')
+          setValue('qs_ranking', uniData.qs_ranking ?? '')
+          setValue('the_ranking', uniData.the_ranking ?? '')
           setValue('map', uniData.map || '')
           setValue('description', uniData.description || '')
           setValue('status', uniData.status || 'Published')
@@ -354,6 +361,8 @@ const CreateUpdateUniversityModal = ({
         postal_code: '',
         date_of_establish: '',
         type_of_institute: 'Public',
+        qs_ranking: '',
+        the_ranking: '',
         logo: '',
         description: '',
         contact: {
@@ -669,6 +678,82 @@ const CreateUpdateUniversityModal = ({
                         {errors.date_of_establish && (
                           <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
                             {errors.date_of_establish.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                      <div>
+                        <Label htmlFor='qs_ranking'>QS World Ranking</Label>
+                        <div className='relative'>
+                          <Medal className='absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#387cae]' />
+                          <Input
+                            id='qs_ranking'
+                            type='number'
+                            placeholder='e.g. 401'
+                            min={1}
+                            className={cn(
+                              'h-11 pl-10 rounded-md border-gray-200 focus:ring-[#387cae]/20',
+                              errors.qs_ranking && 'border-red-500'
+                            )}
+                            {...register('qs_ranking', {
+                              setValueAs: (v) =>
+                                v === '' || v === undefined
+                                  ? null
+                                  : parseInt(v, 10),
+                              validate: (v) => {
+                                if (v === null || v === undefined) return true
+                                if (!Number.isInteger(v) || v <= 0)
+                                  return 'Ranking must be a positive whole number'
+                                return true
+                              }
+                            })}
+                          />
+                        </div>
+                        <p className='text-[10px] text-gray-400 mt-1 ml-1'>
+                          Leave empty if not ranked
+                        </p>
+                        {errors.qs_ranking && (
+                          <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                            {errors.qs_ranking.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor='the_ranking'>THE World Ranking</Label>
+                        <div className='relative'>
+                          <Medal className='absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#c2410c]' />
+                          <Input
+                            id='the_ranking'
+                            type='number'
+                            placeholder='e.g. 801'
+                            min={1}
+                            className={cn(
+                              'h-11 pl-10 rounded-md border-gray-200 focus:ring-[#387cae]/20',
+                              errors.the_ranking && 'border-red-500'
+                            )}
+                            {...register('the_ranking', {
+                              setValueAs: (v) =>
+                                v === '' || v === undefined
+                                  ? null
+                                  : parseInt(v, 10),
+                              validate: (v) => {
+                                if (v === null || v === undefined) return true
+                                if (!Number.isInteger(v) || v <= 0)
+                                  return 'Ranking must be a positive whole number'
+                                return true
+                              }
+                            })}
+                          />
+                        </div>
+                        <p className='text-[10px] text-gray-400 mt-1 ml-1'>
+                          Leave empty if not ranked
+                        </p>
+                        {errors.the_ranking && (
+                          <p className='text-xs font-semibold text-red-500 mt-2 ml-1'>
+                            {errors.the_ranking.message}
                           </p>
                         )}
                       </div>

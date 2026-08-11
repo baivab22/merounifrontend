@@ -4,6 +4,7 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Info, GraduationCap } from 'lucide-react'
 import { motion } from 'framer-motion'
+import UniversityRankings from '@/components/UniversityRankings'
 
 const UniversityCard = ({ university }) => {
   const router = useRouter()
@@ -63,6 +64,11 @@ const UniversityCard = ({ university }) => {
             <h3 className='text-base font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-[#0A70A7] transition-colors mb-1'>
               {fullname}
             </h3>
+            <UniversityRankings
+              university={university}
+              className='mb-1.5'
+              chipClassName='text-[9px]'
+            />
             {location && (
               <div className='flex items-center gap-1 text-[11px] font-medium text-gray-500'>
                 <MapPin className='w-3 h-3 text-[#0A70A7] flex-shrink-0' />

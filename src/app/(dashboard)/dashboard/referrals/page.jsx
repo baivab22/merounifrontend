@@ -83,7 +83,7 @@ const ReferralsPage = () => {
   const loadReferrals = async (page = 1) => {
     setTableLoading(true)
     try {
-      const data = await fetchReferrals(page, isStudent)
+      const data = await fetchReferrals({ page, isStudent })
       // For students, the API returns an array directly
       // For admin, it returns { items, pagination }
       if (isStudent) {
@@ -100,9 +100,15 @@ const ReferralsPage = () => {
         setAllReferrals(referralsArray)
         setReferrals(referralsArray)
         setPagination({
-          currentPage: data.pagination?.currentPage || 1,
+          currentPage:
+            data.pagination?.page ||
+            data.pagination?.currentPage ||
+            page,
           totalPages: data.pagination?.totalPages || 1,
-          total: data.pagination?.totalCount || referralsArray.length
+          total:
+            data.pagination?.total ||
+            data.pagination?.totalCount ||
+            referralsArray.length
         })
       }
     } catch (err) {

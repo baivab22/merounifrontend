@@ -9,6 +9,7 @@ import ScrollToTop from '@/ui/molecules/common/ScrollToTop'
 
 // Dynamically import below-the-fold components
 const DisciplineList = dynamic(() => import('@/components/Frontpage/DisciplineList'))
+const AskExpertModal = dynamic(() => import('@/components/Frontpage/AskExpertModal'))
 
 const FeaturedDegree = dynamic(() => import('@/components/Frontpage/FeaturedDegree'))
 const CollegeRankings = dynamic(() => import('@/components/Frontpage/CollegeRankings'))
@@ -113,6 +114,8 @@ const Page = async () => {
       </Suspense>
 
       <ScrollToTop />
+
+      <AskExpertModal />
     </div>
   )
 }

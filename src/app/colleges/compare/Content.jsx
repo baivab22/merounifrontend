@@ -13,6 +13,7 @@ import SearchCollegeModal from './components/SearchCollegeModal'
 import { getCollegeBySlug } from '../actions'
 import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
 import { stripHtml } from '@/lib/string.utils'
+import UniversityRankings from '@/components/UniversityRankings'
 
 const MAX_COMPARE = 4
 
@@ -444,8 +445,20 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                                         </div>
                                         <div className='text-[11px] font-bold text-gray-900 leading-tight'>{c.name}</div>
                                         {(c.universities || []).length > 0 && (
-                                          <div className='text-[9px] text-gray-400 font-medium'>
-                                            {c.universities.map((u) => u?.fullname).filter(Boolean).join(', ')}
+                                          <div className='flex flex-col items-center gap-1 mt-0.5'>
+                                            {c.universities
+                                              .filter((u) => u?.fullname)
+                                              .map((u) => (
+                                                <div key={u?.id || u?.slug || u?.fullname} className='flex flex-col items-center gap-0.5'>
+                                                  <span className='text-[9px] text-gray-400 font-medium leading-tight'>
+                                                    {u.fullname}
+                                                  </span>
+                                                  <UniversityRankings
+                                                    university={u}
+                                                    chipClassName='text-[8px] px-1'
+                                                  />
+                                                </div>
+                                              ))}
                                           </div>
                                         )}
                                       </div>

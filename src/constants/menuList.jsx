@@ -84,6 +84,12 @@ export const menuItems = [
             visible: ['admin']
           },
           {
+            icon: <FaGraduationCap className='text-lg' />,
+            label: 'Expert Sessions',
+            href: '/dashboard/expert-sessions',
+            visible: ['admin']
+          },
+          {
             icon: <FaBriefcase className='text-lg' />,
             label: 'Careers',
             href: '/dashboard/career',

@@ -9,6 +9,7 @@ import { Eye, GitCompareArrows, BadgeCheck } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
+import UniversityRankings from '@/components/UniversityRankings'
 
 const ImageSection = ({
   college,
@@ -121,6 +122,10 @@ const ImageSection = ({
                 <BadgeCheck className='w-5 h-5 md:w-7 md:h-7 text-[#1A8CFF] fill-[#1A8CFF] stroke-white flex-shrink-0 drop-shadow' />
               )}
             </h1>
+            <UniversityRankings
+              universities={college?.universities}
+              className='mt-1.5'
+            />
             {hasAddress && (
               <div className='flex flex-row items-center gap-1.5 mt-1 text-gray-600'>
                 <span className='flex-shrink-0'>

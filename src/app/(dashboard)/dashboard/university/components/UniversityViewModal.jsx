@@ -16,6 +16,21 @@ import {
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 
+const RankingBadge = ({ label, rank }) => {
+    if (rank === null || rank === undefined || rank === '') return null
+    const isQS = label === 'QS'
+    return (
+        <span className={cn(
+            'px-3 py-1 text-[11px] font-bold rounded-md uppercase tracking-wider border',
+            isQS
+                ? 'bg-[#387cae]/10 text-[#1c5a83] border-[#387cae]/20'
+                : 'bg-[#c2410c]/10 text-[#9a3412] border-[#c2410c]/20'
+        )}>
+            {label} #{rank}
+        </span>
+    )
+}
+
 const InfoRow = ({ icon: Icon, label, value }) => {
     if (!value) return null
     return (
@@ -83,6 +98,8 @@ const UniversityViewModal = ({ isOpen, onClose, data, loading }) => {
                                                     {data.type_of_institute} Institute
                                                 </span>
                                             )}
+                                            <RankingBadge label='QS' rank={data.qs_ranking} />
+                                            <RankingBadge label='THE' rank={data.the_ranking} />
                                         </div>
                                     </div>
 
