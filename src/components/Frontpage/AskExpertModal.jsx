@@ -14,7 +14,7 @@ const AskExpertModal = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsOpen(true)
-    }, 4000)
+    }, 8000)
 
     return () => clearTimeout(timer)
   }, [])
@@ -79,9 +79,8 @@ const AskExpertModal = () => {
               </div>
 
               <h2 className='mt-4 text-[26px] font-bold leading-snug text-gray-900'>
-                Which courses are you
-                <br />
-                interested in?
+                Are you getting confused what to study?
+               
               </h2>
               <p className='mt-2 text-sm leading-relaxed text-gray-500'>
                 Tap your course below and our counselors will get you started on
