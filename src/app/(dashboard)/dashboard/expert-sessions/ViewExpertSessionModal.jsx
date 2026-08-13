@@ -85,6 +85,13 @@ export default function ViewExpertSessionModal({ isOpen, onClose, session }) {
                         </div>
                     </div>
 
+                    {session.comment ? (
+                        <div>
+                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Admin Comment</label>
+                            <p className="mt-1 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 whitespace-pre-wrap">{session.comment}</p>
+                        </div>
+                    ) : null}
+
                     <div className="flex justify-end pt-4">
                         <Button onClick={onClose} variant="outline">Close</Button>
                     </div>

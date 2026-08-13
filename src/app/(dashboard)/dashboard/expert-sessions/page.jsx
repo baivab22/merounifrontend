@@ -36,6 +36,7 @@ export default function ExpertSessionsManager() {
     const [statusModalOpen, setStatusModalOpen] = useState(false)
     const [selectedStatusSession, setSelectedStatusSession] = useState(null)
     const [newStatus, setNewStatus] = useState('new')
+    const [comment, setComment] = useState('')
 
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false)
     const [deleteId, setDeleteId] = useState(null)
@@ -91,6 +92,7 @@ export default function ExpertSessionsManager() {
     const handleStatusUpdate = (session) => {
         setSelectedStatusSession(session)
         setNewStatus(session.status || 'new')
+        setComment(session.comment || '')
         setStatusModalOpen(true)
     }
 
@@ -99,14 +101,14 @@ export default function ExpertSessionsManager() {
 
         setUpdatingStatusId(selectedStatusSession.id)
         try {
-            await updateExpertSession(selectedStatusSession.id, { status: newStatus })
+            await updateExpertSession(selectedStatusSession.id, { status: newStatus, comment })
             toast({
                 title: 'Success',
                 description: `Status updated to ${newStatus}`
             })
 
             setSessions(prev => prev.map(s =>
-                s.id === selectedStatusSession.id ? { ...s, status: newStatus } : s
+                s.id === selectedStatusSession.id ? { ...s, status: newStatus, comment } : s
             ))
 
             setStatusModalOpen(false)
@@ -252,6 +254,18 @@ export default function ExpertSessionsManager() {
                                 <option value='in_progress'>In progress</option>
                                 <option value='resolved'>Resolved</option>
                             </select>
+                        </div>
+                        <div>
+                            <Label className="block text-sm font-medium text-gray-700 mb-1">
+                                Comment
+                            </Label>
+                            <textarea
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                rows={4}
+                                placeholder="Add a comment for this session…"
+                                className='w-full px-3 py-2 rounded-md border border-gray-200 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#387cae]/25 focus:border-[#387cae]/40 resize-none'
+                            />
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
                             <Button
