@@ -42,10 +42,14 @@ export default function ViewContactModal({ isOpen, onClose, contact }) {
                             <p className="text-lg font-medium text-gray-900">{contact.fullname || contact.fullName}</p>
                         </div>
                         <div>
+                            <label className="text-sm font-semibold text-gray-500">Mobile Number</label>
+                            <p className="text-lg font-medium text-gray-900">{contact.phone || 'N/A'}</p>
+                        </div>
+                        <div>
                             <label className="text-sm font-semibold text-gray-500">Email</label>
                             <p className="text-lg font-medium text-gray-900">{contact.email}</p>
                         </div>
-                        <div className="col-span-2">
+                        <div>
                             <label className="text-sm font-semibold text-gray-500">Subject</label>
                             <p className="text-lg font-medium text-gray-900">{contact.subject}</p>
                         </div>

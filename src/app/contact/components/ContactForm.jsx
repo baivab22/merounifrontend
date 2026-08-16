@@ -9,6 +9,7 @@ export default function ContactForm() {
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
+    phone: '',
     subject: '',
     message: ''
   })
@@ -44,7 +45,7 @@ export default function ContactForm() {
           title: 'Success',
           description: 'Message sent successfully!'
         })
-        setFormData({ fullname: '', email: '', subject: '', message: '' })
+        setFormData({ fullname: '', email: '', phone: '', subject: '', message: '' })
         setTimeout(() => setIsSuccess(false), 5000)
       } else {
         toast({
@@ -126,17 +127,31 @@ export default function ContactForm() {
               </div>
             </div>
 
-            <div className='space-y-2'>
-              <label className='text-sm font-semibold text-gray-700 ml-1'>Subject</label>
-              <input
-                type='text'
-                name='subject'
-                value={formData.subject}
-                onChange={handleChange}
-                placeholder='How can we help you?'
-                className='w-full p-4 rounded-md bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-[#387cae] outline-none transition-all duration-200'
-                required
-              />
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+              <div className='space-y-2'>
+                <label className='text-sm font-semibold text-gray-700 ml-1'>Mobile Number</label>
+                <input
+                  type='tel'
+                  name='phone'
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder='98XXXXXXXX'
+                  className='w-full p-4 rounded-md bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-[#387cae] outline-none transition-all duration-200'
+                  required
+                />
+              </div>
+              <div className='space-y-2'>
+                <label className='text-sm font-semibold text-gray-700 ml-1'>Subject</label>
+                <input
+                  type='text'
+                  name='subject'
+                  value={formData.subject}
+                  onChange={handleChange}
+                  placeholder='How can we help you?'
+                  className='w-full p-4 rounded-md bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-[#387cae] outline-none transition-all duration-200'
+                  required
+                />
+              </div>
             </div>
 
             <div className='space-y-2'>

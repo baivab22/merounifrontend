@@ -15,6 +15,11 @@ export const createColumns = ({ handleView, handleDelete, handleStatusUpdate }) 
         accessorKey: 'email',
     },
     {
+        header: 'Mobile',
+        accessorKey: 'phone',
+        cell: ({ getValue }) => getValue() || '-'
+    },
+    {
         header: 'Subject',
         accessorKey: 'subject',
         cell: ({ getValue }) => (
