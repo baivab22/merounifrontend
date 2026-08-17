@@ -1889,6 +1889,9 @@ const EditCollegePage = () => {
                         })
                       }}
                     />
+                    <p className='text-[10px] font-medium text-gray-400 mt-2'>
+                      Recommended size: 500 × 500 px
+                    </p>
                     {errors.college_logo && (
                       <p className='text-[10px] font-semibold text-red-500 mt-2'>
                         {errors.college_logo.message}

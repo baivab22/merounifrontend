@@ -91,6 +91,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
   const [colleges, setColleges] = useState(initialColleges)
   const [copied, setCopied] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [expandedCells, setExpandedCells] = useState({})
   const [openLayers, setOpenLayers] = useState(() => {
     const init = {}
     CHECKPOINTS.forEach((_, i) => { init[i] = true })
@@ -254,6 +255,10 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
     }
   }, [selectedPrograms])
 
+  const toggleCellExpand = useCallback((cellKey) => {
+    setExpandedCells((prev) => ({ ...prev, [cellKey]: !prev[cellKey] }))
+  }, [])
+
   const renderCellValue = useCallback((c, field) => {
     const val = getCollegeField(c, field)
     if (field === 'website') {
@@ -271,11 +276,31 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
         ? <a href={`tel:${val}`} className='text-[#0A6FA7] hover:underline'>{val}</a>
         : <span className='text-gray-300'>—</span>
     }
+    if (val && (field === 'fee' || field === 'scholarship' || field === 'placement')) {
+      const cellKey = `${c.slug}-${field}`
+      const isExpanded = expandedCells[cellKey]
+      const isLong = val.length > 80
+      return (
+        <div className='text-left'>
+          <span className={`${!isExpanded && isLong ? 'line-clamp-3' : ''}`}>
+            {val}
+          </span>
+          {isLong && (
+            <button
+              onClick={() => toggleCellExpand(cellKey)}
+              className='mt-1 text-[13px] font-semibold text-[#0A6FA7] hover:text-[#085a8a] underline transition-colors cursor-pointer'
+            >
+              {isExpanded ? 'See Less' : 'See More'}
+            </button>
+          )}
+        </div>
+      )
+    }
     if (val) {
       return <span title={val}>{val.length > 80 ? val.substring(0, 80) + '...' : val}</span>
     }
     return <span className='text-gray-300'>Not Available</span>
-  }, [getCollegeField])
+  }, [getCollegeField, expandedCells, toggleCellExpand])
 
   return (
     <div className='min-h-screen bg-[#F8FAFC]'>
@@ -429,7 +454,7 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               </colgroup>
                               <thead>
                                 <tr>
-                                  <th className='text-left px-4 py-3.5 text-[10px] uppercase tracking-wider text-gray-400 font-bold bg-[#0A6FA7]/[0.03]'>
+                                  <th className='text-left px-4 py-3.5 text-[13px] uppercase tracking-wider text-gray-400 font-bold bg-[#0A6FA7]/[0.03]'>
                                   </th>
                                   {colleges.map((c) => (
                                     <th key={c.slug} className='text-center px-4 py-3.5 bg-[#0A6FA7]/[0.03]'>
@@ -443,22 +468,37 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                                             </div>
                                           )}
                                         </div>
-                                        <div className='text-[11px] font-bold text-gray-900 leading-tight'>{c.name}</div>
+                                        <div className='text-[14px] font-bold text-gray-900 leading-tight'>{c.name}</div>
                                         {(c.universities || []).length > 0 && (
                                           <div className='flex flex-col items-center gap-1 mt-0.5'>
                                             {c.universities
                                               .filter((u) => u?.fullname)
                                               .map((u) => (
                                                 <div key={u?.id || u?.slug || u?.fullname} className='flex flex-col items-center gap-0.5'>
-                                                  <span className='text-[9px] text-gray-400 font-medium leading-tight'>
+                                                  <span className='text-[12px] text-gray-400 font-medium leading-tight'>
                                                     {u.fullname}
                                                   </span>
                                                   <UniversityRankings
                                                     university={u}
-                                                    chipClassName='text-[8px] px-1'
+                                                    chipClassName='text-[10px] px-1'
                                                   />
                                                 </div>
                                               ))}
+                                          </div>
+                                        )}
+                                        {(c.collegeRankings || []).length > 0 && (
+                                          <div className='flex flex-col items-center gap-0.5 mt-1'>
+                                            <span className='text-[12px] font-bold uppercase tracking-wider text-amber-500/70'>College Rankings</span>
+                                            {c.collegeRankings.map((cr) => (
+                                              <span
+                                                key={cr.id}
+                                                className='inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none bg-amber-50 text-amber-700 border border-amber-200'
+                                                title={`${cr.degree?.title || 'Degree'} Ranking: #${cr.rank}`}
+                                              >
+                                                <span className='w-1 h-1 rounded-full bg-amber-500' />
+                                                {cr.degree?.short_name || cr.degree?.title || 'N/A'} #{cr.rank}
+                                              </span>
+                                            ))}
                                           </div>
                                         )}
                                       </div>
@@ -469,11 +509,11 @@ const CompareContent = ({ initialColleges = [], initialSlugs = [], programSlug =
                               <tbody>
                                 {layer.rows.map((row) => (
                                   <tr key={row.key} className='last:border-0 hover:bg-[#0A6FA7]/[0.01] transition-colors'>
-                                    <td className='px-4 py-3 text-[11px] font-extrabold text-gray-700 uppercase tracking-wider bg-gray-50/40'>
+                                    <td className='px-4 py-3 text-[14px] font-extrabold text-gray-700 uppercase tracking-wider bg-gray-50/40'>
                                       {row.label}
                                     </td>
                                     {colleges.map((c) => (
-                                      <td key={c.slug} className='px-4 py-3 text-center text-xs font-semibold text-gray-700'>
+                                      <td key={c.slug} className={`px-4 py-3 text-[16px] font-semibold text-gray-700 ${(row.key === 'fee' || row.key === 'scholarship' || row.key === 'placement') ? 'text-left' : 'text-center'}`}>
                                         {row.key === 'program' ? (
                                           (c.collegePrograms || []).length > 0 ? (
                                             <ThemeSelect

@@ -347,7 +347,7 @@ const SignInPage = ({ defaultMode = 'login' }) => {
           )}
 
           {/* 7. Further Education Plan */}
-          {!isLogin && (
+          {!isLogin && formData.role !== 'agent' && (
             <div className='space-y-1.5'>
               <label className='text-xs font-bold text-gray-700 uppercase tracking-widest ml-1'>Further Education Plan</label>
               <textarea

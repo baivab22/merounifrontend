@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import {
@@ -12,9 +12,11 @@ import { stripHtml } from '@/lib/string.utils'
 import { ThemeSelect } from '@/ui/shadcn/ThemeSelect'
 
 const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', onProgramChange }) => {
+  const [expandedFields, setExpandedFields] = useState({})
   const address = college?.collegeAddress || {}
   const programs = college?.collegePrograms || []
   const universities = college?.universities || []
+  const collegeRankings = college?.collegeRankings || []
   const facilities = college?.facilities || []
 
   const selectedProgram = programs.find(
@@ -33,6 +35,8 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
   const placement = programPlacement || collegePlacement
   const scholarship = programScholarship || collegeScholarship
 
+  const toggleField = (key) => setExpandedFields((prev) => ({ ...prev, [key]: !prev[key] }))
+
   const fullAddress = [
     address.street, address.city, address.district, address.country
   ].filter(Boolean).join(', ')
@@ -43,7 +47,7 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.1, duration: 0.4 }}
-      className='relative bg-white rounded-2xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden w-full sm:min-w-[280px] sm:max-w-[340px] sm:flex-shrink-0 flex flex-col snap-center'
+      className='relative bg-gradient-to-b from-[#F0F9FF] to-white rounded-2xl border border-[#0A6FA7]/10 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden w-full sm:min-w-[280px] sm:max-w-[340px] sm:flex-shrink-0 flex flex-col snap-center'
     >
       <button
         onClick={() => onRemove(college.slug)}
@@ -107,6 +111,31 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
           />
         )}
 
+        {collegeRankings.length > 0 && (
+          <div className='px-1'>
+            <div className='flex items-start gap-2.5'>
+              <div className='w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5'>
+                <Award className='w-3.5 h-3.5 text-amber-500' />
+              </div>
+              <div className='flex-1 min-w-0'>
+                <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>College Rankings</p>
+                <div className='mt-1 flex flex-wrap gap-1'>
+                  {collegeRankings.map((cr) => (
+                    <span
+                      key={cr.id}
+                      className='inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200'
+                      title={`${cr.degree?.title || 'Degree'} Ranking: #${cr.rank}`}
+                    >
+                      <span className='w-1 h-1 rounded-full bg-amber-500' />
+                      {cr.degree?.short_name || cr.degree?.title || 'N/A'} #{cr.rank}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {college?.website_url && (
           <DetailRow
             icon={<Globe className='w-3.5 h-3.5 text-sky-500' />}
@@ -144,10 +173,12 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
 
 
         {fee ? (
-          <DetailRow
+          <ExpandableDetailRow
             icon={<IndianRupee className='w-3.5 h-3.5 text-green-600' />}
             label='Fee Structure'
-            value={fee.length > 80 ? fee.substring(0, 80) + '...' : fee}
+            value={fee}
+            expanded={expandedFields['fee']}
+            onToggle={() => toggleField('fee')}
           />
         ) : (
           <DetailRow
@@ -159,10 +190,12 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
         )}
 
         {placement ? (
-          <DetailRow
+          <ExpandableDetailRow
             icon={<Briefcase className='w-3.5 h-3.5 text-blue-600' />}
             label='Placement'
-            value={placement.length > 80 ? placement.substring(0, 80) + '...' : placement}
+            value={placement}
+            expanded={expandedFields['placement']}
+            onToggle={() => toggleField('placement')}
           />
         ) : (
           <DetailRow
@@ -174,10 +207,12 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
         )}
 
         {scholarship ? (
-          <DetailRow
+          <ExpandableDetailRow
             icon={<Sparkles className='w-3.5 h-3.5 text-amber-500' />}
             label='Scholarship'
-            value={scholarship.length > 80 ? scholarship.substring(0, 80) + '...' : scholarship}
+            value={scholarship}
+            expanded={expandedFields['scholarship']}
+            onToggle={() => toggleField('scholarship')}
           />
         ) : (
           <DetailRow
@@ -260,6 +295,34 @@ const DetailRow = ({ icon, label, value, href, external, muted }) => {
   }
 
   return <div className='px-1'>{content}</div>
+}
+
+const ExpandableDetailRow = ({ icon, label, value, expanded, onToggle }) => {
+  const isLong = value.length > 80
+
+  return (
+    <div className='px-1'>
+      <div className='flex items-start gap-2.5'>
+        <div className='w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5'>
+          {icon}
+        </div>
+        <div className='flex-1 min-w-0'>
+          <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>{label}</p>
+          <p className={`text-xs font-semibold mt-0.5 break-words text-gray-700 ${!expanded && isLong ? 'line-clamp-2' : ''}`}>
+            {value}
+          </p>
+          {isLong && (
+            <button
+              onClick={onToggle}
+              className='mt-0.5 text-[10px] font-semibold text-[#0A6FA7] hover:text-[#085a86] underline transition-colors cursor-pointer'
+            >
+              {expanded ? 'See Less' : 'See More'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default ComparisonCard
