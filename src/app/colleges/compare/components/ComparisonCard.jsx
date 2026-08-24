@@ -117,7 +117,7 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
               <div className='w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5'>
                 <Award className='w-3.5 h-3.5 text-amber-500' />
               </div>
-              <div className='flex-1 min-w-0'>
+              {/* <div className='flex-1 min-w-0'>
                 <p className='text-[10px] uppercase tracking-wider text-gray-400 font-bold'>College Rankings</p>
                 <div className='mt-1 flex flex-wrap gap-1'>
                   {collegeRankings.map((cr) => (
@@ -131,7 +131,7 @@ const ComparisonCard = ({ college, index, onRemove, selectedProgramSlug = '', on
                     </span>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

@@ -22,7 +22,14 @@ import { useToast } from '@/hooks/use-toast'
 
 // --- Components ---
 
-const FiltersSection = ({ searchTerm, onSearchChange, onClear }) => (
+const TAG_STYLES = {
+  'Entrance Preparation': 'bg-violet-50 text-violet-600 border-violet-200',
+  '+2 Notes': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  'Bachelors Notes': 'bg-amber-50 text-amber-600 border-amber-200',
+  'Masters Notes': 'bg-rose-50 text-rose-600 border-rose-200'
+}
+
+const FiltersSection = ({ searchTerm, onSearchChange, onClear, tags, selectedTag, onTagChange }) => (
   <div className='bg-white rounded-[32px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 mb-12'>
     <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
       {/* Search */}
@@ -49,6 +56,33 @@ const FiltersSection = ({ searchTerm, onSearchChange, onClear }) => (
           )}
         </div>
       </div>
+
+      {/* Tag Filters */}
+      {tags.length > 0 && (
+        <div className='md:col-span-12 flex flex-wrap gap-2 mt-1'>
+          <button
+            onClick={() => onTagChange('')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide border transition-all duration-200 ${!selectedTag
+              ? 'bg-[#0A70A7] text-white border-[#0A70A7] shadow-md shadow-blue-500/20'
+              : 'bg-white text-gray-500 border-gray-200 hover:border-[#0A70A7] hover:text-[#0A70A7]'
+              }`}
+          >
+            All Materials
+          </button>
+          {tags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => onTagChange(tag)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide border transition-all duration-200 ${selectedTag === tag
+                ? 'bg-[#0A70A7] text-white border-[#0A70A7] shadow-md shadow-blue-500/20'
+                : `${TAG_STYLES[tag] || 'bg-blue-50 text-[#0A70A7] border-blue-100'} hover:shadow-sm`
+                }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 )
@@ -337,6 +371,7 @@ const Materials = () => {
   const [hierarchy, setHierarchy] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
+  const [selectedTag, setSelectedTag] = useState(searchParams.get('tag') || '')
   const [expandedClass, setExpandedClass] = useState(null)
 
   const updateURL = (params) => {
@@ -358,15 +393,25 @@ const Materials = () => {
     fetchData()
   }, [])
 
+  const tags = useMemo(() => {
+    return hierarchy.map(cls => cls.title).filter(Boolean)
+  }, [hierarchy])
+
   const filteredHierarchy = useMemo(() => {
-    if (!searchTerm) return hierarchy
-    const query = searchTerm.toLowerCase()
-    return hierarchy.filter(cls => {
-      const matchInClass = cls.title.toLowerCase().includes(query)
-      const matchInSubject = cls.subcategories?.some(sub => sub.title.toLowerCase().includes(query))
-      return matchInClass || matchInSubject
-    })
-  }, [hierarchy, searchTerm])
+    let result = hierarchy
+    if (selectedTag) {
+      result = result.filter(cls => cls.title === selectedTag)
+    }
+    if (searchTerm) {
+      const query = searchTerm.toLowerCase()
+      result = result.filter(cls => {
+        const matchInClass = cls.title.toLowerCase().includes(query)
+        const matchInSubject = cls.subcategories?.some(sub => sub.title.toLowerCase().includes(query))
+        return matchInClass || matchInSubject
+      })
+    }
+    return result
+  }, [hierarchy, searchTerm, selectedTag])
 
   const toggleClass = (id) => {
     setExpandedClass(expandedClass === id ? null : id)
@@ -375,6 +420,11 @@ const Materials = () => {
   const handleSearchChange = (val) => {
     setSearchTerm(val)
     updateURL({ q: val })
+  }
+
+  const handleTagChange = (tag) => {
+    setSelectedTag(tag)
+    updateURL({ tag })
   }
 
   return (
@@ -397,6 +447,9 @@ const Materials = () => {
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
           onClear={() => handleSearchChange('')}
+          tags={tags}
+          selectedTag={selectedTag}
+          onTagChange={handleTagChange}
         />
 
         {loading ? (
@@ -429,7 +482,10 @@ const Materials = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-1">No results found</h3>
             <p className="text-gray-400 text-xs font-medium">Try searching for a different subject or class.</p>
             <button
-              onClick={() => handleSearchChange('')}
+              onClick={() => {
+                handleSearchChange('')
+                handleTagChange('')
+              }}
               className="mt-6 px-5 py-2.5 bg-[#0A70A7] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#085a85] transition-all"
             >
               Reset Library
