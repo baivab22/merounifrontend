@@ -147,7 +147,7 @@ const ReferStudentPage = () => {
           newErrors[`student_phone_no_${cIdx}_${sIdx}`] = true
           isValid = false
         }
-        if (!/^\S+@\S+\.\S+$/.test(s.student_email)) {
+        if (s.student_email && !/^\S+@\S+\.\S+$/.test(s.student_email)) {
           newErrors[`student_email_${cIdx}_${sIdx}`] = true
           isValid = false
         }
@@ -357,7 +357,7 @@ const ReferStudentPage = () => {
                         />
                       </div>
                       <div className='space-y-1.5'>
-                        <Label className="text-xs font-semibold text-slate-600">Email Address</Label>
+                        <Label className="text-xs font-semibold text-slate-600">Email Address (Optional)</Label>
                         <Input
                           type='email'
                           value={s.student_email}
