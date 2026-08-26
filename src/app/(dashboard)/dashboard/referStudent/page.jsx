@@ -174,7 +174,13 @@ const ReferStudentPage = () => {
     if (!validate()) return
 
     setLoading(true)
-    const payload = formData.map(({ college_name, ...rest }) => rest)
+    const payload = formData.map(({ college_name, ...rest }) => ({
+      ...rest,
+      students: rest.students.map((s) => ({
+        ...s,
+        student_email: s.student_email || null,
+      })),
+    }))
 
     try {
       const res = await authFetch(`${process.env.baseUrl}/referral/apply-agent`, {
