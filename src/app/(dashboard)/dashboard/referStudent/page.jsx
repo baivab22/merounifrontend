@@ -176,10 +176,17 @@ const ReferStudentPage = () => {
     setLoading(true)
     const payload = formData.map(({ college_name, ...rest }) => ({
       ...rest,
-      students: rest.students.map((s) => ({
-        ...s,
-        student_email: s.student_email || null,
-      })),
+      students: rest.students.map((s) => {
+        const student = {
+          student_name: s.student_name,
+          student_phone_no: s.student_phone_no,
+          student_description: s.student_description,
+        }
+        if (s.student_email && s.student_email.trim()) {
+          student.student_email = s.student_email.trim()
+        }
+        return student
+      }),
     }))
 
     try {
