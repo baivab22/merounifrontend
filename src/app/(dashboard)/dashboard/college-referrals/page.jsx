@@ -19,9 +19,17 @@ import {
   Filter,
   ChevronDown,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from 'lucide-react'
 import SearchInput from '@/ui/molecules/SearchInput'
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogContent,
+  DialogClose
+} from '@/ui/shadcn/dialog'
 
 const ReferedStudentsPage = () => {
   const { setHeading } = usePageHeading()
@@ -41,6 +49,9 @@ const ReferedStudentsPage = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+
+  // View details state
+  const [selectedReferral, setSelectedReferral] = useState(null)
 
   const statusDropdownRef = useRef(null)
 
@@ -143,9 +154,7 @@ const ReferedStudentsPage = () => {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter(
-        (referral) => referral.status === statusFilter
-      )
+      filtered = filtered.filter((referral) => referral.status === statusFilter)
     }
 
     setReferrals(filtered)
@@ -283,8 +292,9 @@ const ReferedStudentsPage = () => {
               </span>
             </button>
             <ChevronDown
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''
-                }`}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${
+                statusDropdownOpen ? 'rotate-180' : ''
+              }`}
             />
 
             {statusDropdownOpen && (
@@ -314,10 +324,11 @@ const ReferedStudentsPage = () => {
                           setStatusSearchTerm('')
                           setStatusDropdownOpen(false)
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${statusFilter === option.value
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-700'
-                          }`}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
+                          statusFilter === option.value
+                            ? 'bg-blue-100 text-blue-700 font-medium'
+                            : 'text-gray-700'
+                        }`}
                       >
                         {option.label}
                       </button>
@@ -374,6 +385,9 @@ const ReferedStudentsPage = () => {
                 <TableHead className='text-gray-600'>Referred On</TableHead>
                 <TableHead className='text-gray-600'>Remarks</TableHead>
                 <TableHead className='text-gray-600'>Status</TableHead>
+                <TableHead className='w-[80px] text-gray-600'>
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -458,7 +472,9 @@ const ReferedStudentsPage = () => {
                               : referral.student_description}
                           </span>
                         ) : (
-                          <span className='text-sm text-muted-foreground'>N/A</span>
+                          <span className='text-sm text-muted-foreground'>
+                            N/A
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -474,10 +490,23 @@ const ReferedStudentsPage = () => {
                               : referral.remarks}
                           </span>
                         ) : (
-                          <span className='text-sm text-muted-foreground'>N/A</span>
+                          <span className='text-sm text-muted-foreground'>
+                            N/A
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>{getStatusBadge(referral.status)}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setSelectedReferral(referral)}
+                          className='text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+                          title='View details'
+                        >
+                          <Eye className='w-4 h-4' />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )
                 })
@@ -526,7 +555,9 @@ const ReferedStudentsPage = () => {
                     variant={page === safePage ? 'default' : 'outline'}
                     size='sm'
                     onClick={() => handlePageChange(page)}
-                    className={page === safePage ? 'min-w-[36px]' : 'min-w-[36px]'}
+                    className={
+                      page === safePage ? 'min-w-[36px]' : 'min-w-[36px]'
+                    }
                   >
                     {page}
                   </Button>
@@ -545,6 +576,148 @@ const ReferedStudentsPage = () => {
           )}
         </div>
       )}
+
+      {/* View Details Modal */}
+      <Dialog
+        isOpen={!!selectedReferral}
+        onClose={() => setSelectedReferral(null)}
+        className='max-w-2xl'
+      >
+        <DialogHeader>
+          <DialogTitle>Referral Details</DialogTitle>
+          <DialogClose onClick={() => setSelectedReferral(null)} />
+        </DialogHeader>
+        <DialogContent>
+          {selectedReferral &&
+            (() => {
+              const college = selectedReferral.referralCollege || {}
+              const address = college.address || {}
+              const location = [address.city, address.state, address.country]
+                .filter(Boolean)
+                .join(', ')
+
+              return (
+                <div className='space-y-6'>
+                  {/* Student Header */}
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4'>
+                    <div>
+                      <label className='text-sm font-semibold text-gray-500'>
+                        Student Name
+                      </label>
+                      <p className='text-lg font-medium text-gray-900'>
+                        {selectedReferral.student_name || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className='text-sm font-semibold text-gray-500'>
+                        Status
+                      </label>
+                      <div className='mt-1'>
+                        {getStatusBadge(selectedReferral.status)}
+                      </div>
+                    </div>
+                    <div>
+                      <label className='text-sm font-semibold text-gray-500'>
+                        Email
+                      </label>
+                      <p className='text-gray-800'>
+                        {selectedReferral.student_email ? (
+                          <a
+                            href={`mailto:${selectedReferral.student_email}`}
+                            className='text-blue-600 hover:underline'
+                          >
+                            {selectedReferral.student_email}
+                          </a>
+                        ) : (
+                          'N/A'
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className='text-sm font-semibold text-gray-500'>
+                        Phone
+                      </label>
+                      <p className='text-gray-800'>
+                        {selectedReferral.student_phone_no || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* College Info */}
+                  <div className='border-b pb-4'>
+                    <label className='text-sm font-semibold text-gray-500 block mb-2'>
+                      College
+                    </label>
+                    <div className='flex items-start gap-3'>
+                      {college.college_logo ? (
+                        <img
+                          src={college.college_logo}
+                          alt={college.name}
+                          className='w-12 h-12 object-contain rounded-md border border-gray-200 flex-shrink-0'
+                        />
+                      ) : (
+                        <div className='w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 flex-shrink-0'>
+                          <span className='text-xl font-semibold text-gray-400'>
+                            {(college.name || 'C').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <p className='font-medium text-gray-900'>
+                          {college.name || 'N/A'}
+                        </p>
+                        {location && (
+                          <p className='text-sm text-muted-foreground'>
+                            {location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className='text-sm font-semibold text-gray-500 block mb-2'>
+                      Description
+                    </label>
+                    <div className='bg-gray-50 p-4 rounded-md border text-gray-800 whitespace-pre-wrap leading-relaxed'>
+                      {selectedReferral.student_description || 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Remarks */}
+                  <div>
+                    <label className='text-sm font-semibold text-gray-500 block mb-2'>
+                      Remarks
+                    </label>
+                    <div className='bg-gray-50 p-4 rounded-md border text-gray-800 whitespace-pre-wrap leading-relaxed'>
+                      {selectedReferral.remarks || 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Referred On */}
+                  <div className='border-t pt-4'>
+                    <label className='text-sm font-semibold text-gray-500 block mb-1'>
+                      Referred On
+                    </label>
+                    <p className='text-gray-800'>
+                      {formatDate(selectedReferral.createdAt)}
+                    </p>
+                  </div>
+
+                  <div className='flex justify-end pt-2'>
+                    <Button
+                      variant='outline'
+                      onClick={() => setSelectedReferral(null)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )
+            })()}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
