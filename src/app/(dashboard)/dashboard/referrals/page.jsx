@@ -56,6 +56,7 @@ const ReferralsPage = () => {
     totalPages: 1,
     total: 0
   })
+  const [pageSize, setPageSize] = useState(25)
 
   const [collegeDropdownOpen, setCollegeDropdownOpen] = useState(false)
 
@@ -80,10 +81,10 @@ const ReferralsPage = () => {
     return () => setHeading(null)
   }, [setHeading, isStudent])
 
-  const loadReferrals = async (page = 1) => {
+  const loadReferrals = async (page = 1, limit = pageSize) => {
     setTableLoading(true)
     try {
-      const data = await fetchReferrals({ page, isStudent })
+      const data = await fetchReferrals({ page, limit, isStudent })
       // For students, the API returns an array directly
       // For admin, it returns { items, pagination }
       if (isStudent) {
@@ -122,6 +123,11 @@ const ReferralsPage = () => {
     } finally {
       setTableLoading(false)
     }
+  }
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size)
+    loadReferrals(1, size)
   }
 
   // Refs for dropdown click outside
@@ -566,6 +572,9 @@ const ReferralsPage = () => {
           columns={columns}
           pagination={pagination}
           onPageChange={(page) => loadReferrals(page)}
+          pageSizeOptions={isStudent ? null : [25, 50, 100]}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
           showSearch={false}
           emptyContent={
             <div className="flex flex-col items-center justify-center py-12 text-center">

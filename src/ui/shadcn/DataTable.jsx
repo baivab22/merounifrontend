@@ -19,6 +19,7 @@ import {
   TableRow
 } from './table-primitives'
 import { Button } from '@/ui/shadcn/button'
+import { Select } from '@/ui/shadcn/select'
 
 const Table = ({
   data,
@@ -29,7 +30,10 @@ const Table = ({
   loading = false,
   showSearch = true,
   showPagination = true,
-  emptyContent = null
+  emptyContent = null,
+  pageSizeOptions = null,
+  pageSize = 10,
+  onPageSizeChange
 }) => {
   const [sorting, setSorting] = useState([])
   const [filtering, setFiltering] = useState('')
@@ -47,7 +51,7 @@ const Table = ({
       sorting: sorting,
       pagination: {
         pageIndex: pagination?.currentPage - 1,
-        pageSize: 10
+        pageSize
       }
     },
     onSortingChange: setSorting,
@@ -173,9 +177,27 @@ const Table = ({
       {/* Pagination Controls */}
       {showPagination && (
         <div className='flex items-center justify-between px-4 py-2 border-t bg-white rounded-b-md'>
-          <div className='text-sm text-gray-600'>
-            Page {pagination?.currentPage} of {pagination?.totalPages} (
-            {pagination?.total || 0} total items)
+          <div className='flex items-center space-x-4'>
+            {pageSizeOptions && pageSizeOptions.length > 0 && (
+              <div className='flex items-center space-x-2 text-sm text-gray-600'>
+                <span>Rows per page:</span>
+                <Select
+                  className='h-8 w-[70px] py-0 text-sm'
+                  value={pageSize}
+                  onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
+                >
+                  {pageSizeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            <div className='text-sm text-gray-600'>
+              Page {pagination?.currentPage} of {pagination?.totalPages} (
+              {pagination?.total || 0} total items)
+            </div>
           </div>
           <div className='flex items-center space-x-2'>
             <Button
