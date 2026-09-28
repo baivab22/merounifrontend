@@ -22,6 +22,11 @@ const nextConfig = {
       destination: '/programs/:programSlug',
       permanent: true,
     },
+    {
+      source: '/membership/apply',
+      destination: '/membership',
+      permanent: true,
+    },
   ],
 }
 

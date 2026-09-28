@@ -226,6 +226,12 @@ export const menuItems = [
         visible: ['admin', 'editor']
       },
       {
+        icon: <HandCoins className='text-xl' />,
+        label: 'Memberships',
+        href: '/dashboard/memberships',
+        visible: ['admin']
+      },
+      {
         icon: <FaBriefcase className='text-xl' />,
         label: 'Vacancies',
         href: '/dashboard/vacancy',
