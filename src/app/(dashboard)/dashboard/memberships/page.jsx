@@ -13,6 +13,7 @@ import { formatDate } from '@/utils/date.util'
 import {
   BadgeCheck,
   Check,
+  Copy,
   Crown,
   Eye,
   Gem,
@@ -189,6 +190,22 @@ const MembershipsPage = () => {
     [loadMemberships]
   )
 
+  const handleCopyReference = useCallback(
+    async (reference) => {
+      try {
+        await navigator.clipboard.writeText(reference)
+        toast({ title: 'Reference copied', description: reference })
+      } catch {
+        toast({
+          title: 'Could not copy',
+          description: `Reference: ${reference}`,
+          variant: 'destructive'
+        })
+      }
+    },
+    [toast]
+  )
+
   const refreshStats = useCallback(async () => {
     try {
       const [allData, pendingData, approvedData, rejectedData, expiredData] =
@@ -275,6 +292,26 @@ const MembershipsPage = () => {
 
   const columns = useMemo(
     () => [
+      {
+        header: 'Reference',
+        accessorKey: 'reference_id',
+        cell: ({ getValue }) => {
+          const reference = getValue()
+          if (!reference)
+            return <span className='text-xs text-gray-300'>—</span>
+          return (
+            <button
+              type='button'
+              onClick={() => handleCopyReference(reference)}
+              title='Copy reference'
+              className='inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] font-bold tracking-wider text-gray-700 transition-colors hover:border-[#387cae]/40 hover:bg-[#387cae]/5 hover:text-[#387cae]'
+            >
+              {reference}
+              <Copy size={11} className='text-gray-400' />
+            </button>
+          )
+        }
+      },
       {
         header: 'Student',
         accessorKey: 'student_name',
@@ -440,7 +477,7 @@ const MembershipsPage = () => {
         }
       }
     ],
-    [handleDeleteClick]
+    [handleDeleteClick, handleCopyReference]
   )
 
   const statCards = [
@@ -563,6 +600,7 @@ const MembershipsPage = () => {
             setPagination((prev) => ({ ...prev, currentPage: newPage }))
           }
           onSearch={handleSearch}
+          searchPlaceholder='Search name, email, phone or payment reference...'
           pageSize={10}
           pageSizeOptions={[10]}
         />

@@ -18,11 +18,44 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Copy,
+  Hash,
   Sparkles
 } from 'lucide-react'
 
 const BLUE_DEEP = '#2d658e'
 const PAY_BTN = '#0a6fa7'
+
+// Payment reference the member quotes when paying offline. The application row
+// does not exist until the form is submitted, so the browser mints the
+// reference when the member picks a payment method and sends it with the
+// submission. The backend validates the format and falls back to generating
+// one itself if it is missing.
+// 0/O and 1/I are excluded so a reference read aloud at a bank counter can be
+// transcribed unambiguously. Must match REFERENCE_PATTERN in the backend
+// StudentMembership validator.
+const REFERENCE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+const REFERENCE_BODY_LENGTH = 8
+
+const generatePaymentReference = () => {
+  const year = String(new Date().getFullYear()).slice(-2)
+
+  const randomBytes = new Uint8Array(REFERENCE_BODY_LENGTH)
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(randomBytes)
+  } else {
+    for (let i = 0; i < REFERENCE_BODY_LENGTH; i += 1) {
+      randomBytes[i] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  let body = ''
+  for (let i = 0; i < REFERENCE_BODY_LENGTH; i += 1) {
+    body += REFERENCE_ALPHABET[randomBytes[i] % REFERENCE_ALPHABET.length]
+  }
+
+  return `MU-${year}-${body}`
+}
 
 const LEVELS = [
   {
@@ -168,6 +201,59 @@ const FieldError = ({ children }) => (
   </p>
 )
 
+// The payment reference the member has to quote when paying offline. It is
+// minted in the browser as soon as a payment method is picked (the application
+// row does not exist yet), and re-confirmed here once the submission is saved.
+const ReferenceBlock = ({ reference, onCopied }) => {
+  if (!reference) return null
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(reference)
+      onCopied?.()
+    } catch {
+      // Clipboard is unavailable (insecure context / denied permission).
+      // The code is displayed as selectable text either way.
+    }
+  }
+
+  return (
+    <div className='mx-auto w-full max-w-xl rounded-2xl border-2 border-dashed border-[#387cae]/40 bg-[#387cae]/[0.04] p-5 text-left'>
+      <div className='flex items-start gap-3'>
+        <span className='mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#387cae] text-white'>
+          <Hash size={17} strokeWidth={2.5} />
+        </span>
+        <div className='min-w-0 flex-1'>
+          <p className='text-xs font-semibold uppercase tracking-[0.14em] text-[#387cae]'>
+            Your payment reference
+          </p>
+          <div className='mt-1.5 flex flex-wrap items-center gap-2'>
+            <code
+              data-testid='membership-reference'
+              className='select-all break-all rounded-lg border border-[#387cae]/25 bg-white px-3 py-1.5 font-mono text-lg font-bold tracking-[0.08em] text-slate-900'
+            >
+              {reference}
+            </code>
+            <button
+              type='button'
+              onClick={copy}
+              className='inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-[#387cae]/40 hover:text-[#387cae]'
+            >
+              <Copy size={13} />
+              Copy
+            </button>
+          </div>
+          <p className='mt-2.5 text-[13px] leading-relaxed text-slate-500'>
+            Write this reference in the note or remarks when you pay by eSewa,
+            Khalti or bank transfer. Our team uses it to find your application
+            and verify your payment.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const Note = ({ children, icon: Icon = Sparkles, tone = 'blue' }) => (
   <div
     className={cn(
@@ -242,6 +328,15 @@ const MembershipForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [studentId, setStudentId] = useState(null)
+  // Minted when the member picks a payment method, then reused for the
+  // submission so the number they wrote on their payment is the one stored.
+  const [referenceId, setReferenceId] = useState(null)
+
+  const selectPaymentMethod = (methodId) => {
+    set('payment_method', methodId)
+    clearError('payment_method')
+    setReferenceId((current) => current || generatePaymentReference())
+  }
 
   const selectedLevel = useMemo(
     () => LEVELS.find((l) => l.id === formData.membership_type),
@@ -358,7 +453,8 @@ const MembershipForm = () => {
         institution: formData.institution || null,
         payment_method: formData.payment_method || null,
         membership_fee: formData.membership_fee || null,
-        payment_proof_url: paymentProof || null
+        payment_proof_url: paymentProof || null,
+        reference_id: referenceId || null
       }
 
       let endpoint
@@ -388,10 +484,16 @@ const MembershipForm = () => {
       const data = await response.json()
 
       if (!response.ok) {
+        const message =
+          data?.error || data?.message || 'Failed to submit. Please try again.'
+
+        // The server only rejects a reference it already holds, so mint a fresh
+        // one instead of looping the member on a value that can never win.
+        if (response.status === 409) setReferenceId(generatePaymentReference())
+
         toast({
           title: 'Error',
-          description:
-            data?.error || data?.message || 'Failed to submit. Please try again.',
+          description: message,
           variant: 'destructive'
         })
         setIsSubmitting(false)
@@ -399,6 +501,9 @@ const MembershipForm = () => {
       }
 
       setStudentId(data?.membership?.id ?? null)
+      // Server value is authoritative (it is what the admin will search for),
+      // but never blank out a reference the member is already looking at.
+      setReferenceId(data?.membership?.reference_id ?? referenceId ?? null)
       setStep(4)
       setIsSubmitted(true)
       toast({
@@ -551,9 +656,22 @@ const MembershipForm = () => {
             Welcome to MeroUni Membership
           </h2>
           <p className='mb-7 max-w-lg text-[15px] leading-relaxed text-slate-500'>
-            {selectedLevel?.name} membership request received. Our team will
-            confirm your payment and activate your member library shortly.
+            {selectedLevel?.name} membership request received. Pay using the
+            reference below and our team will verify it and activate your member
+            library.
           </p>
+
+          <div className='mb-7 w-full'>
+            <ReferenceBlock
+              reference={referenceId}
+              onCopied={() =>
+                toast({
+                  title: 'Reference copied',
+                  description: 'Paste it in the note when you make your payment.'
+                })
+              }
+            />
+          </div>
 
           <div className='mb-8 w-full max-w-xl rounded-2xl border border-slate-200 bg-slate-50/70 p-6 text-left'>
             <div className='grid grid-cols-1 gap-3 text-sm'>
@@ -1010,10 +1128,7 @@ const MembershipForm = () => {
                       type='button'
                       role='radio'
                       aria-checked={active}
-                      onClick={() => {
-                        set('payment_method', method.id)
-                        clearError('payment_method')
-                      }}
+                      onClick={() => selectPaymentMethod(method.id)}
                       className={cn(
                         fieldCardClass(active),
                         'flex-row items-center gap-3.5 py-4'
@@ -1038,6 +1153,12 @@ const MembershipForm = () => {
                 </div>
               )}
 
+              {referenceId && (
+                <div className='mt-5'>
+                  <ReferenceBlock reference={referenceId} />
+                </div>
+              )}
+
               <div className='mt-7 space-y-2'>
                 <p className='text-sm font-semibold text-slate-700'>
                   Payment proof
@@ -1054,6 +1175,27 @@ const MembershipForm = () => {
                   Optional, but helps us verify your payment faster (screenshot or
                   bank slip).
                 </p>
+              </div>
+
+              <div className='mt-5'>
+                <Note tone='blue' icon={Hash}>
+                  {referenceId ? (
+                    <>
+                      Your <strong>payment reference</strong>{' '}
+                      <span className='font-mono font-bold'>
+                        {referenceId}
+                      </span>{' '}
+                      is reserved for you. Pay using it, then upload your proof
+                      and continue.
+                    </>
+                  ) : (
+                    <>
+                      Pick a payment method above and we&rsquo;ll generate your{' '}
+                      <strong>payment reference</strong> right away. Pay using
+                      it, then upload your proof and continue.
+                    </>
+                  )}
+                </Note>
               </div>
             </div>
 

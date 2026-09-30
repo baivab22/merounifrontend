@@ -33,7 +33,8 @@ const Table = ({
   emptyContent = null,
   pageSizeOptions = null,
   pageSize = 10,
-  onPageSizeChange
+  onPageSizeChange,
+  searchPlaceholder = 'Search...'
 }) => {
   const [sorting, setSorting] = useState([])
   const [filtering, setFiltering] = useState('')
@@ -97,7 +98,7 @@ const Table = ({
             className='max-w-md'
             value={filtering}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder='Search...'
+            placeholder={searchPlaceholder}
           />
         </div>
       )}

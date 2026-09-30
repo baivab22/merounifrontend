@@ -109,7 +109,14 @@ const MembershipViewModal = ({ isOpen, onClose, membership }) => {
                   <p className='font-bold text-gray-900'>
                     {meta.label} Membership
                   </p>
-                  <p className='text-xs text-gray-400'>Application #{membership.id}</p>
+                  <p className='text-xs text-gray-400'>
+                    Application #{membership.id}
+                    {membership.reference_id && (
+                      <span className='ml-2 font-mono font-semibold text-[#387cae]'>
+                        {membership.reference_id}
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
               <StatusBadge status={membership.status} />

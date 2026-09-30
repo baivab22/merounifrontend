@@ -103,6 +103,18 @@ const MembershipApproveModal = ({
             <p className='text-xs text-gray-500'>
               {membership.student_email || membership.student?.email || 'No email'}
             </p>
+            <div className='mt-3 rounded-lg border border-[#387cae]/25 bg-white px-3 py-2'>
+              <p className='text-[10px] font-bold uppercase tracking-wider text-[#387cae]'>
+                Payment reference
+              </p>
+              <p className='mt-0.5 font-mono text-sm font-bold tracking-wider text-gray-900 select-all'>
+                {membership.reference_id || `#${membership.id}`}
+              </p>
+              <p className='mt-1 text-[11px] leading-relaxed text-gray-500'>
+                Confirm this matches the reference on the member's payment before
+                approving. Approving emails the member.
+              </p>
+            </div>
             <div className='flex items-center justify-between mt-3'>
               <span className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
                 {membership.membership_type} · #{membership.id}
