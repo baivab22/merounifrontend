@@ -30,7 +30,8 @@ const moreLinks = [
   { href: '/watch', label: 'Videos' },
   { href: '/short-term-courses', label: 'Short Term Courses' },
   { href: '/events', label: 'Events' },
-  { href: '/contact', label: 'Contact Us' }
+  { href: '/contact', label: 'Contact Us' },
+  { href: '/membership', label: 'Membership Form' }
 ]
 
 const allLinks = [...navLinks, ...moreLinks]

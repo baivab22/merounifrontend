@@ -777,7 +777,7 @@ const MembershipForm = () => {
           </div>
 
           <h2 className='mt-4 font-poppins text-[26px] font-bold leading-[1.15] tracking-tight sm:text-3xl md:text-[34px]'>
-            Set up your <span className='text-[#ffd27a]'>membership</span>
+            Set up your membership
           </h2>
           <p className='mt-2.5 max-w-2xl text-[14px] leading-relaxed text-white/80 sm:text-[15px]'>
             Your level, then your field of interest, then payment — in that

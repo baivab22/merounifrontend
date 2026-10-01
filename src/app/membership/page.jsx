@@ -77,7 +77,7 @@ const MembershipPage = () => {
                         <div className='mt-5 text-sm text-slate-500'>
                             Want to compare levels first?{' '}
                             <Link
-                                href='/membership-pricing'
+                                href='/student-membership-pricing'
                                 className='font-semibold text-[#387cae] underline-offset-4 hover:underline'
                             >
                                 See membership pricing
