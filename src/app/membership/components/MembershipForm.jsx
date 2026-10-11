@@ -57,101 +57,51 @@ const generatePaymentReference = () => {
   return `MU-${year}-${body}`
 }
 
-const LEVELS = [
-  {
-    id: 'PLUS2',
-    name: '+2 / Grade 12',
-    tagline: 'Board exam prep + early career-field access',
-    fee: 'Rs. 1,000',
-    note: 'INCLUDES FREE EXAM PREP',
-    blurb:
-      'Free Grade 12 board exam prep for every member, plus early access to career-field trainings.'
-  },
-  {
-    id: 'BACHELORS',
-    name: "Bachelor's — Running",
-    tagline: 'Course-aligned professional trainings',
-    fee: 'Rs. 3,000',
-    note: 'RUNNING BACHELOR STUDENTS',
-    blurb:
-      'Trainings matched to your actual degree, added straight to your resume.'
-  },
-  {
-    id: 'GRADUATE',
-    name: 'Graduate',
-    tagline: 'Placement-focused upskilling',
-    fee: 'Custom fee',
-    note: 'PRICED BY FIELD',
-    blurb:
-      'Placement-weighted upskilling with depth per field, priced to your career.'
-  }
-]
+const normalizeTrainings = (trainings) =>
+  Array.isArray(trainings)
+    ? trainings
+        .map((training) => ({
+          t: training?.t || training?.title || '',
+          d: training?.d || training?.description || ''
+        }))
+        .filter((training) => training.t)
+    : []
 
-const FIELDS = [
-  {
-    id: 'it',
-    name: 'Information Technology',
-    partner: 'Delivered with partner colleges',
-    trainings: [
-      { t: 'Web Development Fundamentals', d: 'HTML, CSS, JS basics' },
-      { t: 'Python Programming', d: 'Core programming for beginners' },
-      {
-        t: 'Cybersecurity Essentials',
-        d: 'Foundations of safe systems & practices'
-      },
-      {
-        t: 'Digital Marketing',
-        d: 'SEO, social media & content basics'
-      }
-    ]
-  },
-  {
-    id: 'hospitality',
-    name: 'Hospitality Management',
-    partner: 'Delivered with partner hospitality colleges',
-    trainings: [
-      {
-        t: 'Front Office & Guest Services',
-        d: 'Reception & guest handling skills'
-      },
-      { t: 'Food & Beverage Operations', d: 'F&B service fundamentals' },
-      {
-        t: 'Hotel Management Software Basics',
-        d: 'PMS tools used in real hotels'
-      },
-      {
-        t: 'Communication & Guest Handling',
-        d: 'Soft skills for hospitality careers'
-      }
-    ]
-  },
-  {
-    id: 'business',
-    name: 'Business & Management',
-    partner: 'Delivered with partner business colleges',
-    trainings: [
-      {
-        t: 'Business Fundamentals',
-        d: 'Core concepts for any business path'
-      },
-      {
-        t: 'Digital Marketing for Business',
-        d: 'Practical marketing for small business'
-      },
-      { t: 'Basic Financial Literacy', d: 'Budgeting, accounting basics' },
-      {
-        t: 'Communication & Presentation Skills',
-        d: 'Workplace-ready soft skills'
-      }
-    ]
-  }
-]
+const normalizeOptions = (options = {}) => {
+  const levels = Array.isArray(options.levels)
+    ? options.levels.map((level) => ({
+        id: level.slug,
+        name: level.label,
+        tagline: level.metadata?.tagline || level.description || '',
+        fee: level.metadata?.fee || '',
+        note: level.metadata?.note || 'MEMBERSHIP LEVEL',
+        blurb: level.description || level.metadata?.tagline || ''
+      }))
+    : []
 
-const PAYMENT_METHODS = [
-  { id: 'esewa', label: 'eSewa', hint: 'Mobile wallet' },
-  { id: 'khalti', label: 'Khalti', hint: 'Mobile wallet' },
-  { id: 'bank', label: 'Bank Transfer', hint: 'Bank slip upload' }
-]
+  const fields = Array.isArray(options.career_fields)
+    ? options.career_fields.map((field) => ({
+        id: field.slug,
+        name: field.label,
+        partner: field.description || '',
+        trainings: normalizeTrainings(field.metadata?.trainings)
+      }))
+    : []
+
+  const paymentMethods = Array.isArray(options.payment_methods)
+    ? options.payment_methods.map((method) => ({
+        id: method.slug,
+        label: method.label,
+        hint: method.description || ''
+      }))
+    : []
+
+  return {
+    levels,
+    fields,
+    paymentMethods
+  }
+}
 
 const STEPS = [
   { id: 1, label: 'Level', hint: 'Choose your level' },
@@ -288,6 +238,11 @@ const MembershipForm = () => {
   }, [user])
 
   const [step, setStep] = useState(1)
+  const [levels, setLevels] = useState([])
+  const [fields, setFields] = useState([])
+  const [paymentMethods, setPaymentMethods] = useState([])
+  const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsError, setOptionsError] = useState('')
   const [formData, setFormData] = useState({
     membership_type: '',
     student_name: '',
@@ -301,16 +256,49 @@ const MembershipForm = () => {
   })
 
   useEffect(() => {
-    const valid = LEVELS.some((l) => l.id === preselectedPlan)
+    let isMounted = true
+    const loadOptions = async () => {
+      try {
+        const response = await authFetch(`${process.env.baseUrl}/student-member/options`, {
+          cache: 'no-store'
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data?.message || 'Failed to load options')
+        if (!isMounted) return
+        const normalized = normalizeOptions(data.options)
+        setLevels(normalized.levels)
+        setFields(normalized.fields)
+        setPaymentMethods(normalized.paymentMethods)
+        setOptionsError('')
+      } catch (error) {
+        console.error('Failed to load membership options:', error)
+        if (isMounted) {
+          setOptionsError('Membership options could not be loaded. Please try again later.')
+          setLevels([])
+          setFields([])
+          setPaymentMethods([])
+        }
+      } finally {
+        if (isMounted) setOptionsLoading(false)
+      }
+    }
+    loadOptions()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const valid = levels.some((l) => l.id === preselectedPlan)
     if (valid) {
-      const level = LEVELS.find((l) => l.id === preselectedPlan)
+      const level = levels.find((l) => l.id === preselectedPlan)
       setFormData((prev) => ({
         ...prev,
         membership_type: level.id,
         membership_fee: level.fee
       }))
     }
-  }, [preselectedPlan])
+  }, [levels, preselectedPlan])
 
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -339,12 +327,12 @@ const MembershipForm = () => {
   }
 
   const selectedLevel = useMemo(
-    () => LEVELS.find((l) => l.id === formData.membership_type),
-    [formData.membership_type]
+    () => levels.find((l) => l.id === formData.membership_type),
+    [levels, formData.membership_type]
   )
   const selectedField = useMemo(
-    () => FIELDS.find((f) => f.id === formData.career_field),
-    [formData.career_field]
+    () => fields.find((f) => f.id === formData.career_field),
+    [fields, formData.career_field]
   )
 
   const set = (key, value) =>
@@ -689,7 +677,7 @@ const MembershipForm = () => {
                     ? `${formData.membership_fee}${
                         formData.payment_method
                           ? ` via ${
-                              PAYMENT_METHODS.find(
+                              paymentMethods.find(
                                 (p) => p.id === formData.payment_method
                               )?.label || formData.payment_method
                             }`
@@ -700,19 +688,13 @@ const MembershipForm = () => {
               />
               {studentId && <Row label='Application ID' value={`#${studentId}`} />}
             </div>
-            {(selectedLevel?.id === 'PLUS2' ||
-              selectedLevel?.id === 'BACHELORS' ||
-              selectedLevel?.id === 'GRADUATE') && (
+            {selectedLevel && (
               <div className='mt-5'>
                 <Note tone='green' icon={Sparkles}>
                   <strong className='font-semibold text-slate-800'>
-                    {selectedLevel?.id === 'PLUS2'
-                      ? 'Your free Grade 12 exam prep'
-                      : 'Your selected trainings'}
+                    {selectedLevel?.name}
                   </strong>{' '}
-                  {selectedLevel?.id === 'PLUS2'
-                    ? 'is included — you can start in your member dashboard.'
-                    : "will open for your cohort once payment is confirmed."}
+                  will open for your cohort once payment is confirmed.
                 </Note>
               </div>
             )}
@@ -806,7 +788,7 @@ const MembershipForm = () => {
             aria-label='Membership level'
             className='mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3'
           >
-            {LEVELS.map((level, index) => {
+            {levels.map((level, index) => {
               const active = formData.membership_type === level.id
               return (
                 <button
@@ -836,6 +818,16 @@ const MembershipForm = () => {
               )
             })}
           </div>
+          {optionsLoading && (
+            <p className='mb-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500'>
+              Loading latest membership levels...
+            </p>
+          )}
+          {!optionsLoading && levels.length === 0 && (
+            <p className='mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700'>
+              {optionsError || 'No active membership levels are available right now.'}
+            </p>
+          )}
           {errors.membership_type && (
             <div className='mb-6'>
               <FieldError>{errors.membership_type}</FieldError>
@@ -927,11 +919,7 @@ const MembershipForm = () => {
                 htmlFor='institution'
                 className='text-sm font-semibold text-slate-700'
               >
-                {formData.membership_type === 'PLUS2'
-                  ? 'School / +2 college'
-                  : formData.membership_type === 'BACHELORS'
-                    ? 'College & program'
-                    : 'Institution (graduated)'}
+                Institution
               </Label>
               <Input
                 id='institution'
@@ -965,7 +953,7 @@ const MembershipForm = () => {
             aria-label='Career field'
             className='grid grid-cols-1 gap-4 sm:grid-cols-3'
           >
-            {FIELDS.map((field) => {
+            {fields.map((field) => {
               const active = formData.career_field === field.id
               return (
                 <button
@@ -984,7 +972,7 @@ const MembershipForm = () => {
                   </p>
                   <div className='mt-4 flex items-center justify-between gap-3'>
                     <span className='rounded-full bg-[#1F6F5C]/10 px-2.5 py-1 text-[11px] font-semibold text-[#1F6F5C]'>
-                      {field.trainings.length} free trainings
+                      {field.trainings.length} training{field.trainings.length === 1 ? '' : 's'}
                     </span>
                     <Dot active={active} />
                   </div>
@@ -992,6 +980,16 @@ const MembershipForm = () => {
               )
             })}
           </div>
+          {optionsLoading && (
+            <p className='mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500'>
+              Loading latest career fields...
+            </p>
+          )}
+          {!optionsLoading && fields.length === 0 && (
+            <p className='mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700'>
+              {optionsError || 'No active career fields are available right now. You can still choose to decide later.'}
+            </p>
+          )}
 
           <button
             type='button'
@@ -1120,7 +1118,7 @@ const MembershipForm = () => {
                 aria-label='Payment method'
                 className='grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1'
               >
-                {PAYMENT_METHODS.map((method) => {
+                {paymentMethods.map((method) => {
                   const active = formData.payment_method === method.id
                   return (
                     <button
@@ -1147,6 +1145,16 @@ const MembershipForm = () => {
                   )
                 })}
               </div>
+              {optionsLoading && (
+                <p className='mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500'>
+                  Loading latest payment methods...
+                </p>
+              )}
+              {!optionsLoading && paymentMethods.length === 0 && (
+                <p className='mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700'>
+                  {optionsError || 'No active payment methods are available right now.'}
+                </p>
+              )}
               {errors.payment_method && (
                 <div className='mt-3'>
                   <FieldError>{errors.payment_method}</FieldError>
@@ -1236,7 +1244,7 @@ const MembershipForm = () => {
                   <div className='flex items-center justify-between gap-4'>
                     <dt className='text-slate-500'>Payment</dt>
                     <dd className='text-right font-semibold text-slate-800'>
-                      {PAYMENT_METHODS.find(
+                      {paymentMethods.find(
                         (p) => p.id === formData.payment_method
                       )?.label || '—'}
                     </dd>

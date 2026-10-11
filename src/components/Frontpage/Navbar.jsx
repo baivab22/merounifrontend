@@ -25,7 +25,7 @@ const moreLinks = [
   { href: '/exams', label: 'Exams' },
   { href: '/programs', label: 'Programs' },
   { href: '/vacancies', label: 'Vacancies' },
-  { href: '/news', label: 'News' },
+  { href: '/news', label: 'News & Notice' },
   { href: '/career', label: 'Careers at MeroUni' },
   { href: '/watch', label: 'Videos' },
   { href: '/short-term-courses', label: 'Short Term Courses' },

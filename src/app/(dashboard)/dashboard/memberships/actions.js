@@ -84,3 +84,75 @@ export async function deleteMembership(id) {
     throw new Error(error.message || 'Failed to delete membership')
   }
 }
+
+export async function getMembershipOptions(params = {}) {
+  try {
+    const query = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value)
+      }
+    })
+    const queryString = query.toString()
+    const response = await authFetch(
+      `${url}/options/admin${queryString ? `?${queryString}` : ''}`,
+      { cache: 'no-store' }
+    )
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data?.error || data?.message || 'Failed to fetch membership options')
+    }
+    return data.options || []
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch membership options')
+  }
+}
+
+export async function createMembershipOption(data) {
+  try {
+    const response = await authFetch(`${url}/options/admin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.error || result?.message || 'Failed to create option')
+    }
+    return result.option
+  } catch (error) {
+    throw new Error(error.message || 'Failed to create option')
+  }
+}
+
+export async function updateMembershipOption(id, data) {
+  try {
+    const response = await authFetch(`${url}/options/admin/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.error || result?.message || 'Failed to update option')
+    }
+    return result.option
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update option')
+  }
+}
+
+export async function deleteMembershipOption(id) {
+  try {
+    const response = await authFetch(`${url}/options/admin/${id}`, {
+      method: 'DELETE'
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result?.error || result?.message || 'Failed to delete option')
+    }
+    return result
+  } catch (error) {
+    throw new Error(error.message || 'Failed to delete option')
+  }
+}

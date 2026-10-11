@@ -7,7 +7,17 @@ import Loading from '@/ui/molecules/Loading'
 import Table from '@/ui/shadcn/DataTable'
 import EmptyState from '@/ui/shadcn/EmptyState'
 import { Button } from '@/ui/shadcn/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/ui/shadcn/dialog'
+import { Input } from '@/ui/shadcn/input'
+import { Label } from '@/ui/shadcn/label'
 import { Select } from '@/ui/shadcn/select'
+import { Textarea } from '@/ui/shadcn/textarea'
 import { cn } from '@/app/lib/utils'
 import { formatDate } from '@/utils/date.util'
 import {
@@ -15,10 +25,13 @@ import {
   Check,
   Copy,
   Crown,
+  Edit2,
   Eye,
   Gem,
   Hourglass,
   Loader2,
+  Plus,
+  Settings,
   Shield,
   Trash2,
   Wallet
@@ -26,7 +39,11 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   deleteMembership,
+  deleteMembershipOption,
   getAllMemberships,
+  getMembershipOptions,
+  createMembershipOption,
+  updateMembershipOption,
   updateMembershipStatus
 } from './actions'
 import MembershipApproveModal from './components/MembershipApproveModal'
@@ -37,6 +54,92 @@ const MEMBERSHIP_META = {
   BACHELORS: { icon: Crown, label: "Bachelor's", badge: 'bg-[#387cae]/10 text-[#387cae] border-[#387cae]/20' },
   GRADUATE: { icon: Gem, label: 'Graduate', badge: 'bg-purple-50 text-purple-700 border-purple-200' }
 }
+
+const OPTION_TYPES = [
+  { value: 'LEVEL', label: 'Levels' },
+  { value: 'CAREER_FIELD', label: 'Career fields & courses' },
+  { value: 'PAYMENT_METHOD', label: 'Payment methods' }
+]
+
+const emptyOptionForm = {
+  type: 'LEVEL',
+  slug: '',
+  label: '',
+  description: '',
+  fee: '',
+  tagline: '',
+  note: '',
+  trainings: '',
+  sort_order: 0,
+  is_active: true
+}
+
+const normalizeSlug = (value) =>
+  value
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Za-z0-9_-]/g, '')
+
+const parseTrainings = (value) =>
+  value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title, ...rest] = line.split('|')
+      return {
+        title: title.trim(),
+        description: rest.join('|').trim()
+      }
+    })
+    .filter((training) => training.title)
+
+const formatTrainings = (trainings = []) =>
+  trainings
+    .map((training) => {
+      const title = training.title || training.t || ''
+      const description = training.description || training.d || ''
+      return description ? `${title} | ${description}` : title
+    })
+    .filter(Boolean)
+    .join('\n')
+
+const getOptionPayload = (form) => {
+  const metadata = {}
+
+  if (form.type === 'LEVEL') {
+    if (form.fee) metadata.fee = form.fee
+    if (form.tagline) metadata.tagline = form.tagline
+    if (form.note) metadata.note = form.note
+  }
+
+  if (form.type === 'CAREER_FIELD') {
+    metadata.trainings = parseTrainings(form.trainings)
+  }
+
+  return {
+    type: form.type,
+    slug: normalizeSlug(form.slug),
+    label: form.label.trim(),
+    description: form.description.trim() || null,
+    metadata,
+    sort_order: Number(form.sort_order) || 0,
+    is_active: Boolean(form.is_active)
+  }
+}
+
+const formFromOption = (option) => ({
+  type: option.type,
+  slug: option.slug,
+  label: option.label,
+  description: option.description || '',
+  fee: option.metadata?.fee || '',
+  tagline: option.metadata?.tagline || '',
+  note: option.metadata?.note || '',
+  trainings: formatTrainings(option.metadata?.trainings),
+  sort_order: option.sort_order || 0,
+  is_active: option.is_active !== false
+})
 
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -97,6 +200,14 @@ const MembershipsPage = () => {
   const { setHeading } = usePageHeading()
 
   const [memberships, setMemberships] = useState([])
+  const [options, setOptions] = useState([])
+  const [activeTab, setActiveTab] = useState('applications')
+  const [optionTypeFilter, setOptionTypeFilter] = useState('LEVEL')
+  const [optionModalOpen, setOptionModalOpen] = useState(false)
+  const [optionForm, setOptionForm] = useState(emptyOptionForm)
+  const [editingOption, setEditingOption] = useState(null)
+  const [savingOption, setSavingOption] = useState(false)
+  const [deletingOptionId, setDeletingOptionId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -232,6 +343,121 @@ const MembershipsPage = () => {
     refreshStats()
   }, [refreshStats])
 
+  const loadOptions = useCallback(async () => {
+    try {
+      const data = await getMembershipOptions()
+      setOptions(data)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load membership setup',
+        variant: 'destructive'
+      })
+    }
+  }, [toast])
+
+  useEffect(() => {
+    loadOptions()
+  }, [loadOptions])
+
+  const optionLabelBySlug = useMemo(() => {
+    return options.reduce((acc, option) => {
+      acc[option.slug] = option.label
+      return acc
+    }, {})
+  }, [options])
+
+  const levelOptions = useMemo(
+    () => options.filter((option) => option.type === 'LEVEL'),
+    [options]
+  )
+
+  const visibleOptions = useMemo(
+    () => options.filter((option) => option.type === optionTypeFilter),
+    [options, optionTypeFilter]
+  )
+
+  const openCreateOption = (type = optionTypeFilter) => {
+    setEditingOption(null)
+    setOptionForm({ ...emptyOptionForm, type })
+    setOptionModalOpen(true)
+  }
+
+  const openEditOption = (option) => {
+    setEditingOption(option)
+    setOptionForm(formFromOption(option))
+    setOptionModalOpen(true)
+  }
+
+  const closeOptionModal = () => {
+    if (savingOption) return
+    setOptionModalOpen(false)
+    setEditingOption(null)
+    setOptionForm(emptyOptionForm)
+  }
+
+  const handleOptionChange = (key, value) => {
+    setOptionForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const saveOption = async (e) => {
+    e.preventDefault()
+    const payload = getOptionPayload(optionForm)
+    if (!payload.slug || !payload.label) {
+      toast({
+        title: 'Missing details',
+        description: 'Slug and label are required.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    try {
+      setSavingOption(true)
+      if (editingOption) {
+        await updateMembershipOption(editingOption.id, payload)
+      } else {
+        await createMembershipOption(payload)
+      }
+      toast({
+        title: 'Success',
+        description: `Membership ${editingOption ? 'option updated' : 'option created'} successfully`
+      })
+      setOptionModalOpen(false)
+      setEditingOption(null)
+      setOptionForm(emptyOptionForm)
+      loadOptions()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save membership option',
+        variant: 'destructive'
+      })
+    } finally {
+      setSavingOption(false)
+    }
+  }
+
+  const handleDeleteOption = async (id) => {
+    try {
+      setDeletingOptionId(id)
+      await deleteMembershipOption(id)
+      toast({
+        title: 'Success',
+        description: 'Membership option deleted successfully'
+      })
+      loadOptions()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete membership option',
+        variant: 'destructive'
+      })
+    } finally {
+      setDeletingOptionId(null)
+    }
+  }
+
   const handleDeleteClick = useCallback((id) => {
     setDeleteId(id)
     setIsDialogOpen(true)
@@ -344,6 +570,7 @@ const MembershipsPage = () => {
           const type = getValue()
           const meta = MEMBERSHIP_META[type] || MEMBERSHIP_META.PLUS2
           const Icon = meta.icon
+          const label = optionLabelBySlug[type] || meta.label || type
           return (
             <span
               className={cn(
@@ -352,7 +579,7 @@ const MembershipsPage = () => {
               )}
             >
               <Icon size={13} />
-              {meta.label}
+              {label}
             </span>
           )
         }
@@ -375,7 +602,7 @@ const MembershipsPage = () => {
               <p className='text-xs font-semibold text-gray-800 capitalize'>
                 {career_field === 'unsure'
                   ? 'Deciding later'
-                  : career_field}
+                  : optionLabelBySlug[career_field] || career_field}
               </p>
               {trainings.length > 0 && (
                 <p className='text-[11px] text-gray-400 truncate max-w-[160px]'>
@@ -477,7 +704,7 @@ const MembershipsPage = () => {
         }
       }
     ],
-    [handleDeleteClick, handleCopyReference]
+    [handleDeleteClick, handleCopyReference, optionLabelBySlug]
   )
 
   const statCards = [
@@ -498,6 +725,34 @@ const MembershipsPage = () => {
 
   return (
     <div className='w-full space-y-4'>
+      <div className='flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm'>
+        {[
+          { id: 'applications', label: 'Applications', icon: Crown },
+          { id: 'setup', label: 'Setup', icon: Settings }
+        ].map((tab) => {
+          const Icon = tab.icon
+          const active = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              type='button'
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors',
+                active
+                  ? 'bg-[#387cae] text-white shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+              )}
+            >
+              <Icon size={16} />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {activeTab === 'applications' ? (
+        <>
       {/* Stats cards */}
       <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3'>
         {statCards.map((s) => {
@@ -555,9 +810,11 @@ const MembershipsPage = () => {
             aria-label='Filter by level'
           >
             <option value=''>All levels</option>
-            <option value='PLUS2'>+2 / Grade 12</option>
-            <option value='BACHELORS'>Bachelor's</option>
-            <option value='GRADUATE'>Graduate</option>
+            {levelOptions.map((level) => (
+              <option key={level.id} value={level.slug}>
+                {level.label}
+              </option>
+            ))}
           </Select>
           <Select
             value={statusFilter}
@@ -605,11 +862,151 @@ const MembershipsPage = () => {
           pageSizeOptions={[10]}
         />
       )}
+        </>
+      ) : (
+        <div className='space-y-4'>
+          <div className='rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm'>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='flex items-center gap-3'>
+                <span className='flex h-9 w-9 items-center justify-center rounded-md bg-[#387cae]/10'>
+                  <Settings size={17} className='text-[#387cae]' />
+                </span>
+                <div>
+                  <p className='text-sm font-bold text-gray-800'>Membership setup</p>
+                  <p className='text-xs text-gray-400'>
+                    Manage levels, career fields, trainings and payment methods
+                  </p>
+                </div>
+              </div>
+              <Button
+                type='button'
+                onClick={() => openCreateOption()}
+                className='h-9 gap-2 bg-[#387cae] text-white hover:bg-[#2d658e]'
+              >
+                <Plus size={15} />
+                Add option
+              </Button>
+            </div>
+
+            <div className='mt-4 flex flex-wrap gap-2'>
+              {OPTION_TYPES.map((type) => (
+                <button
+                  key={type.value}
+                  type='button'
+                  onClick={() => setOptionTypeFilter(type.value)}
+                  className={cn(
+                    'rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors',
+                    optionTypeFilter === type.value
+                      ? 'border-[#387cae] bg-[#387cae]/10 text-[#387cae]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-800'
+                  )}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {visibleOptions.length === 0 ? (
+            <div className='rounded-2xl border border-gray-200 bg-white p-12'>
+              <EmptyState
+                icon={Settings}
+                title='No Options Found'
+                description='Add the first option for this membership setup area.'
+              />
+            </div>
+          ) : (
+            <div className='grid grid-cols-1 gap-3 lg:grid-cols-2'>
+              {visibleOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className='rounded-2xl border border-gray-200 bg-white p-4 shadow-sm'
+                >
+                  <div className='flex items-start justify-between gap-3'>
+                    <div className='min-w-0'>
+                      <div className='flex flex-wrap items-center gap-2'>
+                        <p className='font-semibold text-gray-900'>{option.label}</p>
+                        <span
+                          className={cn(
+                            'rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                            option.is_active
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-gray-200 bg-gray-100 text-gray-500'
+                          )}
+                        >
+                          {option.is_active ? 'Active' : 'Hidden'}
+                        </span>
+                      </div>
+                      <p className='mt-1 font-mono text-[11px] text-gray-400'>
+                        {option.slug}
+                      </p>
+                      {option.description && (
+                        <p className='mt-2 text-sm leading-relaxed text-gray-500'>
+                          {option.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className='flex shrink-0 items-center gap-1'>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => openEditOption(option)}
+                        className='p-1.5 text-[#387cae] hover:bg-[#387cae]/10'
+                        title='Edit option'
+                      >
+                        <Edit2 size={15} />
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => handleDeleteOption(option.id)}
+                        disabled={deletingOptionId === option.id}
+                        className='p-1.5 text-red-600 hover:bg-red-50'
+                        title='Delete option'
+                      >
+                        {deletingOptionId === option.id ? (
+                          <Loader2 size={15} className='animate-spin' />
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className='mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500'>
+                    {option.metadata?.fee && (
+                      <span className='rounded-md bg-gray-50 px-2 py-1 font-semibold'>
+                        {option.metadata.fee}
+                      </span>
+                    )}
+                    {option.metadata?.tagline && (
+                      <span className='rounded-md bg-gray-50 px-2 py-1'>
+                        {option.metadata.tagline}
+                      </span>
+                    )}
+                    {Array.isArray(option.metadata?.trainings) && (
+                      <span className='rounded-md bg-gray-50 px-2 py-1 font-semibold'>
+                        {option.metadata.trainings.length} training{option.metadata.trainings.length === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    <span className='rounded-md bg-gray-50 px-2 py-1'>
+                      Order {option.sort_order || 0}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <MembershipViewModal
         isOpen={isViewOpen}
         onClose={() => setIsViewOpen(false)}
         membership={viewData}
+        optionLabels={optionLabelBySlug}
       />
 
       <MembershipApproveModal
@@ -624,6 +1021,174 @@ const MembershipsPage = () => {
         onSave={handleApproveSubmit}
         submitting={approving}
       />
+
+      <Dialog
+        isOpen={optionModalOpen}
+        onClose={closeOptionModal}
+        className='max-w-2xl'
+      >
+        <DialogHeader>
+          <DialogTitle>
+            {editingOption ? 'Edit membership option' : 'Add membership option'}
+          </DialogTitle>
+          <DialogClose onClick={closeOptionModal} />
+        </DialogHeader>
+        <DialogContent>
+          <form onSubmit={saveOption} className='space-y-4'>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              <div className='space-y-2'>
+                <Label htmlFor='option_type'>Type</Label>
+                <Select
+                  id='option_type'
+                  value={optionForm.type}
+                  onChange={(e) => handleOptionChange('type', e.target.value)}
+                  className='h-10'
+                >
+                  {OPTION_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='option_order'>Order</Label>
+                <Input
+                  id='option_order'
+                  type='number'
+                  value={optionForm.sort_order}
+                  onChange={(e) => handleOptionChange('sort_order', e.target.value)}
+                  className='h-10'
+                />
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              <div className='space-y-2'>
+                <Label htmlFor='option_label'>Label</Label>
+                <Input
+                  id='option_label'
+                  value={optionForm.label}
+                  onChange={(e) => {
+                    handleOptionChange('label', e.target.value)
+                    if (!editingOption && !optionForm.slug) {
+                      handleOptionChange('slug', normalizeSlug(e.target.value))
+                    }
+                  }}
+                  placeholder='Information Technology'
+                  className='h-10'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='option_slug'>Slug</Label>
+                <Input
+                  id='option_slug'
+                  value={optionForm.slug}
+                  onChange={(e) => handleOptionChange('slug', normalizeSlug(e.target.value))}
+                  placeholder='information-technology'
+                  className='h-10 font-mono text-sm'
+                />
+              </div>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='option_description'>
+                {optionForm.type === 'CAREER_FIELD'
+                  ? 'Partner / short description'
+                  : 'Description'}
+              </Label>
+              <Textarea
+                id='option_description'
+                value={optionForm.description}
+                onChange={(e) => handleOptionChange('description', e.target.value)}
+                rows={3}
+                placeholder='Shown on the membership form'
+              />
+            </div>
+
+            {optionForm.type === 'LEVEL' && (
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
+                <div className='space-y-2'>
+                  <Label htmlFor='option_fee'>Fee</Label>
+                  <Input
+                    id='option_fee'
+                    value={optionForm.fee}
+                    onChange={(e) => handleOptionChange('fee', e.target.value)}
+                    placeholder='Rs. 1,000'
+                    className='h-10'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='option_note'>Badge note</Label>
+                  <Input
+                    id='option_note'
+                    value={optionForm.note}
+                    onChange={(e) => handleOptionChange('note', e.target.value)}
+                    placeholder='INCLUDES FREE EXAM PREP'
+                    className='h-10'
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='option_tagline'>Tagline</Label>
+                  <Input
+                    id='option_tagline'
+                    value={optionForm.tagline}
+                    onChange={(e) => handleOptionChange('tagline', e.target.value)}
+                    placeholder='Board exam prep'
+                    className='h-10'
+                  />
+                </div>
+              </div>
+            )}
+
+            {optionForm.type === 'CAREER_FIELD' && (
+              <div className='space-y-2'>
+                <Label htmlFor='option_trainings'>Courses / trainings</Label>
+                <Textarea
+                  id='option_trainings'
+                  value={optionForm.trainings}
+                  onChange={(e) => handleOptionChange('trainings', e.target.value)}
+                  rows={6}
+                  placeholder={'Web Development Fundamentals | HTML, CSS, JS basics\nPython Programming | Core programming for beginners'}
+                  className='font-mono text-sm'
+                />
+                <p className='text-xs text-gray-400'>
+                  Add one course per line. Use a vertical bar to separate title and description.
+                </p>
+              </div>
+            )}
+
+            <label className='flex items-center gap-2 text-sm font-medium text-gray-700'>
+              <input
+                type='checkbox'
+                checked={optionForm.is_active}
+                onChange={(e) => handleOptionChange('is_active', e.target.checked)}
+                className='h-4 w-4 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]'
+              />
+              Show this option on the membership form
+            </label>
+
+            <div className='flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end'>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={closeOptionModal}
+                disabled={savingOption}
+              >
+                Cancel
+              </Button>
+              <Button
+                type='submit'
+                disabled={savingOption}
+                className='gap-2 bg-[#387cae] text-white hover:bg-[#2d658e]'
+              >
+                {savingOption && <Loader2 size={15} className='animate-spin' />}
+                {savingOption ? 'Saving...' : 'Save option'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmationDialog
         open={isDialogOpen}

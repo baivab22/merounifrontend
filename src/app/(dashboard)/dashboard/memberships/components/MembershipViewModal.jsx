@@ -77,12 +77,15 @@ const SectionTitle = ({ children }) => (
   </p>
 )
 
-const MembershipViewModal = ({ isOpen, onClose, membership }) => {
+const MembershipViewModal = ({ isOpen, onClose, membership, optionLabels = {} }) => {
   if (!membership) return null
 
   const meta = MEMBERSHIP_META[membership.membership_type] || MEMBERSHIP_META.PLUS2
   const Icon = meta.icon
   const student = membership.student
+  const levelLabel = optionLabels[membership.membership_type] || meta.label || membership.membership_type
+  const fieldLabel = optionLabels[membership.career_field] || membership.career_field
+  const paymentLabel = optionLabels[membership.payment_method] || membership.payment_method
 
   return (
     <Dialog isOpen={isOpen} onClose={onClose} className='max-w-2xl'>
@@ -107,7 +110,7 @@ const MembershipViewModal = ({ isOpen, onClose, membership }) => {
                 </span>
                 <div>
                   <p className='font-bold text-gray-900'>
-                    {meta.label} Membership
+                    {levelLabel} Membership
                   </p>
                   <p className='text-xs text-gray-400'>
                     Application #{membership.id}
@@ -126,7 +129,7 @@ const MembershipViewModal = ({ isOpen, onClose, membership }) => {
                 <p className='text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1'>
                   Type
                 </p>
-                <p className='font-semibold text-gray-800'>{meta.label}</p>
+                <p className='font-semibold text-gray-800'>{levelLabel}</p>
               </div>
               <div>
                 <p className='text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1'>
@@ -193,9 +196,9 @@ const MembershipViewModal = ({ isOpen, onClose, membership }) => {
               value={
                 membership.career_field === 'unsure'
                   ? 'Deciding later'
-                  : membership.career_field
-                    ? membership.career_field.charAt(0).toUpperCase() +
-                      membership.career_field.slice(1)
+                  : fieldLabel
+                    ? fieldLabel.charAt(0).toUpperCase() +
+                      fieldLabel.slice(1)
                     : '—'
               }
             />
@@ -232,9 +235,9 @@ const MembershipViewModal = ({ isOpen, onClose, membership }) => {
               icon={CreditCard}
               label='Payment Method'
               value={
-                membership.payment_method
-                  ? (membership.payment_method.charAt(0).toUpperCase() +
-                    membership.payment_method.slice(1))
+                paymentLabel
+                  ? (paymentLabel.charAt(0).toUpperCase() +
+                    paymentLabel.slice(1))
                   : '—'
               }
             />
