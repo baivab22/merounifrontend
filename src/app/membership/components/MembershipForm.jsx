@@ -67,6 +67,11 @@ const normalizeTrainings = (trainings) =>
         .filter((training) => training.t)
     : []
 
+const normalizeAssociatedLevels = (levels) =>
+  Array.isArray(levels)
+    ? levels.map((level) => String(level)).filter(Boolean)
+    : []
+
 const normalizeOptions = (options = {}) => {
   const levels = Array.isArray(options.levels)
     ? options.levels.map((level) => ({
@@ -84,6 +89,7 @@ const normalizeOptions = (options = {}) => {
         id: field.slug,
         name: field.label,
         partner: field.description || '',
+        associatedLevels: normalizeAssociatedLevels(field.metadata?.associated_levels),
         trainings: normalizeTrainings(field.metadata?.trainings)
       }))
     : []
@@ -92,7 +98,8 @@ const normalizeOptions = (options = {}) => {
     ? options.payment_methods.map((method) => ({
         id: method.slug,
         label: method.label,
-        hint: method.description || ''
+        hint: method.description || '',
+        qrCodeUrl: method.metadata?.qr_code_url || ''
       }))
     : []
 
@@ -334,6 +341,33 @@ const MembershipForm = () => {
     () => fields.find((f) => f.id === formData.career_field),
     [fields, formData.career_field]
   )
+  const selectedPaymentMethod = useMemo(
+    () => paymentMethods.find((method) => method.id === formData.payment_method),
+    [paymentMethods, formData.payment_method]
+  )
+  const fieldsForSelectedLevel = useMemo(() => {
+    if (!formData.membership_type) return fields
+
+    return fields.filter(
+      (field) =>
+        field.associatedLevels.length === 0 ||
+        field.associatedLevels.includes(formData.membership_type)
+    )
+  }, [fields, formData.membership_type])
+
+  useEffect(() => {
+    if (!formData.career_field || formData.career_field === 'unsure') return
+    const isAllowed = fieldsForSelectedLevel.some(
+      (field) => field.id === formData.career_field
+    )
+    if (!isAllowed) {
+      setFormData((prev) => ({
+        ...prev,
+        career_field: '',
+        selected_trainings: []
+      }))
+    }
+  }, [fieldsForSelectedLevel, formData.career_field])
 
   const set = (key, value) =>
     setFormData((prev) => ({ ...prev, [key]: value }))
@@ -953,7 +987,7 @@ const MembershipForm = () => {
             aria-label='Career field'
             className='grid grid-cols-1 gap-4 sm:grid-cols-3'
           >
-            {fields.map((field) => {
+            {fieldsForSelectedLevel.map((field) => {
               const active = formData.career_field === field.id
               return (
                 <button
@@ -985,9 +1019,10 @@ const MembershipForm = () => {
               Loading latest career fields...
             </p>
           )}
-          {!optionsLoading && fields.length === 0 && (
+          {!optionsLoading && fieldsForSelectedLevel.length === 0 && (
             <p className='mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700'>
-              {optionsError || 'No active career fields are available right now. You can still choose to decide later.'}
+              {optionsError ||
+                'No active career fields are available for this level right now. You can still choose to decide later.'}
             </p>
           )}
 
@@ -1167,6 +1202,28 @@ const MembershipForm = () => {
                 </div>
               )}
 
+              {selectedPaymentMethod?.qrCodeUrl && (
+                <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'>
+                  <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
+                    <div className='mx-auto flex h-48 w-48 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2 sm:mx-0'>
+                      <img
+                        src={selectedPaymentMethod.qrCodeUrl}
+                        alt={`${selectedPaymentMethod.label} QR code`}
+                        className='h-full w-full object-contain'
+                      />
+                    </div>
+                    <div className='min-w-0 text-center sm:text-left'>
+                      <p className='text-sm font-bold text-slate-900'>
+                        Scan to pay with {selectedPaymentMethod.label}
+                      </p>
+                      <p className='mt-1 text-[13px] leading-relaxed text-slate-500'>
+                        Use this QR code for your selected payment method, then upload your payment proof below.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className='mt-7 space-y-2'>
                 <p className='text-sm font-semibold text-slate-700'>
                   Payment proof
@@ -1244,9 +1301,7 @@ const MembershipForm = () => {
                   <div className='flex items-center justify-between gap-4'>
                     <dt className='text-slate-500'>Payment</dt>
                     <dd className='text-right font-semibold text-slate-800'>
-                      {paymentMethods.find(
-                        (p) => p.id === formData.payment_method
-                      )?.label || '—'}
+                      {selectedPaymentMethod?.label || '—'}
                     </dd>
                   </div>
                 </dl>

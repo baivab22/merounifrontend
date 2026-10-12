@@ -193,6 +193,7 @@ const FileUpload = ({
                   {fileType === 'pdf' ? 'PDF Document' : 'Image Preview'}
                 </span>
                 <button
+                  type='button'
                   onClick={handleRemove}
                   className='p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
                   title='Remove file'
@@ -249,6 +250,7 @@ const FileUpload = ({
                     </div>
                   )}
                   <button
+                    type='button'
                     onClick={handleFileUpload}
                     className='w-full py-2 bg-[#387cae] text-white rounded-md text-sm font-medium hover:bg-[#2d658e] transition-colors shadow-sm'
                   >

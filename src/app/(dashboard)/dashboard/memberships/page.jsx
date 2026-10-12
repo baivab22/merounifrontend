@@ -20,6 +20,7 @@ import { Select } from '@/ui/shadcn/select'
 import { Textarea } from '@/ui/shadcn/textarea'
 import { cn } from '@/app/lib/utils'
 import { formatDate } from '@/utils/date.util'
+import FileUpload from '../colleges/FileUpload'
 import {
   BadgeCheck,
   Check,
@@ -69,6 +70,8 @@ const emptyOptionForm = {
   fee: '',
   tagline: '',
   note: '',
+  qr_code_url: '',
+  associated_levels: [],
   trainings: '',
   sort_order: 0,
   is_active: true
@@ -104,6 +107,11 @@ const formatTrainings = (trainings = []) =>
     .filter(Boolean)
     .join('\n')
 
+const normalizeAssociatedLevels = (levels) =>
+  Array.isArray(levels)
+    ? levels.map((level) => String(level)).filter(Boolean)
+    : []
+
 const getOptionPayload = (form) => {
   const metadata = {}
 
@@ -114,7 +122,12 @@ const getOptionPayload = (form) => {
   }
 
   if (form.type === 'CAREER_FIELD') {
+    metadata.associated_levels = normalizeAssociatedLevels(form.associated_levels)
     metadata.trainings = parseTrainings(form.trainings)
+  }
+
+  if (form.type === 'PAYMENT_METHOD') {
+    if (form.qr_code_url) metadata.qr_code_url = form.qr_code_url
   }
 
   return {
@@ -136,6 +149,8 @@ const formFromOption = (option) => ({
   fee: option.metadata?.fee || '',
   tagline: option.metadata?.tagline || '',
   note: option.metadata?.note || '',
+  qr_code_url: option.metadata?.qr_code_url || '',
+  associated_levels: normalizeAssociatedLevels(option.metadata?.associated_levels),
   trainings: formatTrainings(option.metadata?.trainings),
   sort_order: option.sort_order || 0,
   is_active: option.is_active !== false
@@ -398,6 +413,18 @@ const MembershipsPage = () => {
 
   const handleOptionChange = (key, value) => {
     setOptionForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const toggleAssociatedLevel = (levelSlug) => {
+    setOptionForm((prev) => {
+      const current = normalizeAssociatedLevels(prev.associated_levels)
+      return {
+        ...prev,
+        associated_levels: current.includes(levelSlug)
+          ? current.filter((slug) => slug !== levelSlug)
+          : [...current, levelSlug]
+      }
+    })
   }
 
   const saveOption = async (e) => {
@@ -991,6 +1018,20 @@ const MembershipsPage = () => {
                         {option.metadata.trainings.length} training{option.metadata.trainings.length === 1 ? '' : 's'}
                       </span>
                     )}
+                    {option.type === 'PAYMENT_METHOD' && option.metadata?.qr_code_url && (
+                      <span className='rounded-md bg-[#387cae]/10 px-2 py-1 font-semibold text-[#387cae]'>
+                        QR uploaded
+                      </span>
+                    )}
+                    {option.type === 'CAREER_FIELD' && (
+                      <span className='rounded-md bg-gray-50 px-2 py-1 font-semibold'>
+                        {normalizeAssociatedLevels(option.metadata?.associated_levels).length > 0
+                          ? normalizeAssociatedLevels(option.metadata?.associated_levels)
+                              .map((slug) => optionLabelBySlug[slug] || slug)
+                              .join(', ')
+                          : 'All levels'}
+                      </span>
+                    )}
                     <span className='rounded-md bg-gray-50 px-2 py-1'>
                       Order {option.sort_order || 0}
                     </span>
@@ -1142,18 +1183,70 @@ const MembershipsPage = () => {
             )}
 
             {optionForm.type === 'CAREER_FIELD' && (
+              <>
+                <div className='space-y-2'>
+                  <Label>Associated levels</Label>
+                  <div className='grid grid-cols-1 gap-2 rounded-xl border border-gray-200 p-3 sm:grid-cols-2'>
+                    {levelOptions.map((level) => {
+                      const checked = normalizeAssociatedLevels(
+                        optionForm.associated_levels
+                      ).includes(level.slug)
+                      return (
+                        <label
+                          key={level.id}
+                          className='flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
+                        >
+                          <input
+                            type='checkbox'
+                            checked={checked}
+                            onChange={() => toggleAssociatedLevel(level.slug)}
+                            className='h-4 w-4 rounded border-gray-300 text-[#387cae] focus:ring-[#387cae]'
+                          />
+                          {level.label}
+                        </label>
+                      )
+                    })}
+                    {levelOptions.length === 0 && (
+                      <p className='text-sm text-gray-400'>
+                        Add a level first, then associate this career field.
+                      </p>
+                    )}
+                  </div>
+                  <p className='text-xs text-gray-400'>
+                    Leave all unchecked to show this career field for every level.
+                  </p>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='option_trainings'>Courses / trainings</Label>
+                  <Textarea
+                    id='option_trainings'
+                    value={optionForm.trainings}
+                    onChange={(e) => handleOptionChange('trainings', e.target.value)}
+                    rows={6}
+                    placeholder={'Web Development Fundamentals | HTML, CSS, JS basics\nPython Programming | Core programming for beginners'}
+                    className='font-mono text-sm'
+                  />
+                  <p className='text-xs text-gray-400'>
+                    Add one course per line. Use a vertical bar to separate title and description.
+                  </p>
+                </div>
+              </>
+            )}
+
+            {optionForm.type === 'PAYMENT_METHOD' && (
               <div className='space-y-2'>
-                <Label htmlFor='option_trainings'>Courses / trainings</Label>
-                <Textarea
-                  id='option_trainings'
-                  value={optionForm.trainings}
-                  onChange={(e) => handleOptionChange('trainings', e.target.value)}
-                  rows={6}
-                  placeholder={'Web Development Fundamentals | HTML, CSS, JS basics\nPython Programming | Core programming for beginners'}
-                  className='font-mono text-sm'
+                <FileUpload
+                  label='QR code image'
+                  autoUpload={true}
+                  defaultPreview={optionForm.qr_code_url}
+                  accept='image/*'
+                  onUploadComplete={(url) =>
+                    handleOptionChange('qr_code_url', url || '')
+                  }
                 />
                 <p className='text-xs text-gray-400'>
-                  Add one course per line. Use a vertical bar to separate title and description.
+                  Upload the bank or wallet QR image shown to members after they choose this payment method.
                 </p>
               </div>
             )}
