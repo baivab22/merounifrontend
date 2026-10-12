@@ -1203,15 +1203,8 @@ const MembershipForm = () => {
               )}
 
               {selectedPaymentMethod?.qrCodeUrl && (
-                <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'>
-                  <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
-                    <div className='mx-auto flex h-48 w-48 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2 sm:mx-0'>
-                      <img
-                        src={selectedPaymentMethod.qrCodeUrl}
-                        alt={`${selectedPaymentMethod.label} QR code`}
-                        className='h-full w-full object-contain'
-                      />
-                    </div>
+                <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
+                  <div className='flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between'>
                     <div className='min-w-0 text-center sm:text-left'>
                       <p className='text-sm font-bold text-slate-900'>
                         Scan to pay with {selectedPaymentMethod.label}
@@ -1219,6 +1212,13 @@ const MembershipForm = () => {
                       <p className='mt-1 text-[13px] leading-relaxed text-slate-500'>
                         Use this QR code for your selected payment method, then upload your payment proof below.
                       </p>
+                    </div>
+                    <div className='mx-auto flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 sm:ml-auto lg:h-72 lg:w-72'>
+                      <img
+                        src={selectedPaymentMethod.qrCodeUrl}
+                        alt={`${selectedPaymentMethod.label} QR code`}
+                        className='h-full w-full object-contain'
+                      />
                     </div>
                   </div>
                 </div>

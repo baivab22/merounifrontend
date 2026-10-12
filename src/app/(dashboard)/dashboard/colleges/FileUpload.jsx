@@ -143,33 +143,54 @@ const FileUpload = ({
     onUploadComplete('')
   }
 
+  const openFilePicker = () => {
+    if (isUploading) return
+    fileInputRef.current?.click()
+  }
+
+  const handleUploadAreaClick = (e) => {
+    if (e.target.closest('button, a, input, textarea')) return
+    openFilePicker()
+  }
+
+  const handleUploadAreaKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openFilePicker()
+    }
+  }
+
   return (
     <div className='space-y-2'>
       {label && <Label required={required}>{label}</Label>}
       <div
+        role='button'
+        tabIndex={isUploading ? -1 : 0}
+        onClick={handleUploadAreaClick}
+        onKeyDown={handleUploadAreaKeyDown}
         className={cn(
-          'relative border-2 border-dashed rounded-md p-4 transition-all duration-200',
+          'relative border-2 border-dashed rounded-md p-4 transition-all duration-200 cursor-pointer',
           'border-input bg-background/50 hover:bg-muted/30 hover:border-[#387cae]/40',
           isUploading && 'opacity-60 cursor-not-allowed',
           preview ? 'border-[#387cae]/20 bg-[#387cae]/[0.02]' : 'border-input'
         )}
       >
+        <input
+          ref={fileInputRef}
+          type='file'
+          className='hidden'
+          onChange={handleFileSelect}
+          accept={accept}
+          disabled={isUploading}
+        />
         <div className='flex flex-col items-center justify-center min-h-[120px]'>
           {!selectedFile && !preview && !isUploading && (
             <div className='flex flex-col items-center animate-in fade-in zoom-in duration-300'>
               <Upload className='h-8 w-8 text-muted-foreground mb-3 opacity-60' />
               <div className='text-sm text-center'>
-                <label className='cursor-pointer text-[#387cae] hover:underline font-medium'>
+                <span className='text-[#387cae] font-medium'>
                   Click to upload
-                  <input
-                    ref={fileInputRef}
-                    type='file'
-                    className='hidden'
-                    onChange={handleFileSelect}
-                    accept={accept}
-                    disabled={isUploading}
-                  />
-                </label>
+                </span>
                 <span className='text-muted-foreground ml-1'>
                   or drag and drop
                 </span>
