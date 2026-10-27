@@ -99,7 +99,13 @@ const normalizeOptions = (options = {}) => {
         id: method.slug,
         label: method.label,
         hint: method.description || '',
-        qrCodeUrl: method.metadata?.qr_code_url || ''
+        qrCodeUrl: method.metadata?.qr_code_url || '',
+        accountDetails:
+          method.metadata?.account_details ||
+          method.metadata?.account_number ||
+          method.metadata?.bank_details ||
+          method.metadata?.account_name ||
+          ''
       }))
     : []
 
@@ -397,6 +403,8 @@ const MembershipForm = () => {
     if (n === 3) {
       if (!formData.payment_method)
         newErrors.payment_method = 'Please select a payment method'
+      if (!paymentProof)
+        newErrors.payment_proof = 'Please upload your payment screenshot/proof'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -557,7 +565,7 @@ const MembershipForm = () => {
         (formData.career_field === 'unsure' ||
           formData.selected_trainings.length > 0)
       )
-    if (n === 3) return !!formData.payment_method
+    if (n === 3) return !!(formData.payment_method && paymentProof)
     return true
   }
 
@@ -1202,44 +1210,64 @@ const MembershipForm = () => {
                 </div>
               )}
 
-              {selectedPaymentMethod?.qrCodeUrl && (
+              {(selectedPaymentMethod?.qrCodeUrl ||
+                selectedPaymentMethod?.accountDetails) && (
                 <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
                   <div className='flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between'>
                     <div className='min-w-0 text-center sm:text-left'>
                       <p className='text-sm font-bold text-slate-900'>
-                        Scan to pay with {selectedPaymentMethod.label}
+                        Pay with {selectedPaymentMethod.label}
                       </p>
                       <p className='mt-1 text-[13px] leading-relaxed text-slate-500'>
-                        Use this QR code for your selected payment method, then upload your payment proof below.
+                        Scan the QR code below or use the account details, then
+                        upload your payment proof below.
                       </p>
+                      {selectedPaymentMethod?.accountDetails && (
+                        <div className='mt-3 rounded-xl border border-[#387cae]/20 bg-[#387cae]/[0.04] p-3 text-left'>
+                          <p className='text-[11px] font-semibold uppercase tracking-[0.12em] text-[#387cae]'>
+                            Account details
+                          </p>
+                          <p className='mt-1.5 whitespace-pre-wrap text-sm font-medium text-slate-800'>
+                            {selectedPaymentMethod.accountDetails}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div className='mx-auto flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 sm:ml-auto lg:h-72 lg:w-72'>
-                      <img
-                        src={selectedPaymentMethod.qrCodeUrl}
-                        alt={`${selectedPaymentMethod.label} QR code`}
-                        className='h-full w-full object-contain'
-                      />
-                    </div>
+                    {selectedPaymentMethod?.qrCodeUrl && (
+                      <div className='mx-auto flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 sm:ml-auto lg:h-72 lg:w-72'>
+                        <img
+                          src={selectedPaymentMethod.qrCodeUrl}
+                          alt={`${selectedPaymentMethod.label} QR code`}
+                          className='h-full w-full object-contain'
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               <div className='mt-7 space-y-2'>
                 <p className='text-sm font-semibold text-slate-700'>
-                  Payment proof
+                  Payment proof <span className='text-red-600'>*</span>
                 </p>
                 <FileUpload
                   label=''
                   autoUpload={true}
                   authorId={user?.id != null ? String(user.id) : '1'}
-                  onUploadComplete={(url) => setPaymentProof(url || '')}
+                  onUploadComplete={(url) => {
+                    setPaymentProof(url || '')
+                    if (url) {
+                      setErrors((prev) => ({ ...prev, payment_proof: '' }))
+                    }
+                  }}
                   defaultPreview={paymentProof}
                   accept='image/*,application/pdf'
                 />
                 <p className='text-[13px] leading-relaxed text-slate-500'>
-                  Optional, but helps us verify your payment faster (screenshot or
-                  bank slip).
+                  Required. Upload your payment screenshot or bank slip to complete
+                  your membership application.
                 </p>
+                {errors.payment_proof && <FieldError>{errors.payment_proof}</FieldError>}
               </div>
 
               <div className='mt-5'>
