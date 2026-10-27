@@ -31,6 +31,7 @@ import {
 } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
 import { useToast } from '@/hooks/use-toast'
+import VerifiedBadge from '@/ui/atoms/VerifiedBadge'
 import FileUpload from '../colleges/FileUpload'
 
 const ProfileUpdate = () => {
@@ -51,6 +52,7 @@ const ProfileUpdate = () => {
   const [academicDocs, setAcademicDocs] = useState([])
   const [isAcademicLoading, setIsAcademicLoading] = useState(false)
   const [showImagePreview, setShowImagePreview] = useState(false)
+  const [isMember, setIsMember] = useState(false)
   const userData = useSelector((state) => state.user.data)
 
   const [nameForm, setNameForm] = useState({
@@ -92,6 +94,7 @@ const ProfileUpdate = () => {
       }
       const data = await response.json()
       const user = data.user
+      setIsMember(Boolean(user.isMember))
       setNameForm({
         firstName: user.firstName || '',
         middleName: user.middleName || '',
@@ -310,11 +313,21 @@ const ProfileUpdate = () => {
               </button>
             </div>
             <div className='min-w-0'>
-              <h1 className='text-xl font-semibold text-gray-900 mb-1 truncate'>
-                {nameForm?.firstName && nameForm?.lastName
-                  ? `${nameForm.firstName} ${nameForm.middleName || ''} ${nameForm.lastName}`.trim()
-                  : 'User Profile'}
-              </h1>
+              <div className='flex items-center gap-1.5 mb-1'>
+                <h1 className='text-xl font-semibold text-gray-900 truncate'>
+                  {nameForm?.firstName && nameForm?.lastName
+                    ? `${nameForm.firstName} ${nameForm.middleName || ''} ${nameForm.lastName}`.trim()
+                    : 'User Profile'}
+                </h1>
+                {isMember && (
+                  <VerifiedBadge size='md' title='Verified Member' className='shrink-0' />
+                )}
+              </div>
+              {isMember && (
+                <span className='inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100'>
+                  Verified Member
+                </span>
+              )}
               {!isStudent && <p className='text-sm text-gray-600'>{roles}</p>}
             </div>
           </div>

@@ -1,13 +1,25 @@
 'use server'
 import { cookies } from 'next/headers'
 
+// Forwards the signed-in user's token so the API can decide whether a premium
+// material's file URL should be unlocked for an approved member.
+const getAuthHeaders = async () => {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('token')?.value
+
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  }
+}
+
 export async function getMaterials(
   page = 1,
   search = '',
   categoryId = null
 ) {
   try {
-    let url = `${process.env.baseUrl}/material?page=${page}&limit=12`
+    let url = `${process.env.baseUrl}/materials/list?page=${page}&limit=12`
     if (search) {
       url += `&q=${encodeURIComponent(search)}`
     }
@@ -24,16 +36,26 @@ export async function getMaterials(
 
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: await getAuthHeaders(),
       cache: 'no-store'
     })
 
     if (!response.ok) {
       throw new Error('Failed to fetch Materials')
     }
-    return await response.json()
+
+    const result = await response.json()
+    const materials = result.data || result.materials || result.items || []
+
+    return {
+      materials,
+      pagination: result.pagination || {
+        currentPage: page,
+        totalPages: 1,
+        limit: 12,
+        totalCount: materials.length
+      }
+    }
   } catch (error) {
     console.error('Error fetching materials:', error)
     throw error
@@ -62,7 +84,9 @@ export async function getMaterialCategories() {
       throw new Error('Failed to fetch Material Categories')
     }
     const data = await response.json()
-    return data.items || []
+    const items = data.items || data.data || []
+    // Category pages/cards render `name`; the API exposes the same value as `title`.
+    return items.map((item) => ({ ...item, name: item.name || item.title }))
   } catch (error) {
     console.error('Error fetching material categories:', error)
     throw error

@@ -1,6 +1,6 @@
 'use client'
 
-const VerifiedBadge = ({ size = 'md', className = '' }) => {
+const VerifiedBadge = ({ size = 'md', className = '', title = 'Verified' }) => {
   const sizes = {
     xs: { wrapper: 'w-3.5 h-3.5', svg: 'w-3.5 h-3.5', stroke: 2.5 },
     sm: { wrapper: 'w-4 h-4', svg: 'w-4 h-4', stroke: 2.2 },
@@ -14,7 +14,7 @@ const VerifiedBadge = ({ size = 'md', className = '' }) => {
   return (
     <span
       className={`inline-flex items-center justify-center flex-shrink-0 ${s.wrapper} ${className}`}
-      title='Verified'
+      title={title}
     >
       <svg
         viewBox='0 0 24 24'

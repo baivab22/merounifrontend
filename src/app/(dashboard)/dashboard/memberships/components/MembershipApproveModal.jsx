@@ -112,7 +112,7 @@ const MembershipApproveModal = ({
               </p>
               <p className='mt-1 text-[11px] leading-relaxed text-gray-500'>
                 Confirm this matches the reference on the member's payment before
-                approving. Approving emails the member.
+                approving. Approving emails the member their PDF invoice.
               </p>
             </div>
             <div className='flex items-center justify-between mt-3'>

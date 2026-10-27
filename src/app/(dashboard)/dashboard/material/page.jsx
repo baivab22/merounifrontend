@@ -17,7 +17,8 @@ import {
     FileDown,
     ExternalLink,
     ChevronDown,
-    AlertCircle
+    AlertCircle,
+    Crown
 } from 'lucide-react'
 import {
     DndContext,
@@ -130,7 +131,15 @@ const SortableItem = ({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                    <div className="font-bold text-gray-900 truncate">{item.title}</div>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="font-bold text-gray-900 truncate">{item.title}</div>
+                        {item.is_premium && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-50 text-violet-600 border border-violet-100 text-[9px] font-bold uppercase tracking-wide shrink-0">
+                                <Crown size={9} />
+                                Premium
+                            </span>
+                        )}
+                    </div>
                     <div className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{item.file_url}</div>
                 </div>
 
@@ -272,7 +281,8 @@ export default function MaterialDashboard() {
         defaultValues: {
             title: '',
             file_url: '',
-            description: ''
+            description: '',
+            is_premium: false
         }
     })
 
@@ -475,7 +485,8 @@ export default function MaterialDashboard() {
                 title: (data.title || '').trim(),
                 file_url: data.file_url,
                 description: (data.description || '').trim(),
-                category_id: selectedL2.id
+                category_id: selectedL2.id,
+                is_premium: Boolean(data.is_premium)
             }
             console.log("onMaterialSubmit: Prepared Payload:", payload);
 
@@ -560,7 +571,7 @@ export default function MaterialDashboard() {
             const successStatus = editingItem ? 'updated' : 'added';
             setIsAddingL3(false)
             setEditingItem(null)
-            reset({ title: '', file_url: '', description: '' })
+            reset({ title: '', file_url: '', description: '', is_premium: false })
             toast({
                 title: 'Success',
                 description: `Material ${successStatus} successfully`
@@ -665,7 +676,8 @@ export default function MaterialDashboard() {
             reset({
                 title: item.title,
                 file_url: item.file_url || '',
-                description: item.description || ''
+                description: item.description || '',
+                is_premium: Boolean(item.is_premium)
             })
             setIsAddingL3(true)
         } else {
@@ -884,7 +896,7 @@ export default function MaterialDashboard() {
                                 onClick={() => {
                                     setIsAddingL3(true)
                                     setEditingItem(null)
-                                    reset({ title: '', file_url: '', description: '' })
+                                    reset({ title: '', file_url: '', description: '', is_premium: false })
                                 }}
                                 className="flex items-center gap-2 bg-[#387cae] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#2d648c] transition-all shadow-lg shadow-blue-500/10 active:scale-95"
                             >
@@ -927,6 +939,33 @@ export default function MaterialDashboard() {
                                                 {...register('description')}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none bg-white min-h-[80px]"
                                                 placeholder="Brief description (optional)..."
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white">
+                                            <div className="flex items-start gap-2">
+                                                <Crown size={16} className="text-violet-500 mt-0.5" />
+                                                <div>
+                                                    <span className="block text-sm font-semibold text-gray-700">Premium material</span>
+                                                    <span className="text-[10px] text-gray-400 font-medium">Only verified members can download this file.</span>
+                                                </div>
+                                            </div>
+                                            <Controller
+                                                name="is_premium"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <label className="inline-flex items-center gap-2 cursor-pointer shrink-0">
+                                                        <input
+                                                            type="checkbox"
+                                                            name={field.name}
+                                                            ref={field.ref}
+                                                            checked={Boolean(field.value)}
+                                                            onChange={(e) => field.onChange(e.target.checked)}
+                                                            onBlur={field.onBlur}
+                                                            className="h-4 w-4 rounded accent-violet-600"
+                                                        />
+                                                        <span className="text-xs font-bold text-gray-600">Premium</span>
+                                                    </label>
+                                                )}
                                             />
                                         </div>
                                         <div className="flex justify-end gap-2 pt-2">

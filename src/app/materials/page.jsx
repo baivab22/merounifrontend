@@ -12,7 +12,9 @@ import {
   X,
   FileSearch,
   Book,
-  File
+  File,
+  Lock,
+  Crown
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
@@ -168,9 +170,23 @@ const MaterialRow = ({ material }) => {
           <File className="w-4 h-4" />
         </div>
         <div>
-          <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#0A70A7] transition-colors">
-            {material.title}
-          </h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#0A70A7] transition-colors">
+              {material.title}
+            </h4>
+            {material.is_premium && (
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border shrink-0 ${
+                  material.is_locked
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-violet-50 text-violet-700 border-violet-200'
+                }`}
+              >
+                <Crown size={10} />
+                Premium
+              </span>
+            )}
+          </div>
           {material.description && (
             <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{material.description}</p>
           )}
@@ -201,7 +217,16 @@ const MaterialRow = ({ material }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {(material.file_url || material.file) && (
+          {material.is_locked ? (
+            <a
+              href="/membership"
+              title="Become a member to unlock this material"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-lg shadow-sm active:scale-95 transition-all"
+            >
+              <Lock size={12} />
+              <span>Members only</span>
+            </a>
+          ) : (material.file_url || material.file) && (
             <button
               onClick={() => window.open(material.file_url || material.file, '_blank')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A70A7] hover:bg-[#085a85] text-white text-[10px] font-bold rounded-lg shadow-sm active:scale-95 transition-all"

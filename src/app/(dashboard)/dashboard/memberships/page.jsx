@@ -526,7 +526,10 @@ const MembershipsPage = () => {
       await updateMembershipStatus(approveData.id, payload)
       toast({
         title: 'Success',
-        description: 'Membership status updated successfully!'
+        description:
+          payload?.status === 'APPROVED'
+            ? 'Membership approved. A confirmation email with the PDF invoice was sent to the member.'
+            : 'Membership status updated successfully!'
       })
       setIsApproveOpen(false)
       setApproveData(null)

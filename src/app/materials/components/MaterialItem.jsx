@@ -1,16 +1,19 @@
 'use client'
 import React, { useState } from 'react'
 import { FaDownload, FaEye, FaFileAlt } from 'react-icons/fa'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock, Crown } from 'lucide-react'
 
 const MaterialItem = ({ material }) => {
   const [downloading, setDownloading] = useState(false)
+
+  const fileUrl = material?.file_url || material?.file
+  const isLocked = Boolean(material?.is_premium) && !fileUrl
 
   const handleDownload = async (e) => {
     e.preventDefault()
     setDownloading(true)
     try {
-      window.open(material?.file, '_blank')
+      window.open(fileUrl, '_blank')
     } finally {
       setTimeout(() => setDownloading(false), 2000)
     }
@@ -35,6 +38,17 @@ const MaterialItem = ({ material }) => {
           </div>
         )}
 
+        {material?.is_premium && (
+          <span
+            className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shadow-sm ${
+              isLocked ? 'bg-amber-500 text-white' : 'bg-violet-600 text-white'
+            }`}
+          >
+            <Crown size={11} />
+            Premium
+          </span>
+        )}
+
         {/* Overlay Actions on Image (optional, or keep below) */}
         <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors' />
       </div>
@@ -46,20 +60,29 @@ const MaterialItem = ({ material }) => {
 
         <div className='flex items-center gap-3 pt-4 border-t border-gray-50'>
 
-
-          {/* Download Button */}
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className='flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-[#0A70A7] text-white font-semibold text-sm hover:bg-[#085a85] active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed'
-          >
-            {downloading ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <FaDownload size={14} />
-            )}
-            <span>{downloading ? 'Opening...' : 'Download'}</span>
-          </button>
+          {isLocked ? (
+            <a
+              href='/membership'
+              title='Become a member to unlock this material'
+              className='flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 active:scale-95 transition-all'
+            >
+              <Lock size={14} />
+              <span>Members only</span>
+            </a>
+          ) : (
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className='flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-[#0A70A7] text-white font-semibold text-sm hover:bg-[#085a85] active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed'
+            >
+              {downloading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <FaDownload size={14} />
+              )}
+              <span>{downloading ? 'Opening...' : 'Download'}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
