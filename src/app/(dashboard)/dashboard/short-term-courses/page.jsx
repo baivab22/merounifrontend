@@ -75,6 +75,7 @@ export default function SkillsCoursesManager() {
       price: '',
       duration: '',
       is_featured: false,
+      is_premium: false,
       author: author_id,
       institution_name: '',
       content: '',
@@ -156,6 +157,7 @@ export default function SkillsCoursesManager() {
       ...data,
       thumbnail_image: uploadedFiles.thumbnail_image || undefined,
       is_featured: data.is_featured === 'true' || data.is_featured === true,
+      is_premium: data.is_premium === 'true' || data.is_premium === true,
       price: data.price !== '' ? parseFloat(data.price) : undefined,
       seats_available:
         data.seats_available !== '' ? parseInt(data.seats_available) : undefined
@@ -227,6 +229,7 @@ export default function SkillsCoursesManager() {
     setValue('price', course.price || '')
     setValue('duration', course.duration || '')
     setValue('is_featured', course.is_featured || false)
+    setValue('is_premium', course.is_premium || false)
     setValue('institution_name', course.institution_name || '')
     setValue('content', course.content || '')
     setValue('location', course.location || '')
@@ -730,7 +733,7 @@ export default function SkillsCoursesManager() {
                       title='Settings'
                       subtitle='Additional options'
                     />
-                    <div className='space-y-4'>
+                    <div className='space-y-2'>
                       <div className='flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100'>
                         <input
                           type='checkbox'
@@ -743,6 +746,20 @@ export default function SkillsCoursesManager() {
                           className='cursor-pointer text-amber-900 font-medium text-sm'
                         >
                           Feature this course
+                        </Label>
+                      </div>
+                      <div className='flex items-center gap-3 p-3 bg-violet-50 rounded-lg border border-violet-100'>
+                        <input
+                          type='checkbox'
+                          id='is_premium'
+                          {...register('is_premium')}
+                          className='w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-600'
+                        />
+                        <Label
+                          htmlFor='is_premium'
+                          className='cursor-pointer text-violet-900 font-medium text-sm'
+                        >
+                          Premium course (only for verified members)
                         </Label>
                       </div>
                     </div>

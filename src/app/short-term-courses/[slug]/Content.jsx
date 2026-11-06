@@ -9,7 +9,9 @@ import {
     MapPin,
     Users,
     Building2,
-    CheckCircle
+    CheckCircle,
+    Crown,
+    Lock
 } from 'lucide-react'
 import Image from 'next/image'
 import { formatDate } from '@/utils/date.util'
@@ -18,6 +20,8 @@ import { THEME_BLUE } from '@/constants/constants'
 
 const ShortTermCourseContent = ({ course, error }) => {
     const router = useRouter()
+
+    const isLocked = course?.is_premium && (course?.is_locked || course?.has_access === false)
 
     if (error || !course) {
         return (
@@ -85,6 +89,7 @@ const ShortTermCourseContent = ({ course, error }) => {
                                         <div className='flex gap-2'>
                                             <span className='inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black border border-blue-100 uppercase tracking-wider'> {course.course_type || 'Skill Certification'} </span>
                                             {course.is_featured && ( <span className='inline-block px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-[10px] font-black border border-amber-100 uppercase tracking-wider'> Featured </span> )}
+                                            {course.is_premium && ( <span className='inline-flex items-center gap-1 px-3 py-1 bg-violet-50 text-violet-700 rounded-full text-[10px] font-black border border-violet-100 uppercase tracking-wider'><Crown className='w-3 h-3' /> Premium </span> )}
                                         </div>
                                     </div>
                                 </div>
@@ -98,17 +103,43 @@ const ShortTermCourseContent = ({ course, error }) => {
                         )}
 
                         <div className='space-y-12'>
-                            {course.description && (
-                                <div>
-                                    <h2 className='text-2xl font-bold text-gray-900 mb-6'>About This Course</h2>
-                                    <p className='text-gray-600 leading-relaxed text-lg whitespace-pre-line'> {course.description} </p>
+                            {isLocked ? (
+                                <div className='relative overflow-hidden rounded-[2rem] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-10 text-center shadow-sm'>
+                                    <div className='absolute -top-10 -right-10 w-40 h-40 bg-violet-100/40 rounded-full blur-3xl' />
+                                    <div className='absolute -bottom-12 -left-10 w-44 h-44 bg-blue-100/30 rounded-full blur-3xl' />
+                                    <div className='relative z-10 flex flex-col items-center gap-4'>
+                                        <div className='w-16 h-16 rounded-2xl bg-white shadow-lg shadow-violet-100 flex items-center justify-center border border-violet-100'>
+                                            <Lock className='w-7 h-7 text-violet-600' />
+                                        </div>
+                                        <div>
+                                            <h2 className='text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight'>This is a Premium Course</h2>
+                                            <p className='text-gray-600 max-w-2xl mx-auto leading-relaxed'>This course is only accessible to verified (approved) members. Please log in with a verified membership account to view the full course details.</p>
+                                        </div>
+                                        <div className='flex flex-wrap items-center justify-center gap-3'>
+                                            <Button onClick={() => router.push('/membership')} style={{ backgroundColor: THEME_BLUE }}>
+                                                Become a Verified Member
+                                            </Button>
+                                            <Button variant='outline' onClick={() => router.push('/login')}>
+                                                Login
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                            {course.content && (
-                                <div>
-                                    <h2 className='text-2xl font-bold text-gray-900 mb-6'>Curriculum & Requirements</h2>
-                                    <div className='prose prose-blue max-w-none text-gray-600 leading-relaxed text-lg' dangerouslySetInnerHTML={{ __html: course.content }} />
-                                </div>
+                            ) : (
+                                <>
+                                    {course.description && (
+                                        <div>
+                                            <h2 className='text-2xl font-bold text-gray-900 mb-6'>About This Course</h2>
+                                            <p className='text-gray-600 leading-relaxed text-lg whitespace-pre-line'> {course.description} </p>
+                                        </div>
+                                    )}
+                                    {course.content && (
+                                        <div>
+                                            <h2 className='text-2xl font-bold text-gray-900 mb-6'>Curriculum & Requirements</h2>
+                                            <div className='prose prose-blue max-w-none text-gray-600 leading-relaxed text-lg' dangerouslySetInnerHTML={{ __html: course.content }} />
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
@@ -120,6 +151,11 @@ const ShortTermCourseContent = ({ course, error }) => {
                                 <div className='flex flex-col border-b border-gray-100 pb-4'>
                                     <span className='text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2'> Investment </span>
                                     <span className='text-2xl font-bold text-green-700'> {course.price ? `Rs. ${parseFloat(course.price).toLocaleString()}` : 'Free'} </span>
+                                    {course.is_premium && (
+                                        <span className='mt-2 inline-flex items-center gap-1 text-xs font-semibold text-violet-700'>
+                                            <Crown className='w-3.5 h-3.5' /> Premium - Verified members only
+                                        </span>
+                                    )}
                                 </div>
                                 <DetailItem icon={<Clock className='w-3 h-3' />} label="Duration" value={course.duration || 'Flexible'} />
                                 {course.class_time && <DetailItem icon={<Clock className='w-3 h-3' />} label="Time" value={course.class_time} />}

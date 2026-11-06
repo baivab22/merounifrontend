@@ -20,6 +20,8 @@ import {
   Clock,
   Copy,
   Hash,
+  Landmark,
+  QrCode,
   Sparkles
 } from 'lucide-react'
 
@@ -100,11 +102,15 @@ const normalizeOptions = (options = {}) => {
         label: method.label,
         hint: method.description || '',
         qrCodeUrl: method.metadata?.qr_code_url || '',
+        paymentMode: method.metadata?.payment_mode || '',
+        accountName: method.metadata?.account_name || '',
+        accountNumber: method.metadata?.account_number || '',
+        bankName: method.metadata?.bank_name || '',
+        branchName: method.metadata?.branch_name || '',
+        accountInstructions: method.metadata?.account_instructions || '',
         accountDetails:
           method.metadata?.account_details ||
-          method.metadata?.account_number ||
           method.metadata?.bank_details ||
-          method.metadata?.account_name ||
           ''
       }))
     : []
@@ -233,6 +239,218 @@ const Note = ({ children, icon: Icon = Sparkles, tone = 'blue' }) => (
     <span>{children}</span>
   </div>
 )
+
+const CopyValue = ({ value, mono = false }) => {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // Clipboard is unavailable (insecure context / denied permission).
+    }
+  }
+
+  return (
+    <span className='inline-flex items-center gap-1.5'>
+      <span
+        className={cn(
+          'break-all text-right text-sm font-semibold text-slate-800',
+          mono && 'font-mono'
+        )}
+      >
+        {value}
+      </span>
+      <button
+        type='button'
+        onClick={copy}
+        aria-label='Copy'
+        className='inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:border-[#387cae]/40 hover:text-[#387cae]'
+      >
+        {copied ? (
+          <Check size={13} strokeWidth={3} className='text-[#1F6F5C]' />
+        ) : (
+          <Copy size={13} />
+        )}
+      </button>
+    </span>
+  )
+}
+
+const PaymentDetailRow = ({ label, value, mono = false, copyable = false }) => {
+  if (!value) return null
+
+  return (
+    <div className='flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 py-2.5 last:border-b-0'>
+      <span className='text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400'>
+        {label}
+      </span>
+      {copyable ? (
+        <CopyValue value={value} mono={mono} />
+      ) : (
+        <span className='text-right text-sm font-semibold text-slate-800'>
+          {value}
+        </span>
+      )}
+    </div>
+  )
+}
+
+const PaymentDetailsPanel = ({ method, referenceId }) => {
+  const showQr = method.paymentMode !== 'ACCOUNT' && Boolean(method.qrCodeUrl)
+  const showAccount =
+    method.paymentMode !== 'QR' &&
+    Boolean(
+      method.accountName ||
+        method.accountNumber ||
+        method.bankName ||
+        method.branchName ||
+        method.accountInstructions ||
+        method.accountDetails
+    )
+
+  const [activeTab, setActiveTab] = useState(showQr ? 'qr' : 'account')
+
+  if (!showQr && !showAccount) return null
+
+  const hasStructuredAccount = Boolean(
+    method.accountName ||
+      method.accountNumber ||
+      method.bankName ||
+      method.branchName
+  )
+
+  return (
+    <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
+      <div className='flex flex-col gap-1'>
+        <p className='text-sm font-bold text-slate-900'>
+          Pay with {method.label}
+        </p>
+        <p className='text-[13px] leading-relaxed text-slate-500'>
+          {showQr && showAccount
+            ? 'Scan the QR code or transfer to the account below, then upload your payment proof.'
+            : showQr
+              ? 'Scan the QR code below, then upload your payment proof.'
+              : 'Transfer the fee to the account below, then upload your payment proof.'}
+        </p>
+      </div>
+
+      {showQr && showAccount && (
+        <div
+          role='tablist'
+          aria-label='Payment options'
+          className='mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1'
+        >
+          <button
+            type='button'
+            role='tab'
+            aria-selected={activeTab === 'qr'}
+            onClick={() => setActiveTab('qr')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+              activeTab === 'qr'
+                ? 'bg-white text-[#387cae] shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <QrCode size={14} />
+            QR code
+          </button>
+          <button
+            type='button'
+            role='tab'
+            aria-selected={activeTab === 'account'}
+            onClick={() => setActiveTab('account')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+              activeTab === 'account'
+                ? 'bg-white text-[#387cae] shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <Landmark size={14} />
+            Account details
+          </button>
+        </div>
+      )}
+
+      {showQr && activeTab === 'qr' && (
+        <div className='mt-4'>
+          <div className='mx-auto flex h-64 w-64 max-w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 lg:h-72 lg:w-72'>
+            <img
+              src={method.qrCodeUrl}
+              alt={`${method.label} QR code`}
+              className='h-full w-full object-contain'
+            />
+          </div>
+          <p className='mt-3 text-[13px] leading-relaxed text-slate-500'>
+            Scan with your bank or wallet app. Put your payment reference
+            {referenceId ? (
+              <span className='font-mono font-bold text-slate-700'>
+                {' '}
+                {referenceId}{' '}
+              </span>
+            ) : (
+              ' '
+            )}
+            in the remarks.
+          </p>
+        </div>
+      )}
+
+      {showAccount && activeTab === 'account' && (
+        <div className='mt-4 rounded-xl border border-[#387cae]/20 bg-[#387cae]/[0.04] p-4'>
+          {hasStructuredAccount && (
+            <>
+              <PaymentDetailRow label='Account name' value={method.accountName} />
+              <PaymentDetailRow
+                label='Account number'
+                value={method.accountNumber}
+                mono
+                copyable
+              />
+              <PaymentDetailRow label='Bank / wallet' value={method.bankName} />
+              <PaymentDetailRow label='Branch' value={method.branchName} />
+            </>
+          )}
+
+          {method.accountDetails && (
+            <p
+              className={cn(
+                'whitespace-pre-wrap text-sm font-medium text-slate-800',
+                hasStructuredAccount &&
+                  'mt-3 border-t border-[#387cae]/15 pt-3'
+              )}
+            >
+              {method.accountDetails}
+            </p>
+          )}
+
+          {method.accountInstructions && (
+            <p className='mt-3 whitespace-pre-wrap border-t border-[#387cae]/15 pt-3 text-[13px] leading-relaxed text-slate-600'>
+              {method.accountInstructions}
+            </p>
+          )}
+
+          <p className='mt-3 border-t border-[#387cae]/15 pt-3 text-[13px] leading-relaxed text-slate-600'>
+            Use your payment reference
+            {referenceId ? (
+              <span className='font-mono font-bold text-slate-800'>
+                {' '}
+                {referenceId}{' '}
+              </span>
+            ) : (
+              ' '
+            )}
+            in the remarks so we can match your payment.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const MembershipForm = () => {
   const { toast } = useToast()
@@ -1210,40 +1428,12 @@ const MembershipForm = () => {
                 </div>
               )}
 
-              {(selectedPaymentMethod?.qrCodeUrl ||
-                selectedPaymentMethod?.accountDetails) && (
-                <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
-                  <div className='flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between'>
-                    <div className='min-w-0 text-center sm:text-left'>
-                      <p className='text-sm font-bold text-slate-900'>
-                        Pay with {selectedPaymentMethod.label}
-                      </p>
-                      <p className='mt-1 text-[13px] leading-relaxed text-slate-500'>
-                        Scan the QR code below or use the account details, then
-                        upload your payment proof below.
-                      </p>
-                      {selectedPaymentMethod?.accountDetails && (
-                        <div className='mt-3 rounded-xl border border-[#387cae]/20 bg-[#387cae]/[0.04] p-3 text-left'>
-                          <p className='text-[11px] font-semibold uppercase tracking-[0.12em] text-[#387cae]'>
-                            Account details
-                          </p>
-                          <p className='mt-1.5 whitespace-pre-wrap text-sm font-medium text-slate-800'>
-                            {selectedPaymentMethod.accountDetails}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    {selectedPaymentMethod?.qrCodeUrl && (
-                      <div className='mx-auto flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 sm:ml-auto lg:h-72 lg:w-72'>
-                        <img
-                          src={selectedPaymentMethod.qrCodeUrl}
-                          alt={`${selectedPaymentMethod.label} QR code`}
-                          className='h-full w-full object-contain'
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {selectedPaymentMethod && (
+                <PaymentDetailsPanel
+                  key={selectedPaymentMethod.id}
+                  method={selectedPaymentMethod}
+                  referenceId={referenceId}
+                />
               )}
 
               <div className='mt-7 space-y-2'>

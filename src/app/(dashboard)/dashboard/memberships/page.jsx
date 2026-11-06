@@ -62,6 +62,24 @@ const OPTION_TYPES = [
   { value: 'PAYMENT_METHOD', label: 'Payment methods' }
 ]
 
+const PAYMENT_DISPLAY_MODES = [
+  {
+    value: 'BOTH',
+    label: 'QR code & account details',
+    description: 'Members can choose either way to pay'
+  },
+  {
+    value: 'QR',
+    label: 'QR code only',
+    description: 'Show only the uploaded QR code'
+  },
+  {
+    value: 'ACCOUNT',
+    label: 'Account details only',
+    description: 'Show only the bank or wallet details'
+  }
+]
+
 const emptyOptionForm = {
   type: 'LEVEL',
   slug: '',
@@ -71,6 +89,13 @@ const emptyOptionForm = {
   tagline: '',
   note: '',
   qr_code_url: '',
+  payment_mode: 'BOTH',
+  account_name: '',
+  account_number: '',
+  bank_name: '',
+  branch_name: '',
+  account_instructions: '',
+  legacy_account_details: '',
   associated_levels: [],
   trainings: '',
   sort_order: 0,
@@ -112,6 +137,28 @@ const normalizeAssociatedLevels = (levels) =>
     ? levels.map((level) => String(level)).filter(Boolean)
     : []
 
+const hasAccountDetails = (metadata = {}) =>
+  Boolean(
+    metadata.account_name ||
+      metadata.account_number ||
+      metadata.bank_name ||
+      metadata.branch_name ||
+      metadata.account_instructions ||
+      metadata.account_details
+  )
+
+const getPaymentMode = (metadata = {}) => {
+  if (metadata.payment_mode === 'QR' || metadata.payment_mode === 'ACCOUNT') {
+    return metadata.payment_mode
+  }
+  const hasQr = Boolean(metadata.qr_code_url)
+  const hasAccount = hasAccountDetails(metadata)
+  if (hasQr && hasAccount) return 'BOTH'
+  if (hasQr) return 'QR'
+  if (hasAccount) return 'ACCOUNT'
+  return 'BOTH'
+}
+
 const getOptionPayload = (form) => {
   const metadata = {}
 
@@ -127,7 +174,23 @@ const getOptionPayload = (form) => {
   }
 
   if (form.type === 'PAYMENT_METHOD') {
+    metadata.payment_mode = form.payment_mode || 'BOTH'
     if (form.qr_code_url) metadata.qr_code_url = form.qr_code_url
+    if (form.account_name?.trim()) metadata.account_name = form.account_name.trim()
+    if (form.account_number?.trim()) {
+      metadata.account_number = form.account_number.trim()
+    }
+    if (form.bank_name?.trim()) metadata.bank_name = form.bank_name.trim()
+    if (form.branch_name?.trim()) metadata.branch_name = form.branch_name.trim()
+    if (form.account_instructions?.trim()) {
+      metadata.account_instructions = form.account_instructions.trim()
+    }
+    if (
+      form.legacy_account_details?.trim() &&
+      !(form.account_name?.trim() && form.account_number?.trim())
+    ) {
+      metadata.account_details = form.legacy_account_details.trim()
+    }
   }
 
   return {
@@ -150,6 +213,13 @@ const formFromOption = (option) => ({
   tagline: option.metadata?.tagline || '',
   note: option.metadata?.note || '',
   qr_code_url: option.metadata?.qr_code_url || '',
+  payment_mode: getPaymentMode(option.metadata),
+  account_name: option.metadata?.account_name || '',
+  account_number: option.metadata?.account_number || '',
+  bank_name: option.metadata?.bank_name || '',
+  branch_name: option.metadata?.branch_name || '',
+  account_instructions: option.metadata?.account_instructions || '',
+  legacy_account_details: option.metadata?.account_details || '',
   associated_levels: normalizeAssociatedLevels(option.metadata?.associated_levels),
   trainings: formatTrainings(option.metadata?.trainings),
   sort_order: option.sort_order || 0,
@@ -437,6 +507,36 @@ const MembershipsPage = () => {
         variant: 'destructive'
       })
       return
+    }
+
+    if (optionForm.type === 'PAYMENT_METHOD') {
+      const wantsQr = optionForm.payment_mode !== 'ACCOUNT'
+      const wantsAccount = optionForm.payment_mode !== 'QR'
+      const hasAccountInput = Boolean(
+        (optionForm.account_name?.trim() &&
+          optionForm.account_number?.trim()) ||
+          optionForm.legacy_account_details?.trim()
+      )
+
+      if (wantsQr && !optionForm.qr_code_url) {
+        toast({
+          title: 'QR code needed',
+          description:
+            'Upload the QR code image or choose “Account details only”.',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      if (wantsAccount && !hasAccountInput) {
+        toast({
+          title: 'Account details needed',
+          description:
+            'Add the account holder name and account number, or choose “QR code only”.',
+          variant: 'destructive'
+        })
+        return
+      }
     }
 
     try {
@@ -1021,11 +1121,20 @@ const MembershipsPage = () => {
                         {option.metadata.trainings.length} training{option.metadata.trainings.length === 1 ? '' : 's'}
                       </span>
                     )}
-                    {option.type === 'PAYMENT_METHOD' && option.metadata?.qr_code_url && (
-                      <span className='rounded-md bg-[#387cae]/10 px-2 py-1 font-semibold text-[#387cae]'>
-                        QR uploaded
-                      </span>
-                    )}
+                    {option.type === 'PAYMENT_METHOD' &&
+                      option.metadata?.payment_mode !== 'ACCOUNT' &&
+                      option.metadata?.qr_code_url && (
+                        <span className='rounded-md bg-[#387cae]/10 px-2 py-1 font-semibold text-[#387cae]'>
+                          QR uploaded
+                        </span>
+                      )}
+                    {option.type === 'PAYMENT_METHOD' &&
+                      option.metadata?.payment_mode !== 'QR' &&
+                      hasAccountDetails(option.metadata) && (
+                        <span className='rounded-md bg-[#1F6F5C]/10 px-2 py-1 font-semibold text-[#1F6F5C]'>
+                          Account details added
+                        </span>
+                      )}
                     {option.type === 'CAREER_FIELD' && (
                       <span className='rounded-md bg-gray-50 px-2 py-1 font-semibold'>
                         {normalizeAssociatedLevels(option.metadata?.associated_levels).length > 0
@@ -1238,19 +1347,164 @@ const MembershipsPage = () => {
             )}
 
             {optionForm.type === 'PAYMENT_METHOD' && (
-              <div className='space-y-2'>
-                <FileUpload
-                  label='QR code image'
-                  autoUpload={true}
-                  defaultPreview={optionForm.qr_code_url}
-                  accept='image/*'
-                  onUploadComplete={(url) =>
-                    handleOptionChange('qr_code_url', url || '')
-                  }
-                />
-                <p className='text-xs text-gray-400'>
-                  Upload the bank or wallet QR image shown to members after they choose this payment method.
-                </p>
+              <div className='space-y-5 rounded-2xl border border-gray-200 bg-gray-50/50 p-4'>
+                <div className='space-y-2'>
+                  <Label>How should members pay?</Label>
+                  <div className='grid grid-cols-1 gap-2 sm:grid-cols-3'>
+                    {PAYMENT_DISPLAY_MODES.map((mode) => {
+                      const active = optionForm.payment_mode === mode.value
+                      return (
+                        <button
+                          key={mode.value}
+                          type='button'
+                          onClick={() =>
+                            handleOptionChange('payment_mode', mode.value)
+                          }
+                          className={cn(
+                            'rounded-xl border-2 p-3 text-left transition-colors',
+                            active
+                              ? 'border-[#387cae] bg-[#387cae]/[0.06]'
+                              : 'border-gray-200 bg-white hover:border-[#387cae]/40'
+                          )}
+                        >
+                          <span className='block text-sm font-semibold text-gray-900'>
+                            {mode.label}
+                          </span>
+                          <span className='mt-0.5 block text-[11px] leading-relaxed text-gray-500'>
+                            {mode.description}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {optionForm.payment_mode !== 'ACCOUNT' && (
+                  <div className='space-y-2'>
+                    <FileUpload
+                      label='QR code image'
+                      autoUpload={true}
+                      defaultPreview={optionForm.qr_code_url}
+                      accept='image/*'
+                      onUploadComplete={(url) =>
+                        handleOptionChange('qr_code_url', url || '')
+                      }
+                    />
+                    <p className='text-xs text-gray-400'>
+                      Upload the bank or wallet QR image shown to members after
+                      they choose this payment method.
+                    </p>
+                  </div>
+                )}
+
+                {optionForm.payment_mode !== 'QR' && (
+                  <div className='space-y-4 rounded-xl border border-gray-200 bg-white p-4'>
+                    <div>
+                      <p className='text-sm font-semibold text-gray-900'>
+                        Account details
+                      </p>
+                      <p className='mt-0.5 text-xs text-gray-400'>
+                        These are shown to members on the membership form so
+                        they can pay by bank or wallet transfer.
+                      </p>
+                    </div>
+
+                    {optionForm.legacy_account_details &&
+                      !(
+                        optionForm.account_name?.trim() &&
+                        optionForm.account_number?.trim()
+                      ) && (
+                        <div className='rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800'>
+                          <span className='font-semibold'>
+                            Existing account details:{' '}
+                          </span>
+                          <span className='whitespace-pre-wrap'>
+                            {optionForm.legacy_account_details}
+                          </span>
+                          <span className='mt-1 block'>
+                            Fill in the account fields below to replace these.
+                          </span>
+                        </div>
+                      )}
+
+                    <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                      <div className='space-y-2'>
+                        <Label htmlFor='option_account_name'>
+                          Account holder name
+                        </Label>
+                        <Input
+                          id='option_account_name'
+                          value={optionForm.account_name}
+                          onChange={(e) =>
+                            handleOptionChange('account_name', e.target.value)
+                          }
+                          placeholder='Merouniversity Pvt. Ltd.'
+                          className='h-10'
+                        />
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='option_account_number'>
+                          Account number
+                        </Label>
+                        <Input
+                          id='option_account_number'
+                          value={optionForm.account_number}
+                          onChange={(e) =>
+                            handleOptionChange('account_number', e.target.value)
+                          }
+                          placeholder='0123456789012'
+                          className='h-10 font-mono text-sm'
+                        />
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='option_bank_name'>
+                          Bank / wallet name
+                        </Label>
+                        <Input
+                          id='option_bank_name'
+                          value={optionForm.bank_name}
+                          onChange={(e) =>
+                            handleOptionChange('bank_name', e.target.value)
+                          }
+                          placeholder='Nabil Bank'
+                          className='h-10'
+                        />
+                      </div>
+                      <div className='space-y-2'>
+                        <Label htmlFor='option_branch_name'>
+                          Branch (optional)
+                        </Label>
+                        <Input
+                          id='option_branch_name'
+                          value={optionForm.branch_name}
+                          onChange={(e) =>
+                            handleOptionChange('branch_name', e.target.value)
+                          }
+                          placeholder='Kathmandu'
+                          className='h-10'
+                        />
+                      </div>
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='option_account_instructions'>
+                        Payment instructions (optional)
+                      </Label>
+                      <Textarea
+                        id='option_account_instructions'
+                        value={optionForm.account_instructions}
+                        onChange={(e) =>
+                          handleOptionChange(
+                            'account_instructions',
+                            e.target.value
+                          )
+                        }
+                        rows={3}
+                        placeholder='Add the payment reference in the remarks and upload the bank slip after paying.'
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

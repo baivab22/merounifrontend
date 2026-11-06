@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, MapPin, Info, GraduationCap, Tag } from 'lucide-react'
+import { Clock, MapPin, Info, GraduationCap, Tag, Crown, Lock } from 'lucide-react'
 import { THEME_BLUE } from '@/constants/constants'
 
 const SkillCourseCard = ({ course }) => {
@@ -13,6 +13,7 @@ const SkillCourseCard = ({ course }) => {
     const location = course.location
     const price = course.price
     const duration = course.duration
+    const isPremium = Boolean(course.is_premium)
 
     return (
         <div
@@ -43,7 +44,19 @@ const SkillCourseCard = ({ course }) => {
                                 Featured
                             </span>
                         )}
+                        {isPremium && (
+                            <span className='bg-violet-600 px-2.5 py-1 rounded-md text-[10px] font-bold text-white uppercase tracking-wider shadow-sm flex items-center gap-1'>
+                                <Crown className='w-3 h-3' /> Premium
+                            </span>
+                        )}
                     </div>
+                    {isPremium && (
+                        <div className='absolute top-3 right-3 z-10'>
+                            <div className='bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center gap-1 text-[10px] font-bold text-violet-700'>
+                                <Lock className='w-3 h-3' /> Members Only
+                            </div>
+                        </div>
+                    )}
 
                     <div className='absolute bottom-3 left-4 right-4 z-10 flex justify-between items-center'>
                         {location && (
