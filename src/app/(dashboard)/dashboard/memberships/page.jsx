@@ -140,18 +140,27 @@ const normalizeAssociatedLevels = (levels) =>
 const hasAccountDetails = (metadata = {}) =>
   Boolean(
     metadata.account_name ||
+      metadata.account_holder_name ||
+      metadata.account_holder ||
       metadata.account_number ||
+      metadata.account_no ||
+      metadata.account ||
       metadata.bank_name ||
+      metadata.bank ||
+      metadata.wallet_name ||
       metadata.branch_name ||
       metadata.account_instructions ||
-      metadata.account_details
+      metadata.account_details ||
+      metadata.bank_details
   )
 
 const getPaymentMode = (metadata = {}) => {
   if (metadata.payment_mode === 'QR' || metadata.payment_mode === 'ACCOUNT') {
     return metadata.payment_mode
   }
-  const hasQr = Boolean(metadata.qr_code_url)
+  const hasQr = Boolean(
+    metadata.qr_code_url || metadata.qr_code || metadata.qr_url
+  )
   const hasAccount = hasAccountDetails(metadata)
   if (hasQr && hasAccount) return 'BOTH'
   if (hasQr) return 'QR'
@@ -212,14 +221,31 @@ const formFromOption = (option) => ({
   fee: option.metadata?.fee || '',
   tagline: option.metadata?.tagline || '',
   note: option.metadata?.note || '',
-  qr_code_url: option.metadata?.qr_code_url || '',
+  qr_code_url:
+    option.metadata?.qr_code_url ||
+    option.metadata?.qr_code ||
+    option.metadata?.qr_url ||
+    '',
   payment_mode: getPaymentMode(option.metadata),
-  account_name: option.metadata?.account_name || '',
-  account_number: option.metadata?.account_number || '',
-  bank_name: option.metadata?.bank_name || '',
+  account_name:
+    option.metadata?.account_name ||
+    option.metadata?.account_holder_name ||
+    option.metadata?.account_holder ||
+    '',
+  account_number:
+    option.metadata?.account_number ||
+    option.metadata?.account_no ||
+    option.metadata?.account ||
+    '',
+  bank_name:
+    option.metadata?.bank_name ||
+    option.metadata?.bank ||
+    option.metadata?.wallet_name ||
+    '',
   branch_name: option.metadata?.branch_name || '',
   account_instructions: option.metadata?.account_instructions || '',
-  legacy_account_details: option.metadata?.account_details || '',
+  legacy_account_details:
+    option.metadata?.account_details || option.metadata?.bank_details || '',
   associated_levels: normalizeAssociatedLevels(option.metadata?.associated_levels),
   trainings: formatTrainings(option.metadata?.trainings),
   sort_order: option.sort_order || 0,
@@ -1148,6 +1174,69 @@ const MembershipsPage = () => {
                       Order {option.sort_order || 0}
                     </span>
                   </div>
+
+                  {option.type === 'PAYMENT_METHOD' &&
+                    (option.metadata?.qr_code_url ||
+                      hasAccountDetails(option.metadata)) && (
+                      <div className='mt-3 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50/60 p-3 sm:flex-row sm:items-start'>
+                        {option.metadata?.qr_code_url && (
+                          <a
+                            href={option.metadata.qr_code_url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='shrink-0'
+                            title='Open QR code'
+                          >
+                            <img
+                              src={option.metadata.qr_code_url}
+                              alt={`${option.label} QR code`}
+                              className='h-24 w-24 rounded-lg border border-gray-200 bg-white object-contain p-1'
+                            />
+                          </a>
+                        )}
+                        <div className='min-w-0 flex-1 space-y-1 text-[11px] leading-relaxed text-gray-600'>
+                          {option.metadata?.bank_name && (
+                            <p>
+                              <span className='font-semibold text-gray-500'>
+                                Bank / wallet:
+                              </span>{' '}
+                              {option.metadata.bank_name}
+                            </p>
+                          )}
+                          {option.metadata?.account_name && (
+                            <p>
+                              <span className='font-semibold text-gray-500'>
+                                Account name:
+                              </span>{' '}
+                              {option.metadata.account_name}
+                            </p>
+                          )}
+                          {option.metadata?.account_number && (
+                            <p>
+                              <span className='font-semibold text-gray-500'>
+                                Account number:
+                              </span>{' '}
+                              <span className='font-mono font-semibold text-gray-800'>
+                                {option.metadata.account_number}
+                              </span>
+                            </p>
+                          )}
+                          {option.metadata?.branch_name && (
+                            <p>
+                              <span className='font-semibold text-gray-500'>
+                                Branch:
+                              </span>{' '}
+                              {option.metadata.branch_name}
+                            </p>
+                          )}
+                          {option.metadata?.account_details && (
+                            <p className='whitespace-pre-wrap'>
+                              {option.metadata.account_details}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
@@ -1377,6 +1466,12 @@ const MembershipsPage = () => {
                       )
                     })}
                   </div>
+                  <p className='text-[11px] leading-relaxed text-gray-400'>
+                    Want QR and account transfer to appear as two separate
+                    choices on the membership form? Create two payment method
+                    options: one with “QR code only” and one with “Account
+                    details only”.
+                  </p>
                 </div>
 
                 {optionForm.payment_mode !== 'ACCOUNT' && (

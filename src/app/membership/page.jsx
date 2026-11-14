@@ -29,7 +29,7 @@ const HIGHLIGHTS = [
     {
         icon: Wallet,
         title: 'Pay your way',
-        text: 'eSewa, Khalti or bank transfer. Proof upload is optional but speeds things up.'
+        text: 'eSewa, Khalti or bank transfer. Upload your payment proof so we can verify and activate your membership.'
     }
 ]
 

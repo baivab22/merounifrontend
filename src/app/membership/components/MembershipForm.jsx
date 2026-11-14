@@ -101,11 +101,27 @@ const normalizeOptions = (options = {}) => {
         id: method.slug,
         label: method.label,
         hint: method.description || '',
-        qrCodeUrl: method.metadata?.qr_code_url || '',
+        qrCodeUrl:
+          method.metadata?.qr_code_url ||
+          method.metadata?.qr_code ||
+          method.metadata?.qr_url ||
+          '',
         paymentMode: method.metadata?.payment_mode || '',
-        accountName: method.metadata?.account_name || '',
-        accountNumber: method.metadata?.account_number || '',
-        bankName: method.metadata?.bank_name || '',
+        accountName:
+          method.metadata?.account_name ||
+          method.metadata?.account_holder_name ||
+          method.metadata?.account_holder ||
+          '',
+        accountNumber:
+          method.metadata?.account_number ||
+          method.metadata?.account_no ||
+          method.metadata?.account ||
+          '',
+        bankName:
+          method.metadata?.bank_name ||
+          method.metadata?.bank ||
+          method.metadata?.wallet_name ||
+          '',
         branchName: method.metadata?.branch_name || '',
         accountInstructions: method.metadata?.account_instructions || '',
         accountDetails:
@@ -298,7 +314,22 @@ const PaymentDetailRow = ({ label, value, mono = false, copyable = false }) => {
   )
 }
 
-const PaymentDetailsPanel = ({ method, referenceId }) => {
+const PaymentStepList = ({ steps }) => (
+  <ol className='mt-4 space-y-3'>
+    {steps.map((step, index) => (
+      <li key={index} className='flex items-start gap-3'>
+        <span className='mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#387cae] text-[10px] font-bold text-white'>
+          {index + 1}
+        </span>
+        <span className='text-[13px] leading-relaxed text-slate-600'>
+          {step}
+        </span>
+      </li>
+    ))}
+  </ol>
+)
+
+const PaymentDetailsPanel = ({ method, referenceId, amount }) => {
   const showQr = method.paymentMode !== 'ACCOUNT' && Boolean(method.qrCodeUrl)
   const showAccount =
     method.paymentMode !== 'QR' &&
@@ -313,7 +344,20 @@ const PaymentDetailsPanel = ({ method, referenceId }) => {
 
   const [activeTab, setActiveTab] = useState(showQr ? 'qr' : 'account')
 
-  if (!showQr && !showAccount) return null
+  if (!showQr && !showAccount) {
+    return (
+      <div className='mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5'>
+        <p className='text-sm font-bold text-amber-900'>
+          Payment details are not ready yet
+        </p>
+        <p className='mt-1 text-[13px] leading-relaxed text-amber-800'>
+          The dashboard has not configured the {method.label || 'selected'}{' '}
+          payment details. Please choose another payment method or contact
+          support.
+        </p>
+      </div>
+    )
+  }
 
   const hasStructuredAccount = Boolean(
     method.accountName ||
@@ -321,133 +365,183 @@ const PaymentDetailsPanel = ({ method, referenceId }) => {
       method.bankName ||
       method.branchName
   )
+  const amountText =
+    amount && String(amount).trim() ? amount : 'the membership fee'
+  const referenceInstruction = referenceId ? (
+    <>
+      Use{' '}
+      <strong className='font-mono font-bold text-slate-800'>
+        {referenceId}
+      </strong>{' '}
+      as the payment reference or remarks.
+    </>
+  ) : (
+    <>Keep the payment receipt for verification.</>
+  )
+
+  const qrSteps = [
+    'Open your bank or wallet app and scan the QR code below.',
+    <>
+      Pay <strong className='font-semibold text-slate-800'>{amountText}</strong>.{' '}
+      {referenceInstruction}
+    </>,
+    'Take a screenshot of the successful payment and upload it as proof below.'
+  ]
+
+  const accountSteps = [
+    <>
+      Transfer{' '}
+      <strong className='font-semibold text-slate-800'>{amountText}</strong> to
+      the account details below.
+    </>,
+    referenceInstruction,
+    'Upload the bank slip or payment screenshot as proof below.'
+  ]
 
   return (
     <div className='mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
-      <div className='flex flex-col gap-1'>
-        <p className='text-sm font-bold text-slate-900'>
-          Pay with {method.label}
-        </p>
-        <p className='text-[13px] leading-relaxed text-slate-500'>
-          {showQr && showAccount
-            ? 'Scan the QR code or transfer to the account below, then upload your payment proof.'
-            : showQr
-              ? 'Scan the QR code below, then upload your payment proof.'
-              : 'Transfer the fee to the account below, then upload your payment proof.'}
-        </p>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div className='min-w-0'>
+          <p className='text-sm font-bold text-slate-900'>
+            Pay with {method.label}
+          </p>
+          <p className='mt-1 text-[13px] leading-relaxed text-slate-500'>
+            {showQr && showAccount
+              ? 'Choose QR code or account details below. Only the payment option you choose is shown.'
+              : showQr
+                ? 'Follow the QR code steps below to complete your payment.'
+                : 'Follow the bank or wallet transfer steps below to complete your payment.'}
+          </p>
+        </div>
+        {amount && String(amount).trim() && (
+          <span className='shrink-0 rounded-full border border-[#387cae]/20 bg-[#387cae]/10 px-3 py-1 text-sm font-bold text-[#2d658e]'>
+            {amount}
+          </span>
+        )}
       </div>
 
       {showQr && showAccount && (
-        <div
-          role='tablist'
-          aria-label='Payment options'
-          className='mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1'
-        >
-          <button
-            type='button'
-            role='tab'
-            aria-selected={activeTab === 'qr'}
-            onClick={() => setActiveTab('qr')}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-              activeTab === 'qr'
-                ? 'bg-white text-[#387cae] shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            )}
-          >
-            <QrCode size={14} />
-            QR code
-          </button>
-          <button
-            type='button'
-            role='tab'
-            aria-selected={activeTab === 'account'}
-            onClick={() => setActiveTab('account')}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-              activeTab === 'account'
-                ? 'bg-white text-[#387cae] shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            )}
-          >
-            <Landmark size={14} />
-            Account details
-          </button>
+        <div className='mt-4'>
+          <p className='mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400'>
+            Choose how you want to pay
+          </p>
+          <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+            <button
+              type='button'
+              aria-pressed={activeTab === 'qr'}
+              onClick={() => setActiveTab('qr')}
+              className={cn(
+                'flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-colors',
+                activeTab === 'qr'
+                  ? 'border-[#387cae] bg-[#387cae]/[0.06]'
+                  : 'border-slate-200 bg-white hover:border-[#387cae]/40'
+              )}
+            >
+              <QrCode
+                size={18}
+                className={cn(
+                  'mt-0.5 shrink-0',
+                  activeTab === 'qr' ? 'text-[#387cae]' : 'text-slate-400'
+                )}
+              />
+              <span>
+                <span className='block text-sm font-semibold text-slate-900'>
+                  QR code
+                </span>
+                <span className='mt-0.5 block text-[11px] leading-relaxed text-slate-500'>
+                  Scan and pay from any bank or wallet app
+                </span>
+              </span>
+            </button>
+            <button
+              type='button'
+              aria-pressed={activeTab === 'account'}
+              onClick={() => setActiveTab('account')}
+              className={cn(
+                'flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-colors',
+                activeTab === 'account'
+                  ? 'border-[#387cae] bg-[#387cae]/[0.06]'
+                  : 'border-slate-200 bg-white hover:border-[#387cae]/40'
+              )}
+            >
+              <Landmark
+                size={18}
+                className={cn(
+                  'mt-0.5 shrink-0',
+                  activeTab === 'account' ? 'text-[#387cae]' : 'text-slate-400'
+                )}
+              />
+              <span>
+                <span className='block text-sm font-semibold text-slate-900'>
+                  Account details
+                </span>
+                <span className='mt-0.5 block text-[11px] leading-relaxed text-slate-500'>
+                  Transfer from your bank or wallet using the account below
+                </span>
+              </span>
+            </button>
+          </div>
         </div>
       )}
 
       {showQr && activeTab === 'qr' && (
         <div className='mt-4'>
-          <div className='mx-auto flex h-64 w-64 max-w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-0 lg:h-72 lg:w-72'>
+          <PaymentStepList steps={qrSteps} />
+
+          <div className='mt-4 flex justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 sm:justify-start'>
             <img
               src={method.qrCodeUrl}
               alt={`${method.label} QR code`}
-              className='h-full w-full object-contain'
+              className='h-56 w-56 max-w-full object-contain lg:h-64 lg:w-64'
             />
           </div>
-          <p className='mt-3 text-[13px] leading-relaxed text-slate-500'>
-            Scan with your bank or wallet app. Put your payment reference
-            {referenceId ? (
-              <span className='font-mono font-bold text-slate-700'>
-                {' '}
-                {referenceId}{' '}
-              </span>
-            ) : (
-              ' '
-            )}
-            in the remarks.
-          </p>
         </div>
       )}
 
       {showAccount && activeTab === 'account' && (
-        <div className='mt-4 rounded-xl border border-[#387cae]/20 bg-[#387cae]/[0.04] p-4'>
-          {hasStructuredAccount && (
-            <>
-              <PaymentDetailRow label='Account name' value={method.accountName} />
-              <PaymentDetailRow
-                label='Account number'
-                value={method.accountNumber}
-                mono
-                copyable
-              />
-              <PaymentDetailRow label='Bank / wallet' value={method.bankName} />
-              <PaymentDetailRow label='Branch' value={method.branchName} />
-            </>
-          )}
+        <div className='mt-4'>
+          <PaymentStepList steps={accountSteps} />
 
-          {method.accountDetails && (
-            <p
-              className={cn(
-                'whitespace-pre-wrap text-sm font-medium text-slate-800',
-                hasStructuredAccount &&
-                  'mt-3 border-t border-[#387cae]/15 pt-3'
-              )}
-            >
-              {method.accountDetails}
-            </p>
-          )}
-
-          {method.accountInstructions && (
-            <p className='mt-3 whitespace-pre-wrap border-t border-[#387cae]/15 pt-3 text-[13px] leading-relaxed text-slate-600'>
-              {method.accountInstructions}
-            </p>
-          )}
-
-          <p className='mt-3 border-t border-[#387cae]/15 pt-3 text-[13px] leading-relaxed text-slate-600'>
-            Use your payment reference
-            {referenceId ? (
-              <span className='font-mono font-bold text-slate-800'>
-                {' '}
-                {referenceId}{' '}
-              </span>
-            ) : (
-              ' '
+          <div className='mt-4 rounded-xl border border-[#387cae]/20 bg-[#387cae]/[0.04] p-4'>
+            {hasStructuredAccount && (
+              <>
+                <PaymentDetailRow label='Account name' value={method.accountName} />
+                <PaymentDetailRow
+                  label='Account number'
+                  value={method.accountNumber}
+                  mono
+                  copyable
+                />
+                <PaymentDetailRow label='Bank / wallet' value={method.bankName} />
+                <PaymentDetailRow label='Branch' value={method.branchName} />
+              </>
             )}
-            in the remarks so we can match your payment.
-          </p>
+
+            {method.accountDetails && (
+              <p
+                className={cn(
+                  'whitespace-pre-wrap text-sm font-medium text-slate-800',
+                  hasStructuredAccount &&
+                    'mt-3 border-t border-[#387cae]/15 pt-3'
+                )}
+              >
+                {method.accountDetails}
+              </p>
+            )}
+
+            {method.accountInstructions && (
+              <p className='mt-3 whitespace-pre-wrap border-t border-[#387cae]/15 pt-3 text-[13px] leading-relaxed text-slate-600'>
+                {method.accountInstructions}
+              </p>
+            )}
+          </div>
         </div>
       )}
+
+      <p className='mt-4 rounded-lg bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-500'>
+        We verify your payment, email your PDF invoice, and unlock premium
+        courses and materials after approval.
+      </p>
     </div>
   )
 }
@@ -904,9 +998,18 @@ const MembershipForm = () => {
             Welcome to MeroUni Membership
           </h2>
           <p className='mb-7 max-w-lg text-[15px] leading-relaxed text-slate-500'>
-            {selectedLevel?.name} membership request received. Pay using the
-            reference below and our team will verify it and activate your member
-            library.
+            {selectedLevel?.name} membership request and payment proof
+            received. We&rsquo;ve emailed your invoice
+            {(formData.student_email || user?.email) && (
+              <>
+                {' '}
+                to{' '}
+                <span className='font-semibold text-slate-700'>
+                  {formData.student_email || user?.email}
+                </span>
+              </>
+            )}
+            . Our team will verify the payment and activate your member library.
           </p>
 
           <div className='mb-7 w-full'>
@@ -1365,8 +1468,8 @@ const MembershipForm = () => {
             Confirm and pay
           </h3>
           <p className='mb-7 text-[15px] leading-relaxed text-slate-500'>
-            Pay with your preferred method and upload the proof (optional) so we
-            can activate your membership faster.
+            Choose one payment option, follow its steps, and upload your payment
+            proof. We verify the payment before activating your membership.
           </p>
 
           <div className='grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8'>
@@ -1433,6 +1536,7 @@ const MembershipForm = () => {
                   key={selectedPaymentMethod.id}
                   method={selectedPaymentMethod}
                   referenceId={referenceId}
+                  amount={formData.membership_fee || selectedLevel?.fee}
                 />
               )}
 
