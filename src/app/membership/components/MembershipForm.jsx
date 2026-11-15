@@ -595,6 +595,18 @@ const MembershipForm = () => {
         setFields(normalized.fields)
         setPaymentMethods(normalized.paymentMethods)
         setOptionsError('')
+
+        // Preselect the first available payment method so the member has a
+        // sensible default. They can still switch to another one.
+        if (normalized.paymentMethods.length > 0) {
+          const defaultMethod = normalized.paymentMethods[0].id
+          setFormData((prev) =>
+            prev.payment_method
+              ? prev
+              : { ...prev, payment_method: defaultMethod }
+          )
+          setReferenceId((current) => current || generatePaymentReference())
+        }
       } catch (error) {
         console.error('Failed to load membership options:', error)
         if (isMounted) {
@@ -713,8 +725,6 @@ const MembershipForm = () => {
         newErrors.career_field = 'Select at least one training'
     }
     if (n === 3) {
-      if (!formData.payment_method)
-        newErrors.payment_method = 'Please select a payment method'
       if (!paymentProof)
         newErrors.payment_proof = 'Please upload your payment screenshot/proof'
     }
@@ -877,7 +887,7 @@ const MembershipForm = () => {
         (formData.career_field === 'unsure' ||
           formData.selected_trainings.length > 0)
       )
-    if (n === 3) return !!(formData.payment_method && paymentProof)
+    if (n === 3) return !!paymentProof
     return true
   }
 
@@ -1474,7 +1484,7 @@ const MembershipForm = () => {
 
           <div className='grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8'>
             <div>
-              <Label required className='mb-3 block text-sm font-semibold text-slate-700'>
+              <Label className='mb-3 block text-sm font-semibold text-slate-700'>
                 Payment method
               </Label>
               <div
