@@ -16,7 +16,8 @@ const getAuthHeaders = async () => {
 export async function getMaterials(
   page = 1,
   search = '',
-  categoryId = null
+  categoryId = null,
+  isPremium = null
 ) {
   try {
     let url = `${process.env.baseUrl}/materials/list?page=${page}&limit=12`
@@ -32,6 +33,9 @@ export async function getMaterials(
         // Ensure categoryId is a valid number
         url += `&category_id=${categoryId}`
       }
+    }
+    if (isPremium !== null && isPremium !== undefined) {
+      url += `&is_premium=${isPremium ? 'true' : 'false'}`
     }
 
     const response = await fetch(url, {
@@ -63,8 +67,8 @@ export async function getMaterials(
 }
 
 // Kept for backward compatibility if needed, but getMaterials covers it
-export async function getMaterialsByCategory(page, search, categoryId) {
-  return getMaterials(page, search, categoryId)
+export async function getMaterialsByCategory(page, search, categoryId, isPremium = null) {
+  return getMaterials(page, search, categoryId, isPremium)
 }
 
 export async function getMaterialCategories() {
@@ -93,13 +97,18 @@ export async function getMaterialCategories() {
   }
 }
 // Fetches classes and subjects
-export async function getMaterialHierarchy() {
+export async function getMaterialHierarchy(isPremium = null) {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('token')?.value
 
+    let url = `${process.env.baseUrl}/materials?type=MATERIAL&depth=2`
+    if (isPremium !== null && isPremium !== undefined) {
+      url += `&is_premium=${isPremium ? 'true' : 'false'}`
+    }
+
     const response = await fetch(
-      `${process.env.baseUrl}/materials?type=MATERIAL&depth=2`,
+      url,
       {
         method: 'GET',
         headers: { 
@@ -119,13 +128,18 @@ export async function getMaterialHierarchy() {
 }
 
 // Fetches materials for a specific subject (topic)
-export async function getMaterialsBySubject(subjectId) {
+export async function getMaterialsBySubject(subjectId, isPremium = null) {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('token')?.value
 
+    let url = `${process.env.baseUrl}/materials/topic/${subjectId}`
+    if (isPremium !== null && isPremium !== undefined) {
+      url += `?is_premium=${isPremium ? 'true' : 'false'}`
+    }
+
     const response = await fetch(
-      `${process.env.baseUrl}/materials/topic/${subjectId}`,
+      url,
       {
         method: 'GET',
         headers: { 

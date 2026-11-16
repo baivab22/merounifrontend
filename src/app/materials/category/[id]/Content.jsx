@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 import Header from '../../../../components/Frontpage/Header'
 import Navbar from '../../../../components/Frontpage/Navbar'
@@ -26,6 +26,7 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
   const [error, setError] = useState(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [activeTab, setActiveTab] = useState('free') // 'free' | 'premium'
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -36,6 +37,7 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
 
   const prevCategoryRef = useRef(null)
   const prevSearchRef = useRef(null)
+  const prevTabRef = useRef(null)
 
   useEffect(() => {
     if (!selectedCategory) {
@@ -46,17 +48,19 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
 
     const categoryChanged = prevCategoryRef.current !== selectedCategory
     const searchChanged = prevSearchRef.current !== debouncedSearch
+    const tabChanged = prevTabRef.current !== activeTab
 
-    if (categoryChanged || searchChanged) {
+    if (categoryChanged || searchChanged || tabChanged) {
       setMaterials([])
       setPagination((prev) => ({ ...prev, currentPage: 1 }))
       prevCategoryRef.current = selectedCategory
       prevSearchRef.current = debouncedSearch
+      prevTabRef.current = activeTab
       loadPageNumber(1)
     } else {
       loadPageNumber(pagination.currentPage)
     }
-  }, [pagination.currentPage, debouncedSearch, selectedCategory])
+  }, [pagination.currentPage, debouncedSearch, selectedCategory, activeTab])
 
   const loadPageNumber = async (page) => {
     if (!selectedCategory) return
@@ -66,7 +70,8 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
     setLoading(true)
     setError(null)
     try {
-      const response = await getMaterialsByCategory(page, debouncedSearch, selectedCategory)
+      const isPremium = activeTab === 'premium'
+      const response = await getMaterialsByCategory(page, debouncedSearch, selectedCategory, isPremium)
       if (response && response.pagination) {
         setMaterials(response.materials)
         setPagination((prev) => ({ ...prev, ...response.pagination }))
@@ -87,6 +92,11 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
     }
   }
 
+  const tabs = [
+    { id: 'free', label: 'Free' },
+    { id: 'premium', label: 'Premium' }
+  ]
+
   return (
     <>
       <Header />
@@ -103,10 +113,26 @@ const MaterialsCategoryContent = ({ categoryIdFromUrl, initialCategoryName, cate
           <div className='w-24'></div>
         </div>
 
-        <div className='flex justify-center mb-10 md:mb-20 w-full'>
-          <div className='relative w-full max-w-md mb-6'>
+        <div className='flex flex-col items-center mb-8 w-full gap-4'>
+          <div className='relative w-full max-w-md'>
             <input type='text' placeholder='Search material...' className='w-full p-2 pl-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' onChange={(e) => setSearchTerm(e.target.value)} value={searchTerm} />
             <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+          </div>
+
+          <div className='inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1'>
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-white text-[#0A70A7] shadow-sm border border-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 

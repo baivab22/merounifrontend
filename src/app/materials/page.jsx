@@ -241,23 +241,29 @@ const MaterialRow = ({ material }) => {
   )
 }
 
-const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive }) => {
+const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremium }) => {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
 
   useEffect(() => {
+    // Reset cache when premium filter changes so we refetch for the new tab
+    setHasLoaded(false)
+    setMaterials([])
+  }, [isPremium])
+
+  useEffect(() => {
     if ((isExpanded || searchActive) && !hasLoaded) {
       const loadMaterials = async () => {
         setLoading(true)
-        const data = await getMaterialsBySubject(subject.id)
+        const data = await getMaterialsBySubject(subject.id, isPremium)
         setMaterials(data)
         setLoading(false)
         setHasLoaded(true)
       }
       loadMaterials()
     }
-  }, [isExpanded, searchActive, hasLoaded, subject.id])
+  }, [isExpanded, searchActive, hasLoaded, subject.id, isPremium])
 
   return (
     <div className="mb-1">
@@ -313,8 +319,13 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive }) => {
   )
 }
 
-const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive }) => {
+const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive, isPremium }) => {
   const [expandedSubject, setExpandedSubject] = useState(null)
+
+  useEffect(() => {
+    // Collapse subjects when switching tabs to avoid stale expanded state
+    setExpandedSubject(null)
+  }, [isPremium])
 
   const toggleSubject = (id) => {
     setExpandedSubject(expandedSubject === id ? null : id)
@@ -372,6 +383,7 @@ const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive }) => {
                       isExpanded={searchActive || expandedSubject === subject.id}
                       onToggle={() => toggleSubject(subject.id)}
                       searchActive={searchActive}
+                      isPremium={isPremium}
                     />
                   ))}
                 </div>
@@ -398,6 +410,7 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
   const [selectedTag, setSelectedTag] = useState(searchParams.get('tag') || '')
   const [expandedClass, setExpandedClass] = useState(null)
+  const [activeTab, setActiveTab] = useState('free') // 'free' | 'premium'
 
   const updateURL = (params) => {
     const newParams = new URLSearchParams(searchParams.toString())
@@ -411,12 +424,14 @@ const Materials = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const data = await getMaterialHierarchy()
+      setExpandedClass(null)
+      const isPremium = activeTab === 'premium'
+      const data = await getMaterialHierarchy(isPremium)
       setHierarchy(data)
       setLoading(false)
     }
     fetchData()
-  }, [])
+  }, [activeTab])
 
   const tags = useMemo(() => {
     return hierarchy.map(cls => cls.title).filter(Boolean)
@@ -477,6 +492,27 @@ const Materials = () => {
           onTagChange={handleTagChange}
         />
 
+        <div className='flex justify-center mb-8'>
+          <div className='inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1'>
+            {[
+              { id: 'free', label: 'Free' },
+              { id: 'premium', label: 'Premium' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-white text-[#0A70A7] shadow-sm border border-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
@@ -492,6 +528,7 @@ const Materials = () => {
                 isExpanded={!!searchTerm || expandedClass === classItem.id}
                 onToggle={() => toggleClass(classItem.id)}
                 searchActive={!!searchTerm}
+                isPremium={activeTab === 'premium'}
               />
             ))}
           </div>
