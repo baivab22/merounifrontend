@@ -1,98 +1,27 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
-  Search,
   ChevronDown,
   Folder,
-  BookOpen,
   ExternalLink,
   Loader2,
-  X,
-  FileSearch,
-  Book,
   File,
   Lock,
-  Crown
+  Crown,
+  Heart
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
-import { Heart } from 'lucide-react'
-import { getMaterialHierarchy, getMaterialsBySubject, toggleMaterialHeart } from './action'
+import { getMaterialHierarchy, toggleMaterialHeart } from './action'
 import { useToast } from '@/hooks/use-toast'
 
 // --- Components ---
 
-const TAG_STYLES = {
-  'Entrance Preparation': 'bg-violet-50 text-violet-600 border-violet-200',
-  '+2 Notes': 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  'Bachelors Notes': 'bg-amber-50 text-amber-600 border-amber-200',
-  'Masters Notes': 'bg-rose-50 text-rose-600 border-rose-200'
-}
-
-const FiltersSection = ({ searchTerm, onSearchChange, onClear, tags, selectedTag, onTagChange }) => (
-  <div className='bg-white rounded-[32px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 mb-12'>
-    <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
-      {/* Search */}
-      <div className='md:col-span-12'>
-        <label className='block text-[11px] font-bold mb-2 uppercase tracking-wider text-gray-500'>
-          Search Materials
-        </label>
-        <div className='relative group'>
-          <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#0A70A7] transition-colors' />
-          <input
-            type='text'
-            placeholder='Search by chapter, subject, or class...'
-            onChange={(e) => onSearchChange(e.target.value)}
-            value={searchTerm}
-            className='w-full px-5 py-3.5 pl-12 rounded-xl border border-gray-100 bg-gray-50/50 outline-none focus:ring-2 focus:ring-[#0A70A7]/10 focus:border-[#0A70A7] focus:bg-white transition-all text-sm font-semibold text-gray-700'
-          />
-          {searchTerm && (
-            <button
-              onClick={onClear}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500 transition-colors"
-            >
-              <X size={18} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Tag Filters */}
-      {tags.length > 0 && (
-        <div className='md:col-span-12 flex flex-wrap gap-2 mt-1'>
-          <button
-            onClick={() => onTagChange('')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide border transition-all duration-200 ${!selectedTag
-              ? 'bg-[#0A70A7] text-white border-[#0A70A7] shadow-md shadow-blue-500/20'
-              : 'bg-white text-gray-500 border-gray-200 hover:border-[#0A70A7] hover:text-[#0A70A7]'
-              }`}
-          >
-            All Materials
-          </button>
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => onTagChange(tag)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide border transition-all duration-200 ${selectedTag === tag
-                ? 'bg-[#0A70A7] text-white border-[#0A70A7] shadow-md shadow-blue-500/20'
-                : `${TAG_STYLES[tag] || 'bg-blue-50 text-[#0A70A7] border-blue-100'} hover:shadow-sm`
-                }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-)
-
 const MaterialRow = ({ material }) => {
   const { toast } = useToast()
   const user = useSelector((state) => state.user?.data)
-  
+
   const role = useMemo(() => {
     const r = user?.role || user?.roles
     if (!r) return {}
@@ -112,7 +41,7 @@ const MaterialRow = ({ material }) => {
 
   const handleToggleHeart = async (e) => {
     e.stopPropagation()
-    
+
     if (!user) {
       toast({
         title: "Login Required",
@@ -200,12 +129,12 @@ const MaterialRow = ({ material }) => {
             aria-label="Heart material"
             onClick={handleToggleHeart}
             className={`p-1.5 rounded-full transition-all duration-300 ${
-              isHearted 
-                ? 'bg-rose-50 text-rose-500 scale-110' 
+              isHearted
+                ? 'bg-rose-50 text-rose-500 scale-110'
                 : 'text-gray-300 hover:text-rose-400 hover:bg-rose-50/30'
             } ${isToggling ? 'opacity-50 animate-pulse' : ''} ${!isStudent ? 'cursor-default' : 'cursor-pointer'}`}
           >
-            <Heart 
+            <Heart
               size={18}
               fill={isHearted ? 'currentColor' : 'none'}
               className={isHearted ? 'animate-heart-beat' : ''}
@@ -241,29 +170,10 @@ const MaterialRow = ({ material }) => {
   )
 }
 
-const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremium }) => {
-  const [materials, setMaterials] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [hasLoaded, setHasLoaded] = useState(false)
-
-  useEffect(() => {
-    // Reset cache when premium filter changes so we refetch for the new tab
-    setHasLoaded(false)
-    setMaterials([])
-  }, [isPremium])
-
-  useEffect(() => {
-    if ((isExpanded || searchActive) && !hasLoaded) {
-      const loadMaterials = async () => {
-        setLoading(true)
-        const data = await getMaterialsBySubject(subject.id, isPremium)
-        setMaterials(data)
-        setLoading(false)
-        setHasLoaded(true)
-      }
-      loadMaterials()
-    }
-  }, [isExpanded, searchActive, hasLoaded, subject.id, isPremium])
+const SubjectAccordion = ({ subject, isExpanded, onToggle }) => {
+  // Materials arrive already filtered by the backend for the selected
+  // Free/Premium tab as part of the hierarchy response.
+  const materials = subject.materials || []
 
   return (
     <div className="mb-1">
@@ -272,7 +182,7 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremi
         className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group"
       >
         <div className="flex items-center gap-3 text-left">
-          <motion.div animate={{ rotate: (isExpanded || searchActive) ? 0 : -90 }}>
+          <motion.div animate={{ rotate: isExpanded ? 0 : -90 }}>
             <ChevronDown size={14} className="text-gray-400 group-hover:text-gray-600" />
           </motion.div>
           <div className="w-8 h-8 rounded-lg bg-[#0A70A7]/5 flex items-center justify-center text-[#0A70A7]">
@@ -293,7 +203,7 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremi
       </button>
 
       <AnimatePresence>
-        {(isExpanded || searchActive) && (
+        {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -301,12 +211,7 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremi
             className="overflow-hidden"
           >
             <div className="pl-12 pr-2 pt-1 pb-3 border-l-2 border-dashed border-gray-100 ml-7">
-              {loading ? (
-                <div className="flex items-center gap-2 text-gray-400 text-xs py-3">
-                  <Loader2 className="animate-spin" size={12} />
-                  <span>Loading...</span>
-                </div>
-              ) : materials.length > 0 ? (
+              {materials.length > 0 ? (
                 materials.map((m) => <MaterialRow key={m.id} material={m} />)
               ) : (
                 <p className="text-gray-400 text-[11px] italic py-2">No materials found.</p>
@@ -319,13 +224,8 @@ const SubjectAccordion = ({ subject, isExpanded, onToggle, searchActive, isPremi
   )
 }
 
-const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive, isPremium }) => {
+const ClassAccordion = ({ classItem, isExpanded, onToggle }) => {
   const [expandedSubject, setExpandedSubject] = useState(null)
-
-  useEffect(() => {
-    // Collapse subjects when switching tabs to avoid stale expanded state
-    setExpandedSubject(null)
-  }, [isPremium])
 
   const toggleSubject = (id) => {
     setExpandedSubject(expandedSubject === id ? null : id)
@@ -380,10 +280,8 @@ const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive, isPremi
                     <SubjectAccordion
                       key={subject.id}
                       subject={subject}
-                      isExpanded={searchActive || expandedSubject === subject.id}
+                      isExpanded={expandedSubject === subject.id}
                       onToggle={() => toggleSubject(subject.id)}
-                      searchActive={searchActive}
-                      isPremium={isPremium}
                     />
                   ))}
                 </div>
@@ -401,70 +299,32 @@ const ClassAccordion = ({ classItem, isExpanded, onToggle, searchActive, isPremi
 }
 
 const Materials = () => {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-
   const [hierarchy, setHierarchy] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
-  const [selectedTag, setSelectedTag] = useState(searchParams.get('tag') || '')
   const [expandedClass, setExpandedClass] = useState(null)
   const [activeTab, setActiveTab] = useState('free') // 'free' | 'premium'
 
-  const updateURL = (params) => {
-    const newParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) newParams.set(key, value)
-      else newParams.delete(key)
-    })
-    router.push(`${pathname}?${newParams.toString()}`, { scroll: false })
-  }
-
   useEffect(() => {
+    let cancelled = false
     const fetchData = async () => {
       setLoading(true)
       setExpandedClass(null)
+      // The backend filters every material by its own is_premium flag.
       const isPremium = activeTab === 'premium'
       const data = await getMaterialHierarchy(isPremium)
-      setHierarchy(data)
-      setLoading(false)
+      if (!cancelled) {
+        setHierarchy(data)
+        setLoading(false)
+      }
     }
     fetchData()
+    return () => {
+      cancelled = true
+    }
   }, [activeTab])
-
-  const tags = useMemo(() => {
-    return hierarchy.map(cls => cls.title).filter(Boolean)
-  }, [hierarchy])
-
-  const filteredHierarchy = useMemo(() => {
-    let result = hierarchy
-    if (selectedTag) {
-      result = result.filter(cls => cls.title === selectedTag)
-    }
-    if (searchTerm) {
-      const query = searchTerm.toLowerCase()
-      result = result.filter(cls => {
-        const matchInClass = cls.title.toLowerCase().includes(query)
-        const matchInSubject = cls.subcategories?.some(sub => sub.title.toLowerCase().includes(query))
-        return matchInClass || matchInSubject
-      })
-    }
-    return result
-  }, [hierarchy, searchTerm, selectedTag])
 
   const toggleClass = (id) => {
     setExpandedClass(expandedClass === id ? null : id)
-  }
-
-  const handleSearchChange = (val) => {
-    setSearchTerm(val)
-    updateURL({ q: val })
-  }
-
-  const handleTagChange = (tag) => {
-    setSelectedTag(tag)
-    updateURL({ tag })
   }
 
   return (
@@ -482,15 +342,6 @@ const Materials = () => {
             </div>
           </div>
         </div>
-
-        <FiltersSection
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          onClear={() => handleSearchChange('')}
-          tags={tags}
-          selectedTag={selectedTag}
-          onTagChange={handleTagChange}
-        />
 
         <div className='flex justify-center mb-8'>
           <div className='inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1'>
@@ -519,16 +370,15 @@ const Materials = () => {
               <div key={i} className="h-20 bg-white rounded-2xl border border-gray-100 animate-pulse" />
             ))}
           </div>
-        ) : filteredHierarchy.length > 0 ? (
+        ) : hierarchy.length > 0 ? (
           <div className="space-y-3">
-            {filteredHierarchy.map((classItem) => (
+            {hierarchy.map((classItem) => (
               <ClassAccordion
-                key={classItem.id}
+                // Remount on tab change so expanded subjects never carry over stale data.
+                key={`${classItem.id}-${activeTab}`}
                 classItem={classItem}
-                isExpanded={!!searchTerm || expandedClass === classItem.id}
+                isExpanded={expandedClass === classItem.id}
                 onToggle={() => toggleClass(classItem.id)}
-                searchActive={!!searchTerm}
-                isPremium={activeTab === 'premium'}
               />
             ))}
           </div>
@@ -541,17 +391,10 @@ const Materials = () => {
             <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5 text-gray-300">
               <File size={28} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">No results found</h3>
-            <p className="text-gray-400 text-xs font-medium">Try searching for a different subject or class.</p>
-            <button
-              onClick={() => {
-                handleSearchChange('')
-                handleTagChange('')
-              }}
-              className="mt-6 px-5 py-2.5 bg-[#0A70A7] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#085a85] transition-all"
-            >
-              Reset Library
-            </button>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">No materials found</h3>
+            <p className="text-gray-400 text-xs font-medium">
+              There are no {activeTab} materials available yet.
+            </p>
           </motion.div>
         )}
       </main>
