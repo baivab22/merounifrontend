@@ -327,6 +327,17 @@ const Materials = () => {
     setExpandedClass(expandedClass === id ? null : id)
   }
 
+  // Both tabs fetch a filtered list, so hide classes that ended up with no
+  // materials for the selected tab (e.g. 0 premium materials in the Premium tab).
+  const visibleHierarchy = useMemo(() => {
+    const classHasMaterials = (classItem) =>
+      (classItem.materials?.length || 0) > 0 ||
+      (classItem.subcategories || []).some(
+        (sub) => (sub.materials_count || 0) > 0 || (sub.materials?.length || 0) > 0
+      )
+    return hierarchy.filter(classHasMaterials)
+  }, [hierarchy, activeTab])
+
   return (
     <div className="min-h-screen bg-[#f8fafc]">
 
@@ -370,9 +381,9 @@ const Materials = () => {
               <div key={i} className="h-20 bg-white rounded-2xl border border-gray-100 animate-pulse" />
             ))}
           </div>
-        ) : hierarchy.length > 0 ? (
+        ) : visibleHierarchy.length > 0 ? (
           <div className="space-y-3">
-            {hierarchy.map((classItem) => (
+            {visibleHierarchy.map((classItem) => (
               <ClassAccordion
                 // Remount on tab change so expanded subjects never carry over stale data.
                 key={`${classItem.id}-${activeTab}`}
