@@ -2,18 +2,22 @@
 import React, { useState } from 'react'
 import { FaDownload, FaEye, FaFileAlt } from 'react-icons/fa'
 import { Loader2, Lock, Crown } from 'lucide-react'
+import { getMaterialFileUrl, getMaterialOpenUrl, isMaterialLocked } from '../materialAccess'
 
 const MaterialItem = ({ material }) => {
   const [downloading, setDownloading] = useState(false)
 
-  const fileUrl = material?.file_url || material?.file
-  const isLocked = Boolean(material?.is_premium) && !fileUrl
+  const fileUrl = getMaterialFileUrl(material)
+  const isLocked = isMaterialLocked(material)
 
   const handleDownload = async (e) => {
     e.preventDefault()
+    if (isLocked || !fileUrl) return
+    const openUrl = getMaterialOpenUrl(material)
+    if (!openUrl) return
     setDownloading(true)
     try {
-      window.open(fileUrl, '_blank')
+      window.open(openUrl, '_blank', 'noopener,noreferrer')
     } finally {
       setTimeout(() => setDownloading(false), 2000)
     }

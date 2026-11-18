@@ -7,6 +7,7 @@ import { FaUserCircle, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { ChevronDown } from 'lucide-react'
 import { authFetch } from '@/app/utils/authFetch'
 import { removeUser } from '../../app/utils/userSlice'
+import { clearAuthCookie } from '../../app/utils/authCookies'
 import { THEME_BLUE } from '@/constants/constants'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 
@@ -71,7 +72,7 @@ export default function UserDropdown() {
 
     // Always clear local storage and redirect, even if API call fails
     const performLogout = () => {
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      clearAuthCookie()
       dispatch(removeUser())
       localStorage.removeItem('access_token')
       localStorage.removeItem('refreshToken')

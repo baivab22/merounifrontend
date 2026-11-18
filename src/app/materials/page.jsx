@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import { getMaterialHierarchy, toggleMaterialHeart } from './action'
+import { getMaterialFileUrl, getMaterialOpenUrl, isMaterialLocked } from './materialAccess'
 import { useToast } from '@/hooks/use-toast'
 
 // --- Components ---
@@ -34,6 +35,9 @@ const MaterialRow = ({ material }) => {
   }, [user])
 
   const isStudent = role?.student === true
+
+  const fileUrl = getMaterialFileUrl(material)
+  const locked = isMaterialLocked(material)
 
   const [isHearted, setIsHearted] = useState(material.is_hearted)
   const [heartsCount, setHeartsCount] = useState(material.hearts_count || 0)
@@ -88,6 +92,20 @@ const MaterialRow = ({ material }) => {
     }
   }
 
+  const handleOpen = () => {
+    if (locked || !fileUrl) {
+      toast({
+        variant: 'destructive',
+        title: 'Members only',
+        description: 'Become a verified member to open this material.'
+      })
+      return
+    }
+    const openUrl = getMaterialOpenUrl(material)
+    if (!openUrl) return
+    window.open(openUrl, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -106,7 +124,7 @@ const MaterialRow = ({ material }) => {
             {material.is_premium && (
               <span
                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border shrink-0 ${
-                  material.is_locked
+                  locked
                     ? 'bg-amber-50 text-amber-700 border-amber-200'
                     : 'bg-violet-50 text-violet-700 border-violet-200'
                 }`}
@@ -146,7 +164,7 @@ const MaterialRow = ({ material }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {material.is_locked ? (
+          {locked ? (
             <a
               href="/membership"
               title="Become a member to unlock this material"
@@ -155,15 +173,15 @@ const MaterialRow = ({ material }) => {
               <Lock size={12} />
               <span>Members only</span>
             </a>
-          ) : (material.file_url || material.file) && (
+          ) : fileUrl ? (
             <button
-              onClick={() => window.open(material.file_url || material.file, '_blank')}
+              onClick={handleOpen}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A70A7] hover:bg-[#085a85] text-white text-[10px] font-bold rounded-lg shadow-sm active:scale-95 transition-all"
             >
               <ExternalLink size={12} />
               <span>Open</span>
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </motion.div>

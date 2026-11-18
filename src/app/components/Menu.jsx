@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSelector, useDispatch } from 'react-redux'
 import { removeUser } from '@/app/utils/userSlice'
+import { clearAuthCookie } from '@/app/utils/authCookies'
 import { destr } from 'destr'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import {
@@ -214,7 +215,7 @@ const Menu = ({ isCollapsed = false }) => {
 
       if (!response.ok) throw new Error('Logout failed')
 
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      clearAuthCookie()
       dispatch(removeUser())
       localStorage.removeItem('access_token')
       localStorage.removeItem('refreshToken')

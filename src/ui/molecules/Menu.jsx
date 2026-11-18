@@ -1,6 +1,7 @@
 'use client'
 import ConfirmationDialog from '@/ui/molecules/ConfirmationDialog'
 import { removeUser } from '@/app/utils/userSlice'
+import { clearAuthCookie } from '@/app/utils/authCookies'
 import { destr } from 'destr'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -305,7 +306,7 @@ const Menu = ({ isCollapsed = false }) => {
   const handleLogoutConfirm = async () => {
     setIsLogoutDialogOpen(false)
     const performLogout = () => {
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      clearAuthCookie()
       dispatch(removeUser())
       localStorage.removeItem('access_token')
       localStorage.removeItem('refreshToken')

@@ -11,6 +11,7 @@ import { apiAuth } from '../../app/utils/agentverify'
 import { usePageHeading } from '../../contexts/PageHeadingContext'
 import { FaUserCircle, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { removeUser } from '../../app/utils/userSlice'
+import { clearAuthCookie } from '../../app/utils/authCookies'
 import { ChevronDown, Search } from 'lucide-react'
 import { THEME_BLUE } from '@/constants/constants'
 import SearchInput from '../molecules/SearchInput'
@@ -159,7 +160,7 @@ const AdminNavbar = ({ onMenuClick, searchQuery, setSearchQuery }) => {
 
     // Always clear local storage and redirect, even if API call fails
     const performLogout = () => {
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      clearAuthCookie()
       dispatch(removeUser())
       localStorage.removeItem('access_token')
       localStorage.removeItem('refreshToken')
